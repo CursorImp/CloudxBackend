@@ -1,0 +1,336 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{5E35FE6D-2AF0-4F7D-80E4-7187F7E40D37}</ProjectGuid>
+    <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SignalRHub</RootNamespace>
+    <AssemblyName>SignalRHub</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <UseIISExpress>false</UseIISExpress>
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <Use64BitIISExpress />
+    <UseGlobalApplicationHostFile />
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AsterNET, Version=1.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\AsterNET.dll</HintPath>
+    </Reference>
+    <Reference Include="CabTreasureJobPoolGateway, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\CabTreasureJobPoolGateway.dll</HintPath>
+    </Reference>
+    <Reference Include="DAL">
+      <HintPath>..\..\..\Projects\DISPATCH\map\TCS_TcpListener\bin\Debug\DAL.dll</HintPath>
+    </Reference>
+    <Reference Include="DotNetCoords">
+      <HintPath>..\..\..\Projects\DISPATCH\map\TCS_TcpListener\bin\Debug\DotNetCoords.dll</HintPath>
+    </Reference>
+    <Reference Include="EASendMail, Version=7.8.0.2, Culture=neutral, PublicKeyToken=88adb80ecd66540b, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\EASendMail.dll</HintPath>
+    </Reference>
+    <Reference Include="EngineIoClientDotNet, Version=0.9.22.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\EngineIoClientDotNet.0.9.22\lib\net45\EngineIoClientDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="GMap.NET.WindowsForms">
+      <HintPath>..\DISPATCH\Taxi_AppMain\maindll\GMap.NET.WindowsForms.dll</HintPath>
+    </Reference>
+    <Reference Include="JobPoolAPICaller, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\JobPoolAPICaller.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.Client, Version=2.4.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Microsoft.AspNet.SignalR.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.4.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Microsoft.AspNet.SignalR.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.SignalR.SystemWeb, Version=2.4.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Microsoft.AspNet.SignalR.SystemWeb.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Owin, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.3.1.0\lib\net45\Microsoft.Owin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Host.SystemWeb, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.3.1.0\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Owin.Security, Version=3.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Owin.Security.3.1.0\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <HintPath>..\packages\Microsoft.Web.Infrastructure.1.0.0.0\lib\net40\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Owin">
+      <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
+    </Reference>
+    <Reference Include="SMSGateway, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\SMSGateway.dll</HintPath>
+    </Reference>
+    <Reference Include="SocketIoClientDotNet, Version=0.9.13.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\SocketIoClientDotNet.0.9.13\lib\net45\SocketIoClientDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.Formatting, Version=5.2.7.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\System.Net.Http.Formatting.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.WebRequest" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Http, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\System.Web.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Http.WebHost, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\System.Web.Http.WebHost.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\System.Web.Mvc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Optimization, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\System.Web.Optimization.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="Taxi_BLL, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Taxi_BLL.dll</HintPath>
+    </Reference>
+    <Reference Include="Taxi_Model, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Taxi_Model.dll</HintPath>
+    </Reference>
+    <Reference Include="ThePaymentGatewayPublicShared">
+      <HintPath>..\..\..\Projects\DISPATCH\map\TCS_TcpListener\bin\Debug\ThePaymentGatewayPublicShared.dll</HintPath>
+    </Reference>
+    <Reference Include="Utils">
+      <HintPath>..\..\..\Projects\DISPATCH\map\TCS_TcpListener\bin\Debug\Utils.dll</HintPath>
+    </Reference>
+    <Reference Include="WebSocket4Net, Version=0.14.1.0, Culture=neutral, PublicKeyToken=eb4e154b696bf72a, processorArchitecture=MSIL">
+      <HintPath>packages\WebSocket4Net.0.14.1\lib\net45\WebSocket4Net.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Connected Services\DriverImageUploader\SignalRHub.DriverImageUploader.UploadFileResponse.datasource" />
+    <None Include="Connected Services\DriverImageUploader\WebUploadFile.wsdl" />
+    <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
+    <None Include="Scripts\jquery-3.3.1.intellisense.js" />
+    <None Include="Connected Services\DriverImageUploader\configuration.svcinfo" />
+    <None Include="Connected Services\DriverImageUploader\configuration91.svcinfo" />
+    <None Include="Connected Services\DriverImageUploader\Reference.svcmap">
+      <Generator>WCF Proxy Generator</Generator>
+      <LastGenOutput>Reference2.cs</LastGenOutput>
+    </None>
+    <None Include="Connected Services\DriverImageUploader\WebUploadFile.disco" />
+    <Content Include="Global.asax" />
+    <Content Include="Scripts\jquery-3.3.1.js" />
+    <Content Include="Scripts\jquery-3.3.1.min.js" />
+    <Content Include="Scripts\jquery-3.3.1.slim.js" />
+    <Content Include="Scripts\jquery-3.3.1.slim.min.js" />
+    <Content Include="Scripts\jquery-3.3.1.slim.min.map" />
+    <Content Include="Scripts\jquery-3.3.1.min.map" />
+    <None Include="Web.Debug.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+    <None Include="Web.Release.config">
+      <DependentUpon>Web.config</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Default.html" />
+    <Content Include="packages.config" />
+    <Content Include="Scripts\jquery.signalR-2.4.0.js" />
+    <Content Include="Scripts\jquery.signalR-2.4.0.min.js" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="App_Start\BundleConfig.cs" />
+    <Compile Include="App_Start\FilterConfig.cs" />
+    <Compile Include="App_Start\RouteConfig.cs" />
+    <Compile Include="Classes\AccountInvoiceSummary.cs" />
+    <Compile Include="Classes\AdminApi.cs" />
+    <Compile Include="Classes\AirportLocationData.cs" />
+    <Compile Include="Classes\Apicalling.cs" />
+    <Compile Include="Classes\AppUser.cs" />
+    <Compile Include="Classes\AutoDispatchSettings.cs" />
+    <Compile Include="Classes\BookingInformation.cs" />
+    <Compile Include="Classes\BreakDriver.cs" />
+    <Compile Include="Classes\BroadcasterData.cs" />
+    <Compile Include="Classes\BroadCastMessage.cs" />
+    <Compile Include="Classes\CallSupplierApi.cs" />
+    <Compile Include="Classes\ClsAppFares.cs" />
+    <Compile Include="Classes\ClsAutoDespatchPlot.cs" />
+    <Compile Include="Classes\ClsBookingsData.cs" />
+    <Compile Include="Classes\ClsCallerId.cs" />
+    <Compile Include="Classes\ClsChangePlot.cs" />
+    <Compile Include="Classes\ClsDetailBid.cs" />
+    <Compile Include="Classes\ClsDispatchFares.cs" />
+    <Compile Include="Classes\ClsDispatchJob.cs" />
+    <Compile Include="Classes\ClsDriverBid.cs" />
+    <Compile Include="Classes\ClsDriverPay.cs" />
+    <Compile Include="Classes\ClsDriverPayDetails.cs" />
+    <Compile Include="Classes\ClsDriverRank.cs" />
+    <Compile Include="Classes\ClsEASendEmail.cs" />
+    <Compile Include="Classes\ClsEmail.cs" />
+    <Compile Include="Classes\ClsFareMeter.cs" />
+    <Compile Include="Classes\ClsInvoicePayment.cs" />
+    <Compile Include="Classes\ClsIVR.cs" />
+    <Compile Include="Classes\ClsJobMessageParser.cs" />
+    <Compile Include="Classes\ClsJourneys.cs" />
+    <Compile Include="Classes\ClsLic.cs" />
+    <Compile Include="Classes\ClsPaymentInformation.cs" />
+    <Compile Include="Classes\clsPDA.cs" />
+    <Compile Include="Classes\ClsPlotBidding.cs" />
+    <Compile Include="Classes\ClsPlotDetails.cs" />
+    <Compile Include="Classes\ClsSaveDriverStatement.cs" />
+    <Compile Include="Classes\ClsSendReceipt.cs" />
+    <Compile Include="Classes\Clsstp_CalculateGeneralFaresBySubCompany.cs" />
+    <Compile Include="Classes\clsZones.cs" />
+    <Compile Include="Classes\DriverAppClasses.cs" />
+    <Compile Include="Classes\DriverPDASettings.cs" />
+    <Compile Include="Classes\eMessageTypes.cs" />
+    <Compile Include="Classes\FareEx.cs" />
+    <Compile Include="Classes\FareMeterSettings.cs" />
+    <Compile Include="Classes\FlightAlert.cs" />
+    <Compile Include="Classes\FlightData.cs" />
+    <Compile Include="Classes\General.cs" />
+    <Compile Include="Classes\GetDistance.cs" />
+    <Compile Include="Classes\HereForwardGeocoding.cs" />
+    <Compile Include="Classes\HereMapApi.cs" />
+    <Compile Include="Classes\HereMaps.cs" />
+    <Compile Include="Classes\JobAction.cs" />
+    <Compile Include="Classes\JobList.cs" />
+    <Compile Include="Classes\JobMeter.cs" />
+    <Compile Include="Classes\JobPoolBLL.cs" />
+    <Compile Include="Classes\JobPromotion.cs" />
+    <Compile Include="Classes\JudoPayPayment.cs" />
+    <Compile Include="Classes\JudoProcessPayment.cs" />
+    <Compile Include="Classes\KonnectPay.cs" />
+    <Compile Include="Classes\MeterType.cs" />
+    <Compile Include="Classes\NaturalSortComparer.cs" />
+    <Compile Include="Classes\payload.cs" />
+    <Compile Include="Classes\PlaceSearchResponse.cs" />
+    <Compile Include="Classes\RingbackVIPCaller.cs" />
+    <Compile Include="Classes\SignalRClientsType.cs" />
+    <Compile Include="Classes\SignalRConnection.cs" />
+    <Compile Include="Classes\SocketIO.cs" />
+    <Compile Include="Classes\SP_GetVechileDetailResult.cs" />
+    <Compile Include="Classes\stp_GetAutoDispatchBookingsResult.cs" />
+    <Compile Include="Classes\stp_GetBookingDetailsEx.cs" />
+    <Compile Include="Classes\stp_GetBookingsDataResult.cs" />
+    <Compile Include="Classes\Stripe3DS.cs" />
+    <Compile Include="Classes\StripeToken.cs" />
+    <Compile Include="Classes\UDPReceiverClass.cs" />
+    <Compile Include="Classes\UserConnections.cs" />
+    <Compile Include="Classes\WebApiClasses.cs" />
+    <Compile Include="Classes\WebMethods.cs" />
+    <Compile Include="Classes\Zones.cs" />
+    <Compile Include="Connected Services\DriverImageUploader\Reference.cs" />
+    <Compile Include="Connected Services\DriverImageUploader\Reference1.cs" />
+    <Compile Include="Connected Services\DriverImageUploader\Reference2.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </Compile>
+    <Compile Include="Controllers\AdminController.cs" />
+    <Compile Include="Controllers\DriverAppController.cs" />
+    <Compile Include="Controllers\SupplierController.cs" />
+    <Compile Include="Controllers\WebApiController.cs" />
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Hubs\HubProcessor.cs" />
+    <Compile Include="Hubs\MyHub.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Startup.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v10.0\WebApplications\Microsoft.WebApplication.targets" Condition="false" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <SaveServerSettingsInUserFile>True</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
