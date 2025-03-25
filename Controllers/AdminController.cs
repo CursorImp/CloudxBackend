@@ -237,49 +237,76 @@ namespace SignalRHub.Controllers
             {
                 if (obj.companyVehicle != null)
                 {
-                    var query = from a in General.GetQueryable<Fleet_Master>(null)
-                                where a.Id == obj.companyVehicle.ID
-                                select new
-                                {
-                                    Id = a.Id,
-                                    VehicleID = a.VehicleID,
-                                    PlateNo = a.Plateno,
-                                    VehicleNo = a.VehicleNo,
-                                    Vehicle = a.Fleet_VehicleType.VehicleType,
-                                    Owner = a.VehicleOwner,
-                                    Make = a.VehicleMake,
-                                    Model = a.VehicleModel,
-                                    Mot = String.Format("{0:dd/MM/yyyy}", a.MOTExpiryDate),
-                                    RoadTax = String.Format("{0:dd/MM/yyyy}", a.RoadTaxExpDate),
-                                    Insurance = String.Format("{0:dd/MM/yyyy}", a.InsuranceExpiry),
-                                    //Plate =a.PLateExpiryDate.GetValueOrDefault().ToString(),
-                                    Plate = String.Format("{0:dd/MM/yyyy}", a.PLateExpiryDate),
-                                    VehicleTypeId = a.VehicleTypeId,
-                                    FuelTypeId = a.FuelTypeId,
-                                    VehicleColor = a.VehicleColor
-                                };
-                    response.Data = new { VehicleTypes = query.ToList() };
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        string sqlQuery = $@"
+                      SELECT 
+                          a.Id,
+                          a.VehicleID,
+                          a.Plateno AS PlateNo,
+                          a.VehicleNo,
+                          a.VehicleOwner AS Owner,
+                          a.VehicleMake AS Make,
+                          a.VehicleModel AS Model,
+                          CONVERT(VARCHAR, a.MOTExpiryDate, 103) AS Mot,
+                          CONVERT(VARCHAR, a.RoadTaxExpDate, 103) AS RoadTax,
+                          CONVERT(VARCHAR, a.InsuranceExpiry, 103) AS Insurance,
+                          CONVERT(VARCHAR, a.PLateExpiryDate, 103) AS Plate,
+                          CONVERT(VARCHAR, a.PHCVehicleExpiryDate, 103) AS PHCVehicleExpiryDate,
+                          a.VehicleTypeId,
+                          a.FuelTypeId,
+                          a.VehicleColor,
+                          a.LogBookNo,
+                          a.MOTExpiryPath,
+                          a.InsuranceExpiryPath,
+                          a.RoadTaxExpPath,
+                          a.LogBookPath,
+                          a.PHCVehicleExpiryPath,
+                          CONVERT(VARCHAR, a.ManufactureDate, 103) As Manufacture
+                      FROM Fleet_Master a
+                      WHERE a.Id = {obj.companyVehicle.ID}";
+
+                        var result = db.ExecuteQuery<Fleet_Master_Update>(sqlQuery).ToList();
+
+                        response.Data = new { VehicleTypes = result };
+                    }
                 }
                 else
                 {
-                    var query = from a in General.GetQueryable<Fleet_Master>(null)
-                                select new
-                                {
-                                    Id = a.Id,
-                                    VehicleID = a.VehicleID,
-                                    PlateNo = a.Plateno,
-                                    VehicleNo = a.VehicleNo,
-                                    Vehicle = a.Fleet_VehicleType.VehicleType,
-                                    Owner = a.VehicleOwner,
-                                    Make = a.VehicleMake,
-                                    Model = a.VehicleModel,
-                                    Mot = String.Format("{0:dd/MM/yyyy}", a.MOTExpiryDate),
-                                    RoadTax = String.Format("{0:dd/MM/yyyy}", a.RoadTaxExpDate),
-                                    Insurance = String.Format("{0:dd/MM/yyyy}", a.InsuranceExpiry),
-                                    //Plate =a.PLateExpiryDate.GetValueOrDefault().ToString(),
-                                    Plate = String.Format("{0:dd/MM/yyyy}", a.PLateExpiryDate)
-                                };
-                    response.Data = new { VehicleTypes = query.ToList() };
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        string sqlQuery = $@"
+                         SELECT 
+                             a.Id,
+                             a.VehicleID,
+                             a.Plateno AS PlateNo,
+                             a.VehicleNo,
+                             a.VehicleOwner AS Owner,
+                             a.VehicleMake AS Make,
+                             a.VehicleModel AS Model,
+                             CONVERT(VARCHAR, a.MOTExpiryDate, 103) AS Mot,
+                             CONVERT(VARCHAR, a.RoadTaxExpDate, 103) AS RoadTax,
+                             CONVERT(VARCHAR, a.InsuranceExpiry, 103) AS Insurance,
+                             CONVERT(VARCHAR, a.PLateExpiryDate, 103) AS Plate,
+                             CONVERT(VARCHAR, a.PHCVehicleExpiryDate, 103) AS PHCVehicleExpiryDate,
+                             a.VehicleTypeId,
+                             a.FuelTypeId,
+                             a.VehicleColor,
+                             a.LogBookNo,
+                             a.MOTExpiryPath,
+                             a.InsuranceExpiryPath,
+                             a.RoadTaxExpPath,
+                             a.LogBookPath,
+                             a.PHCVehicleExpiryPath,
+                             a.InActive,
+                             b.VehicleType AS Vehicle
+                         FROM Fleet_Master a
+                         LEFT JOIN Fleet_VehicleTypes b ON a.VehicleTypeId = b.Id";
+
+                        var result = db.ExecuteQuery<Fleet_Master_Update>(sqlQuery).ToList();
+
+                        response.Data = new { VehicleTypes = result };
+                    }
                 }
             }
             catch (Exception ex)
@@ -960,6 +987,9 @@ namespace SignalRHub.Controllers
                             MobileNo = x.MobileNo,
                             EndDatestr = String.Format("{0:dd/MM/yyyy}", x.EndDate),
                             DriverTypeId = x.DriverTypeId,
+                            TFLCheckExpirystr = String.Format("{0:dd/MM/yyyy}", x.TFLCheckExpiryDate),
+                            RightToWorkExpirystr = String.Format("{0:dd/MM/yyyy}", x.RightToWorkExpiryDate),
+                            Surname = x.Surname
                         })
                         .OrderBy(item => item.No).ToList();
 
@@ -15084,160 +15114,10 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
         }
 
-        //[System.Web.Http.HttpGet]
-        //[System.Web.Http.HttpPost]
-        //[System.Web.Http.Route("SaveCompanyVehicle")]
-        //public JsonResult SaveCompanyVehicle(AdminApi obj, HttpPostedFileBase file)
-        //{
-
-        //    CompanyVehcileBO objCompanyVehicle = new CompanyVehcileBO();
-        //    ResponseAdminApi response = new ResponseAdminApi();
-        //    try
-        //    {
-        //        try
-        //        {
-        //            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveCompanyVehicle.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.Company) + Environment.NewLine);
-        //        }
-        //        catch
-        //        {
-        //        }
-
-        //        //---------------- file Upload / Download start
-
-        //        var DnFile = Request.Files["file"];
-
-        //        if (DnFile != null)
-        //        {
-        //            var fileName = Path.GetFileName(file.FileName);
-        //            var path = Path.Combine(Server.MapPath("~/DownloadFile"), fileName);
-        //            file.SaveAs(path);
-
-        //        }
-
-        //        //---------------- file Upload / Download End
-
-        //        //CompanyVehcileBO
-
-        //        using (TaxiDataContext db = new TaxiDataContext())
-        //        {
-        //            //int? Id = obj.fleetVehicleType.Id;
-
-        //            int? Id = obj.companyVehicle.Fleet_Master.Id;
-        //            if (Id == 0)
-        //            {
-
-        //                Fleet_Master obj_CompanyVeh = General.GetQueryable<Fleet_Master>(null).OrderByDescending(c => c.Id).FirstOrDefault();
-        //                objCompanyVehicle.New();
-
-        //            }
-        //            else
-        //            {
-        //                objCompanyVehicle.Edit();
-        //            }
-
-
-
-
-
-        //            objCompanyVehicle.Current.VehicleNo = obj.companyVehicle.Fleet_Master.VehicleNo.Trim(); // .fleet .VehicleNo.Trim();                    
-        //            objCompanyVehicle.Current.VehicleTypeId = obj.companyVehicle.Fleet_Master.VehicleTypeId.ToIntorNull();  //  obj.VehicleTypeId.ToIntorNull();
-        //            objCompanyVehicle.Current.VehicleColor = obj.companyVehicle.Fleet_Master.VehicleColor.ToStr().Trim();
-        //            objCompanyVehicle.Current.FuelTypeId = obj.companyVehicle.Fleet_Master.FuelTypeId.ToIntorNull();
-
-
-        //            //objCompanyVehicle.Current.Fleet_FuelType = new Fleet_FuelType();
-        //            //objCompanyVehicle.Current.Fleet_FuelType.Id = (int)obj.companyVehicle.Fleet_Master.Fleet_FuelType.Id;
-        //            //objCompanyVehicle.Current.Fleet_FuelType.FuelType = obj.companyVehicle.Fleet_Master.Fleet_FuelType.FuelType.ToStr().Trim();
-
-
-
-        //            objCompanyVehicle.Current.VehicleMake = obj.companyVehicle.Fleet_Master.VehicleMake.ToStr().Trim();
-        //            objCompanyVehicle.Current.VehicleModel = obj.companyVehicle.Fleet_Master.VehicleModel.ToStr().Trim();
-        //            objCompanyVehicle.Current.VehicleOwner = obj.companyVehicle.Fleet_Master.VehicleOwner.ToStr().Trim();
-        //            objCompanyVehicle.Current.ManufactureDate = obj.companyVehicle.Fleet_Master.ManufactureDate.ToDateTimeorNull();
-        //            objCompanyVehicle.Current.ServicesDate = obj.companyVehicle.Fleet_Master.ServicesDate.ToDateTimeorNull();
-        //            objCompanyVehicle.Current.RoadTaxExpDate = obj.companyVehicle.Fleet_Master.RoadTaxExpDate.ToDateTimeorNull();
-        //            objCompanyVehicle.Current.MOTExpiryDate = obj.companyVehicle.Fleet_Master.MOTExpiryDate.ToDateTimeorNull();
-        //            objCompanyVehicle.Current.PLateExpiryDate = obj.companyVehicle.Fleet_Master.PLateExpiryDate.ToDateTimeorNull();
-        //            //objCompanyVehicle.Current.PLateExpiryDate2 = obj.companyVehicle.Fleet_Master.PLateExpiryDate2.ToDateTimeorNull();    //? Object & property missing
-        //            //objCompanyVehicle.Current.PLateExpiryDate3 = obj.companyVehicle.Fleet_Master.PLateExpiryDate3.ToDateTimeorNull();    //? Object & property missing
-        //            objCompanyVehicle.Current.InsuranceExpiry = obj.companyVehicle.Fleet_Master.InsuranceExpiry.ToDateTimeorNull();
-        //            objCompanyVehicle.Current.Plateno = obj.companyVehicle.Fleet_Master.Plateno.ToStr();
-        //            //objCompanyVehicle.Current.plateno2 = obj.companyVehicle.Fleet_Master.plateno2.Trim();                    //? Object & property missing
-        //            //objCompanyVehicle.Current.plateno3 = obj.companyVehicle.Fleet_Master.plateno3.Trim();                    //? Object & property missing
-        //            objCompanyVehicle.Current.PartDetails = obj.companyVehicle.Fleet_Master.PartDetails.ToStr();
-        //            objCompanyVehicle.Current.Parts = obj.companyVehicle.Fleet_Master.Parts.ToDecimal();
-        //            objCompanyVehicle.Current.Labour = obj.companyVehicle.Fleet_Master.Labour.ToDecimal();
-        //            objCompanyVehicle.Current.TyreChangeMileage = obj.companyVehicle.Fleet_Master.TyreChangeMileage.ToDecimal();
-        //            objCompanyVehicle.Current.TyresChanged = obj.companyVehicle.Fleet_Master.TyresChanged.ToStr();
-        //            objCompanyVehicle.Current.CostofTyres = obj.companyVehicle.Fleet_Master.CostofTyres.ToDecimal();
-        //            objCompanyVehicle.Current.SubCompanyId = obj.companyVehicle.Fleet_Master.SubCompanyId.ToInt();
-        //            objCompanyVehicle.Current.PLateExpiryPath = obj.companyVehicle.Fleet_Master.PLateExpiryPath;
-        //            //objCompanyVehicle.Current.PLateExpiryPath2 = obj.companyVehicle.Fleet_Master.PLateExpiryPath2;                     //? Object & property missing
-        //            //objCompanyVehicle.Current.PLateExpiryPath3 = obj.companyVehicle.Fleet_Master.PLateExpiryPath3;                     //? Object & property missing
-        //            objCompanyVehicle.Current.InsuranceExpiryPath = obj.companyVehicle.Fleet_Master.InsuranceExpiryPath;
-        //            objCompanyVehicle.Current.MOTExpiryPath = obj.companyVehicle.Fleet_Master.MOTExpiryPath;
-        //            objCompanyVehicle.Current.RoadTaxExpPath = obj.companyVehicle.Fleet_Master.RoadTaxExpPath;
-        //            objCompanyVehicle.Current.VehicleID = obj.companyVehicle.Fleet_Master.VehicleID;
-        //            objCompanyVehicle.Current.LogBookNo = obj.companyVehicle.Fleet_Master.LogBookNo;
-        //            objCompanyVehicle.Current.LogBookPath = obj.companyVehicle.Fleet_Master.LogBookPath;
-        //            //objCompanyVehicle.Current.Notes = obj.companyVehicle.Fleet_Master.Notes;                     //? Object & property missing
-        //            //objCompanyVehicle.Current.Notes2 = obj.companyVehicle.Fleet_Master.Notes2;                    //? Object & property missing
-        //            //objCompanyVehicle.Current.Notes3 = obj.companyVehicle.Fleet_Master.Notes3;                    //? Object & property missing
-
-        //            //objCompanyVehicle.Current.Fleet_Master_TyreTransactions.Add(new Fleet_Master_TyreTransaction
-        //            //{
-        //            //    FleetMasterId = objCompanyVehicle.Current.Id,
-
-        //            //    FrontRightDate = obj.companyVehicle.Fleet_Master.Fleet_Master_TyreTransactions[0].FrontRightDate.ToDateTimeorNull(),
-        //            //    FrontLeftDate = obj.companyVehicle.Fleet_Master.Fleet_Master_TyreTransactions[0].FrontLeftDate.ToDateTimeorNull(),
-        //            //    RearRightDate = obj.companyVehicle.Fleet_Master.Fleet_Master_TyreTransactions[0].RearRightDate.ToDateTimeorNull(),
-        //            //    RearLeftDate = obj.companyVehicle.Fleet_Master.Fleet_Master_TyreTransactions[0].RearLeftDate.ToDateTimeorNull(),
-        //            //    FrontRightMileage = obj.companyVehicle.Fleet_Master.Fleet_Master_TyreTransactions[0].FrontRightMileage.ToDecimal(),
-        //            //    FrontLeftMileage = obj.companyVehicle.Fleet_Master.Fleet_Master_TyreTransactions[0].FrontLeftMileage.ToDecimal(),
-        //            //    RearRightMileage = obj.companyVehicle.Fleet_Master.Fleet_Master_TyreTransactions[0].RearRightMileage.ToDecimal(),
-        //            //    RearLeftMileage = obj.companyVehicle.Fleet_Master.Fleet_Master_TyreTransactions[0].RearLeftMileage.ToDecimal()
-
-        //            //});
-
-
-        //            objCompanyVehicle.Save();
-
-        //            db.SubmitChanges();
-
-        //            response.Data = "";
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        try
-        //        {
-        //            response.HasError = true;
-
-        //            if (objCompanyVehicle.Errors.Count == 0)
-        //            {
-        //                response.Message = ex.Message;
-        //                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveCompanyVehicle.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
-        //            }
-        //            else
-        //            {
-        //                response.Message = objCompanyVehicle.ShowErrors();
-        //                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveCompanyVehicle.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
-        //            }
-        //        }
-        //        catch
-        //        {
-
-        //        }
-        //    }
-        //    return Json(response, JsonRequestBehavior.AllowGet);
-        //}
-
-
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("SaveCompanyVehicle")]
-        public JsonResult SaveCompanyVehicle(AdminApi obj, HttpPostedFileBase file)
+        public JsonResult SaveCompanyVehicle(AdminApi obj, HttpPostedFileBase file, HttpPostedFileBase MOTDoc, HttpPostedFileBase RoadTaxDoc, HttpPostedFileBase InsuranceDoc, HttpPostedFileBase VehicleLogDoc, HttpPostedFileBase PHCVehicleDoc)
         {
 
             CompanyVehcileBO objCompanyVehicle = new CompanyVehcileBO();
@@ -15262,6 +15142,49 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     var path = Path.Combine(Server.MapPath("~/DownloadFile"), fileName);
                     file.SaveAs(path);
 
+                }
+
+                string uploadDirectory = Server.MapPath("~/Images/Document/CompanyVehicleDocument");
+
+                if (!Directory.Exists(uploadDirectory))
+                {
+                    Directory.CreateDirectory(uploadDirectory);  // Create the directory
+                }
+
+                if (MOTDoc != null)
+                {
+                    var filePath = Path.Combine(uploadDirectory, MOTDoc.FileName);
+                    MOTDoc.SaveAs(filePath);
+                    obj.companyVehicle.Fleet_Master.MOTExpiryPath = "/Images/Document/CompanyVehicleDocument/" + MOTDoc.FileName;
+                }
+
+                if (RoadTaxDoc != null)
+                {
+                    var filePath = Path.Combine(uploadDirectory, RoadTaxDoc.FileName);
+                    RoadTaxDoc.SaveAs(filePath);
+                    obj.companyVehicle.Fleet_Master.RoadTaxExpPath = "/Images/Document/CompanyVehicleDocument/" + RoadTaxDoc.FileName;
+                }
+
+                if (InsuranceDoc != null)
+                {
+                    var filePath = Path.Combine(uploadDirectory, InsuranceDoc.FileName);
+                    InsuranceDoc.SaveAs(filePath);
+
+                    obj.companyVehicle.Fleet_Master.InsuranceExpiryPath = "/Images/Document/CompanyVehicleDocument/" + InsuranceDoc.FileName;
+                }
+
+                if (VehicleLogDoc != null)
+                {
+                    var filePath = Path.Combine(uploadDirectory, VehicleLogDoc.FileName);
+                    VehicleLogDoc.SaveAs(filePath);
+                    obj.companyVehicle.Fleet_Master.LogBookPath = "/Images/Document/CompanyVehicleDocument/" + VehicleLogDoc.FileName;
+                }
+
+                if (PHCVehicleDoc != null)
+                {
+                    var filePath = Path.Combine(uploadDirectory, PHCVehicleDoc.FileName);
+                    PHCVehicleDoc.SaveAs(filePath);
+                    obj.PHCVehicleExpiryPath = "/Images/Document/CompanyVehicleDocument/" + PHCVehicleDoc.FileName;
                 }
 
                 //---------------- file Upload / Download End
@@ -15308,7 +15231,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     objCompanyVehicle.Current.ManufactureDate = obj.companyVehicle.Fleet_Master.ManufactureDate.ToDateTimeorNull();
                     objCompanyVehicle.Current.ServicesDate = obj.companyVehicle.Fleet_Master.ServicesDate.ToDateTimeorNull();
                     objCompanyVehicle.Current.RoadTaxExpDate = obj.companyVehicle.Fleet_Master.RoadTaxExpDate.ToDateTimeorNull();
-                    objCompanyVehicle.Current.MOTExpiryDate = obj.companyVehicle.Fleet_Master.MOTExpiryDate.ToDateTimeorNull();
+                    objCompanyVehicle.Current.MOTExpiryDate = obj.companyVehicle.Fleet_Master.MOTExpiryDate.ToDateTimeorNull(); //
                     objCompanyVehicle.Current.PLateExpiryDate = obj.companyVehicle.Fleet_Master.PLateExpiryDate.ToDateTimeorNull();
                     //objCompanyVehicle.Current.PLateExpiryDate2 = obj.companyVehicle.Fleet_Master.PLateExpiryDate2.ToDateTimeorNull();    //? Object & property missing
                     //objCompanyVehicle.Current.PLateExpiryDate3 = obj.companyVehicle.Fleet_Master.PLateExpiryDate3.ToDateTimeorNull();    //? Object & property missing
@@ -15326,12 +15249,59 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     objCompanyVehicle.Current.PLateExpiryPath = obj.companyVehicle.Fleet_Master.PLateExpiryPath;
                     //objCompanyVehicle.Current.PLateExpiryPath2 = obj.companyVehicle.Fleet_Master.PLateExpiryPath2;                     //? Object & property missing
                     //objCompanyVehicle.Current.PLateExpiryPath3 = obj.companyVehicle.Fleet_Master.PLateExpiryPath3;                     //? Object & property missing
-                    objCompanyVehicle.Current.InsuranceExpiryPath = obj.companyVehicle.Fleet_Master.InsuranceExpiryPath;
-                    objCompanyVehicle.Current.MOTExpiryPath = obj.companyVehicle.Fleet_Master.MOTExpiryPath;
-                    objCompanyVehicle.Current.RoadTaxExpPath = obj.companyVehicle.Fleet_Master.RoadTaxExpPath;
+
+                    if (obj.companyVehicle.Fleet_Master.InsuranceExpiryPath != null)
+                    {
+                        objCompanyVehicle.Current.InsuranceExpiryPath = obj.companyVehicle.Fleet_Master.InsuranceExpiryPath;
+                    }
+                    else
+                    {
+                        if (obj.UFIEDoc_CVP_Text == null)
+                        {
+                            objCompanyVehicle.Current.InsuranceExpiryPath = null;
+                        }
+                    }
+                    if (obj.companyVehicle.Fleet_Master.MOTExpiryPath != null)
+                    {
+                        objCompanyVehicle.Current.MOTExpiryPath = obj.companyVehicle.Fleet_Master.MOTExpiryPath;
+
+                    }
+                    else
+                    {
+                        if (obj.UFMOTDoc_CVP_Text == null)
+                        {
+                            objCompanyVehicle.Current.MOTExpiryPath = null;
+                        }
+                    }
+                    if (obj.companyVehicle.Fleet_Master.RoadTaxExpPath != null)
+                    {
+                        objCompanyVehicle.Current.RoadTaxExpPath = obj.companyVehicle.Fleet_Master.RoadTaxExpPath;
+
+                    }
+                    else
+                    {
+                        if (obj.UFRTEDoc_CVP_Text == null)
+                        {
+                            objCompanyVehicle.Current.RoadTaxExpPath = null;
+                        }
+                    }
+
                     objCompanyVehicle.Current.VehicleID = obj.companyVehicle.Fleet_Master.VehicleID;
                     objCompanyVehicle.Current.LogBookNo = obj.companyVehicle.Fleet_Master.LogBookNo;
-                    objCompanyVehicle.Current.LogBookPath = obj.companyVehicle.Fleet_Master.LogBookPath;
+
+                    //       objCompanyVehicle.Current.LogBookPath = obj.companyVehicle.Fleet_Master.LogBookPath;
+                    if (obj.companyVehicle.Fleet_Master.LogBookPath != null)
+                    {
+                        objCompanyVehicle.Current.LogBookPath = obj.companyVehicle.Fleet_Master.LogBookPath;
+
+                    }
+                    else
+                    {
+                        if (obj.UFVehicleLogDoc_CVP_Text == null)
+                        {
+                            objCompanyVehicle.Current.LogBookPath = null;
+                        }
+                    }
                     //objCompanyVehicle.Current.Notes = obj.companyVehicle.Fleet_Master.Notes;                     //? Object & property missing
                     //objCompanyVehicle.Current.Notes2 = obj.companyVehicle.Fleet_Master.Notes2;                    //? Object & property missing
                     //objCompanyVehicle.Current.Notes3 = obj.companyVehicle.Fleet_Master.Notes3;                    //? Object & property missing
@@ -15353,6 +15323,27 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
 
                     objCompanyVehicle.Save();
+
+                    if (obj.PHCVehicleExpiryDate != null)
+                    {
+                        db.ExecuteQuery<int>(@"UPDATE Fleet_Master SET PHCVehicleExpiryDate = {0} WHERE Id = {1}",
+                                         obj.PHCVehicleExpiryDate, objCompanyVehicle.Current.Id);
+                    }
+                    if (obj.PHCVehicleExpiryPath != null)
+                    {
+                        db.ExecuteQuery<int>(@"UPDATE Fleet_Master SET PHCVehicleExpiryPath = {0} WHERE Id = {1}",
+                                    obj.PHCVehicleExpiryPath, objCompanyVehicle.Current.Id);
+                    }
+                    else
+                    {
+                        if (obj.PHCVehicleExpiryDate_CVP_Text == null)
+                        {
+                            db.ExecuteQuery<int>(@"UPDATE Fleet_Master SET PHCVehicleExpiryPath = {0} WHERE Id = {1}",
+                                   "", objCompanyVehicle.Current.Id);
+                        }
+                    }
+
+
 
                     db.SubmitChanges();
 

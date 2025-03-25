@@ -423,7 +423,40 @@ namespace SignalRHub.Classes
         public string CompanyName { get; set; }
         public List<IVRInfo> IVRInfo { get; set; }
         public string HubURL { get; set; }
-
+        public DateTime? PHCVehicleExpiryDate { get; set; }
+        public string PHCVehicleExpiryPath { get; set; }
+        public string UFMOTDoc_CVP_Text { get; set; }
+        public string UFRTEDoc_CVP_Text { get; set; }
+        public string UFIEDoc_CVP_Text { get; set; }
+        public string UFVehicleLogDoc_CVP_Text { get; set; }
+        public string PHCVehicleExpiryDate_CVP_Text { get; set; }
+    }
+    public class Fleet_Master_Update
+    {
+        public int Id { get; set; }
+        public string VehicleID { get; set; }
+        public string PlateNo { get; set; }
+        public string VehicleNo { get; set; }
+        public string Vehicle { get; set; }
+        public string Owner { get; set; }
+        public string Make { get; set; }
+        public string Model { get; set; }
+        public string Mot { get; set; }
+        public string RoadTax { get; set; }
+        public string Insurance { get; set; }
+        public string Plate { get; set; }
+        public int VehicleTypeId { get; set; }
+        public int FuelTypeId { get; set; }
+        public string VehicleColor { get; set; }
+        public string LogBookNo { get; set; }
+        public string MOTExpiryPath { get; set; }
+        public string InsuranceExpiryPath { get; set; }
+        public string RoadTaxExpPath { get; set; }
+        public string LogBookPath { get; set; }
+        public string PHCVehicleExpiryDate { get; set; }
+        public string PHCVehicleExpiryPath { get; set; }
+        public bool InActive { get; set; }
+        public string Manufacture { get; set; }
     }
     public class IVRInfo
     {
@@ -806,6 +839,12 @@ namespace SignalRHub.Classes
         public string LicenseExpirystr { get; set; }
         public string RoadTaxExpirystr { get; set; }
         public string EndDatestr { get; set; }
+        public DateTime? TFLCheckExpiryDate { get; set; }
+        public DateTime? RightToWorkExpiryDate { get; set; }
+
+        public string TFLCheckExpirystr { get; set; }
+        public string RightToWorkExpirystr { get; set; }
+        public string Surname { get; set; }
     }
     public class stp_GetDriverRecord
     {

@@ -12,7 +12,57 @@ using Taxi_Model;
 
 namespace SignalRHub.WebApiClasses
 {
+    public class ClsQuotationBooking
+    {
+        public long BookingId { get; set; }
+        public string BookingNo { get; set; }
 
+        public int? BookingStatusId { get; set; }
+        public int? BookingTypeId;
+
+        public string BookingType;
+        public string UserName { get; set; }
+        public bool IsQuotation { get; set; }
+
+    }
+    public class ClsOnlineBooking
+    {
+        public long Id { get; set; }
+        public string BookingNo { get; set; }
+
+        public DateTime? BookingDate;
+        public string BookingDateString;
+        public DateTime? PickupDateTime;
+        public string PickupDateString;
+        public string PickupTimeString;
+        public string CustomerName;
+        public string CustomerMobileNo;
+        public string CustomerPhoneNo;
+        public string CustomerEmail;
+        public string FromAddress;
+        public string FromDoorNo;
+        public string FromStreet;
+        public string ToAddress;
+        public string ToDoorNo;
+        public string ToStreet;
+        public int? BookingStatusId { get; set; }
+        public int? BookingTypeId;
+        public string CompanyName;
+        public string VehicleType;
+        public string ViaString;
+        public string PaymentType;
+        public decimal? FareRate;
+        public decimal? Parking;
+        public decimal? Waiting;
+        public decimal? Extra;
+        public decimal? CompanyPrice;
+        public string SpecialRequirements;
+        public string FlightNumber;
+        public string PaymentComments;
+        public string BookingType;
+        public string OrderNo { get; set; }
+        public string UserName { get; set; }
+    }
     public class Zones
     {
     }

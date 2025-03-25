@@ -8850,6 +8850,136 @@ namespace SignalRHub.Controllers
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetQuotationBookingList")]
+        public JsonResult GetQuotationBookingList()
+        {
+            List<WebApiClasses.ClsOnlineBooking> list = null;
+            ResponseWebApi response = new ResponseWebApi();
+            try
+            {
+
+                //
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    DateTime? dt = DateTime.Now.ToDateorNull();
+                    DateTime recentDays = dt.Value.AddDays(-1);
+
+                    //
+                    list = (from a in db.Bookings
+                            join bt in db.BookingTypes on a.BookingTypeId equals bt.Id
+                            join b in db.Gen_PaymentTypes on a.PaymentTypeId equals b.Id
+                            join c in db.Gen_Companies on a.CompanyId equals c.Id into table2
+                            join v in db.Fleet_VehicleTypes on a.VehicleTypeId equals v.Id
+                            from c in table2.DefaultIfEmpty()
+                            where (a.PickupDateTime >= recentDays)
+                            && a.IsQuotation == true && a.BookingStatusId == Enums.BOOKINGSTATUS.WAITING
+
+                            select new WebApiClasses.ClsOnlineBooking
+                            {
+                                Id = a.Id,
+                                BookingNo = a.BookingNo,
+                                BookingDate = a.BookingDate,
+                                //BookingDateString = a.BookingDate.HasValue ? "" : a.BookingDate.Value.ToString("dd-MMM-yyyy"),
+                                PickupDateTime = a.PickupDateTime,
+                                //PickupDateString = a.PickupDateTime.HasValue? "" : a.PickupDateTime.Value.ToString("dd-MMM-yyyy"),
+                                //PickupTimeString = a.PickupDateTime.HasValue? "" : a.PickupDateTime.Value.ToString("HH:mm"),
+                                CustomerName = a.CustomerName,
+                                CustomerEmail = a.CustomerEmail,
+                                CustomerMobileNo = a.CustomerMobileNo,
+                                CustomerPhoneNo = a.CustomerPhoneNo,
+                                CompanyPrice = a.CompanyPrice,
+                                Extra = a.ExtraDropCharges,
+                                FareRate = a.FareRate,
+                                Parking = a.CongtionCharges,
+                                Waiting = a.MeetAndGreetCharges,
+
+                                FromAddress = a.FromAddress,
+                                FromDoorNo = a.FromDoorNo,
+                                FromStreet = a.FromStreet,
+                                ToAddress = a.ToAddress,
+                                ToDoorNo = a.ToDoorNo,
+
+                                ToStreet = a.ToStreet,
+                                BookingStatusId = a.BookingStatusId,
+                                BookingTypeId = a.BookingTypeId,
+                                CompanyName = c.CompanyName,
+                                VehicleType = v.VehicleType,
+                                ViaString = a.ViaString,
+                                PaymentType = b.PaymentType,
+                                SpecialRequirements = a.SpecialRequirements,
+                                FlightNumber = a.FromFlightNo,
+                                PaymentComments = a.PaymentComments,
+                                BookingType = bt.BookingTypeName,
+                                OrderNo = a.OrderNo,
+                                UserName = a.AddLog
+
+                            }).ToList();
+                }
+                response.Data = list;
+            }
+            catch (Exception e)
+            {
+                response.Message = "Some Error Occured while retrieving list";
+                response.HasError = true;
+            }
+            return new CustomJsonResult { Data = response };
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("UpdateQuotationBookingStatus")]
+        public JsonResult UpdateQuotationBookingStatus(WebApiClasses.ClsQuotationBooking obj)
+        {
+            ResponseWebApi response = new ResponseWebApi();
+            try
+            {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\UpdateQuotationBookingStatus.txt", DateTime.Now + ",json: " + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+            }
+            try
+            {
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    string Username = obj.UserName == "" ? "Controller" : obj?.UserName;
+                    if (!obj.IsQuotation)
+                    {
+                        db.ExecuteQuery<int>("exec stp_UpdateQuotationJobStatus {0},{1},{2},{3},{4},{5}", obj.BookingId, Enums.BOOKINGSTATUS.WAITING, obj.IsQuotation, "Quotation", "Quotation Booking Confirmed", Username);
+                        response.Message = "Quotation Booking Confirmed";
+                    }
+                    else
+                    {
+
+                        db.ExecuteQuery<int>("exec stp_UpdateQuotationJobStatus {0},{1},{2},{3},{4},{5}", obj.BookingId, Enums.BOOKINGSTATUS.CANCELLED, 0, "Quotation", "Quotation Booking Cancelled", Username);
+                        response.Message = "Quotation Booking Cancelled";
+                    }
+                    response.HasError = false;
+                    response.Message = "Booking Updated";
+                    General.BroadCastMessage("**refresh required dashboard");
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\UpdateQuotationBookingStatus_Exception.txt", DateTime.Now + ",json: " + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+                }
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
         [System.Web.Http.Route("GetOnlineAddressData")]
         public JsonResult GetOnlineAddressData(WebApiClasses.RequestWebApi obj)
         {
