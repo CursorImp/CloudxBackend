@@ -23063,6 +23063,223 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
             return Json(response, JsonRequestBehavior.AllowGet);
         }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetFixedFareWithPagination")]
+        public JsonResult GetFixedFareWithPagination(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+
+                int pageNumber = obj.pageNumber > 0 ? obj.pageNumber : 1;
+                int pageSize = obj.pageSize > 0 ? obj.pageSize : 10;
+                int totalRecords = 0;
+
+
+                DataSet ds = new DataSet();
+                using (System.Data.SqlClient.SqlConnection sqlconn = new System.Data.SqlClient.SqlConnection(Cryptography.Decrypt(System.Configuration.ConfigurationManager.AppSettings["ConnectionString"].ToStr(), "tcloudX@@!", true)))
+                {
+
+                    sqlconn.Open();
+
+                    using (System.Data.SqlClient.SqlCommand sql_cmnd = new System.Data.SqlClient.SqlCommand("stp_GetFixedFareWithPagination", sqlconn))
+                    {
+                        sql_cmnd.CommandType = CommandType.StoredProcedure;
+                        sql_cmnd.Parameters.Add(new System.Data.SqlClient.SqlParameter("@fare", obj.fare.Id));
+                        sql_cmnd.Parameters.Add(new System.Data.SqlClient.SqlParameter("@pageNumber", pageNumber));
+                        sql_cmnd.Parameters.Add(new System.Data.SqlClient.SqlParameter("@pageSize", pageSize));
+                        using (System.Data.SqlClient.SqlDataAdapter da = new System.Data.SqlClient.SqlDataAdapter(sql_cmnd))
+                        {
+                            da.Fill(ds);
+                        }
+                    }
+
+                    DataTable dtt = ds.Tables[0];
+                    var FormatPlotWiseGrid = Newtonsoft.Json.JsonConvert.SerializeObject(dtt);
+
+
+                    var List_Fare_PDAMeters = new object();
+                    var List_Fare_ChargesDetails = new object();
+                    //var List_Fare_ChargesDetailsCount = new object();
+                    FareBO objMaster = new FareBO();
+                    objMaster.GetByPrimaryKey(obj.fare.Id);
+                    if (objMaster.Current != null)
+                    {
+                        Fare obj1 = objMaster.Current;
+                        totalRecords = obj1.Fare_ChargesDetails.Count();
+
+                        List_Fare_PDAMeters = (from b in obj1.Fare_OtherCharges
+                                               select new
+                                               {
+                                                   Id = b.Id,
+                                                   FareId = b.FareId,
+                                                   FromMile = b.FromMile,
+                                                   ToMile = b.ToMile,
+                                                   Rate = b.Rate,
+                                                   CompanyRate = b.CompanyRate,
+
+                                               }).ToList();
+                        List_Fare_ChargesDetails = (from b in obj1.Fare_ChargesDetails
+                                                    select new
+                                                    {
+                                                        Id = b.Id,
+                                                        FareId = b.FareId,
+                                                        OriginLocationTypeId = b.OriginLocationTypeId,
+                                                        DestinationLocationTypeId = b.DestinationLocationTypeId,
+                                                        OriginId = b.OriginId,
+                                                        DestinationId = b.DestinationId,
+                                                        FromZoneId = b.FromZoneId,
+                                                        fromLocation = b.FromAddress,
+                                                        toLocation = b.ToAddress,
+                                                        Rate = b.Rate,
+                                                        CompanyRate = b.CompanyRate
+
+                                                    }).Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+
+                    }
+
+                    response.Data = new
+                    {
+                        FormatPlotWiseGrid = FormatPlotWiseGrid,
+                        List_Fare_ChargesDetails = List_Fare_ChargesDetails,
+                        List_Fare_PDAMeters = List_Fare_PDAMeters,
+                        TotalRecords = totalRecords,
+                        CurrentPage = pageNumber,
+                        PageSize = pageSize,
+                        TotalPages = totalRecords > 0 ? (int)Math.Ceiling(Convert.ToDouble(totalRecords) / pageSize) : 1 //(int)Math.Ceiling((double)totalRecords / pageSize)
+                    };
+                }
+
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            var jsonResult = Json(response, JsonRequestBehavior.AllowGet);
+            jsonResult.MaxJsonLength = int.MaxValue;
+            return jsonResult;
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("Get_PlotToPlotFareWithPagination")]
+        public JsonResult Get_PlotToPlotFareWithPagination(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                int pageNumber = obj.pageNumber > 0 ? obj.pageNumber : 1;
+                int pageSize = obj.pageSize > 0 ? obj.pageSize : 10;
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var listFare = (from a in General.GetQueryable<Fare>(null)
+                                    where (a.VehicleTypeId == obj.fare.VehicleTypeId)
+                                    && (a.SubCompanyId == obj.fare.SubCompanyId)
+                                    && ((a.CompanyId == null || a.CompanyId == obj.fare.CompanyId))
+                                    select new
+                                    {
+                                        a.Id,
+                                        a.VehicleTypeId, // Ensure FareId is retrieved correctly
+                                        a.EffectiveDate,
+                                        a.AddOn,
+                                        a.AddBy,
+                                        a.EditOn,
+                                        a.EditBy,
+                                        a.IsVehicleWise,
+                                        a.IsCompanyWise,
+                                        a.CompanyId,
+                                        a.SubCompanyId,
+                                        a.PerMinJourneyCharges,
+                                        a.IsDayWise,
+                                        a.DayValue,
+                                        a.StartRate,
+                                        a.StartRateValidMiles,
+                                        a.FromDayName,
+                                        a.TillDayName,
+                                        a.SpecialDayName,
+                                        a.FromSpecialDate,
+                                        a.TillSpecialDate,
+                                        a.FromDateTime,
+                                        a.TillDateTime,
+                                    }).ToList();
+
+                    int FareId = (obj.fare.VehicleTypeId == 5) ? 0 : (listFare.Any() ? listFare.First().Id : 0);
+                    int VehicleId = (int)obj.fare.VehicleTypeId;
+
+                    using (System.Data.SqlClient.SqlConnection sqlconn = new System.Data.SqlClient.SqlConnection(
+                        Cryptography.Decrypt(System.Configuration.ConfigurationManager.AppSettings["ConnectionString"].ToStr(), "tcloudX@@!", true)))
+                    {
+                        sqlconn.Open();
+                        using (System.Data.SqlClient.SqlCommand sql_cmnd = new System.Data.SqlClient.SqlCommand("stp_GetPlottoPlotFareWithPagination", sqlconn))
+                        {
+                            sql_cmnd.CommandType = CommandType.StoredProcedure;
+                            sql_cmnd.Parameters.Add(new System.Data.SqlClient.SqlParameter("@fare", (VehicleId == 5 || FareId == 0) ? DBNull.Value : (object)FareId));
+                            sql_cmnd.Parameters.Add(new System.Data.SqlClient.SqlParameter("@VehicleTypeId", VehicleId));
+                            sql_cmnd.Parameters.Add(new System.Data.SqlClient.SqlParameter("@PageNumber", pageNumber));
+                            sql_cmnd.Parameters.Add(new System.Data.SqlClient.SqlParameter("@PageSize", pageSize));
+
+                            DataSet ds = new DataSet();
+                            using (System.Data.SqlClient.SqlDataAdapter da = new System.Data.SqlClient.SqlDataAdapter(sql_cmnd))
+                            {
+                                da.Fill(ds);
+
+                                if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+                                {
+                                    DataTable rawData = ds.Tables[0];
+
+                                    List<string> columnNames = rawData.Columns.Cast<DataColumn>()
+                                                             .Select(col => col.ColumnName)
+                                                             .Where(name => name != "Plot") // Exclude "Plot" from columns
+                                                             .ToList();
+
+                                    var transformedData = rawData.AsEnumerable()
+                                        .Select(row => new
+                                        {
+                                            Plot = row["Plot"].ToString(),
+                                            Prices = columnNames.ToDictionary(
+                                                column => column,
+                                                column => row[column] == DBNull.Value ? "" : row[column].ToString()
+                                            )
+                                        }).ToList();
+
+                                    int totalRecords = ds.Tables.Count > 1 && ds.Tables[1].Rows.Count > 0
+                                        ? Convert.ToInt32(ds.Tables[1].Rows[0]["TotalRecords"])
+                                        : 0;
+
+                                    response.Data = new
+                                    {
+                                        FormatPlotWiseGrid = transformedData,
+                                        TotalRecords = totalRecords,
+                                        CurrentPage = pageNumber,
+                                        PageSize = pageSize,
+                                        TotalPages = totalRecords > 0 ? (int)Math.Ceiling((double)totalRecords / pageSize) : 1
+                                    };
+                                }
+                                else
+                                {
+                                    response.HasError = true;
+                                    response.Message = "No data found.";
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "An error occurred: " + ex.Message;
+            }
+
+            var jsonResult = Json(response, JsonRequestBehavior.AllowGet);
+            jsonResult.MaxJsonLength = int.MaxValue;
+            return jsonResult;
+        }
+
         public List<object> ShowMessage()
         {
             List<object> obj = new List<object>();
