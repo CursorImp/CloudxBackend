@@ -23280,6 +23280,73 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             return jsonResult;
         }
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("DeleteVehicleType")]
+        public JsonResult DeleteVehicleType(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DeleteVehicleType.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                }
+                catch
+                {
+                }
+
+                try
+                {
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+
+                        db.DeferredLoadingEnabled = false;
+                        string VehicleTypeId = obj.Id.ToStr();
+
+                        var booking = db.ExecuteQuery<Booking>("SELECT * FROM Booking WHERE VehicleTypeId = " + VehicleTypeId).FirstOrDefault();
+                        if (booking != null)
+                        {
+                            response.HasError = true;
+                            response.Message = "Vehicle exists in Booking";
+                        }
+
+                        var fleet_driv = db.ExecuteQuery<Fleet_Driver>("SELECT * FROM Fleet_Driver WHERE VehicleTypeId = " + VehicleTypeId).FirstOrDefault();
+                        if (fleet_driv != null)
+                        {
+                            response.HasError = true;
+                            response.Message = "Vehicle exists in Driver Profile";
+                        }
+
+                        if (booking == null && fleet_driv == null)
+                        {
+                            db.ExecuteQuery<int>("Delete from Fleet_VehicleTypes where Id=" + VehicleTypeId);
+                            response.Message = "Success! Vehicle deleted successfully";
+                            response.HasError = false;
+                        }
+
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DeleteVehicleType_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",Message:" + ex.Message + Environment.NewLine);
+                    }
+                    catch
+                    {
+                    }
+                    response.HasError = true;
+                    response.Message = ex.Message;
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
         public List<object> ShowMessage()
         {
             List<object> obj = new List<object>();
