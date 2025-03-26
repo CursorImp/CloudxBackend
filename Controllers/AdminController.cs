@@ -228,7 +228,7 @@ namespace SignalRHub.Controllers
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
-        [System.Web.Http.Route("GetCompanyVehcileListData")]
+        [System.Web.Http.Route("CAST(ISNULL(a.InActive,0), AS BIT) InActive,")]
         public JsonResult GetCompanyVehcileListData(AdminApi obj)
         {
             ResponseAdminApi response = new ResponseAdminApi();
@@ -298,7 +298,7 @@ namespace SignalRHub.Controllers
                              a.RoadTaxExpPath,
                              a.LogBookPath,
                              a.PHCVehicleExpiryPath,
-                             a.InActive,
+                             CAST(ISNULL(a.InActive,0), AS BIT) InActive,
                              b.VehicleType AS Vehicle
                          FROM Fleet_Master a
                          LEFT JOIN Fleet_VehicleTypes b ON a.VehicleTypeId = b.Id";
