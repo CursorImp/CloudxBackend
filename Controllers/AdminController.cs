@@ -10152,6 +10152,28 @@ namespace SignalRHub.Controllers
             //EmailReport(exportType.ToLower(), from, ToEmail, EmailSubject, body);
             return Json(0, JsonRequestBehavior.AllowGet);
         }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("TestSendEmail")]
+        public JsonResult TestSendEmail(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                Gen_SubCompany obj_SubCompany = General.GetQueryable<Gen_SubCompany>(null).Where(a => a.Id == obj.SubCompanyId).FirstOrDefault();
+                if (obj_SubCompany == null) { response.HasError = true; return Json(response, JsonRequestBehavior.AllowGet); }
+
+                bool IsEmailVerified = ClsEmail.TestEmailSetting(obj.emailSubject, obj.fromEmail, obj.toEmail, obj_SubCompany);
+                if (IsEmailVerified) { response.HasError = false; } else { response.HasError = true; }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -22981,6 +23003,38 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
         }
         #endregion
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetSubCompanylist")]
+        public JsonResult GetSubCompanylist(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                // Get the list of sub-companies
+                var Query4 = (from a in General.GetQueryable<Gen_SubCompany>(c => c.IsSysGen != null && c.IsSysGen == false)
+                              orderby a.CompanyName
+                              select new
+                              {
+                                  Id = a.Id,
+                                  CompanyName = a.CompanyName
+                              }).ToList();
+
+
+
+                // Set the response data to include only the SubCompanyList
+                response.Data = new { SubCompanyList = Query4 };
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
         public List<object> ShowMessage()
         {
             List<object> obj = new List<object>();

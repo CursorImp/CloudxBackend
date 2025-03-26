@@ -189,5 +189,111 @@ namespace SignalRHub.Classes
 
             }
         }
+        public static bool TestEmailSetting(string subject, string FromEmail, string ToEmail, Gen_SubCompany objSubCompany)
+        {
+            bool resp = false;
+            try
+            {
+
+                string emptyName = "...";
+
+
+
+                string smptHost = objSubCompany.SmtpHost;
+                int port = 587;
+                if (!string.IsNullOrEmpty(objSubCompany.SmtpPort)) { port = objSubCompany.SmtpPort.ToInt(); }
+                string userName = objSubCompany.SmtpUserName;
+                string pwd = objSubCompany.SmtpPassword;
+                string emailcc = "";
+                bool enableSSL = true;
+                string companyName = objSubCompany.CompanyName;
+                FromEmail = userName;
+
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
+                if (objSubCompany != null && objSubCompany.SmtpHost.ToStr().Trim().Length > 0)
+                {
+
+                    smptHost = objSubCompany.SmtpHost.ToStr().Trim();
+                    port = objSubCompany.SmtpPort.ToInt();
+                    userName = objSubCompany.SmtpUserName.ToStr().Trim();
+                    pwd = objSubCompany.SmtpPassword.ToStr().Trim();
+                    emailcc = objSubCompany.EmailCC.ToStr().Trim();
+                    enableSSL = objSubCompany.SmtpHasSSL.ToBool();
+                    companyName = objSubCompany.CompanyName.ToStr().Trim();
+                    FromEmail = userName;
+
+
+                    if (objSubCompany.IsTpCompany.ToBool() && objSubCompany.UseDifferentEmailForInvoices.ToBool())
+                    {
+
+                        smptHost = objSubCompany.SmtpInvoiceHost.ToStr().Trim();
+                        port = objSubCompany.SmtpInvoicePort.ToInt();
+                        userName = objSubCompany.SmtpInvoiceUserName.ToStr().Trim();
+                        pwd = objSubCompany.SmtpInvoicePassword.ToStr().Trim();
+                        enableSSL = objSubCompany.SmtpInvoiceSSL.ToBool();
+                        FromEmail = userName;
+                    }
+
+
+                }
+                using (MailMessage message = new MailMessage())
+                {
+
+
+                    System.Net.Mail.SmtpClient smtp = new System.Net.Mail.SmtpClient(smptHost, port);
+                    smtp.EnableSsl = enableSSL;
+
+                    NetworkCredential mailAuthentication = new NetworkCredential(userName, pwd);
+
+
+                    char[] arr = new char[] { ',' };
+                    string[] toArr = ToEmail.Split(arr);
+
+                    foreach (var item in toArr)
+                    {
+
+                        message.To.Add(new MailAddress(item.Trim()));
+                    }
+
+                    if (string.IsNullOrEmpty(subject))
+                        subject = emptyName;
+
+
+                    if (emailcc.Length > 0)
+                    {
+
+                        message.CC.Add(emailcc);
+                    }
+
+
+
+                    message.From = new MailAddress(FromEmail.Trim(), companyName);
+                    message.IsBodyHtml = true;
+                    message.Subject = subject;
+                    message.Body = subject;
+                    //      smtp.DeliveryMethod= SmtpDeliveryMethod.
+
+                    smtp.Credentials = mailAuthentication;
+
+                    FieldInfo transport = smtp.GetType().GetField("transport", BindingFlags.NonPublic | BindingFlags.Instance);
+                    FieldInfo authModules = transport.GetValue(smtp).GetType().GetField("authenticationModules", BindingFlags.NonPublic | BindingFlags.Instance);
+
+                    Array modulesArray = authModules.GetValue(transport.GetValue(smtp)) as Array;
+                    modulesArray.SetValue(modulesArray.GetValue(3), 1);
+
+                    smtp.Send(message);
+                    resp = true;
+                }
+
+                return resp;
+            }
+            catch (Exception ex)
+            {
+                return false;
+
+
+            }
+
+        }
     }
 }
