@@ -319,6 +319,34 @@ namespace SignalRHub.Controllers
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("InActiveComapnyVehicle")]
+        public JsonResult InActiveComapnyVehicle(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            List<Fleet_Master> lst = new List<Fleet_Master>();
+            try
+            {
+                if (obj.companyVehicle != null)
+                {
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        db.ExecuteQuery<int>(@"
+                                      UPDATE Fleet_Master 
+                                      SET InActive = CASE WHEN InActive = 1 THEN 0 ELSE 1 END 
+                                      WHERE Id = {0}", obj.companyVehicle.ID);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
         [System.Web.Http.Route("GetVehicleTypesListData")]
         public JsonResult GetVehicleTypesListData(AdminApi obj)
         {
