@@ -25207,5 +25207,44 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             return Json(response, JsonRequestBehavior.AllowGet);
         }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetVehicleTypeByNoofPassenger")]
+        public JsonResult GetVehicleTypeByNoofPassenger(int NoofPassenger)
+        {
+            //
+            try
+            {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetBookingDetails.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(NoofPassenger) + Environment.NewLine);
+            }
+            catch
+            {
+            }
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var query = "select top 1 Id from Fleet_VehicleTypes where " + NoofPassenger + " <= NoofPassengers order by NoofPassengers, OrderNo";
+                    var vehicleTypeId = db.ExecuteQuery<int>(query).FirstOrDefault();
+                    response.HasError = false;
+                    response.Data = vehicleTypeId;
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetBookingDetails.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(NoofPassenger) + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+                }
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return new CustomJsonResult { Data = response };
+        }
     }
 }
