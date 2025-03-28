@@ -21329,6 +21329,60 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
         }
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("ForcePOB")]
+        public JsonResult ForcePOB(AdminApi obj1)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var obj = db.Fleet_DriverQueueLists.FirstOrDefault(c => c.Status == true
+                    && c.DriverId == obj1.DriverId && c.CurrentJobId != null);
+                    if (obj != null)
+                    {
+                        int statusId = obj.DriverWorkStatusId.ToInt();
+                        long jobId = obj.CurrentJobId.ToLong();
+                        var objBooking = db.Bookings.FirstOrDefault(c => c.Id == jobId);
+                        if (objBooking != null)
+                        {
+                            if (statusId == 6 || statusId == 4) //status 6 is Arrived & status 4 is On Route
+                            {
+                                string msg = "<<POB Job>>" + jobId;
+                                //General.requestPDA(msg);
+                                SocketIO.SendToSocket(obj1.DriverId.ToStr(), msg, "forcePobJob");
+
+                                objBooking.Booking_Logs.Add(new Booking_Log { AfterUpdate = "Force POB by Controller (" + obj1.UserName + ")", User = obj1.UserName, UpdateDate = DateTime.Now, BookingId = jobId });
+                                db.SubmitChanges();
+                            }
+                            else
+                            {
+                                response.HasError = true;
+                                response.Message = "Current Job is not on Arrived Status";
+                            }
+                        }
+                        else
+                        {
+                            response.HasError = true;
+                            response.Message = "No Current Job Found";
+                        }
+                    }
+                    else
+                    {
+                        response.HasError = true;
+                        response.Message = "No Current Job Found";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
         [System.Web.Http.Route("SaveAppSettings")]
         public JsonResult SaveAppSettings(ParameterValues obj)
         {
