@@ -12641,6 +12641,129 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("PickingCustomerInvoiceRecord")]
+        public JsonResult PickingCustomerInvoiceRecord(AdminApi obj)
+        {
+
+            try
+            {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\PickingInvoiceRecord.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+
+            }
+            catch
+            {
+
+            }
+
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                int customerId = obj.customer.Id.ToInt();
+                int? PaymentTypeIndex = obj.bookingInfo.PaymentTypeId;
+                if (PaymentTypeIndex == null || PaymentTypeIndex == -1)
+                {
+                    PaymentTypeIndex = 2;
+                }
+                //PaymentTypeIndex --> 0- Cash 1- Credit 2- Both
+
+                DateTime? fromDate = Convert.ToDateTime(obj.Fromdate);
+                DateTime? tillDate = Convert.ToDateTime(obj.titleDate);
+
+                if (obj.chkAllFromDate == true)
+                    fromDate = new DateTime(DateTime.Now.Year - 1, 1, 1);
+
+
+
+                string error = string.Empty;
+                if (customerId == 0)
+                {
+                    error += "Required : Customer ";
+                }
+
+                if (fromDate == null)
+                {
+                    if (string.IsNullOrEmpty(error))
+                        error += Environment.NewLine;
+
+                    error += "Required : From Date ";
+                }
+
+                if (tillDate == null)
+                {
+                    if (string.IsNullOrEmpty(error))
+                        error += Environment.NewLine;
+
+                    error += "Required : To Date ";
+
+
+                }
+
+                if (!string.IsNullOrEmpty(error))
+                {
+                    response.HasError = true;
+                    response.Message = error;
+
+                }
+                else
+                {
+
+
+                    tillDate = tillDate.ToDate() + new TimeSpan(23, 59, 59);
+
+
+                    string[] hiddenColumns = null;
+
+
+                    hiddenColumns = new string[] {  "Id", "CompanyId","CompanyName","Parking","Destination","Waiting","ExtraDrop","MeetAndGreet","Congtion",
+                                                "Total","OrderNo","PupilNo","BookingDate","Description","Fare","AccountType","PaymentTypeId","BookingStatusId","BookingFee","WaitingTime"};
+
+
+
+                    bool IsDepartmentWise = Convert.ToBoolean(obj.DepartmentWise).ToString() == null ? false : Convert.ToBoolean(obj.DepartmentWise); //chkDepartmentWise.Checked;
+
+
+                    string orderNo = obj.OrderNo == null ? "" : obj.invoice.OrderNo;
+
+                    Func<Booking, bool> _conditionDate = null;
+                    _conditionDate = b => b.PickupDateTime.Value.Date >= fromDate && b.PickupDateTime.Value.Date <= tillDate;
+                    Expression<Func<Booking, bool>> expPickBooking = null;
+                    expPickBooking = c => (c.CustomerId == customerId
+                                        && (((PaymentTypeIndex == 2) && (c.PaymentTypeId == Enums.PAYMENT_TYPES.CASH || c.PaymentTypeId == Enums.PAYMENT_TYPES.CREDIT_CARD))
+                      || (PaymentTypeIndex == 0 && (c.PaymentTypeId == Enums.PAYMENT_TYPES.CASH))
+                      || (PaymentTypeIndex == 1 && (c.PaymentTypeId == Enums.PAYMENT_TYPES.CREDIT_CARD)))
+                      && (c.BookingStatusId == Enums.BOOKINGSTATUS.DISPATCHED));
+
+
+                    List<BookingLister> list = ShowCustomerInvoiceBookingMultiLister(expPickBooking, c => c.InvoiceId != 0, hiddenColumns, _conditionDate);
+
+                    response.Data = new
+                    {
+                        Bookingdata = list.ToList(),
+                    };
+
+
+                    try
+                    {
+                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\PickingInvoiceRecord_response.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(list) + Environment.NewLine);
+
+                    }
+                    catch
+                    {
+
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
         [System.Web.Http.Route("GetAccountInvoiceHistory")]//AdminApi obj
         public JsonResult GetAccountInvoiceHistory(AccountInvoicehistory obj)
         {
@@ -21774,6 +21897,449 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
             return Json(response, JsonRequestBehavior.AllowGet);
         }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetBookingReceiptDeposit")]
+        public JsonResult GetBookingReceiptDeposit(WebApiClasses.RequestWebApi obj)
+        {
+
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingReceiptDeposit.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+
+                }
+                catch
+                {
+
+                }
+
+                List<Vu_BookingDetail> cls = new List<Vu_BookingDetail>();
+                Gen_SubCompany objSubCompany = new Gen_SubCompany();
+
+                string bookingNo = obj.bookingInfo.BookingNo.ToStr().Trim();
+
+                if (bookingNo.ToStr().Trim().Length > 0)
+                {
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        decimal SurchargeAmount = 0.00m;
+                        string cardNumber = string.Empty;
+
+
+                        var list = db.ExecuteQuery<Vu_BookingDetail>("select * from Vu_BookingDetailsDeposit where Id =" + obj.JobId).ToList();
+
+                        //var list = db.Vu_BookingDetails.Where(c => c.Id == obj.JobId || c.MasterJobId == obj.JobId).ToList();
+
+                        cls = list;
+
+                        if (list != null && list[0].AuthCode.ToStr().Trim().Length > 0 &&
+                           (list[0].PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.CREDIT_CARD || list[0].PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.BANK_ACCOUNT || list[0].PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.CREDIT_CARD_PAID))
+                        {
+                            Booking_Payment objPayment = General.GetObject<Booking_Payment>(c => c.BookingId == list[0].Id).DefaultIfEmpty();
+
+                            if (objPayment != null)
+                            {
+
+                                SurchargeAmount = objPayment.SurchargeAmount.ToDecimal();
+                                cls[0].SurchargeAmount = SurchargeAmount.ToStr();
+
+                                if (objPayment.CardNumber.ToStr().Length >= 16)
+                                    cardNumber = "**************" + objPayment.CardNumber.Substring(14).ToStr();
+
+                                cls[0].CardNumber = cardNumber;
+
+                            }
+
+                        }
+
+                        string criteria = obj.bookingInfo.ViaString;
+                        if (list != null)
+                        {
+                            if (list[0].CompanyId.ToInt() == 0 && criteria == "Customer")
+                            {
+                                criteria = "Driver";
+                            }
+
+                            cls[0].NotesString = criteria;
+                            db.DeferredLoadingEnabled = false;
+                            objSubCompany = db.Gen_SubCompanies.FirstOrDefault(c => c.Id == list[0].SubCompanyId);
+                            objSubCompany.CompanyLogo = null;
+                        }
+
+
+
+                        response.Data = new { bookingReceipt = cls, ObjSubCompany = objSubCompany }; //new { cls, objSubCompany };
+
+
+                    }
+
+
+                }
+                else
+                {
+                    response.HasError = true;
+                    response.Message = "Required : Booking Ref";
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    response.HasError = true;
+                    response.Message = ex.Message;
+
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingReceiptDeposit_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+                }
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+            //return new CustomJsonResult { Data = response };
+
+        }
+
+        #region promotion work
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetPromotionCustomerListData")]
+        public JsonResult GetPromotionCustomerListData(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var query = "SELECT Distinct Id, Name, MobileNo, Email  FROM Customer WHERE  Len(MobileNo) > 10   and LoginPassword is not Null and LoginPassword <> '' and (SubCompanyId = '" + obj.SubCompanyId + "'  or SubCompanyId is NULL) ";
+                    var listCustomer = db.ExecuteQuery<Customer>(query).ToList();
+                    var list1 = db.ExecuteQuery<PromotonCustomer>(@"SELECT
+                        CASE WHEN c.Id IS NOT NULL THEN c.Id ELSE 0 END AS RecordId,
+                        p.Id AS CustomerId,
+                        p.Name,
+                        p.MobileNo,
+                        p.Email
+                        FROM
+                        Customer p
+                        LEFT OUTER JOIN
+                        BookingPromotion c ON p.Id = c.CustomerId
+                        AND c.PromotionId = ''
+                        AND c.SubCompanyId = '" + obj.SubCompanyId + "'").ToList();
+                    response.Data = new
+                    {
+                        CustomerList = Newtonsoft.Json.JsonConvert.SerializeObject(list1),
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            var jsonResult = Json(response, JsonRequestBehavior.AllowGet);
+            jsonResult.MaxJsonLength = int.MaxValue;
+            return jsonResult;
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetPromotionsDropdownData")]
+        public JsonResult GetPromotionsDropdownData(AdminApi obj)
+        {
+            //
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var PromotionType = db.ExecuteQuery<Promotion_Type>("select * from Promotion_Type").ToList();
+                    var DiscountType = db.ExecuteQuery<Discount_Type>("select * from DiscountType").ToList();
+                    var SubCompanyList = db.Gen_SubCompanies.Select(n => new { Id = n.Id, CompanyName = n.CompanyName }).ToList();
+                    response.Data = new
+                    {
+                        PromotionType = Newtonsoft.Json.JsonConvert.SerializeObject(PromotionType),
+                        DiscountType = Newtonsoft.Json.JsonConvert.SerializeObject(DiscountType),
+                        SubCompanyList = Newtonsoft.Json.JsonConvert.SerializeObject(SubCompanyList),
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            var jsonResult = Json(response, JsonRequestBehavior.AllowGet);
+            jsonResult.MaxJsonLength = int.MaxValue;
+            return jsonResult;
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SavePromotionData")]
+        public JsonResult SavePromotionData(Promotion obj)
+        {
+            //
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    //db.ExecuteQuery<int>("update BookingPromotion set promotionid = null where PromotionCode='rrr'");
+                    var Overlapquery = @"IF EXISTS (
+                            SELECT 1
+                            FROM Promotion
+                            WHERE ('" + obj.PromotionStartDateTime + @"' <= PromotionEndDateTime)
+                            AND ('" + obj.PromotionEndDateTime + @"' >= PromotionStartDateTime)
+                            )
+                            BEGIN
+                            SELECT 1 as Overlap;
+                            END
+                            ELSE
+                            BEGIN
+                            SELECT 0 as Overlap;;
+                            END";
+                    var overlap = db.ExecuteQuery<int>(Overlapquery).FirstOrDefault();
+                    if (obj.Id == 0)
+                    {
+                        if (Convert.ToInt32(overlap) == 0)
+                        {
+                            var query = @"INSERT INTO Promotion (PromotionCode, PromotionTitle, PromotionMessage, PromotionStartDateTime, PromotionEndDateTime, PromotionTypeID, Charges, IsActive, CreatedDateTime, CreatedBy, ModifyedDateTime, ModifyedBy, CustomerId, Totaljourney, IsAllCustomer, NoOfUses, NoofCustomer, DiscountTypeId, Value, FromDate, ToDate, IsPeriod, MinimumFare, MaximumDiscount, SubCompanyId, IsDiscountToDriver)
+               VALUES ('" + obj.PromotionCode + "', '" + obj.PromotionTitle + "', '" + obj.PromotionMessage + "', '" + obj.PromotionStartDateTime + "', '" + obj.PromotionEndDateTime + "', " + obj.PromotionTypeID + ", " + obj.Charges + ", '" + obj.IsActive + "', '" + obj.CreatedDateTime + "', '" + obj.CreatedBy + "', '" + obj.ModifyedDateTime + "', '" + obj.ModifyedBy + "', '" + obj.CustomerId + "', " + obj.Totaljourney + ", '" + obj.IsAllCustomer + "', " + obj.NoOfUses + ", " + obj.NoofCustomer + ", " + obj.DiscountTypeId + "," + obj.Value + ",'" + obj.FromDate + "', '" + obj.ToDate + "', '" + obj.IsPeriod + "', " + obj.MinimumFare + ", " + obj.MaximumDiscount + ", " + obj.SubCompanyId + ", '" + obj.IsDiscountToDriver + "')";
+                            db.ExecuteQuery<int>(query);
+                        }
+                        else
+                        {
+                            response.Message = "Overlap";
+                        }
+                    }
+                    else
+                    {
+                        var query = @"
+                UPDATE Promotion
+                SET
+                PromotionTitle = '" + obj.PromotionTitle + @"',
+                PromotionMessage = '" + obj.PromotionMessage + @"',
+                PromotionStartDateTime = '" + obj.PromotionStartDateTime + @"',
+                PromotionEndDateTime = '" + obj.PromotionEndDateTime + @"',
+                PromotionTypeID = " + obj.PromotionTypeID + @",
+                Charges = " + obj.Charges + @",
+                IsActive = '" + obj.IsActive + @"',
+                CreatedDateTime = '" + obj.CreatedDateTime + @"',
+                CreatedBy = '" + obj.CreatedBy + @"',
+                ModifyedDateTime = '" + obj.ModifyedDateTime + @"',
+                ModifyedBy = '" + obj.ModifyedBy + @"',
+                CustomerId = '" + obj.CustomerId + @"',
+                Totaljourney = " + obj.Totaljourney + @",
+                IsAllCustomer = '" + obj.IsAllCustomer + @"',
+                NoOfUses = " + obj.NoOfUses + @",
+                NoofCustomer = " + obj.NoofCustomer + @",
+                DiscountTypeId = " + obj.DiscountTypeId + @",
+                Value = " + obj.Value + @",
+                FromDate = '" + obj.FromDate + @"',
+                ToDate = '" + obj.ToDate + @"',
+                IsPeriod = '" + obj.IsPeriod + @"',
+                MinimumFare = " + obj.MinimumFare + @",
+                MaximumDiscount = " + obj.MaximumDiscount + @",
+                SubCompanyId = " + obj.SubCompanyId + @",
+                IsDiscountToDriver = '" + obj.IsDiscountToDriver + @"'
+                WHERE
+                Id = '" + obj.Id + @"'";
+                        db.ExecuteQuery<int>(query);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetPromotionData")]
+        public JsonResult GetPromotionData(Promotion obj)
+        {
+            //
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    //db.ExecuteQuery<int>("update BookingPromotion set promotionid = null where PromotionCode='rrr'");
+                    var PromotionList = db.ExecuteQuery<Promotion>("select * from Promotion").ToList();
+                    response.Data = new
+                    {
+                        PromotionList = Newtonsoft.Json.JsonConvert.SerializeObject(PromotionList),
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("DeletePromotionData")]
+        public JsonResult DeletePromotionData(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    if (obj.Id > 0)
+                    {
+                        db.ExecuteQuery<int>(@"delete from Promotion  WHERE Id ={0}", obj.Id);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\DeletePromotion.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetPromoCodeDropDownData")]
+        public JsonResult GetPromoCodeDropDownData()
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+                    var query = db.ExecuteQuery<PromotionReport>("SELECT Id, PromotionCode FROM Promotion").OrderBy(item => item.PromotionCode, new NaturalSortComparer<string>()).ToList();
+
+                    response.Data = query;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetBookingPromotionReportPrint")]
+        public JsonResult GetBookingPromotionReportPrint(AdminApi obj)
+        {
+            string templateName = null;
+            //
+            try
+            {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetBookingPromotionReportPrint.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+            }
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                if (templateName == null)
+                    templateName = General.GetObject<UM_Form_Template>(c => c.UM_Form.FormName == "rptfrmBookingPromotion" && c.IsDefault == true).DefaultIfEmpty().TemplateName.ToStr();
+
+                int cnt = 0;
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+                    DateTime FromDate = DateTime.Now.ToDate();
+                    DateTime TillDate = DateTime.Now.ToDate();
+                    FromDate = obj.Fromdate.Value.ToDate() + TimeSpan.Parse(obj.FromTimestr);
+                    TillDate = obj.Todate.Value.ToDate() + TimeSpan.Parse(obj.ToTimestr);
+                    string promotionCode = obj.RowValue;
+                    var list = db.ExecuteQuery<stp_BookingPromotionReports>("exec stp_BookingPromotionReports {0},{1},{2}", obj.Fromdate, obj.Todate, promotionCode).ToList();
+
+                    cnt = list.Count;
+
+                    response.Data = new { list2 = list, cnt = cnt, template = templateName.ToStr().ToLower().Trim() };
+                    response.Message = "Success";
+
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetBookingPromotionReportPrint.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+                }
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return new CustomJsonResult { Data = response };
+        }
+        #endregion
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetEmailData")]
+        public JsonResult GetEmailData(AdminApi obj)
+        {
+            try
+            {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetEmailData.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+            }
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    db.DeferredLoadingEnabled = false;
+                    var query = from subCompany in db.Gen_SubCompanies
+                                join booking in db.Bookings on subCompany.Id equals booking.SubcompanyId into bookingGroup
+                                from bookingItem in bookingGroup.DefaultIfEmpty()
+                                join fDriver in db.Fleet_Drivers on bookingItem.DriverId equals fDriver.Id
+                                where bookingItem != null && bookingItem.Id == obj.Id
+                                select new
+                                {
+                                    SubCompany = subCompany,
+                                    Email = fDriver.Email
+                                };
+                    response.Data = query.FirstOrDefault();
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetEmailData.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+                }
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
         #region KonnectPay 
 
         [System.Web.Http.HttpGet]
@@ -24201,5 +24767,403 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
             }
         }
+
+        #region customer/cash Invoice
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetCashInvoiceList")]
+        public JsonResult GetCashInvoiceList(AdminApi Obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var query = from a in General.GetQueryable<Invoice>(c => c.InvoiceTypeId == Enums.INVOICE_TYPE.CUSTOMER)
+                                select new
+                                {
+                                    Id = a.Id,
+                                    InvoiceNo = a.InvoiceNo,
+                                    InvoiceDate = a.InvoiceDate,
+                                    Customer = a.Customer.Name,
+                                    Address = a.Customer.Address1,
+                                    Telephone = a.Customer.TelephoneNo,
+                                    MobileNo = a.Customer.MobileNo,
+                                    InvoiceTotal = a.InvoiceTotal
+                                };
+                    response.Data = new
+                    {
+                        CashInvoiceList = query.OrderByDescending(c => c.InvoiceDate).ToList()
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            var jsonResult = Json(response, JsonRequestBehavior.AllowGet);
+            jsonResult.MaxJsonLength = int.MaxValue;
+            return jsonResult;
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("DeleteCashInvoice")]
+        public JsonResult DeleteCashInvoice(AdminApi Obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    db.ExecuteQuery<int>("delete from invoice where id=" + Obj.InvoiceId.ToInt() + "");
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            var jsonResult = Json(response, JsonRequestBehavior.AllowGet);
+            jsonResult.MaxJsonLength = int.MaxValue;
+            return jsonResult;
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetCashInvoiceCustomersList")]
+        public JsonResult GetCashInvoiceCustomersList(AdminApi Obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                string pageSize = System.Configuration.ConfigurationManager.AppSettings["PageSize"];
+                int TotalCount = 0;
+                int ResultCount = 0;
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var CustomerList = from a in db.GetTable<Customer>()
+                                       orderby a.Name
+                                       select new
+                                       {
+                                           Id = a.Id,
+                                           Name = a.Name,
+                                           Phone = a.TelephoneNo,
+                                           MobileNo = a.MobileNo,
+                                           Email = a.Email,
+                                           Address = a.DoorNo != null && a.DoorNo != string.Empty ? a.DoorNo + " - " + a.Address1 : a.Address1,
+                                           Doorno = a.DoorNo,
+                                           BlackList = a.BlackList,
+                                           DisableIVR = a.AccountNo,
+                                           ExcludedDriverIds = a.ExcludedDriverIds,
+                                           LikesAndDislikes = a.LikesAndDislikes,
+                                           Address1 = a.Address1,
+                                           PostCode = a.PostCode,
+                                           TelephoneNo = a.TelephoneNo,
+                                           DateOfBirth = a.DateOfBirth,
+                                           CompanyName = a.CompanyName,
+                                           FirstName = a.FirstName,
+                                           LastName = a.LastName,
+                                           Address2 = a.Address2,
+                                           AccountNo = a.AccountNo,
+                                           DoorNo = a.DoorNo,
+                                           BlackListResion = a.BlackListResion,
+                                           TotalCalls = a.TotalCalls,
+                                           CompanyId = a.CompanyId
+                                       };
+
+                    TotalCount = CustomerList.Count();
+                    if (!string.IsNullOrEmpty(Obj.searchTerm))
+                    {
+                        CustomerList = CustomerList.Where(item =>
+                            item.Name.Contains(Obj.searchTerm) ||
+                            item.MobileNo.Contains(Obj.searchTerm) ||
+                            item.Address.Contains(Obj.searchTerm) ||
+                            item.Email.Contains(Obj.searchTerm)
+                        );
+                    }
+                    var results = CustomerList.Skip((Obj.pageNumber - 1) * Convert.ToInt32(pageSize))
+                   .Take(Convert.ToInt32(pageSize))
+                   .ToList();
+                    if (!string.IsNullOrEmpty(Obj.searchTerm))
+                    {
+                        ResultCount = CustomerList.Count();
+                    }
+                    else
+                    {
+                        ResultCount = TotalCount;
+                    }
+                    response.Data = new
+                    {
+                        CustomerList = results.ToList(),
+                        TotalCount = ResultCount,
+                        ResultCount = pageSize
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            var jsonResult = Json(response, JsonRequestBehavior.AllowGet);
+
+            jsonResult.MaxJsonLength = int.MaxValue;
+
+            return jsonResult;
+
+        }
+
+        public InvoiceBO objMasterCust = new InvoiceBO();
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SaveCustomerInvoiceRecord")]
+        public JsonResult SaveCustomerInvoiceRecord(AdminApi obj)
+        {
+
+            try
+            {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveInvoiceRecord.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + obj.invoice.SubCompanyId + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+                    if (obj.invoice.InvoiceNo == string.Empty)
+                    {
+                        response.HasError = true;
+                        response.Message = "Required : Invoice No";
+                        return Json(response, JsonRequestBehavior.AllowGet);
+
+                    }
+                    int customerId = obj.invoice.CustomerId.ToInt();
+                    if (customerId <= 0)
+                    {
+                        response.HasError = true;
+                        response.Message = "Required : Customer";
+                        return Json(response, JsonRequestBehavior.AllowGet);
+                    }
+                    if (obj.invoice.Id == 0)
+                    {
+                        objMasterCust.New();
+                        objMasterCust.Current.InvoicePaymentTypeID = 1;
+                        objMasterCust.Current.AddOn = DateTime.Now;
+                    }
+                    else
+                    {
+                        objMasterCust.GetByPrimaryKey(obj.invoice.Id);
+                        objMasterCust.Edit();
+                        objMasterCust.Current.EditOn = DateTime.Now;
+                    }
+
+                    objMasterCust.Current.BookingTypeId = Enums.BOOKING_TYPES.LOCAL;
+                    objMasterCust.Current.InvoiceDate = Convert.ToDateTime(obj.invoice.InvoiceDate);
+                    objMasterCust.Current.CustomerId = customerId;
+                    //objMasterCust.Current.DueDate = Convert.ToDateTime(obj.invoice.DueDate);
+                    objMasterCust.Current.Remarks = obj.invoice.Remarks;
+
+                    try
+                    {
+                        if (obj.invoice.DueDate == null)
+                        {
+                            objMasterCust.Current.DueDate = obj.invoice.InvoiceDate.Value.AddDays(30).ToDate();
+                        }
+                        else
+                        {
+                            objMasterCust.Current.DueDate = obj.invoice.DueDate.ToDate();
+
+                        }
+                        if (obj.invoice.FromDate != null)
+                        {
+
+                            objMasterCust.Current.FromDate = obj.invoice.FromDate.ToDate();
+                        }
+                        if (obj.invoice.TillDate != null)
+                        {
+
+                            objMasterCust.Current.TillDate = obj.invoice.TillDate.ToDate();
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+
+                    objMasterCust.Current.InvoiceNo = obj.invoice.InvoiceNo;
+                    objMasterCust.Current.InvoiceTypeId = Enums.INVOICE_TYPE.CUSTOMER;
+                    objMasterCust.Current.InvoiceTotal = obj.invoice.InvoiceTotal;
+
+                    if (obj.invoice.SubCompanyId == null)
+                        obj.invoice.SubCompanyId = 1;
+
+                    objMasterCust.Current.SubCompanyId = Convert.ToInt32(obj.invoice.SubCompanyId);
+                    string[] skipProperties = { "Invoice", "Booking" };
+                    IList<Invoice_Charge> savedList = objMasterCust.Current.Invoice_Charges;
+                    List<Invoice_Charge> listofDetail = (from r in obj.invoice.Invoice_Charges
+
+                                                         select new Invoice_Charge
+                                                         {
+                                                             Id = r.Id,
+                                                             InvoiceId = r.InvoiceId,
+                                                             BookingId = r.BookingId.ToLongorNull()
+                                                         }).ToList();
+
+                    Utils.General.SyncChildCollection(ref savedList, ref listofDetail, "Id", skipProperties);
+
+                    objMasterCust.Save();
+
+                    objMasterCust.GetByPrimaryKey(objMasterCust.PrimaryKeyValue);
+                    response.Data = "";
+                    response.Message = "Invoice Created Successfully";
+                }
+            }
+
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                if (objMasterCust.Errors.Count > 0)
+                {
+                    response.Message = objMasterCust.ShowErrors();
+                }
+                else
+                {
+                    response.Message = ex.Message;
+                }
+            }
+
+
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("EditCustomerInvoiceHistory")]
+        public JsonResult EditCustomerInvoiceHistory(AccountInvoicehistory obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            List<stp_GetInvoiceBookingsResultEx> list = null;
+            try
+            {
+                var InvoiceId = Convert.ToInt32(obj.InvoiceId);
+                objMaster.GetByPrimaryKey(InvoiceId);
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    list = db.ExecuteQuery<stp_GetInvoiceBookingsResultEx>("exec stp_GetCustomerInvoiceBookings {0}", objMaster.Current.Id).ToList();
+
+                    response.Data = new
+                    {
+                        EditCashInvoiceHistory = list.ToList(),
+                    };
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetCustomerInvoiceMail")]
+        public JsonResult GetCustomerInvoiceMail(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var Company = db.Gen_Companies.ToList();
+                    var subCompany = db.Gen_SubCompanies.ToList();
+                    var list = (from c in Company
+                                join sc in subCompany on c.SubCompanyId equals sc.Id
+                                where c.Id == obj.CompanyId
+                                select new
+                                {
+                                    FromMail = c.Email,
+                                    ToMail = sc.EmailAddress
+                                }).ToList();
+                    response.Data = new
+                    {
+                        Getemail = list.ToList()
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        private List<BookingLister> ShowCustomerInvoiceBookingMultiLister(Expression<Func<Booking, bool>> _condition, Expression<Func<Invoice_Charge, bool>> _invoiceCondition, string[] hiddenColumns, Func<Booking, bool> _condition2)
+        {
+            List<BookingLister> listofObjects = new List<BookingLister>();
+            using (TaxiDataContext db = new TaxiDataContext())
+            {
+                var list1 = db.GetTable<Booking>().Where(_condition).Where(_condition2).AsEnumerable();
+                var list2 = db.GetTable<Invoice_Charge>().Where(_invoiceCondition);
+
+                var list = (from b in list1
+                            join c in list2 on b.Id equals c.BookingId into table2
+                            join v in db.Fleet_VehicleTypes on b.VehicleTypeId equals v.Id
+                            join p in db.Gen_PaymentTypes on b.PaymentTypeId equals p.Id
+                            from c in table2.DefaultIfEmpty()
+                            where (c == null)
+                            select new BookingLister
+                            {
+                                Id = b.Id,
+                                BookingDate = b.BookingDate,
+                                PickupDate = b.PickupDateTime,
+                                RefNo = b.BookingNo,
+                                Vehicle = v.VehicleType,
+                                OrderNo = b.OrderNo,
+                                PupilNo = b.PupilNo,
+                                Passenger = b.CustomerName,
+                                PickupPoint = b.FromAddress,
+                                Destination = b.ToAddress,
+                                Charges = b.FareRate,
+                                Fare = b.FareRate,
+                                CompanyId = b.CompanyId,
+                                CompanyName = "",
+                                Parking = b.ParkingCharges,
+                                Waiting = b.WaitingCharges,
+                                ExtraDrop = b.ExtraDropCharges,
+                                MeetAndGreet = b.MeetAndGreetCharges,
+                                Congtion = b.CongtionCharges,
+                                Description = "",
+                                Total = b.TotalCharges,
+                                BookedBy = b.BookedBy,
+                                AccountType = 0,
+                                PaymentTypeId = b.PaymentTypeId,
+                                BookingStatusId = b.BookingStatusId,
+                                PaymentType = p.PaymentType,
+                                BookingFee = b.ServiceCharges.ToDecimal(),
+                                WaitingTime = b.DriverWaitingMins,
+                                ViaString = b.ViaString,
+                                EscortPrice = b.EscortPrice,
+                                Status = b.BookingStatus.StatusName,
+                            }).OrderBy(c => c.PickupDate).ToList();
+
+                listofObjects = list;
+            }
+            return listofObjects;
+
+        }
+        #endregion
     }
 }
