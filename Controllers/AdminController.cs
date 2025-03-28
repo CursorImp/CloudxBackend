@@ -25165,5 +25165,47 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
         }
         #endregion
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendMessageToCustomer")]
+        public JsonResult SendMessageToCustomer(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                string msg = obj.Message;
+                string mobileno = obj.MobileNo;
+                if (string.IsNullOrEmpty(msg))
+                {
+                    response.HasError = true;
+                    response.Message = "Please enter message.";
+                }
+                else if (string.IsNullOrEmpty(mobileno))
+                {
+                    response.HasError = true;
+                    response.Message = "Please select Customer(s) to sent message.";
+                }
+                else
+                {
+                    var phoneNumbers = obj.MobileNo.Split(',');
+                    foreach (var phoneNumber in phoneNumbers)
+                    {
+                        string trimmedPhoneNumber = phoneNumber.Trim();
+                        if (!string.IsNullOrEmpty(trimmedPhoneNumber))
+                        {
+                            General.AddSMS(trimmedPhoneNumber, $"request pda=0=0=Message>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}", 1);
+                        }
+                    }
+                    response.Data = "Messages Sent Successfully";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
     }
 }
