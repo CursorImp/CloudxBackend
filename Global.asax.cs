@@ -1262,7 +1262,7 @@ namespace SignalRHub
 
                 if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["EnablaDriverDocuments"]))
                 {
-                    customerOfficeNumber = ConfigurationManager.AppSettings["EnablaDriverDocuments"].ToStr();
+                    EnablaDriverDocuments = ConfigurationManager.AppSettings["EnablaDriverDocuments"].ToStr();
 
                 }
 
@@ -1270,7 +1270,7 @@ namespace SignalRHub
 
                 if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["EnableViaAction"]))
                 {
-                    customerOfficeNumber = ConfigurationManager.AppSettings["EnableViaAction"].ToStr();
+                    EnableViaAction = ConfigurationManager.AppSettings["EnableViaAction"].ToStr();
 
                 }
 
