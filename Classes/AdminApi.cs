@@ -8,6 +8,77 @@ using Taxi_Model;
 
 namespace SignalRHub.Classes
 {
+    #region TWILLIO SMS
+    public class TwilioSMSRequestDto
+    {
+        public string sid { get; set; }
+        public string token { get; set; }
+        public string from { get; set; }
+        public string to { get; set; }
+        public string message { get; set; }
+        public string companyName { get; set; }
+        public string other { get; set; }
+        public string createdOn { get; set; }
+    }
+    public class TwilioSMSResponse
+    {
+        public bool isSuccssfull { get; set; }
+        public string msgSid { get; set; }
+        public Status status { get; set; }
+        public string error { get; set; }
+    }
+    public class TwilioGetSMSResponse
+    {
+        public bool isSuccssfull { get; set; }
+        public string msgSid { get; set; }
+        public string status { get; set; }
+        public string error { get; set; }
+    }
+    public class Status
+    {
+    }
+    public class GetSendTwilioSMS
+    {
+        public string sid { get; set; }
+        public string token { get; set; }
+        public string MSId { get; set; }
+    }
+    public class TwillioSMS
+    {
+
+        public string AccountSID { get; set; }
+        public string AuthToken { get; set; }
+        public string PhoneNumber { get; set; }
+    }
+
+    #endregion
+    #region Pending Driver document
+    public class GetPendingDocumentRequestModel
+    {
+        public long Id { get; set; }
+        public int DriverId { get; set; }
+        public string DriverName { get; set; }
+        public DateTime? ExpiryDate { get; set; }
+        public string ExpiryDateString { get; set; }
+        public int DocumentId { get; set; }
+        public string DocumentName { get; set; }
+        public string FileName { get; set; }
+        public string FilePath { get; set; }
+        public string BadgeNumber { get; set; }
+        public string Status { get; set; }
+
+    }
+    public class PendingDocumentRequestModel
+    {
+        public int Id { get; set; }
+        public string Status { get; set; }
+
+    }
+    public class UpdatePendingDocumentModel
+    {
+        public List<PendingDocumentRequestModel> Documents { get; set; }
+    }
+    #endregion
     #region Shuttle
     public class GroupJob_Order
     {

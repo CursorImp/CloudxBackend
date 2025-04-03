@@ -25310,5 +25310,68 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             return new CustomJsonResult { Data = response };
         }
+
+        #region Pending Driver document
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetPendingDocuments")]
+        public JsonResult GetPendingDocuments(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var data = new List<GetPendingDocumentRequestModel>();
+
+                    data = db.ExecuteQuery<GetPendingDocumentRequestModel>("exec SP_GetPendingDriverDocumentList_Query " + obj.DriverId.ToInt().ToStr()).ToList();
+
+                    var DocuemntList = data.GroupBy(x => x.DriverId).Select(x => new
+                    {
+                        DriverId = x.Key,
+                        DriverName = x.FirstOrDefault()?.DriverName,
+                        Documents = x.ToList()
+                    });
+
+                    response.Data = DocuemntList;
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("UpdatePendingDocument")]
+        public JsonResult UpdatePendingDocument(UpdatePendingDocumentModel req)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    foreach (var row in req.Documents)
+                    {
+                        var query = $"exec SP_UpdatePendingDocument_Query {row.Id.ToInt().ToStr()},'{row.Status.ToStr()}'";
+                        db.ExecuteQuery<int>(query);
+                    }
+                }
+                response.HasError = false;
+                response.Data = "success";
+                response.Data = "success";
+            }
+            catch (Exception e)
+            {
+                response.HasError = true;
+                response.Data = "failure";
+                response.Message = e.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        #endregion
     }
 }
