@@ -1234,7 +1234,7 @@ namespace SignalRHub
 
                 if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["EnableWaitingAfterArrive"]))
                 {
-                    customerOfficeNumber = ConfigurationManager.AppSettings["EnableWaitingAfterArrive"].ToStr();
+                    EnableWaitingAfterArrive = ConfigurationManager.AppSettings["EnableWaitingAfterArrive"].ToStr();
 
                 }
 
