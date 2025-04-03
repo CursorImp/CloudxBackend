@@ -19,6 +19,7 @@ namespace SignalRHub
         public decimal? AutoStartWaitingBelowSpeed;
         public int? NoofPassengers;
         public bool? HasMeter;
+        public decimal? FreeWaitingSeconds;
     }
 
     public class MeterTarrif

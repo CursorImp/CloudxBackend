@@ -13129,7 +13129,8 @@ namespace SignalRHub
                                         FullRoundFares = HubProcessor.Instance.objPolicy.RoundMileageFares.ToBool() ? 1 : 0,
                                         RoundUpTo = HubProcessor.Instance.objPolicy.RoundUpTo.ToDecimal(),
                                         WaitingSecondsToDivide = obj.AccWaitingChargesPerMin.ToInt(),
-                                        RoundJourneyMiles = roundJourneyMile
+                                        RoundJourneyMiles = roundJourneyMile,
+                                        FreeWaitingMins = obj.FreeWaitingSeconds.ToInt()
                                     });
 
                                 }
@@ -13155,8 +13156,8 @@ namespace SignalRHub
                                         FullRoundFares = HubProcessor.Instance.objPolicy.RoundMileageFares.ToBool() ? 1 : 0,
                                         RoundUpTo = HubProcessor.Instance.objPolicy.RoundUpTo.ToDecimal(),
                                         WaitingSecondsToDivide = obj.AccWaitingChargesPerMin.ToInt(),
-                                        RoundJourneyMiles = roundJourneyMile
-
+                                        RoundJourneyMiles = roundJourneyMile,
+                                        FreeWaitingMins = obj.FreeWaitingSeconds.ToInt()
                                     });
                                 }
 
@@ -16082,7 +16083,8 @@ namespace SignalRHub
                                                 FullRoundFares = HubProcessor.Instance.objPolicy.RoundMileageFares.ToBool() ? 1 : 0,
                                                 RoundUpTo = HubProcessor.Instance.objPolicy.RoundUpTo.ToDecimal(),
                                                 WaitingSecondsToDivide = obj.AccWaitingChargesPerMin.ToInt(),
-                                                RoundJourneyMiles = roundJourneyMile
+                                                RoundJourneyMiles = roundJourneyMile,
+                                                FreeWaitingMins = obj.FreeWaitingSeconds.ToInt()
                                             });
 
                                         }
@@ -16108,7 +16110,8 @@ namespace SignalRHub
                                                 FullRoundFares = HubProcessor.Instance.objPolicy.RoundMileageFares.ToBool() ? 1 : 0,
                                                 RoundUpTo = HubProcessor.Instance.objPolicy.RoundUpTo.ToDecimal(),
                                                 WaitingSecondsToDivide = obj.AccWaitingChargesPerMin.ToInt(),
-                                                RoundJourneyMiles = roundJourneyMile
+                                                RoundJourneyMiles = roundJourneyMile,
+                                                FreeWaitingMins = obj.FreeWaitingSeconds.ToInt()
                                             });
                                         }
 

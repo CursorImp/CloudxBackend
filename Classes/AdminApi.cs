@@ -893,6 +893,7 @@ namespace SignalRHub.Classes
         public decimal AutoStopWaitingOnSpeed { get; set; }
         public decimal DrvWaitingChargesPerMin { get; set; }
         public decimal AccWaitingChargesPerMin { get; set; }
+        public decimal FreeWaitingSeconds { get; set; }
     }
     public class CreateAllDriverCommissionRequest
     {

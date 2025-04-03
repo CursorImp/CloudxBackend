@@ -515,6 +515,14 @@ namespace SignalRHub.Controllers
                 sysPolicyBO.Current.Gen_SysPolicy_Configurations[0].PDANewWeekMessageByDay = jsonParameterValue.ToStr();
                 sysPolicyBO.Save();
 
+                foreach (var item in obj.FareMeterSettings)
+                {
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        db.ExecuteQuery<int>("update Gen_SysPolicy_FareMeterSettings set FreeWaitingSeconds=" + item.FreeWaitingSeconds + "where Id =" + item.Id);
+                    }
+                }
+
                 Global.ReloadMeterList();
 
                 //
@@ -19009,21 +19017,22 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                         VehicleTypeId = a.Id,
                                         VehicleType = a.VehicleType
                                     }).ToList();
-                var MeterSetting = (from a in General.GetQueryable<Gen_SysPolicy_FareMeterSetting>(c => c.SysPolicyId != null)
-                                    select new
-                                    {
-                                        Id = a.Id,
-                                        SysPolicyId = a.SysPolicyId,
-                                        VehicleTypeId = a.VehicleTypeId,
-                                        HasMeter = a.HasMeter,
-                                        AutoStartWaiting = a.AutoStartWaiting,
-                                        a.AutoStartWaitingBelowSpeed,
-                                        // a.AutoStartWaitingMinDist,
-                                        a.AutoStartWaitingBelowSpeedSeconds,
-                                        AutoStopWaitingSpeed = a.AutoStopWaitingOnSpeed,
-                                        DrvWaitingCharges = a.DrvWaitingChargesPerMin,
-                                        WaitingTime = a.AccWaitingChargesPerMin
-                                    }).ToList();
+                List<FareMeterSetting> MeterSetting = db.ExecuteQuery<FareMeterSetting>("select * from Gen_SysPolicy_FareMeterSettings where SysPolicyId is not null").ToList();
+                //var MeterSetting = (from a in General.GetQueryable<Gen_SysPolicy_FareMeterSetting>(c => c.SysPolicyId != null)
+                //                    select new
+                //                    {
+                //                        Id = a.Id,
+                //                        SysPolicyId = a.SysPolicyId,
+                //                        VehicleTypeId = a.VehicleTypeId,
+                //                        HasMeter = a.HasMeter,
+                //                        AutoStartWaiting = a.AutoStartWaiting,
+                //                        a.AutoStartWaitingBelowSpeed,
+                //                        // a.AutoStartWaitingMinDist,
+                //                        a.AutoStartWaitingBelowSpeedSeconds,
+                //                        AutoStopWaitingSpeed = a.AutoStopWaitingOnSpeed,
+                //                        DrvWaitingCharges = a.DrvWaitingChargesPerMin,
+                //                        WaitingTime = a.AccWaitingChargesPerMin
+                //                    }).ToList();
 
 
                 var FareMeterSetting = (from a in VehicleTypes
@@ -19039,9 +19048,10 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                             AutoStartWaiting = b != null ? b.AutoStartWaiting : false,
                                             AutoStartWaitingBelowSpeed = b != null ? b.AutoStartWaitingBelowSpeed : 0.00m,
                                             AutoStartWaitingBelowSpeedSeconds = b != null ? b.AutoStartWaitingBelowSpeedSeconds : 0,
-                                            AutoStopWaitingSpeed = b != null ? b.AutoStopWaitingSpeed : 0.00m,
-                                            DrvWaitingCharges = b != null ? b.DrvWaitingCharges : 0.00m,
-                                            WaitingTime = b != null ? b.WaitingTime : 0.00m
+                                            AutoStopWaitingSpeed = b != null ? b.AutoStopWaitingOnSpeed : 0.00m,
+                                            DrvWaitingCharges = b != null ? b.DrvWaitingChargesPerMin : 0.00m,
+                                            WaitingTime = b != null ? b.AccWaitingChargesPerMin : 0.00m,
+                                            FreeWaitingSeconds = b != null ? b.FreeWaitingSeconds : 0.00m
                                         }).ToList();
 
 
