@@ -9047,5 +9047,39 @@ namespace SignalRHub.Controllers
             }
             return new CustomJsonResult { Data = response };
         }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendSMSJobDetails")]
+        public JsonResult SendSMSJobDetails(WebApiClasses.RequestWebApi obj)
+        {
+            try
+            {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendSMSJobDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+            }
+            ResponseWebApi response = new ResponseWebApi();
+            try
+            {
+                HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + obj.smsInfo.MobileNo.Trim() + " = " + obj.smsInfo.Message);
+                response.HasError = false;
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    response.HasError = true;
+                    response.Message = ex.Message;
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendSMSJobDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+                }
+            }
+            //   return Json(response, JsonRequestBehavior.AllowGet);
+            return new CustomJsonResult { Data = response };
+        }
     }
 }
