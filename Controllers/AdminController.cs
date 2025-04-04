@@ -25456,6 +25456,9 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             return Json(response, JsonRequestBehavior.AllowGet);
         }
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetZonesDropDownData")]
         public JsonResult GetZonesDropDownData()
         {
             ResponseAdminApi response = new ResponseAdminApi();
