@@ -1887,6 +1887,27 @@ namespace SignalRHub.Classes
         public bool EnablePeakOffPeakFares { get; set; }
         public int RecentBookingDays { get; set; }
     }
+    public class ClickToCall
+    {
+        public string ClientId { get; set; }
+        public string Token { get; set; }
+
+        public string OriginNumber { get; set; }  // Company Profile number
+
+        public string DestinationNumber { get; set; } //customer number or driver number
+
+        public string Extension { get; set; }
+
+        public string ApiType { get; set; }
+    }
+    public class ClickToCallRequest
+    {
+        public bool IsDriverCall { get; set; }
+        public int DriverId { get; set; }
+
+        public string Extension { get; set; }
+
+    }
     public class callerId
     {
         public bool IsVOIP { get; set; }

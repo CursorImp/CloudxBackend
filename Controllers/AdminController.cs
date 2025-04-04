@@ -13,8 +13,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Mail;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Script.Serialization;
@@ -25373,5 +25375,118 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             return Json(response, JsonRequestBehavior.AllowGet);
         }
         #endregion
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("ClickToCall")]
+        public JsonResult ClickToCall(ClickToCallRequest obj)
+        {
+            try
+            {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\ClickToCall_request.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+            }
+            ResponseAdminApi response = new ResponseAdminApi();
+            string DestinationNumber = string.Empty;
+            try
+            {
+                //CalltoClick lst = obj.GetDetailsforCalltoClick();
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var Company = db.Gen_SubCompanies.FirstOrDefault();
+                    if (obj.IsDriverCall == true)
+                    {
+                        var objDriver = db.Fleet_Drivers.Where(c => c.Id == obj.DriverId).Select(args => new { args.MobileNo }).FirstOrDefault();
+                        DestinationNumber = objDriver.MobileNo.Replace("+", "");
+                    }
+                    else
+                    {
+                        var booking = db.Bookings.Where(c => c.Id == obj.DriverId).Select(arg => new { arg.CustomerMobileNo }).FirstOrDefault();
+                        DestinationNumber = booking.CustomerMobileNo.Replace("+", "");
+                    }
+                    var objdata = db.CallerIdVOIP_Configurations.FirstOrDefault();
+
+                    ClickToCall lst = new ClickToCall()
+                    {
+                        OriginNumber = Company.TelephoneNo,
+                        Token = objdata.UserName + "," + objdata.Password,
+                        DestinationNumber = DestinationNumber,
+                        Extension = obj.Extension
+
+                    };
+
+                    using (var client = new HttpClient())
+                    {
+                        client.BaseAddress = new Uri("https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/");
+                        client.DefaultRequestHeaders.Accept.Clear();
+                        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                        string Data = new JavaScriptSerializer().Serialize(lst);
+                        try
+                        {
+                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\ClickToCall_CallApi.txt", DateTime.Now + ",json: " + "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/ClickToCallEP" + new JavaScriptSerializer().Serialize(lst) + Environment.NewLine);
+                        }
+                        catch
+                        {
+                        }
+                        HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Post, "ClickToCallEP?json=" + Data);
+                        //request.Content = new StringContent(Data, Encoding.UTF8, "application/json");
+                        Task<HttpResponseMessage> response1 = client.SendAsync(request);
+                        var result = response1.Result;
+                        var str = result.Content.ReadAsStringAsync();
+                        response.Data = new
+                        {
+                            Message = str
+                        };
+
+                    }
+                }
+
+                //lst.DestinationNumber = PhNo;
+
+
+
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        public JsonResult GetZonesDropDownData()
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                // Commented out the database fetch
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var query = (from a in db.Gen_Zones.Where(a => a.MaxLatitude != null)
+                                 orderby a.ZoneName
+                                 select new
+                                 {
+                                     Id = a.Id,
+                                     ZoneName = a.ZoneName
+                                 }).ToList();
+                    response.Data = query;
+                }
+                // Hardcoded zones data
+                //        var zones = new[]
+                //        {
+                //    new { Id = 1, ZoneName = "Zone1" },
+                //    new { Id = 2, ZoneName = "Zone2" }
+                //};
+                // response.Data = zones;
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
     }
 }
