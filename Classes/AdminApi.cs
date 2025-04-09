@@ -8,6 +8,29 @@ using Taxi_Model;
 
 namespace SignalRHub.Classes
 {
+    public class FleetDriver_ExpireList
+    {
+        public int Id { get; set; }
+        public string No { get; set; }
+        public string Name { get; set; }
+        public string VehicleNo { get; set; }
+        public string VehicleType { get; set; }
+        public string DrvBadge { get; set; }
+        public string VehBadge { get; set; }
+        public string NI { get; set; }
+        public string MOTExpiry { get; set; }
+        public string MOT2Expiry { get; set; }
+        public string PCOVehicleExpiry { get; set; }
+        public string InsuranceExpiry { get; set; }
+        public string PCODriverExpiry { get; set; }
+        public string LicenseExpiry { get; set; }
+        public string RoadTaxExpiry { get; set; }
+        public string MobileNo { get; set; }
+        public string EndDate { get; set; }
+        public int? DriverTypeId { get; set; }
+
+        public string EndDatestr { get; set; }
+    }
     #region TWILLIO SMS
     public class TwilioSMSRequestDto
     {
