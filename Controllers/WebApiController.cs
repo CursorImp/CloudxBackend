@@ -160,7 +160,10 @@ namespace SignalRHub.Controllers
                                 // ShowMultiDispatchJob = true
                                 ShowMultiBooking,
                                 MultiVehicle=true,
-                                IsBookingPayment = true
+                                IsBookingPayment = true,
+                                EnableNoofHours = false,
+                                EnbaleDriverHourlyCommission = false,
+                                IsCompanyWiseHourlyFare = false
                             };
 
 
@@ -1414,6 +1417,24 @@ namespace SignalRHub.Controllers
                     {
 
                     }
+
+                    Booking_DriverCommsiion booking_DriverCommsiion = new Booking_DriverCommsiion();
+                    try
+                    {
+                        booking_DriverCommsiion = db.ExecuteQuery<Booking_DriverCommsiion>($"Select ISNULL(IsFixedNoOfHours,0) IsFixNoOfHours,ISNULL(IsFixedDriverCommission,0) IsFixedDriverCommission,DriverCommissionTypeId,DriverCommissionValue,DriverHours from Booking WHERE Id={obj.bookingInfo.Id}").FirstOrDefault();
+                        if (booking_DriverCommsiion != null)
+                        {
+                            obj.bookingInfo.IsFixNoOfHours = booking_DriverCommsiion.IsFixNoOfHours.ToBool();
+                            obj.bookingInfo.IsFixedDriverCommission = booking_DriverCommsiion.IsFixedDriverCommission.ToBool();
+                            obj.bookingInfo.DriverCommissionTypeId = booking_DriverCommsiion.DriverCommissionTypeId.ToInt();
+                            obj.bookingInfo.DriverCommissionValue = booking_DriverCommsiion.DriverCommissionValue.ToDecimal();
+                            obj.bookingInfo.DriverHours = booking_DriverCommsiion.DriverHours.ToDecimal();
+                        }
+                    }
+                    catch
+                    {
+                    }
+
                     response.Data = obj.bookingInfo;
 
 
@@ -2054,6 +2075,18 @@ namespace SignalRHub.Controllers
 
                     response.Data = GetBookingJSON(objMaster);
 
+                    try
+                    {
+                        string driverCommissionQuery = $"Update Booking SET DriverCommissionTypeId={obj.bookingInfo.DriverCommissionTypeId}, DriverCommissionValue={obj.bookingInfo.DriverCommissionValue.ToDecimal()}, DriverHours={obj.bookingInfo.DriverHours.ToDecimal()}, IsFixedNoOfHours={(obj.bookingInfo.IsFixNoOfHours.ToBool() ? "1" : "0")}, IsFixedDriverCommission={(obj.bookingInfo.IsFixedDriverCommission.ToBool() ? "1" : "0")} WHERE Id={objMaster.Current.Id}";
+                        db.ExecuteQuery<int>(driverCommissionQuery);
+                        if (objMaster.Current.Id > 0 && objMaster.Current.DriverId > 0)
+                        {
+                            db.ExecuteQuery<int>($"exec sp_calculateDriverCommission {objMaster.Current.Id},{objMaster.Current.DriverId}");
+                        }
+                    }
+                    catch
+                    {
+                    }
 
                     General.MessageToPDA("request broadcast=" + RefreshTypes.REFRESH_REQUIRED_DASHBOARD + "=" + objMaster.Current.Id);
 
@@ -3274,10 +3307,21 @@ namespace SignalRHub.Controllers
 
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-
                     string pickup = obj.routeInfo.pickupAddress.Address.ToStr().ToUpper().Trim();
                     string destination = obj.routeInfo.destinationAddress.Address.ToStr().ToUpper().Trim();
-
+                    if (HubProcessor.Instance.objPolicy.BookingInterval.ToInt() == 1)
+                    {
+                        var hereMapResponse = General.getHeremapJourneyLocationCordinates(pickup, destination);
+                        if (hereMapResponse != null)
+                        {
+                            //pickup
+                            obj.routeInfo.pickupAddress.Latitude = hereMapResponse.pickup?.DisplayPosition?.Latitude;
+                            obj.routeInfo.pickupAddress.Longitude = hereMapResponse.pickup?.DisplayPosition?.Longitude;
+                            //destination
+                            obj.routeInfo.destinationAddress.Latitude = hereMapResponse.dropOff?.DisplayPosition?.Latitude;
+                            obj.routeInfo.destinationAddress.Longitude = hereMapResponse.dropOff?.DisplayPosition?.Longitude;
+                        }
+                    }
 
 
                     if (obj.routeInfo.pickupAddress.Latitude == null)
@@ -3789,8 +3833,13 @@ namespace SignalRHub.Controllers
                     try
                     {
 
-
-
+                        if (HubProcessor.Instance.objPolicy.BookingInterval.ToInt() == 1)
+                        {
+                            var locationList = GetGoogleAndOtherAddressData(obj);
+                            var locationName = locationList.Select(x => x.AddressLine).ToList();
+                            response.Data = locationName;
+                        }
+                        else { 
                         //
                         string postCode = General.GetPostCodeMatchOpt(searchValue);
 
@@ -4149,7 +4198,7 @@ namespace SignalRHub.Controllers
 
 
                         }
-
+                    }
 
                         //
 
@@ -4200,7 +4249,31 @@ namespace SignalRHub.Controllers
         }
 
 
-
+        public List<LocationList> GetGoogleAndOtherAddressData(WebApiClasses.RequestWebApi obj)
+        {
+            ResponseWebApi response = new ResponseWebApi();
+            List<LocationList> str = new List<LocationList>();
+            using (TaxiDataContext db = new TaxiDataContext())
+            {
+                string street = obj.addressInfo.searchText.ToStr();
+                string query = @"select  AddressLine=LTRIM(RTRIM(REPLACE((  LocationName + ' '+REPLACE((REPLACE(Address, ISNULL(postcode,''),'')),LOCATIONNAME,'') + ' '+ISNULL(PostCode,'')),'  ',' ')))
+                                                ,CONVERT(varchar, LocationTypeId) LocationTypeId from Gen_Locations where LocationTypeId !=8 And LocationName like '" + street + "'  +'%'  or Address like '" + street + "'  +'%' ";
+                //response.Data = db.stp_GetByRoadLevelData(postCode, doorNo, street, place).Select(c => c.AddressLine1).Where(c => c != null).ToArray<string>();
+                List<LocationList> lst = db.ExecuteQuery<LocationList>(query).ToList();
+                response.Data = lst;
+            }
+            if (HubProcessor.Instance.objPolicy.BookingInterval.ToInt() == 1)
+            {
+                str = General.GetGoogleAddressData(obj.addressInfo.searchText.ToStr());
+            }
+            List<LocationList> castedList = (List<LocationList>)response.Data;
+            if (castedList == null)
+            {
+                castedList = new List<LocationList>();
+            }
+            castedList.AddRange(str);
+            return castedList;
+        }
 
 
 

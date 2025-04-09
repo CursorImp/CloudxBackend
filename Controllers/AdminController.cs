@@ -1384,7 +1384,16 @@ namespace SignalRHub.Controllers
                                                      }).ToList();
 
 
+                        var grdHTRate = new List<FleetDriverHourlyTariffRate>();
+                        try
+                        {
+                            grdHTRate = db.ExecuteQuery<FleetDriverHourlyTariffRate>("select * from Fleet_Driver_HourlyTariffRate with(nolock) " +
+                        " WHERE IsActive = 0 AND DriverId = " + obj.fleetDriver.Id).ToList();
 
+                        }
+                        catch
+                        {
+                        }
 
 
 
@@ -1405,7 +1414,8 @@ namespace SignalRHub.Controllers
                             grdShift = Newtonsoft.Json.JsonConvert.SerializeObject(grdShift.ToList()),
                             // grdShift = serializer.Serialize(grdShift.ToList()),
                             Syspolicy_DriverDocumentList = Syspolicy_DriverDocumentList,
-                            FleetDriverPDASetting = FleetDriverPDASetting
+                            FleetDriverPDASetting = FleetDriverPDASetting,
+                            grdHTRate = Newtonsoft.Json.JsonConvert.SerializeObject(grdHTRate)
 
                         };
 
@@ -14715,6 +14725,33 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         UploadImage(objdriver.Current.Id, objdriver.Current.DriverNo, objdriver.Current.Fleet_Driver_Images[0].Photo, HubProcessor.Instance.objPolicy.DefaultClientId.ToStr().Replace("/", "").Trim().Replace("*", "").Replace("_", "").Trim() + "_" + objdriver.Current.DriverNo, objdriver.Current.Fleet_Driver_Images[0].PhotoLinkId.ToStr());
 
 
+                    try
+                    {
+                        db.ExecuteQuery<int>($"Update Fleet_Driver SET DriverHourlyRate={obj.DriverHourlyRate.ToDecimal()} WHERE Id={objdriver.Current.Id}");
+                    }
+                    catch
+                    {
+                    }
+
+                    try
+                    {
+                        var Dquery = "Delete FROM Fleet_Driver_hourlyTariffRate WHERE DriverId = " + objdriver.Current.Id;
+                        db.ExecuteQuery<FleetDriverHourlyTariffRate>(Dquery);
+                        if (obj.Fleet_Driver_HourlyTariffRate != null && obj.Fleet_Driver_HourlyTariffRate.Count > 0)
+                        {
+                            foreach (var rate in obj.Fleet_Driver_HourlyTariffRate)
+                            {
+                                var query = "INSERT INTO Fleet_Driver_hourlyTariffRate (DriverId, VehicleTypeId, FromMinute, ToMinute, HTRate, IsActive)" +
+                                    "VALUES(" + objdriver.Current.Id + ", " + rate.VehicleTypeId + ", " + rate.FromMinute + ", " + rate.ToMinute + ", " + rate.HTRate + ", 0);";
+                                db.ExecuteQuery<int>(query).FirstOrDefault();
+                            }
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+
                     response.Data = "";
 
 
@@ -20994,6 +21031,30 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 if (templateName == null)
                     templateName = General.GetObject<UM_Form_Template>(c => c.UM_Form.FormName == "rptfrmDriverEarning" && c.IsDefault == true).DefaultIfEmpty().TemplateName.ToStr();
 
+
+                DateTime FromdatePart = (obj.Fromdate).ToDateTime();
+                DateTime FromtimePart = (obj.FromTime).ToDateTime();
+                // Combine date from datePart and time from timePart
+                DateTime FromDate = new DateTime(
+                    FromdatePart.Year,
+                    FromdatePart.Month,
+                    FromdatePart.Day,
+                    FromtimePart.Hour,
+                    FromtimePart.Minute,
+                    FromtimePart.Second
+                );
+                DateTime TodatePart = (obj.Todate).ToDateTime();
+                DateTime TotimePart = (obj.ToTime).ToDateTime();
+                // Combine date from datePart and time from timePart
+                DateTime ToDate = new DateTime(
+                    TodatePart.Year,
+                    TodatePart.Month,
+                    TodatePart.Day,
+                    TotimePart.Hour,
+                    TotimePart.Minute,
+                    TotimePart.Second
+                );
+
                 int cnt = 0;
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
@@ -21041,7 +21102,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     }
                     else if (templateName.ToStr().ToLower().Trim() == "template3")
                     {
-                        List<stp_GetDriverEarningResult_Template3> list = db.ExecuteQuery<stp_GetDriverEarningResult_Template3>("exec stp_GetDriverEarning {0},{1},{2},{3},{4}", obj.Fromdate.ToDate(), obj.Todate.ToDate(), obj.DriverId.ToInt(), Enums.BOOKINGSTATUS.DISPATCHED, 0).ToList();
+                        List<stp_GetDriverEarningResult_Template3> list = db.ExecuteQuery<stp_GetDriverEarningResult_Template3>("exec stp_GetDriverEarning {0},{1},{2},{3},{4}", FromDate, ToDate, obj.DriverId.ToInt(), Enums.BOOKINGSTATUS.DISPATCHED, 0).ToList();
 
                         var list2 = (from a in list
                                      select new

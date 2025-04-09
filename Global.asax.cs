@@ -35,6 +35,7 @@ namespace SignalRHub
         public static List<ClsFareMeter> listofMeter = null;
         public static string DefaultCurrencySign = "£";
         public static string googleKey = string.Empty;
+        public static string Region = "";
         public static List<MeterTarrif> listMeterTariff = null;
         public static List<SMSTag> listofSMSTags = null;
         private static CallerIdVOIP_Configuration objAsterik = null;

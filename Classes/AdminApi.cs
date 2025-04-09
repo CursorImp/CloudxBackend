@@ -307,6 +307,8 @@ namespace SignalRHub.Classes
         public string ReportType { get; set; }
         public DateTime? Todate { get; set; }
         public DateTime? Fromdate { get; set; }
+        public DateTime? FromTime { get; set; }
+        public DateTime? ToTime { get; set; }
         public string DayName { get; set; }
         public Gen_SubCompany SubCompany { get; set; }
         public Fleet_Driver_CompanyVehicle companyVehicle { get; set; }
