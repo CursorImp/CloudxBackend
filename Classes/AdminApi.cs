@@ -553,7 +553,24 @@ namespace SignalRHub.Classes
         public decimal? DriverHourlyRate { get; set; }
         public List<FleetDriverHourlyTariffRate> Fleet_Driver_HourlyTariffRate { get; set; }
         #endregion
+        public string CustomerMobileNo { get; set; }
+        public FareIncrement FareIncrement { get; set; }
     }
+    #region Fare Increment
+    public class FareIncrement
+    {
+        public int Id { get; set; }
+        public DateTime? FromDate { get; set; }
+        public DateTime? TillDate { get; set; }
+        public string FromDateStr { get; set; }
+        public string TillDateStr { get; set; }
+        public string IncrementType { get; set; }
+        public decimal? IncrementRate { get; set; }
+        public bool? EnableIncrement { get; set; }
+        public string EnableIncrementStr { get; set; }
+        public int? CriteriaBy { get; set; }
+    }
+    #endregion
     #region viken lux 
     public class FleetDriverHourlyTariffRate
     {
@@ -2354,5 +2371,22 @@ namespace SignalRHub.Classes
         public double From { get; set; }
         public double To { get; set; }
         public double Charges { get; set; }
+    }
+    public class DriverShiftReport
+    {
+        public string DriverName { get; set; }
+        public string DriverNo { get; set; }
+        public DateTime DriverShiftStarted { get; set; }
+        public string DriverShiftStartedFormatted { get; set; }
+
+        public DateTime DriverShiftEnded { get; set; }
+        public string DriverShiftEndedFormatted { get; set; }
+        public string ShiftLengthFormatted { get; set; }
+        public decimal? CashTotal { get; set; }  // Nullable Decimal
+        public decimal? CardTotal { get; set; }  // Nullable Decimal
+        public decimal? Total { get; set; }      // Nullable Decimal
+        public int? CompletedCashTotal { get; set; } // Nullable Decimal
+        public int? CompletedCardTotal { get; set; } // Nullable Decimal
+        public int RejectedJobs { get; set; }
     }
 }

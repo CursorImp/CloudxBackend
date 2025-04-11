@@ -3296,7 +3296,7 @@ namespace SignalRHub.Controllers
                                                  ResultDescription = a.ResultDescription
                                              }).ToList();
 
-                        var query = from a in db.Gen_Companies
+                                              var query = from a in db.Gen_Companies
                                     join b in db.Gen_SubCompanies on a.SubCompanyId equals b.Id into table2
                                     from b in table2.DefaultIfEmpty()
                                     where a.Id == obj.Company.Id
@@ -25552,5 +25552,190 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             return Json(response, JsonRequestBehavior.AllowGet);
         }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("ChkMobileNumberBlockList")]
+        public JsonResult ChkMobileNumberBlockList(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "ChkMobileNumberBlockList.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                }
+                catch
+                {
+                }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    //var BlackListResult = db.GetTable<Customer>().Where(x => x.MobileNo == obj.CustomerMobileNo || x.TelephoneNo == obj.CustomerMobileNo);
+                    var data1 = db.GetTable<Customer>().Where(x => x.MobileNo == obj.CustomerMobileNo || x.TelephoneNo == obj.CustomerMobileNo && x.BlackList == true).OrderBy(c => c.Name);
+                    var BlackListResult = (from a in data1
+                                           select new
+                                           {
+                                               BlackListResion = a.BlackListResion,
+                                               BlackList = a.BlackList
+                                           }).FirstOrDefault();
+                    response.Data = new { BlackListResult = BlackListResult };
+                }
+            }
+            catch (Exception ex)
+            {
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        #region Fare Increment
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetFareIncrementListData")]
+        public JsonResult GetFareIncrementListData(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var query = from a in General.GetQueryable<Fare_IncrementSetting>(null)
+                                where (a.Id == obj.FareIncrement.Id || obj.FareIncrement.Id == 0)
+                                select new FareIncrement
+                                {
+                                    Id = a.Id,
+                                    FromDate = a.FromDate,
+                                    FromDateStr = String.Format("{0:yyyy-MM-ddTHH:mm}", a.FromDate),
+                                    TillDate = a.TillDate,
+                                    TillDateStr = String.Format("{0:yyyy-MM-ddTHH:mm}", a.TillDate),
+                                    IncrementRate = a.IncrementRate,
+                                    IncrementType = a.IncrementType == "1" ? "Amount" : "Percent",
+                                    EnableIncrementStr = a.EnableIncrement == true ? "Yes" : "No",
+                                    CriteriaBy = a.CriteriaBy
+                                };
+                    response.Data = new { FareIncrement = query.ToList() };
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        public JsonResult SaveFareIncrement(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                int Id = obj.FareIncrement.Id;
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    if (Id > 0)
+                    {
+                        db.ExecuteQuery<int>(@"UPDATE Fare_IncrementSettings
+                                               SET FromDate = {0}, TillDate = {1}, IncrementRate = {2},IncrementType = {3},EnableIncrement = {4},CriteriaBy = {5} WHERE Id = {6}",
+                                obj.FareIncrement.FromDate,
+                                obj.FareIncrement.TillDate,
+                                obj.FareIncrement.IncrementRate?.ToDecimal(),
+                                obj.FareIncrement.IncrementType,
+                                obj.FareIncrement.EnableIncrement,
+                                obj.FareIncrement.CriteriaBy,
+                                Id.ToLong());
+                    }
+                    else
+                    {
+                        db.ExecuteQuery<int>(@"INSERT INTO Fare_IncrementSettings (FromDate, TillDate, IncrementRate, IncrementType, EnableIncrement,CriteriaBy)
+                        VALUES ({0}, {1}, {2}, {3}, {4}, {5})",
+                                obj.FareIncrement.FromDate,
+                                obj.FareIncrement.TillDate,
+                                obj.FareIncrement.IncrementRate?.ToDecimal(),
+                                obj.FareIncrement.IncrementType,
+                                obj.FareIncrement.EnableIncrement,
+                                obj.FareIncrement.CriteriaBy);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        public JsonResult DeleteFareIncrementListData(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DeleteFixedFares.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                }
+                catch
+                {
+                }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    int Id = obj.FareIncrement.Id;
+                    if (Id > 0)
+                    {
+                        db.ExecuteQuery<int>("Delete from Fare_IncrementSettings where Id=" + Id);
+                    }
+                    response.Data = "";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        #endregion
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetDriverJobShiftReport")]
+        public JsonResult GetDriverJobShiftReport(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            Gen_SubCompany objSubCompany = new Gen_SubCompany();
+            try
+            {
+
+                int? driverId = obj.DriverId;
+
+                DateTime? fromDate = obj.Fromdate.Value.ToDateorNull();
+                DateTime? tillDate = obj.Todate.Value.ToDateorNull();
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    try
+                    {
+                        // Execute the query and get the list of DriverShiftReport objects
+                        var list = db.ExecuteQuery<DriverShiftReport>("EXEC GetDriverShiftReport @DriverId = {0}", driverId).ToList();
+                        foreach (var item in list)
+                        {
+                            item.DriverShiftStartedFormatted = item.DriverShiftStarted.ToString("yyyy-MM-dd HH:mm:ss"); // You can adjust the format
+                            item.DriverShiftEndedFormatted = item.DriverShiftEnded.ToString("yyyy-MM-dd HH:mm:ss"); // You can adjust the format
+                        }
+                        // Prepare the response with data, total record count, and sum of Total charges
+                        response.Data = new
+                        {
+                            list = Newtonsoft.Json.JsonConvert.SerializeObject(list), // Serialize list to JSON
+                            TotalRecord = list.Count(), // Get the total number of records
+                            SumTotalCharges = list.Sum(c => c.Total) // Sum the Total charges
+                        };
+                    }
+                    catch (Exception ex)
+                    {
+                        response.Data = null;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
     }
 }
