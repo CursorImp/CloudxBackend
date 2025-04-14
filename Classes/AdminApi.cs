@@ -8,6 +8,100 @@ using Taxi_Model;
 
 namespace SignalRHub.Classes
 {
+    public class FleetDriver_ExpireList
+    {
+        public int Id { get; set; }
+        public string No { get; set; }
+        public string Name { get; set; }
+        public string VehicleNo { get; set; }
+        public string VehicleType { get; set; }
+        public string DrvBadge { get; set; }
+        public string VehBadge { get; set; }
+        public string NI { get; set; }
+        public string MOTExpiry { get; set; }
+        public string MOT2Expiry { get; set; }
+        public string PCOVehicleExpiry { get; set; }
+        public string InsuranceExpiry { get; set; }
+        public string PCODriverExpiry { get; set; }
+        public string LicenseExpiry { get; set; }
+        public string RoadTaxExpiry { get; set; }
+        public string MobileNo { get; set; }
+        public string EndDate { get; set; }
+        public int? DriverTypeId { get; set; }
+
+        public string EndDatestr { get; set; }
+    }
+    #region TWILLIO SMS
+    public class TwilioSMSRequestDto
+    {
+        public string sid { get; set; }
+        public string token { get; set; }
+        public string from { get; set; }
+        public string to { get; set; }
+        public string message { get; set; }
+        public string companyName { get; set; }
+        public string other { get; set; }
+        public string createdOn { get; set; }
+    }
+    public class TwilioSMSResponse
+    {
+        public bool isSuccssfull { get; set; }
+        public string msgSid { get; set; }
+        public Status status { get; set; }
+        public string error { get; set; }
+    }
+    public class TwilioGetSMSResponse
+    {
+        public bool isSuccssfull { get; set; }
+        public string msgSid { get; set; }
+        public string status { get; set; }
+        public string error { get; set; }
+    }
+    public class Status
+    {
+    }
+    public class GetSendTwilioSMS
+    {
+        public string sid { get; set; }
+        public string token { get; set; }
+        public string MSId { get; set; }
+    }
+    public class TwillioSMS
+    {
+
+        public string AccountSID { get; set; }
+        public string AuthToken { get; set; }
+        public string PhoneNumber { get; set; }
+    }
+
+    #endregion
+    #region Pending Driver document
+    public class GetPendingDocumentRequestModel
+    {
+        public long Id { get; set; }
+        public int DriverId { get; set; }
+        public string DriverName { get; set; }
+        public DateTime? ExpiryDate { get; set; }
+        public string ExpiryDateString { get; set; }
+        public int DocumentId { get; set; }
+        public string DocumentName { get; set; }
+        public string FileName { get; set; }
+        public string FilePath { get; set; }
+        public string BadgeNumber { get; set; }
+        public string Status { get; set; }
+
+    }
+    public class PendingDocumentRequestModel
+    {
+        public int Id { get; set; }
+        public string Status { get; set; }
+
+    }
+    public class UpdatePendingDocumentModel
+    {
+        public List<PendingDocumentRequestModel> Documents { get; set; }
+    }
+    #endregion
     #region Shuttle
     public class GroupJob_Order
     {
@@ -236,6 +330,8 @@ namespace SignalRHub.Classes
         public string ReportType { get; set; }
         public DateTime? Todate { get; set; }
         public DateTime? Fromdate { get; set; }
+        public DateTime? FromTime { get; set; }
+        public DateTime? ToTime { get; set; }
         public string DayName { get; set; }
         public Gen_SubCompany SubCompany { get; set; }
         public Fleet_Driver_CompanyVehicle companyVehicle { get; set; }
@@ -423,6 +519,7 @@ namespace SignalRHub.Classes
         public string CompanyName { get; set; }
         public List<IVRInfo> IVRInfo { get; set; }
         public string HubURL { get; set; }
+        #region odysse
         public DateTime? PHCVehicleExpiryDate { get; set; }
         public string PHCVehicleExpiryPath { get; set; }
         public string UFMOTDoc_CVP_Text { get; set; }
@@ -430,7 +527,275 @@ namespace SignalRHub.Classes
         public string UFIEDoc_CVP_Text { get; set; }
         public string UFVehicleLogDoc_CVP_Text { get; set; }
         public string PHCVehicleExpiryDate_CVP_Text { get; set; }
+        #endregion
+        #region viken lux
+        public double Radius { get; set; }
+        public string Region { get; set; }
+        public string TimeZone { get; set; }
+        public string DistanceUnit { get; set; }
+        public int? MinPassenger_Normal { get; set; }
+        public int? MinPassenger_Airport { get; set; }
+        public decimal? Charges_Normal { get; set; }
+        public decimal? Charges_Airport { get; set; }
+        public List<CompanyDepartment> DeptNotes { get; set; }
+
+
+        //
+
+        public HourlyFare HourlyFare { get; set; }
+        public HourlyFare HourlyTariffFare { get; set; }
+        public List<HourlyFare_OtherCharges> HourlyFare_OtherCharges { get; set; }
+        public List<HourlyTariffFare_OtherCharges> HourlyTariffFare_OtherCharges { get; set; }
+
+
+        public string MobileNo { get; set; }
+        public bool? HasVatInclusive { get; set; }
+        public decimal? DriverHourlyRate { get; set; }
+        public List<FleetDriverHourlyTariffRate> Fleet_Driver_HourlyTariffRate { get; set; }
+        #endregion
+        public string CustomerMobileNo { get; set; }
+        public FareIncrement FareIncrement { get; set; }
     }
+    #region Fare Increment
+    public class FareIncrement
+    {
+        public int Id { get; set; }
+        public DateTime? FromDate { get; set; }
+        public DateTime? TillDate { get; set; }
+        public string FromDateStr { get; set; }
+        public string TillDateStr { get; set; }
+        public string IncrementType { get; set; }
+        public decimal? IncrementRate { get; set; }
+        public bool? EnableIncrement { get; set; }
+        public string EnableIncrementStr { get; set; }
+        public int? CriteriaBy { get; set; }
+    }
+    #endregion
+    #region viken lux 
+    public class FleetDriverHourlyTariffRate
+    {
+        public int Id { get; set; }
+        public int DriverId { get; set; }
+        public int VehicleTypeId { get; set; }
+        public decimal FromMinute { get; set; }
+        public decimal ToMinute { get; set; }
+        public decimal HTRate { get; set; }
+        public bool IsActive { get; set; }
+    }
+    public class CompanyDepartment
+    {
+        public long Id { get; set; }
+        public string DepartmentName { get; set; }
+        public int CompanyId { get; set; }
+        public string ComapanyFromAddress { get; set; }
+        public string ComapnyToAddress { get; set; }
+        public string invoicenote { get; set; }
+    }
+
+
+    public class HourlyFare
+    {
+        public int Id { get; set; }
+        public int VehicleTypeId { get; set; }
+        public DateTime? EffectiveDate { get; set; }
+        public DateTime? AddOn { get; set; }
+        public int? AddBy { get; set; }
+        public DateTime? EditOn { get; set; }
+        public int? EditBy { get; set; }
+        public bool IsVehicleWise { get; set; }
+        public bool IsCompanyWise { get; set; }
+        public int CompanyId { get; set; }
+        public int SubCompanyId { get; set; }
+        public decimal PerMinJourneyCharges { get; set; }
+        public bool IsDayWise { get; set; }
+        public string DayValue { get; set; }
+        public decimal StartRate { get; set; }
+        public decimal StartRateValidMins { get; set; }
+        public string FromDayName { get; set; }
+        public string TillDayName { get; set; }
+        public string SpecialDayName { get; set; }
+        public DateTime? FromSpecialDate { get; set; }
+        public DateTime? TillSpecialDate { get; set; }
+        public DateTime? FromDateTime { get; set; }
+        public DateTime? TillDateTime { get; set; }
+        public decimal WaitingCharges { get; set; }
+        public int WaitingChargesPerSeconds { get; set; }
+        public int WaitingSecondsFree { get; set; }
+
+    }
+    public class HourlyTariffFare
+    {
+        public int Id { get; set; }
+        public int VehicleTypeId { get; set; }
+        public DateTime? EffectiveDate { get; set; }
+        public DateTime? AddOn { get; set; }
+        public int? AddBy { get; set; }
+        public DateTime? EditOn { get; set; }
+        public int? EditBy { get; set; }
+        public bool IsVehicleWise { get; set; }
+        public bool IsCompanyWise { get; set; }
+        public int CompanyId { get; set; }
+        public int SubCompanyId { get; set; }
+        public bool IsDayWise { get; set; }
+        public string DayValue { get; set; }
+        public string FromDayName { get; set; }
+        public string TillDayName { get; set; }
+        public string SpecialDayName { get; set; }
+        public DateTime? FromSpecialDate { get; set; }
+        public DateTime? TillSpecialDate { get; set; }
+        public DateTime? FromDateTime { get; set; }
+        public DateTime? TillDateTime { get; set; }
+        public decimal WaitingCharges { get; set; }
+        public int WaitingChargesPerSeconds { get; set; }
+        public int WaitingSecondsFree { get; set; }
+    }
+    public class HourlyFare_OtherCharges
+    {
+        public long? Id { get; set; }
+        public int FareId { get; set; }
+        public int FromMins { get; set; }
+        public int ToMins { get; set; }
+        public decimal Rate { get; set; }
+        public decimal PeakTimeRate { get; set; }
+        public decimal OffPeakTimeRate { get; set; }
+        public decimal NightTimeRate { get; set; }
+        public DateTime? FromStartTime { get; set; }
+        public DateTime? TillStartTime { get; set; }
+        public DateTime? FromEndTime { get; set; }
+        public DateTime? TillEndTime { get; set; }
+        public decimal CompanyRate { get; set; }
+    }
+    public class HourlyTariffFare_OtherCharges
+    {
+        public long? Id { get; set; }
+        public int FareId { get; set; }
+        public int FromMins { get; set; }
+        public int Hours { get; set; }
+        public decimal Rate { get; set; }
+        public decimal CompanyRate { get; set; }
+    }
+    public class Gen_Company_Contacts
+    {
+        public int Id { get; set; }
+        public int CompanyId { get; set; }
+        public string ContactName { get; set; }
+        public string Email { get; set; }
+        public string TelephoneNo { get; set; }
+        public string MobileNo { get; set; }
+        public string CustomerId { get; set; }
+        public string PaymentMethodId { get; set; }
+        public string PaymentStatus { get; set; }
+        public bool? IsSuccess { get; set; }
+        public string lastfour { get; set; }
+        public string Expiry { get; set; }
+        public string CardType { get; set; }
+    }
+    public class PromotionReport
+    {
+        public long Id { get; set; }
+        public string PromotionCode { get; set; }
+        public string PromotionTitle { get; set; }
+        public string PromotionMessage { get; set; }
+        public DateTime? PromotionStartDateTime { get; set; }
+        public DateTime? PromotionEndDateTime { get; set; }
+        public int PromotionTypeID { get; set; }
+        public decimal? Charges { get; set; }
+        public bool IsActive { get; set; }
+        public int? SubCompanyId { get; set; }
+
+    }
+    public class stp_BookingPromotionReports
+    {
+        public string PromotionCode { get; set; }
+        public string BookingNo { get; set; }
+        public DateTime? PickupDateTime { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerEmail { get; set; }
+        public string FromAddress { get; set; }
+        public string ViaCount { get; set; }
+        public string ToAddress { get; set; }
+        public decimal? OriginalFare { get; set; }
+        public decimal? DiscountedFare { get; set; }
+
+    }
+    public class Promotion
+    {
+        public long Id { get; set; }
+        public int? SubCompanyId { get; set; }
+        public bool IsActive { get; set; }
+        public string PromotionCode { get; set; }
+        public string PromotionTitle { get; set; }
+        public string PromotionMessage { get; set; }
+        public DateTime PromotionStartDateTime { get; set; }
+        public DateTime PromotionEndDateTime { get; set; }
+        public int? PromotionTypeID { get; set; }
+        public decimal? Charges { get; set; }
+        public DateTime? CreatedDateTime { get; set; }
+        public string CreatedBy { get; set; }
+        public DateTime? ModifyedDateTime { get; set; }
+        public string ModifyedBy { get; set; }
+        public int? CustomerId { get; set; }
+        public int? Totaljourney { get; set; }
+        public bool? IsAllCustomer { get; set; }
+        public int? NoOfUses { get; set; }
+        public int? NoofCustomer { get; set; }
+        public int? DiscountTypeId { get; set; }
+        public long? Value { get; set; }
+        public DateTime? FromDate { get; set; }
+        public DateTime? ToDate { get; set; }
+        public bool? IsPeriod { get; set; }
+        public decimal? MinimumFare { get; set; }
+        public decimal? MaximumDiscount { get; set; }
+        public bool? IsDiscountToDriver { get; set; }
+    }
+    public class Promotion_Type
+    {
+        public int? Id { get; set; }
+        public string PromotionType { get; set; }
+    }
+    public class Discount_Type
+    {
+        public int? Id { get; set; }
+        public string DiscountType { get; set; }
+    }
+    public class PromotonCustomer
+    {
+        public long? RecordId { get; set; }
+        public int? CustomerId { get; set; }
+        public string Name { get; set; }
+        public string MobileNo { get; set; }
+        public string Email { get; set; }
+    }
+    public class VehicleTypeExtraDetails
+    {
+        public int? MinPassenger { get; set; }
+        public int? MinPassengerAirport { get; set; }
+        public decimal? ChargesNormal { get; set; }
+        public decimal? ChargesAirport { get; set; }
+        public int Id { get; set; }
+        public string VehicleType { get; set; }
+        public decimal? StartRate { get; set; }
+        public decimal? IncrementRate { get; set; }
+        public int? NoofPassengers { get; set; }
+        public int? NoofLuggages { get; set; }
+        public int? NoofHandLuggages { get; set; }
+        public string BackgroundColor { get; set; }
+        public string TextColor { get; set; }
+        public decimal? StartRateValidMiles { get; set; }
+        public string AttributeValues { get; set; }
+    }
+    public class SMSLOG
+    {
+        public long Id { get; set; }
+        public string SMSBody { get; set; }
+        public DateTime? SentOn { get; set; }
+        public string SentBy { get; set; }
+        public string SentTo { get; set; }
+        public string Status { get; set; }
+        public string SmsRequest { get; set; }
+        public string SentOnstr { get; set; }
+    }
+    #endregion
     public class Fleet_Master_Update
     {
         public int Id { get; set; }
@@ -641,6 +1006,7 @@ namespace SignalRHub.Classes
         public decimal AutoStopWaitingOnSpeed { get; set; }
         public decimal DrvWaitingChargesPerMin { get; set; }
         public decimal AccWaitingChargesPerMin { get; set; }
+        public decimal FreeWaitingSeconds { get; set; }
     }
     public class CreateAllDriverCommissionRequest
     {
@@ -1563,6 +1929,27 @@ namespace SignalRHub.Classes
         public bool EnablePeakOffPeakFares { get; set; }
         public int RecentBookingDays { get; set; }
     }
+    public class ClickToCall
+    {
+        public string ClientId { get; set; }
+        public string Token { get; set; }
+
+        public string OriginNumber { get; set; }  // Company Profile number
+
+        public string DestinationNumber { get; set; } //customer number or driver number
+
+        public string Extension { get; set; }
+
+        public string ApiType { get; set; }
+    }
+    public class ClickToCallRequest
+    {
+        public bool IsDriverCall { get; set; }
+        public int DriverId { get; set; }
+
+        public string Extension { get; set; }
+
+    }
     public class callerId
     {
         public bool IsVOIP { get; set; }
@@ -1984,5 +2371,22 @@ namespace SignalRHub.Classes
         public double From { get; set; }
         public double To { get; set; }
         public double Charges { get; set; }
+    }
+    public class DriverShiftReport
+    {
+        public string DriverName { get; set; }
+        public string DriverNo { get; set; }
+        public DateTime DriverShiftStarted { get; set; }
+        public string DriverShiftStartedFormatted { get; set; }
+
+        public DateTime DriverShiftEnded { get; set; }
+        public string DriverShiftEndedFormatted { get; set; }
+        public string ShiftLengthFormatted { get; set; }
+        public decimal? CashTotal { get; set; }  // Nullable Decimal
+        public decimal? CardTotal { get; set; }  // Nullable Decimal
+        public decimal? Total { get; set; }      // Nullable Decimal
+        public int? CompletedCashTotal { get; set; } // Nullable Decimal
+        public int? CompletedCardTotal { get; set; } // Nullable Decimal
+        public int RejectedJobs { get; set; }
     }
 }

@@ -5900,6 +5900,140 @@ namespace SignalRHub
             }
             return googleKey;
         }
+        public static string GetGoogleKey()
+        {
+            if (Global.googleKey.ToStr().Trim().Length > 0)
+                return Global.googleKey.ToStr().Trim();
+            string keyVal = "";
+            try
+            {
+                using (TaxiDataContext dbX = new TaxiDataContext())
+                {
+                    dbX.CommandTimeout = 5;
+                    keyVal = dbX.ExecuteQuery<string>("select apikey from mapkeys where maptype='google'").FirstOrDefault();
+                    Global.googleKey = keyVal;
+                }
+            }
+            catch
+            {
+            }
+            return keyVal;
+        }
+
+        public static List<LocationList> GetGoogleAddressData(string locationName)
+        {
+            ResponseWebApi response = new ResponseWebApi();
+            var list = new List<LocationList>();
+            try
+            {
+                GetGoogleKey();
+                //
+                //
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                using (HttpClient httpClient = new HttpClient())
+                {
+                    string placeSerachApiUrl = string.Empty;
+                    //"https://maps.googleapis.com/maps/api/place/autocomplete/json?input=VILLENUEVE&components=country:CA&radius=200&key=AIzaSyAbWqKOltEdweCG34MprD4dfzZZMyvZjSY";
+                    //if (Global.centerPoint.ToStr().Trim().Length == 0)
+                    //{
+                        using (TaxiDataContext db = new TaxiDataContext())
+                        {
+                            var Query = "SELECT SubCompanyId, Latitude, Longitude, Radius, Region from Gen_Subcompany_Details";
+                            var SubcompanyDetails = db.ExecuteQuery<Classes.Gen_SubCompany_Details>(Query).FirstOrDefault();
+                            Global.centerPoint = SubcompanyDetails.Longitude + "," + SubcompanyDetails.Latitude;
+                            Global.Region = SubcompanyDetails.Region;
+                            Global.googleKey = GetKey();
+                        //}
+                        //
+                    }
+                    placeSerachApiUrl = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=" + locationName + "&components=country:" + Global.Region + "&radius=48000" + Global.googleKey;
+                    //placeSerachApiUrl = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=" + locationName + "&components=country:" + Global.Region + "&radius=48000&key=AIzaSyCT8dOoBlDPqPoX8EQ81D8HzZ5TKcbWWOE";
+                    try
+                    {
+                        // //
+                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetGoogleAddressData.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",URL:" + placeSerachApiUrl + Environment.NewLine);
+                    }
+                    catch
+                    {
+                    }
+                    string suggestResponseBody = "";
+                    using (var client = new HttpClient())
+                    {
+                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                        var postTask = client.GetAsync(placeSerachApiUrl).Result;
+                        suggestResponseBody = postTask.Content.ReadAsStringAsync().Result;
+                    }
+                    // var data = new System.Net.WebClient().DownloadData(placeSerachApiUrl);
+                    //  string  suggestResponseBody = System.Text.UTF8Encoding.Default.GetString(data);
+                    var suggestData = new GoogleAutoCompleteRoot();
+                    suggestData.predictions = new List<Prediction>();
+                    suggestData = Newtonsoft.Json.JsonConvert.DeserializeObject<GoogleAutoCompleteRoot>(suggestResponseBody);
+                    try
+                    {
+                        //
+                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetGoogleAddressDataResponse.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",URL:" + placeSerachApiUrl + ",Response:" + suggestResponseBody + Environment.NewLine);
+                    }
+                    catch
+                    {
+                    }
+                    if (suggestData.predictions != null)
+                    {
+                        foreach (var row in suggestData.predictions)
+                        {
+                            LocationList locationList = new LocationList();
+                            string CleanAddress = row.description.Replace(", Canada", "");
+                            locationList.AddressLine = CleanAddress;
+                            string PlactType = row.types[0].ToStr().ToLower();
+                            if (PlactType == "address")
+                            {
+                                locationList.LocationTypeId = "0";
+                            }
+                            else
+                            {
+                                if (PlactType.ToLower() == "airport")
+                                {
+                                    locationList.LocationTypeId = "1";
+                                }
+                                else
+                                {
+                                    locationList.LocationTypeId = "0";
+                                }
+                            }
+                            list.Add(locationList);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return list;
+        }
+
+        public static heremapJourneyLocationResponse getHeremapJourneyLocationCordinates(string pickup, string dropOff)
+        {
+            #region Initialization
+            var resp = new heremapJourneyLocationResponse();
+            resp.dropOff = null;
+            resp.pickup = null;
+            #endregion
+            if (!string.IsNullOrEmpty(pickup))
+            {
+                resp.pickup = GetLocationCoord(pickup, "");
+            }
+            if (!string.IsNullOrEmpty(dropOff))
+            {
+                resp.dropOff = GetLocationCoord(dropOff, "");
+            }
+            return resp;
+        }
+
+        public class heremapJourneyLocationResponse
+        {
+            public WebApiClasses.Location pickup { get; set; }
+            public WebApiClasses.Location dropOff { get; set; }
+        }
 
         public static decimal CalculateDistanceFromAPI(string pickup, string destination, List<ViaAddresses> viaAddresses = null)
         {

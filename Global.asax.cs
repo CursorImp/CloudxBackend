@@ -35,6 +35,7 @@ namespace SignalRHub
         public static List<ClsFareMeter> listofMeter = null;
         public static string DefaultCurrencySign = "£";
         public static string googleKey = string.Empty;
+        public static string Region = "";
         public static List<MeterTarrif> listMeterTariff = null;
         public static List<SMSTag> listofSMSTags = null;
         private static CallerIdVOIP_Configuration objAsterik = null;
@@ -1234,7 +1235,7 @@ namespace SignalRHub
 
                 if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["EnableWaitingAfterArrive"]))
                 {
-                    customerOfficeNumber = ConfigurationManager.AppSettings["EnableWaitingAfterArrive"].ToStr();
+                    EnableWaitingAfterArrive = ConfigurationManager.AppSettings["EnableWaitingAfterArrive"].ToStr();
 
                 }
 
@@ -1262,7 +1263,7 @@ namespace SignalRHub
 
                 if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["EnablaDriverDocuments"]))
                 {
-                    customerOfficeNumber = ConfigurationManager.AppSettings["EnablaDriverDocuments"].ToStr();
+                    EnablaDriverDocuments = ConfigurationManager.AppSettings["EnablaDriverDocuments"].ToStr();
 
                 }
 
@@ -1270,7 +1271,7 @@ namespace SignalRHub
 
                 if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["EnableViaAction"]))
                 {
-                    customerOfficeNumber = ConfigurationManager.AppSettings["EnableViaAction"].ToStr();
+                    EnableViaAction = ConfigurationManager.AppSettings["EnableViaAction"].ToStr();
 
                 }
 
