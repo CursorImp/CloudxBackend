@@ -140,6 +140,7 @@ namespace SignalRHub.Classes
                 }
                 else
                 {
+                    objMasterCommission.GetByPrimaryKey(obj.driverCommission.Id);
                     DateTime? LastEditDate = objMasterCommission.Current.EditOn;
 
                     var query = General.GetQueryable<Fleet_DriverCommision>(c => c.DriverId == DriverId).OrderByDescending(c => c.Id).FirstOrDefault();
