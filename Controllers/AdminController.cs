@@ -25698,43 +25698,74 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
         public JsonResult GetDriverJobShiftReport(AdminApi obj)
         {
             ResponseAdminApi response = new ResponseAdminApi();
+
             Gen_SubCompany objSubCompany = new Gen_SubCompany();
+
             try
             {
-
                 int? driverId = obj.DriverId;
 
-                DateTime? fromDate = obj.Fromdate.Value.ToDateorNull();
-                DateTime? tillDate = obj.Todate.Value.ToDateorNull();
+                DateTime? fromDate = obj.Fromdate;
+
+                DateTime? tillDate = obj.Todate?.Date.AddDays(1).AddMilliseconds(-1);
+
+                //DateTime? fromDate = string.Format("{0:dd/MM/yyyy HH:mm}", obj.Fromdate.Value.ToDate() + obj.Fromdate.Value.TimeOfDay).ToDateTime();
+                //DateTime? tillDate = string.Format("{0:dd/MM/yyyy HH:mm}", obj.Todate.Value.ToDate() + obj.Todate.Value.TimeOfDay).ToDateTime();
+                //DateTime? fromDate = DateTime.ParseExact(obj.Fromdate.Value.ToString("yyyy-MM-dd HH:mm:ss"), "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+                //DateTime? tillDate = DateTime.ParseExact(obj.Todate.Value.ToString("yyyy-MM-dd HH:mm:ss"), "yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
                 using (TaxiDataContext db = new TaxiDataContext())
+
                 {
+
                     try
+
                     {
+
                         // Execute the query and get the list of DriverShiftReport objects
-                        var list = db.ExecuteQuery<DriverShiftReport>("EXEC GetDriverShiftReport @DriverId = {0}", driverId).ToList();
+                        var list = db.ExecuteQuery<DriverShiftReport>("EXEC GetDriverShiftReport  {0},{1},{2}", driverId, fromDate, tillDate).ToList();
+
                         foreach (var item in list)
+
                         {
+
                             item.DriverShiftStartedFormatted = item.DriverShiftStarted.ToString("yyyy-MM-dd HH:mm:ss"); // You can adjust the format
                             item.DriverShiftEndedFormatted = item.DriverShiftEnded.ToString("yyyy-MM-dd HH:mm:ss"); // You can adjust the format
                         }
+
                         // Prepare the response with data, total record count, and sum of Total charges
                         response.Data = new
+
                         {
-                            list = Newtonsoft.Json.JsonConvert.SerializeObject(list), // Serialize list to JSON
-                            TotalRecord = list.Count(), // Get the total number of records
+
+                            list = Newtonsoft.Json.JsonConvert.SerializeObject(list),
+                            // Serialize list to JSON
+                            TotalRecord = list.Count(),
+                            // Get the total number of records
                             SumTotalCharges = list.Sum(c => c.Total) // Sum the Total charges
                         };
+
                     }
+
                     catch (Exception ex)
+
                     {
+
                         response.Data = null;
+
                     }
+
                 }
+
             }
+
             catch (Exception ex)
+
             {
+
             }
+
             return Json(response, JsonRequestBehavior.AllowGet);
+
         }
 
     }
