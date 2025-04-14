@@ -16337,10 +16337,72 @@ namespace SignalRHub
                     else
                         objAction.Dropoff = string.Empty;
 
+                    if (objAction.DropOffFareList != null && objAction.DropOffFareList.Count > 0)
+                    {
+                        foreach (var item in objAction.DropOffFareList)
+                        {
+                            if (item.fieldname.ToLower() == "fares")
+                            {
+                                objAction.Fares = item.value;
+                            }
+                            else if (item.fieldname.ToLower() == "parking")
+                            {
+                                objAction.ParkingCharges = item.value;
+                            }
+                            else if (item.fieldname.ToLower() == "waiting")
+                            {
+                                objAction.WaitingCharges = item.value;
+                            }
+                            else if (item.fieldname.ToLower() == "extradropcharges")
+                            {
+                                objAction.ExtraDropCharges = item.value;
+                            }
+                            else if (item.fieldname.ToLower() == "tip")
+                            {
+                                objAction.Tip = item.value;
+                            }
+                            else if (item.fieldname.ToLower() == "bookingfee")
+                            {
+                                objAction.BookingFee = item.value;
+                            }
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(objAction.cardPaymentExtras))
+                    {
+                        var cardpaymentlist = new JavaScriptSerializer().Deserialize<List<BookingSummary>>(objAction.cardPaymentExtras.ToStr().Trim());
+                        foreach (var item in cardpaymentlist)
+                        {
+                            if (item.fieldname.ToLower() == "fares")
+                            {
+                                objAction.Fares = item.value;
+                            }
+                            else if (item.fieldname.ToLower() == "parking")
+                            {
+                                objAction.ParkingCharges = item.value;
+                            }
+                            else if (item.fieldname.ToLower() == "waiting")
+                            {
+                                objAction.WaitingCharges = item.value;
+                            }
+                            else if (item.fieldname.ToLower() == "extradropcharges")
+                            {
+                                objAction.ExtraDropCharges = item.value;
+                            }
+                            else if (item.fieldname.ToLower() == "tip")
+                            {
+                                objAction.Tip = item.value;
+                            }
+                            else if (item.fieldname.ToLower() == "bookingfee")
+                            {
+                                objAction.BookingFee = item.value;
+                            }
+                        }
+                    }
+
 
                     using (TaxiDataContext db = new TaxiDataContext())
                     {
-                        if (objAction.IsMeter.ToStr().Trim() == "1")
+                        if (objAction.IsMeter.ToStr().Trim() == "1" || (objAction.DropOffFareList != null && objAction.DropOffFareList.Count > 0))
                         {
                             int waitingTime = 0;
 
@@ -16355,164 +16417,13 @@ namespace SignalRHub
                                  , objAction.ExtraDropCharges.ToDecimal(), objAction.BookingFee.ToDecimal(), objAction.ExtrasDetail.ToStr());
 
 
-
-
-
-
-
-
                         }
                         else
                         {
                             db.stp_UpdateJobAndRoute(objAction.JobId.ToStr().ToLong(), objAction.DrvId.ToInt(), objAction.JStatus.ToInt(), objAction.DStatus.ToInt(), objAction.Dropoff.ToStr(), objAction.Miles, null);
 
 
-                            //if (objAction.Account.ToStr().Trim().Length > 0)
-                            //{
-
-                            //    long jobId = objAction.JobId.ToLong();
-                            //    var book = db.Bookings.Where(c => c.Id == jobId).Select(args => new
-                            //    {
-                            //        args.CompanyId,
-                            //        args.IsQuotedPrice,
-                            //        args.VehicleTypeId,
-                            //        args.SubcompanyId,
-                            //        args.PickupDateTime,
-                            //        args.POBDateTime
-                            //        ,
-                            //        args.PaymentTypeId
-                            //    }).FirstOrDefault();
-
-                            //    if (book != null && book.POBDateTime != null && book.IsQuotedPrice.ToBool() == false
-                            //        && book.PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.BANK_ACCOUNT)
-                            //    {
-
-
-
-                            //        var listMiles = db.Booking_RoutePaths.Where(c => c.BookingId == jobId && c.UpdateDate >= book.POBDateTime)
-                            //            .Select(a => new { a.Latitude, a.Longitude }).ToList();
-
-
-                            //        double mile = 0;
-                            //        for (int i = 0; i < listMiles.Count; i++)
-                            //        {
-                            //            if (i + 1 < listMiles.Count)
-                            //            {
-                            //                mile += new DotNetCoords.LatLng(Convert.ToDouble(listMiles[i].Latitude), Convert.ToDouble(listMiles[i].Longitude))
-                            //                    .DistanceMiles(new DotNetCoords.LatLng(Convert.ToDouble(listMiles[i + 1].Latitude), Convert.ToDouble(listMiles[i + 1].Longitude)));
-
-
-                            //            }
-                            //        }
-
-
-
-                            //        decimal mileageFares = 0.00m;
-                            //        decimal mileageCostFares = 0.00m;
-                            //        // var objFare = new TaxiDataContext().stp_CalculateGeneralFaresBySubCompany(book.VehicleTypeId,book.CompanyId, mile.ToDecimal(), book.PickupDateTime, book.SubcompanyId);
-
-                            //        Clsstp_CalculateGeneralFaresBySubCompany objFare = new TaxiDataContext().ExecuteQuery<Clsstp_CalculateGeneralFaresBySubCompany>("exec stp_CalculateGeneralFaresBySubCompany {0},{1},{2},{3},{4}",
-                            //                                        book.VehicleTypeId, book.CompanyId, mile.ToDecimal(), book.PickupDateTime, book.SubcompanyId).FirstOrDefault();
-
-                            //        //
-                            //        if (objFare != null)
-                            //        {
-                            //            var f = objFare;
-
-                            //            if ((f.Result == "Success" || f.Result.ToStr().IsNumeric()))
-                            //            {
-                            //                mileageFares = f.totalFares.ToDecimal();
-
-                            //                mileageCostFares = f.totalCost.ToDecimal();
-
-                            //            }
-
-
-                            //            if (Instance.objPolicy.RoundMileageFares.ToBool())
-                            //            {
-
-                            //                decimal startRateTillMiles = General.GetObject<Fleet_VehicleType>(c => c.Id == book.VehicleTypeId).DefaultIfEmpty().StartRateValidMiles.ToDecimal();
-                            //                if (startRateTillMiles > 0 && mile.ToDecimal() > startRateTillMiles)
-                            //                {
-
-                            //                    //  rtnFare = Math.Ceiling((rtnFare);
-                            //                    mileageFares = Math.Ceiling(mileageFares);
-
-                            //                    mileageCostFares = Math.Ceiling(mileageCostFares);
-                            //                }
-                            //            }
-                            //            else
-                            //            {
-
-                            //                decimal roundUp = Instance.objPolicy.RoundUpTo.ToDecimal();
-
-                            //                if (roundUp > 0)
-                            //                {
-                            //                    mileageFares = (decimal)Math.Ceiling(mileageFares / roundUp) * roundUp;
-
-                            //                    mileageCostFares = (decimal)Math.Ceiling(mileageCostFares / roundUp) * roundUp;
-                            //                    //
-                            //                }
-                            //            }
-
-
-                            //            try
-                            //            {
-                            //                db.ExecuteQuery<int>("update booking set farerate=" + mileageCostFares + ",CompanyPrice=" + mileageFares + ", totalcharges=" + mileageFares + ",TotalTravelledMiles=" + Math.Round(mile, 1) + " where id=" + jobId);
-
-
-                            //                try
-                            //                {
-
-                            //                    File.AppendAllText(physicalPath + "\\updateaccountjob.txt", DateTime.Now + ": datavalue=" + dataValue + ",mile:" + mile +  Environment.NewLine);
-                            //                }
-                            //                catch
-                            //                {
-
-
-                            //                }
-
-                            //            }
-                            //            catch(Exception ex)
-                            //            {
-                            //                try
-                            //                {
-
-                            //                    File.AppendAllText(physicalPath + "\\exception_updateaccountjob.txt", DateTime.Now + ": datavalue=" + dataValue + ",mile:"+ mile+ ",exception= " + ex.Message + Environment.NewLine);
-                            //                }
-                            //                catch
-                            //                {
-
-
-                            //                }
-                            //            }
-
-                            //            if (objAction.version.ToStr().Trim().Length > 0)
-                            //                respAccount = "success:" + "{ \"totalFares\" :\"" + mileageCostFares + "\",\"totalMiles\" :\"" + Math.Round(mile, 1) + "\" }";
-
-                            //        }
-                            //        else
-                            //        {
-                            //            try
-                            //            {
-
-                            //                File.AppendAllText(physicalPath + "\\updateaccountjobelse.txt", DateTime.Now + ": datavalue=" + dataValue + ",mile:" + mile + Environment.NewLine);
-                            //            }
-                            //            catch
-                            //            {
-
-
-                            //            }
-
-
-                            //        }
-
-                            //    }
-
-
-
-
-                            //}
+                         
                         }
 
 
@@ -16522,6 +16433,53 @@ namespace SignalRHub
 
                         if (transId.Length > 0)
                         {
+                            decimal tipAmount = 0.00m;
+                            if (objAction.DropOffFareList != null && objAction.DropOffFareList.Count > 0)
+                            {
+                                tipAmount = objAction.Tip.ToDecimal();
+                                db.stp_BookingLog(objAction.JobId.ToLong(), "System", " Tip " + tipAmount + " Paid By Customer");
+                            }
+                            else
+                            {
+                                if (objAction.cardPaymentExtras.ToStr().Trim().Length > 0)
+                                {
+
+                                    try
+                                    {
+
+                                        try
+                                        {
+                                            File.AppendAllText(physicalPath + "\\requestClearJob_tipAmount.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                                        }
+                                        catch
+                                        {
+
+                                        }
+
+                                        var cardpaymentlist = new JavaScriptSerializer().Deserialize<List<BookingSummary>>(objAction.cardPaymentExtras.ToStr().Trim());
+
+
+                                        tipAmount = cardpaymentlist.FirstOrDefault(c => c.label == "Tip").value;
+                                        db.stp_BookingLog(objAction.JobId.ToLong(), "System", " Tip " + tipAmount + " Paid By Customer");
+
+
+
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        try
+                                        {
+                                            File.AppendAllText(physicalPath + "\\requestClearJob_tipAmount_exception.txt", DateTime.Now + " : msg" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                                        }
+                                        catch
+                                        {
+
+                                        }
+
+                                    }
+                                }
+                            }
+
 
                             try
                             {

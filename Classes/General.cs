@@ -2164,7 +2164,8 @@ namespace SignalRHub
                     {
                         bool offlinejob = false;
                         status = Enums.BOOKINGSTATUS.PENDING;
-                        if (dispatchType == 3)
+                        var res = (db.ExecuteQuery<string>("select SetVal from AppSettings where SetKey='DisableAcceptJob'").FirstOrDefault());
+                        if (dispatchType == 3 && res=="true")
                         {
                             status = Enums.BOOKINGSTATUS.PENDING_START;
                             offlinejob = true;
@@ -5898,6 +5899,118 @@ namespace SignalRHub
 
             }
             return googleKey;
+        }
+
+        public static decimal CalculateDistanceFromAPI(string pickup, string destination, List<ViaAddresses> viaAddresses = null)
+        {
+            decimal miles = 0.00m;
+
+            try
+            {
+                RequestWebApi obj = new RequestWebApi();
+                obj.routeInfo = new RouteInfo();
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var coord = db.stp_getCoordinatesByAddress(pickup, General.GetPostCodeMatch(pickup)).FirstOrDefault();
+                    if (coord != null)
+                    {
+                        obj.routeInfo.pickupAddress = new AddressInfo();
+                        obj.routeInfo.pickupAddress.Latitude = coord.Latitude;
+                        obj.routeInfo.pickupAddress.Longitude = coord.Longtiude;
+                    }
+                    coord = db.stp_getCoordinatesByAddress(destination, General.GetPostCodeMatch(destination)).FirstOrDefault();
+                    if (coord != null)
+                    {
+                        obj.routeInfo.destinationAddress = new AddressInfo();
+                        obj.routeInfo.destinationAddress.Latitude = coord.Latitude;
+                        obj.routeInfo.destinationAddress.Longitude = coord.Longtiude;
+                    }
+
+                    string vias = "";
+                    if (viaAddresses != null)
+                    {
+
+                        foreach (var item in viaAddresses)
+                        {
+                            coord = db.stp_getCoordinatesByAddress(item.Viaaddress, General.GetPostCodeMatch(item.Viaaddress)).FirstOrDefault();
+                            if (coord != null && coord.Latitude != 0)
+                            {
+                                vias += coord.Latitude + "," + coord.Longtiude + "|";
+                            }
+                            else
+                            {
+                                if (string.IsNullOrEmpty(item.ViaCoordinates))
+                                {
+                                    vias += item.ViaCoordinates + "|";
+                                }
+                            }
+
+                        }
+                        vias = vias.Remove(vias.Length - 1, 1);
+                    }
+
+                    string KEY = "avsHjHri-tP5Su5wV7xyPBWwmdqOtEKK2Atn0xgDnrM";
+
+
+                    if (HubProcessor.Instance.objPolicy.MapType.ToInt() == 1)
+                        KEY = db.ExecuteQuery<string>("select APIKey from mapkeys where maptype='google'").FirstOrDefault().ToStr().Trim();
+
+                    var objX = new
+                    {
+                        originLat = Convert.ToDouble(obj.routeInfo.pickupAddress.Latitude),
+                        originLng = Convert.ToDouble(obj.routeInfo.pickupAddress.Longitude),
+                        destLat = Convert.ToDouble(obj.routeInfo.destinationAddress.Latitude),
+                        destLng = Convert.ToDouble(obj.routeInfo.destinationAddress.Longitude),
+                        defaultclientid = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr(),
+                        keys = KEY,
+                        MapType = HubProcessor.Instance.objPolicy.MapType.ToInt(),
+                        sourceType = "hubapi",
+                        routeType = "short",
+                        vias = vias
+                        //vias = obj.routeInfo.viaAddresses.Select(args => new {Via=args.Latitude +","+args.Longitude })
+                    };
+
+
+                    string json = new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(objX);
+                    string API = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GetRouteDetails" + "?json=" + json;
+
+
+                    HttpWebRequest request = (HttpWebRequest)WebRequest.Create(API);
+                    request.ContentType = "application/json; charset=utf-8";
+                    request.Accept = "application/json";
+                    request.Method = WebRequestMethods.Http.Post;
+                    request.Proxy = null;
+                    request.ContentLength = 0;
+
+                    ResponseWebApi response = new ResponseWebApi();
+
+                    using (WebResponse responsea = request.GetResponse())
+                    {
+
+                        using (StreamReader sr = new StreamReader(responsea.GetResponseStream()))
+                        {
+                            response.Data = sr.ReadToEnd();
+                        }
+                    }
+
+
+
+                    RouteCoordinates route = Newtonsoft.Json.JsonConvert.DeserializeObject<RouteCoordinates>(response.Data.ToStr());
+
+                    obj.routeInfo.Distance = route.Distance;
+                    miles = route.Distance;
+                    //if (pickup.ToStr().Trim().Length > 0 && destination.ToStr().Trim().Length > 0)
+                    //    route.fareModel = CalculateFaresFromAPI(obj);
+                }
+            }
+            catch (Exception ex)
+            {
+
+
+
+            }
+
+            return miles;
         }
     }
 }

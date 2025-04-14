@@ -40,7 +40,13 @@ namespace SignalRHub
         public string revertstatus = "";
     }
 
+    public class DefaultPolicies
+    {
+        public int Id;
+        public int Value;
+        public int PolicyName;
 
+    }
 
      public class ClsAddStop
     {

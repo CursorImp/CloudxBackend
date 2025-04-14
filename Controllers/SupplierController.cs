@@ -6127,67 +6127,107 @@ namespace SignalRHub
                         //CabTreasureAppAPI.ClsDispatchFares objFares = new JavaScriptSerializer().Deserialize<CabTreasureAppAPI.ClsDispatchFares>(data);
                         info.Vehicle = db.Fleet_VehicleTypes.Where(a => a.Id == info.VehicleTypeId).Select(b => b.VehicleType).FirstOrDefault();
 
-                        //
-                        //AppAPISer.AppAPISoapClient c = new AppAPISer.AppAPISoapClient();
-                        //string data = c.GetAllFaresFromDispatch("5139", "LOCAL", new JavaScriptSerializer().Serialize(info), "51394321orue");
-                        //data = data.Replace("\\", "");
-                        //int startIndex = data.IndexOf("[{") + 1;
+                        #region TravelLink
 
-                        ////
-                        //data = data.Substring(startIndex);
-                        //int lastIndex = data.IndexOf("}]") + 1;
-                        //data = data.Substring(0, lastIndex);
+                        info.Mileage = General.CalculateDistanceFromAPI(info.FromAddress, info.ToAddress, info.Via.ToList());
+                        info.Miles = info.Mileage.ToStr();
 
+                        var objFares = new WebApiClasses.ClsDispatchFares();
+                        try
+                        {
+                            var url = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GETALLFARESFROMDISPATCHNEW";
+                            var requestData = new
+                            {
 
-                        ////try
-                        ////{
-                        ////    //
-                        ////    File.AppendAllText(AppContext.BaseDirectory + "\\requestAddStopStep4.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
-                        ////}
-                        ////catch
-                        ////{
-
-                        ////}
-
-                        //CabTreasureAppAPI.ClsDispatchFares objFares = new JavaScriptSerializer().Deserialize<CabTreasureAppAPI.ClsDispatchFares>(data);
-
-
-                        //obj.Fares = objFares.Fare;
-                        //obj.Extra = objFares.ExtraCharges;
-                        //obj.Congestion = objFares.Congestion.ToDecimal();
-                        //obj.AgentFee = objFares.AgentCharge.ToDecimal() + objFares.AgentFees.ToDecimal();
-                        //obj.Parking = objFares.Parking.ToDecimal();
-                       
-                        //if (booking.PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.CREDIT_CARD && objFares.CompanyPrice.ToDecimal() > objFares.Fare.ToDecimal())
-                        //{
-                        //    obj.Fares = objFares.CompanyPrice.ToDecimal();
-                        //    booking.CompanyPrice = objFares.CompanyPrice.ToDecimal();
-                        //}
-
-                        //obj.UpdateCharges = true;
-
-
-                        //booking.IsQuotedPrice = objFares.IsQuoted.ToStr() == "1" ? true : false;
-                        //booking.CashRate = objFares.AgentCharge.ToDecimal();
-                        //booking.AgentCommission = objFares.AgentFees.ToDecimal();
-                        //booking.FareRate = objFares.Fare.ToDecimal();
-                        //booking.ExtraDropCharges = objFares.ExtraCharges.ToDecimal();
-                        //booking.CashFares = objFares.Congestion.ToDecimal();
+                                defaultclientId = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr(),
+                                bookingInformation = info
+                            };
+                            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                            httpWebRequest.ContentType = "application/json";
+                            httpWebRequest.Method = "POST";
+                            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                            {
+                                string json = new JavaScriptSerializer().Serialize(requestData);
+                                streamWriter.Write(json);
+                                streamWriter.Flush();
+                                streamWriter.Close();
+                            }
+                            String result = "";
+                            var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                            {
+                                result = streamReader.ReadToEnd();
 
 
 
-                        //db.SubmitChanges();
+                            }
+                            try
+                            {
 
 
-                        //try
-                        //{
+                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GETALLFARESFROMDISPATCHNEW_AddStop.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(result) + Environment.NewLine);
+                            }
+                            catch
+                            {
 
-                        //    File.AppendAllText(AppContext.BaseDirectory + "\\requestupdatedestinationrespo.txt", DateTime.Now.ToStr() + " request" + mesg + ", response:" + data + Environment.NewLine);
-                        //}
-                        //catch
-                        //{
+                            }
 
-                        //}
+
+                            result = result.Replace("\\", "");
+                            int startIndex = result.IndexOf("[{") + 1;
+
+                            //
+                            result = result.Substring(startIndex);
+                            int lastIndex = result.IndexOf("}]") + 1;
+                            result = result.Substring(0, lastIndex);
+
+                            objFares = Newtonsoft.Json.JsonConvert.DeserializeObject<WebApiClasses.ClsDispatchFares>(result);
+
+                            if (booking.PaymentTypeId == 2)
+                            {
+                                if (db.Gen_SysPolicy_Configurations.FirstOrDefault().CreditCardChargesType == 1)
+                                {
+                                    objFares.ExtraCharges += db.Gen_SysPolicy_Configurations.FirstOrDefault().CreditCardExtraCharges;
+                                }
+
+                            }
+
+                            if (objFares.ReturnFare.ToDecimal() > 0 && objFares.ReturnFare < objFares.Fare)
+                                objFares.ReturnFare = objFares.Fare.ToDecimal();
+
+                        }
+                        catch
+                        {
+
+                        }
+
+                        obj.Fares = objFares.Fare;
+                        obj.Extra = objFares.ExtraCharges;
+                        obj.Congestion = objFares.Congestion.ToDecimal();
+                        obj.AgentFee = objFares.AgentCharge.ToDecimal() + objFares.AgentFees.ToDecimal();
+                        obj.Parking = objFares.Parking.ToDecimal();
+
+                        if (booking.PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.CREDIT_CARD && objFares.CompanyPrice.ToDecimal() > objFares.Fare.ToDecimal())
+                        {
+                            obj.Fares = objFares.CompanyPrice.ToDecimal();
+                            booking.CompanyPrice = objFares.CompanyPrice.ToDecimal();
+                        }
+
+                        obj.UpdateCharges = true;
+
+
+                        booking.IsQuotedPrice = objFares.IsQuoted.ToStr() == "1" ? true : false;
+                        booking.CashRate = objFares.AgentCharge.ToDecimal();
+                        booking.AgentCommission = objFares.AgentFees.ToDecimal();
+                        booking.FareRate = objFares.Fare.ToDecimal();
+                        booking.ExtraDropCharges = objFares.ExtraCharges.ToDecimal();
+                        booking.CashFares = objFares.Congestion.ToDecimal();
+
+
+
+                        db.SubmitChanges();
+
+                        #endregion
 
                     }
 
@@ -6249,18 +6289,11 @@ namespace SignalRHub
 
 
                 }
-                // obj.Fares = 3;
-                //  obj.Extra = 2;
-                // obj.Parking = 6;
-                // obj.Waiting = 8;
-                //  obj.AgentFee = 22;
-
-                //  obj.UpdateCharges = false;
-                //  General.BroadCastMessage("**changeaddress>>" + values[2].ToInt() + ">>" + values[1].ToLong() + ">>" + values[3].ToStr() + ">>" + values[5].ToStr());
+               
             }
             catch (Exception ex)
             {
-                // Clients.Caller.changeDestination(ex.Message);
+                
             }
 
             return obj;
@@ -6461,66 +6494,136 @@ namespace SignalRHub
 
                         info.Vehicle = db.Fleet_VehicleTypes.Where(a => a.Id == info.VehicleTypeId).Select(b => b.VehicleType).FirstOrDefault();
 
+                        #region TravelLink
 
-                        //AppAPISer.AppAPISoapClient c = new AppAPISer.AppAPISoapClient();
-                        //string data = c.GetAllFaresFromDispatch("5139", "LOCAL", new JavaScriptSerializer().Serialize(info), "51394321orue");
-                        //data = data.Replace("\\", "");
-                        //int startIndex = data.IndexOf("[{") + 1;
+                        info.Mileage = General.CalculateDistanceFromAPI(info.FromAddress, info.ToAddress, info.Via.ToList());
+                        info.Miles = info.Mileage.ToStr();
 
-                        ////
-                        //data = data.Substring(startIndex);
-                        //int lastIndex = data.IndexOf("}]") + 1;
-                        //data = data.Substring(0, lastIndex);
+                        var objFares = new WebApiClasses.ClsDispatchFares();
+                        try
+                        {
+                            var url = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GETALLFARESFROMDISPATCHNEW";
+                            var requestData = new
+                            {
 
-
-
-                        //CabTreasureAppAPI.ClsDispatchFares objFares = new JavaScriptSerializer().Deserialize<CabTreasureAppAPI.ClsDispatchFares>(data);
-
-
-                        ////try
-                        ////{
-                        ////    //
-                        ////    File.AppendAllText(AppContext.BaseDirectory + "\\requestAddStopStep5.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
-                        ////}
-                        ////catch
-                        ////{
-
-                        ////}
-
-                        //obj.Fares = objFares.Fare;
-                        //obj.Extra = booking.ExtraDropCharges.ToDecimal();
-                        //obj.Waiting = booking.MeetAndGreetCharges.ToDecimal();
-
-                        ////   obj.Extra = objFares.ExtraCharges;
-                        //obj.Congestion = objFares.Congestion.ToDecimal();
-                        //obj.AgentFee = objFares.AgentCharge.ToDecimal() + objFares.AgentFees.ToDecimal();
-                        //obj.Parking = 0.00m;
-                        //obj.StopName = stop;
-                        //obj.BookingFee = 0.00m;
+                                defaultclientId = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr(),
+                                bookingInformation = info
+                            };
+                            var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                            httpWebRequest.ContentType = "application/json";
+                            httpWebRequest.Method = "POST";
+                            using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                            {
+                                string json = new JavaScriptSerializer().Serialize(requestData);
+                                streamWriter.Write(json);
+                                streamWriter.Flush();
+                                streamWriter.Close();
+                            }
+                            String result = "";
+                            var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                            using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                            {
+                                result = streamReader.ReadToEnd();
 
 
-                        //if (booking.PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.CREDIT_CARD && objFares.CompanyPrice.ToDecimal() > objFares.Fare.ToDecimal())
-                        //{
-                        //    obj.Fares = objFares.CompanyPrice.ToDecimal();
-                        //    booking.CompanyPrice = objFares.CompanyPrice.ToDecimal();
-                        //}
 
-                        //obj.UpdateCharges = true;
+                            }
+                            try
+                            {
 
 
-                        //booking.IsQuotedPrice = false;
-                        //booking.CashRate = objFares.AgentCharge.ToDecimal();
-                        //booking.AgentCommission = objFares.AgentFees.ToDecimal();
-                        //booking.FareRate = objFares.Fare.ToDecimal();
-                        ////   booking.ExtraDropCharges = objFares.ExtraCharges.ToDecimal();
-                        //booking.CashFares = objFares.Congestion.ToDecimal();
+                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GETALLFARESFROMDISPATCHNEW_AddStop.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(result) + Environment.NewLine);
+                            }
+                            catch
+                            {
+
+                            }
 
 
-                        //booking.Booking_ViaLocations.Add(new Booking_ViaLocation { BookingId = booking.Id, ViaLocValue = stop, ViaLocTypeLabel = "Via Address", ViaLocTypeId = 7 });
+                            result = result.Replace("\\", "");
+                            int startIndex = result.IndexOf("[{") + 1;
 
-                        //booking.Booking_Logs.Add(new Booking_Log { BookingId = booking.Id, UpdateDate = DateTime.Now, User = "Driver", AfterUpdate = "ADD STOP : " + stop });
+                            //
+                            result = result.Substring(startIndex);
+                            int lastIndex = result.IndexOf("}]") + 1;
+                            result = result.Substring(0, lastIndex);
 
-                        //db.SubmitChanges();
+                            objFares = Newtonsoft.Json.JsonConvert.DeserializeObject<WebApiClasses.ClsDispatchFares>(result);
+
+                            if (booking.PaymentTypeId == 2)
+                            {
+                                if (db.Gen_SysPolicy_Configurations.FirstOrDefault().CreditCardChargesType == 1)
+                                {
+                                    objFares.ExtraCharges += db.Gen_SysPolicy_Configurations.FirstOrDefault().CreditCardExtraCharges;
+                                }
+
+                            }
+
+                            if (objFares.ReturnFare.ToDecimal() > 0 && objFares.ReturnFare < objFares.Fare)
+                                objFares.ReturnFare = objFares.Fare.ToDecimal();
+
+                        }
+                        catch
+                        {
+
+                        }
+
+
+
+                        obj.Fares = objFares.Fare;
+                        //jiya
+                        var res = (db.ExecuteQuery<DefaultPolicies>("select * from DefaultPolicies where PolicyName='Add Via Charges'").FirstOrDefault());
+                        if (res != null)
+                        {
+                            booking.ExtraDropCharges = booking.ExtraDropCharges.ToDecimal() +res.Value.ToInt();
+                        }
+                        else
+                        {
+                            booking.ExtraDropCharges = booking.ExtraDropCharges.ToDecimal();
+                        }
+
+                            obj.Extra = booking.ExtraDropCharges.ToDecimal();
+                        obj.Waiting = booking.MeetAndGreetCharges.ToDecimal();
+
+                        //   obj.Extra = objFares.ExtraCharges;
+                        obj.Congestion = objFares.Congestion.ToDecimal();
+                        obj.AgentFee = objFares.AgentCharge.ToDecimal() + objFares.AgentFees.ToDecimal();
+                        obj.Parking = 0.00m;
+                        obj.StopName = stop;
+                        obj.BookingFee = 0.00m;
+
+
+                        if (booking.PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.CREDIT_CARD && objFares.CompanyPrice.ToDecimal() > objFares.Fare.ToDecimal())
+                        {
+                            obj.Fares = objFares.CompanyPrice.ToDecimal();
+                            booking.CompanyPrice = objFares.CompanyPrice.ToDecimal();
+                        }
+
+                        obj.UpdateCharges = true;
+
+
+                        booking.IsQuotedPrice = false;
+                        booking.CashRate = objFares.AgentCharge.ToDecimal();
+                        booking.AgentCommission = objFares.AgentFees.ToDecimal();
+                        booking.FareRate = objFares.Fare.ToDecimal();
+                        //   booking.ExtraDropCharges = objFares.ExtraCharges.ToDecimal();
+                        booking.CashFares = objFares.Congestion.ToDecimal();
+
+
+                        if (booking.CompanyPrice.ToDecimal() > 0 && booking.CompanyPrice.ToDecimal() < booking.FareRate.ToDecimal())
+                        {
+                            booking.CompanyPrice = booking.FareRate.ToDecimal();
+
+
+                        }
+
+                        booking.Booking_ViaLocations.Add(new Booking_ViaLocation { BookingId = booking.Id, ViaLocValue = stop, ViaLocTypeLabel = "Via Address", ViaLocTypeId = 7 });
+
+                        booking.Booking_Logs.Add(new Booking_Log { BookingId = booking.Id, UpdateDate = DateTime.Now, User = "Driver", AfterUpdate = "ADD STOP : " + stop });
+
+                        db.SubmitChanges();
+
+                        #endregion
 
 
                         try

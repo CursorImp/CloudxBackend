@@ -10850,6 +10850,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     try
                     {
                         General.RecyclePool();
+                       
                     }
                     catch
                     {
@@ -10859,7 +10860,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
 
                     General.RecyclePool();
-
+                    Global.LoadDataList(true);
                 }
             }
             catch (Exception ex)

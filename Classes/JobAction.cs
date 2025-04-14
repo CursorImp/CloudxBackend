@@ -22,9 +22,10 @@ namespace SignalRHub
         public decimal? ParkingCharges;
         public decimal? ExtraDropCharges;
         public decimal? BookingFee;
-
+        public decimal? Tip;
         public string Passengers;
         public string Dropoff;
+        public string cardPaymentExtras;
         public string QuotedPrice;
 
         public string DrvNo;
@@ -32,6 +33,7 @@ namespace SignalRHub
         public double? Longitude;
 
         public int? PaymentGatewayID;
+
 
         public string ExtrasDetail;
 
@@ -43,6 +45,9 @@ namespace SignalRHub
 
         public string IsAuto = "";
         public int NavType = 0;
+        public string EnableDropOffAction;
+        public string PaymentType;
+        public List<BookingSummary> DropOffFareList;
     }
     public class PauseMeter
     {
