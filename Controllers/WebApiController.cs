@@ -3039,6 +3039,7 @@ namespace SignalRHub.Controllers
         [System.Web.Http.Route("GetAddressDetails")]
         public JsonResult GetAddressDetails(WebApiClasses.RequestWebApi obj)
         {
+            int loctypeId = 0;
             //
             try
             {
@@ -3057,7 +3058,14 @@ namespace SignalRHub.Controllers
                     try
                     {
                         var objLoc = db.Gen_Locations.FirstOrDefault(c => c.Address.ToUpper() == searchValue || c.FullLocationName.ToUpper() == searchValue);
-                        int loctypeId = Enums.LOCATION_TYPES.ADDRESS;
+                        if (obj.addressInfo.locTypeId > 0)
+                        {
+                            loctypeId = obj.addressInfo.locTypeId;
+                        }
+                        else
+                        {
+                            loctypeId = Enums.LOCATION_TYPES.ADDRESS;
+                        }
                         //   double? latitude = null;
                         //  double? longitude = null;
                         double? latitude = obj.addressInfo.Latitude;
@@ -3837,7 +3845,7 @@ namespace SignalRHub.Controllers
                         {
                             var locationList = GetGoogleAndOtherAddressData(obj);
                             var locationName = locationList.Select(x => x.AddressLine).ToList();
-                            response.Data = locationName;
+                            response.Data = locationList;
                         }
                         else { 
                         //
