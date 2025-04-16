@@ -11392,6 +11392,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                              CompanyNumber = s.CompanyNumber,
                                              CompanyVatNumber = s.CompanyVatNumber,
                                              //CompanyLogo = s.CompanyLogo,
+                                             CompanyLogo1 = s.CompanyLogo != null ? Convert.ToBase64String(s.CompanyLogo.ToArray()) : null,
                                              BankName = s.BankName,
                                              AdminFeeLabel = u.UserName,
                                              AdminFees = c.AdminFees,
