@@ -11439,8 +11439,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                 where c.Id == obj.CompanyId
                                 select new
                                 {
-                                    FromMail = c.Email,
-                                    ToMail = sc.EmailAddress
+                                    FromMail = sc.EmailAddress,
+                                    ToMail = c.Email
                                 }).ToList();
                     response.Data = new
                     {
