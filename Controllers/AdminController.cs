@@ -11398,7 +11398,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                              AdminFees = c.AdminFees,
                                              IbanNumber = s.IbanNumber,
                                              BlcNumber = s.BlcNumber,
-                                             HasVat = c.HasVat
+                                             HasVat = c.HasVat,
+                                             ReportParameterHideExtraCharge = "True"
                                              //HideBankDetail=c.HideBankDetails
                                          }).ToList();
                     response.Data = new
@@ -24735,6 +24736,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                 ViaString = b.ViaString,
                                 EscortPrice = b.EscortPrice,
                                 Status = b.BookingStatus.StatusName,
+                                TotalTravelledMiles = b.TotalTravelledMiles == null ? 0 : b.TotalTravelledMiles
                                 // InvoiceId = c.InvoiceId,
                             }).OrderBy(c => c.PickupDate).ToList();
 

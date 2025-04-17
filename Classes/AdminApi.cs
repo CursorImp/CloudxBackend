@@ -2046,6 +2046,7 @@ namespace SignalRHub.Classes
         public string ViaString { get; set; }
         public decimal? EscortPrice { get; set; }
         public string Status { get; set; }
+        public decimal? TotalTravelledMiles { get; set; }
     }
     public class AccountInvoicehistory
     {
