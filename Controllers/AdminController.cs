@@ -1039,6 +1039,7 @@ namespace SignalRHub.Controllers
                         var fleetDriverRecd = db.ExecuteQuery<stp_GetDriverRecord>("exec stp_GetDriverRecord {0}", obj.fleetDriver.Id)
                                 .Select(x => new
                                 {
+                                    VehicleLogBookDocument = x.VehicleLogBookDocument,
                                     Id = x.Id,
                                     No = x.No, //txtDriverNo
                                     Name = x.Name, //txtDriverName.Text
@@ -3296,7 +3297,7 @@ namespace SignalRHub.Controllers
                                                  ResultDescription = a.ResultDescription
                                              }).ToList();
 
-                                              var query = from a in db.Gen_Companies
+                        var query = from a in db.Gen_Companies
                                     join b in db.Gen_SubCompanies on a.SubCompanyId equals b.Id into table2
                                     from b in table2.DefaultIfEmpty()
                                     where a.Id == obj.Company.Id
@@ -10870,7 +10871,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     try
                     {
                         General.RecyclePool();
-                       
+
                     }
                     catch
                     {
@@ -14313,7 +14314,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("SaveFleetDriver")]
-        public JsonResult SaveFleetDriver(AdminApi obj, HttpPostedFileBase file, List<HttpPostedFileBase> Documents)
+        public JsonResult SaveFleetDriver(AdminApi obj, HttpPostedFileBase file, HttpPostedFileBase VehicleLogBookDocument, string FU_VehicleLogBookDocument_Text, List<HttpPostedFileBase> Documents)
         {
             ResponseAdminApi response = new ResponseAdminApi();
             DriverBO objdriver = new DriverBO();
@@ -14403,6 +14404,25 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                         }
 
+                    }
+
+                    string VehicleLogBookDocument_TemNameStore = null;
+                    try
+                    {
+                        if (VehicleLogBookDocument != null)
+                        {
+                            string Dir = Path.Combine(Server.MapPath("~/Images/Document/" + "Driver" + obj.fleetDriver.DriverNo));
+                            if (!Directory.Exists(Dir))
+                            {
+                                Directory.CreateDirectory(Dir);
+                            }
+                            var filePath = Path.Combine(Dir, VehicleLogBookDocument.FileName);
+                            VehicleLogBookDocument.SaveAs(filePath);
+                            VehicleLogBookDocument_TemNameStore = "/Images/Document/Driver" + obj.fleetDriver.DriverNo + "/" + VehicleLogBookDocument.FileName;
+                        }
+                    }
+                    catch
+                    {
                     }
 
                     string oldDriverNo = string.Empty;
@@ -14722,7 +14742,28 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                     objdriver.Save();
                     //db.SubmitChanges();
+                    try
+                    {
+                        if (VehicleLogBookDocument_TemNameStore != null)
+                        {
+                            db.ExecuteQuery<int>(@"UPDATE Fleet_Driver SET VehicleLogBookDocument = {0} WHERE Id = {1}",
+                                                         VehicleLogBookDocument_TemNameStore, objdriver.Current.Id);
+                        }
+                        else
+                        {
+                            if (string.IsNullOrWhiteSpace(FU_VehicleLogBookDocument_Text))
+                            {
+                                db.ExecuteQuery<int>($@"
+    	          UPDATE Fleet_Driver 
+         	  SET VehicleLogBookDocument = NULL 
+         	  WHERE Id = {objdriver.Current.Id}");
+                            }
+                        }
 
+                    }
+                    catch
+                    {
+                    }
 
                     if (objdriver.Current.Fleet_Driver_Images != null && objdriver.Current.Fleet_Driver_Images.Count > 0)
                         UploadImage(objdriver.Current.Id, objdriver.Current.DriverNo, objdriver.Current.Fleet_Driver_Images[0].Photo, HubProcessor.Instance.objPolicy.DefaultClientId.ToStr().Replace("/", "").Trim().Replace("*", "").Replace("_", "").Trim() + "_" + objdriver.Current.DriverNo, objdriver.Current.Fleet_Driver_Images[0].PhotoLinkId.ToStr());
@@ -18143,17 +18184,17 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 foreach (var item in listMain)
                 {
                     sb.Append("insert into PAFDb.dbo.Localization (PostCode,PostCodeId) values ('" + item.PostCode.ToStr() + "'," + item.Id + "); ");
-                    
-                        sb.Append(" exec PAFDb.dbo.stp_saveaddressdata '" + item.PostCode.ToStr() + "'; ");
-                    
+
+                    sb.Append(" exec PAFDb.dbo.stp_saveaddressdata '" + item.PostCode.ToStr() + "'; ");
+
 
                 }
 
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
                     db.stp_SavePostCodes(sb.ToStr());
-                }                
-               
+                }
+
 
             }
             catch (Exception ex)

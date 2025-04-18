@@ -1290,6 +1290,7 @@ namespace SignalRHub.Classes
         public string EndDatestr { get; set; }
         public string LicenseExpiryDatestr { get; set; }
         public string DateOfBirthstr { get; set; }
+        public string VehicleLogBookDocument { get; set; }
     }
     public class stp_GetDriverRecord1
     {
