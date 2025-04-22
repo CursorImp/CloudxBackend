@@ -25813,5 +25813,177 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
         }
 
+        #region Online Booking
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetOnlineBookingList")]
+        public JsonResult GetOnlineBookingList()
+        {
+            List<WebApiClasses.ClsOnlineBooking> list = null;
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+
+                //
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+                    //
+                    list = (from a in db.Bookings
+                            join b in db.Gen_PaymentTypes on a.PaymentTypeId equals b.Id
+                            join c in db.Gen_Companies on a.CompanyId equals c.Id into table2
+                            join v in db.Fleet_VehicleTypes on a.VehicleTypeId equals v.Id
+                            from c in table2.DefaultIfEmpty()
+                            where a.BookingStatusId == Enums.BOOKINGSTATUS.WAITING_WEBBOOKING
+                            && (a.BookingTypeId == Enums.BOOKING_TYPES.ONLINE || a.BookingTypeId == Enums.BOOKING_TYPES.WEB || a.BookingTypeId == 11)
+
+                            select new WebApiClasses.ClsOnlineBooking
+                            {
+                                Id = a.Id,
+                                BookingNo = a.BookingNo,
+                                BookingDate = a.BookingDate,
+                                //BookingDateString = a.BookingDate.HasValue ? "" : a.BookingDate.Value.ToString("dd-MMM-yyyy"),
+                                PickupDateTime = a.PickupDateTime,
+                                //PickupDateString = a.PickupDateTime.HasValue? "" : a.PickupDateTime.Value.ToString("dd-MMM-yyyy"),
+                                //PickupTimeString = a.PickupDateTime.HasValue? "" : a.PickupDateTime.Value.ToString("HH:mm"),
+                                CustomerName = a.CustomerName,
+                                CustomerEmail = a.CustomerEmail,
+                                CustomerMobileNo = a.CustomerMobileNo,
+                                CustomerPhoneNo = a.CustomerPhoneNo,
+                                CompanyPrice = a.CompanyPrice,
+                                Extra = a.ExtraDropCharges,
+                                FareRate = a.FareRate,
+                                Parking = a.CongtionCharges,
+                                Waiting = a.MeetAndGreetCharges,
+
+                                FromAddress = a.FromAddress,
+                                FromDoorNo = a.FromDoorNo,
+                                FromStreet = a.FromStreet,
+                                ToAddress = a.ToAddress,
+                                ToDoorNo = a.ToDoorNo,
+
+                                ToStreet = a.ToStreet,
+                                BookingStatusId = a.BookingStatusId,
+                                BookingTypeId = a.BookingTypeId,
+                                CompanyName = c.CompanyName,
+                                VehicleType = v.VehicleType,
+                                ViaString = a.ViaString,
+                                PaymentType = b.PaymentType,
+                                SpecialRequirements = a.SpecialRequirements,
+                                FlightNumber = a.FromFlightNo,
+                                PaymentComments = a.PaymentComments
+
+                            }).ToList();
+                }
+                response.Data = list;
+            }
+            catch (Exception e)
+            {
+                response.Message = "Some Error Occured while retrieving list";
+                response.HasError = true;
+            }
+            return new CustomJsonResult { Data = response };
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("UpdateOnlineBookingStatus")]
+        public JsonResult UpdateOnlineBookingStatus(WebApiClasses.ClsOnlineBooking obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\UpdateOnlineBookingStatus.txt", DateTime.Now + ",json: " + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+            }
+
+
+
+            try
+            {
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+
+
+                    if (obj.BookingStatusId.ToInt() == 1)
+
+                        db.stp_UpdateOnlineJobStatus(obj.Id, Enums.BOOKINGSTATUS.WAITING, "OnlineBooking Accept", "Accept", "Controller");
+                    else
+
+                        db.stp_UpdateOnlineJobStatus(obj.Id, Enums.BOOKINGSTATUS.CANCELLED, "OnlineBooking Declined:" + "", "Declined", "Controller");
+
+
+                }
+                //
+
+                General.BroadCastMessage("**close authorize web>>" + Environment.MachineName + ">>" + obj.Id + ">>" + obj.BookingStatusId.ToInt());
+
+
+                if (obj.BookingStatusId.ToInt() != 1)
+                {
+
+
+                    CallSupplierApi.UpdateStatus(obj.Id, Enums.BOOKINGSTATUS.CANCELLED.ToInt());
+
+                    try
+                    {
+                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateOnlineBookingStatusDeclined.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    }
+                    catch
+                    {
+
+                    }
+
+                }
+
+
+                try
+                {
+
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+
+                        var detail = db.Bookings.Where(c => c.Id == obj.Id).Select(c => new { c.CustomerId, c.BookingTypeId }).FirstOrDefault();
+
+                        if (detail.CustomerId != null && detail.BookingTypeId.ToInt() == Enums.BOOKING_TYPES.ONLINE)
+                        {
+                            if (obj.BookingStatusId.ToInt() != 1)
+                                General.SendPushNotification("Your Booking is Rejected [" + obj.Id.ToStr() + "]", "", detail.CustomerId.ToInt());
+                            else
+                                General.SendPushNotification("Your Booking is Approved [" + obj.Id.ToStr() + "]", "", detail.CustomerId.ToInt());
+
+
+
+                        }
+
+                    }
+                }
+                catch
+                {
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\AcceptOnlineBookingException.txt", DateTime.Now + ",json: " + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+                }
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        #endregion
     }
 }
