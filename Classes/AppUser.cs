@@ -8,6 +8,40 @@ using System.Web.Mvc;
 
 namespace SignalRHub
 {
+    public class JobLateSchedular
+    {
+
+        public long JobId;
+        public string MobileNo;
+
+    }
+
+
+    public class FCMPushNotification
+    {
+        public FCMPushNotification()
+        {
+            // TODO: Add constructor logic here  
+        }
+        public bool Successful
+        {
+            get;
+            set;
+        }
+        public string Response
+        {
+            get;
+            set;
+        }
+        public Exception Error
+        {
+            get;
+            set;
+        }
+
+        string serverKey = string.Empty;
+        string senderId = string.Empty;
+    }
     public class CustomJsonResult : JsonResult
     {
         private const string _dateFormat = "yyyy-MM-dd HH:mm:ss";

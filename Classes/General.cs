@@ -38,7 +38,131 @@ namespace SignalRHub
     {
         public static string remoteIps = string.Empty;
 
+        public static string GetAppSettings()
+        {
+            string result = "";
 
+            try
+            {
+
+                string clientId = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr();
+                string con = "Server=116.202.197.103,52565;Database=onlineWebVehicleManagementSystem;Trusted_Connection=NO; user id =0nL!n3@Web$!T3$3@;password=onl!n3$er@;";
+                string query = "execute SP_GetclientInfo @ClientName = '" + clientId + "'";
+
+                using (SqlConnection conn = new SqlConnection(con))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = new SqlCommand(query, conn))
+                    {
+                        SqlDataReader reader = cmd.ExecuteReader();
+                        reader.Read();
+                        result = reader["ParameterValues"].ToString();
+                        reader.Close();
+                    }
+                    conn.Close();
+
+                }
+
+
+
+
+            }
+            catch
+            {
+            }
+
+            return result;
+        }
+
+        public static FCMPushNotification SendPushNotification(string _title, string _message, int customerId)
+        {
+
+            try
+            {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\SendPushNotification.txt", DateTime.Now + ",json:" + _title + Environment.NewLine);
+
+            }
+            catch
+            {
+
+            }
+
+            FCMPushNotification result = new FCMPushNotification();
+            try
+            {
+
+                string deviceId = string.Empty;
+                string serverKey = "AAAAvStUXH0:APA91bHN7gPIJmJSL1zujNp4huE9RU_4-oYo-z2qFanQGkDaBiA8qbfdPf1VES-mO2VoTUPf9R7MK4ThUC_3yYLsmpNntX54a3eGhZ9iXUW-CoZw1DncVfKoKL-eHdGw7FRgf93zsPCq";
+
+                string senderId = "812475767933";
+
+                try
+                {
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        deviceId = db.ExecuteQuery<string>("select NotifyToken from Customer_NotificationDetail where CustomerId=" + customerId).FirstOrDefault();
+
+                    }
+                }
+                catch { }
+
+                if (deviceId.ToStr().Trim().Length > 0)
+                {
+
+                    result.Successful = true;
+                    result.Error = null;
+
+
+                    var requestUri = "https://fcm.googleapis.com/fcm/send";
+                    WebRequest webRequest = WebRequest.Create(requestUri);
+                    webRequest.Method = "POST";
+                    webRequest.Headers.Add(string.Format("Authorization: key={0}", serverKey));
+                    webRequest.Headers.Add(string.Format("Sender: id={0}", senderId));
+                    webRequest.ContentType = "application/json";
+                    var data = new
+                    {
+                        to = deviceId, // this if you want to test for a single device  
+                                       //                        to = "/topics/" + _topic, // this is for topic  
+                        priority = "high",
+                        notification = new
+                        {
+                            title = _title,
+                            body = _message,
+                            show_in_foreground = "True",
+                            icon = "myicon",
+                            sound = "default"
+                        }
+                    };
+                    var serializer = new JavaScriptSerializer();
+                    var json = serializer.Serialize(data);
+                    Byte[] byteArray = Encoding.UTF8.GetBytes(json);
+                    webRequest.ContentLength = byteArray.Length;
+                    using (Stream dataStream = webRequest.GetRequestStream())
+                    {
+                        dataStream.Write(byteArray, 0, byteArray.Length);
+                        using (WebResponse webResponse = webRequest.GetResponse())
+                        {
+                            using (Stream dataStreamResponse = webResponse.GetResponseStream())
+                            {
+                                using (StreamReader tReader = new StreamReader(dataStreamResponse))
+                                {
+                                    String sResponseFromServer = tReader.ReadToEnd();
+                                    result.Response = sResponseFromServer;
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                result.Successful = false;
+                result.Response = null;
+                result.Error = ex;
+            }
+            return result;
+        }
 
         public static void RecyclePool()
         {
