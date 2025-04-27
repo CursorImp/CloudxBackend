@@ -20,6 +20,7 @@ using SignalRHub.WebApiClasses;
 using DotNetCoords;
 using SignalRHub.Classes;
 using System.Threading;
+using System.Data.SqlClient;
 
 namespace SignalRHub
 {

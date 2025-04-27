@@ -163,7 +163,10 @@ namespace SignalRHub.Controllers
                                 IsBookingPayment = true,
                                 EnableNoofHours = false,
                                 EnbaleDriverHourlyCommission = false,
-                                IsCompanyWiseHourlyFare = false
+                                IsCompanyWiseHourlyFare = false,
+                                EnableCongestionCharges = true,
+                                EnableCongestionSubCompanyWise = true,
+                                ShowDashboardMap = true
                             };
 
 
@@ -3442,7 +3445,7 @@ namespace SignalRHub.Controllers
                         RouteCoordinates route = Newtonsoft.Json.JsonConvert.DeserializeObject<RouteCoordinates>(response.Data.ToStr());
 
                         obj.routeInfo.Distance = route.Distance;
-
+                        obj.routeInfo.legs = route.legs;
                         if (obj.routeInfo.AutoCalculateFares.ToBool() && pickup.ToStr().Trim().Length > 0 && destination.ToStr().Trim().Length > 0)
                             route.fareModel = CalculateFares(obj);
 
@@ -3717,6 +3720,17 @@ namespace SignalRHub.Controllers
 
                         var res = Newtonsoft.Json.JsonConvert.DeserializeObject<ClsDispatchFares>(result);
 
+                        try
+                        {
+                            var CongestionCharges = GetCongestionCharges(obj.routeInfo.legs, info.PickupDateTime, info.SubCompanyId);
+                            Newtonsoft.Json.Linq.JObject jsonObj = Newtonsoft.Json.Linq.JObject.Parse(CongestionCharges);
+                            decimal congestion = jsonObj["Data"]["FareRate"].ToObject<decimal>();
+                            res.Congestion = congestion;
+                            res.Parking = 0;
+                        }
+                        catch
+                        {
+                        }
 
                         if (res.ReturnFare.ToDecimal() > 0 && res.ReturnFare < res.Fare)
                             res.ReturnFare = res.Fare.ToDecimal();
@@ -3817,7 +3831,60 @@ namespace SignalRHub.Controllers
             return new CustomJsonResult { Data = response };
         }
 
-
+        public string GetCongestionCharges(List<RouteLeg> route, string PickupDateTime, int? SubCompanyId)
+        {
+            var url = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GetCongestionCharges";
+            List<RouteCoords> allCoords = new List<RouteCoords>();
+            foreach (var leg in route)
+            {
+                if (leg.coords != null)
+                {
+                    allCoords.AddRange(leg.coords);
+                }
+            }
+            string result = "";
+            int batchSize = 100; // Adjust based on server limit
+            List<List<RouteCoords>> batches = allCoords.Select((coord, index) => new { coord, index }).GroupBy(x => x.index / batchSize).Select(g => g.Select(x => x.coord).ToList()).ToList();
+            foreach (var batch in batches)
+            {
+                var requestData = new
+                {
+                    Coords = batch,
+                    defaultclientId = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr(),
+                    PickupDateTime = PickupDateTime,
+                    SubCompanyId = SubCompanyId
+                };
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                httpWebRequest.ContentType = "application/json";
+                httpWebRequest.Method = "POST";
+                using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                {
+                    string json = new JavaScriptSerializer().Serialize(requestData);
+                    streamWriter.Write(json);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+                }
+                var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                {
+                    result = streamReader.ReadToEnd();
+                    Newtonsoft.Json.Linq.JObject jsonObj = Newtonsoft.Json.Linq.JObject.Parse(result);
+                    decimal congestion = jsonObj["Data"]["FareRate"].ToObject<decimal>();
+                    if (congestion > 0)
+                    {
+                        break;
+                    }
+                }
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetCongestionCharges.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(result) + Environment.NewLine);
+                }
+                catch
+                {
+                }
+            }
+            return result;
+        }
 
 
         [System.Web.Http.HttpGet]

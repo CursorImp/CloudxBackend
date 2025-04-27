@@ -1637,9 +1637,13 @@ namespace SignalRHub.WebApiClasses
 
         public bool? AutoCalculateFares { get; set; }
         public decimal Distance;
+        public int Duration;
         public string unit;
         public string currency;
         public RouteCoordinates RouteCoordinates;
+        public int Noofhours { get; set; }
+        public int FareCalculationSetting { get; set; }
+        public List<RouteLeg> legs;
 
 
     }
