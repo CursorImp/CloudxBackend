@@ -92,10 +92,74 @@ namespace SignalRHub.Controllers
 
                         if (objUser != null)
                         {
+                            //List<SignalRHub.Classes.AppSetting> AppSettings = new List<SignalRHub.Classes.AppSetting>();
+                            var requiredSettings = new List<AppSetting>
+                        {
+                            new AppSetting { SetKey = "BookingSortBy", SetVal = "Lead", description = "Booking Sort By" },
+                            new AppSetting { SetKey = "Currency", SetVal = "£", description = "Currency" },
+                            new AppSetting { SetKey = "ShowMsgToAllDriver", SetVal = "true", description = "Show Msg To All Driver" },
+                            new AppSetting { SetKey = "IsVisibleNoShow", SetVal = "true", description = "Is Visible No Show" },
+                            new AppSetting { SetKey = "ShowDriverShortCutPanicButton", SetVal = "true", description = "Show Driver ShortCut Panic Button" },
+                            new AppSetting { SetKey = "ShowDriverShortCut", SetVal = "true", description = "Show Driver ShortCut" },
+                            new AppSetting { SetKey = "ShowPlot", SetVal = "true", description = "Show Plot" },
+                            new AppSetting { SetKey = "FaresSetting", SetVal = "true", description = "Fares Setting" },
+                            new AppSetting { SetKey = "ShowMultiBooking", SetVal = "true", description = "Show Multi Booking" },
+                            new AppSetting { SetKey = "MultiVehicle", SetVal = "true", description = "Multi Vehicle" },
+                            new AppSetting { SetKey = "IsBookingPayment", SetVal = "true", description = "Is Booking Payment" },
+                            new AppSetting { SetKey = "EnableUnblockDriver", SetVal = "true", description = "Enable Unblock Driver" },
+                            new AppSetting { SetKey = "EnableCongestionCharges", SetVal = "true", description = "Enable Congestion Charges" },
+                            new AppSetting { SetKey = "ShowETA", SetVal = "true", description = "Show ETA" },
+                            new AppSetting { SetKey = "ShowCompleteJob", SetVal = "true", description = "Show Complete Job" },
+                            new AppSetting { SetKey = "EnableBookingCharges", SetVal = "true", description = "Enable Booking Charges" },
+                            new AppSetting { SetKey = "BookingPayment", SetVal = "true", description = "Booking Payment" },
+                            new AppSetting { SetKey = "EnableNoofHours", SetVal = "false", description = "Enable No of Hours" },
+                            new AppSetting { SetKey = "EnbaleDriverHourlyCommission", SetVal = "false", description = "Enbale Driver Hourly Commission" },
+                            new AppSetting { SetKey = "IsCompanyWiseHourlyFare", SetVal = "false", description = "Is Company Wise Hourly Fare" },
+                            new AppSetting { SetKey = "showCommandLine", SetVal = "true", description = "showCommandLine" },
+                        };
 
-                            bool showCommandLine = false;
+                            // Load existing settings
+                            var AppSettings = db.ExecuteQuery<AppSetting>(
+                                @"SELECT SetKey, SetVal, description FROM AppSettings").ToList();
+
+                            // Insert missing settings
+                            foreach (var setting in requiredSettings)
+                            {
+                                if (!AppSettings.Any(a => a.SetKey == setting.SetKey))
+                                {
+                                    db.ExecuteCommand(@"INSERT INTO AppSettings (SetKey, SetVal, description) VALUES ({0}, {1}, {2})",
+                                                      setting.SetKey, setting.SetVal, setting.description);
+                                }
+                            }
+
+                            // Reload to get updated AppSettings
+                            AppSettings = db.ExecuteQuery<AppSetting>(
+                                @"SELECT SetKey, SetVal, description FROM AppSettings").ToList();
+                            AppSettings = db.ExecuteQuery<AppSetting>(@"SELECT SetKey, SetVal, description FROM AppSettings").ToList();
+                            var bookingSortBySetting = AppSettings.FirstOrDefault(a => a.SetKey == "BookingSortBy");
+                            var CurrencySetting = AppSettings.FirstOrDefault(a => a.SetKey == "Currency");
+                            var ShowMsgToAllDriverSetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowMsgToAllDriver");
+                            var IsVisibleNoShowSetting = AppSettings.FirstOrDefault(a => a.SetKey == "IsVisibleNoShow");
+                            var ShowDriverShortCutPanicButtonSetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowDriverShortCutPanicButton");
+                            var ShowDriverShortCutSetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowDriverShortCut");
+                            var ShowPlotSetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowPlot");
+                            var FaresSettingSetting = AppSettings.FirstOrDefault(a => a.SetKey == "FaresSetting");
+                            var ShowMultiBookingSetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowMultiBooking");
+                            var MultiVehicleSetting = AppSettings.FirstOrDefault(a => a.SetKey == "MultiVehicle");
+                            var IsBookingPaymentSetting = AppSettings.FirstOrDefault(a => a.SetKey == "IsBookingPayment");
+                            var EnableUnblockDriverSetting = AppSettings.FirstOrDefault(a => a.SetKey == "EnableUnblockDriver");
+                            var EnableCongestionChargesSetting = AppSettings.FirstOrDefault(a => a.SetKey == "EnableCongestionCharges");
+                            var ShowETASetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowETA");
+                            var ShowCompleteJobSetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowCompleteJob");
+                            var EnableBookingChargesSetting = AppSettings.FirstOrDefault(a => a.SetKey == "EnableBookingCharges");
+                            var BookingPaymentSetting = AppSettings.FirstOrDefault(a => a.SetKey == "BookingPayment");
+                            var EnableNoofHoursSetting = AppSettings.FirstOrDefault(a => a.SetKey == "EnableNoofHours");
+                            var EnbaleDriverHourlyCommissionSetting = AppSettings.FirstOrDefault(a => a.SetKey == "EnbaleDriverHourlyCommission");
+                            var IsCompanyWiseHourlyFareSetting = AppSettings.FirstOrDefault(a => a.SetKey == "IsCompanyWiseHourlyFare");
+                            var showCommandLineSetting = AppSettings.FirstOrDefault(a => a.SetKey == "showCommandLine");
+                            //bool showCommandLine = false;
                             // showCommandLine= db.UM_SecurityGroup_Permissions.Where(c => c.SecurityGroupId == objUser.SecurityGroupId && c.UM_FormFunction.UM_Function.FunctionName == "SHOW COMMAND LINE").Count() > 0;
-                            showCommandLine = true;
+                            //showCommandLine = true;
                             if (objUser.SecurityGroupId == 2)
                             {
                                 IsAdmin = false;
@@ -142,31 +206,31 @@ namespace SignalRHub.Controllers
                                 HubProcessor.Instance.objPolicy.TrackDriverType,
                                 HubProcessor.Instance.objPolicy.AutoCalculateFares,
                                 BaseAddress = baseAddress,
-                                showCommandLine,
+                                showCommandLine = showCommandLineSetting,
                                 HubProcessor.Instance.objPolicy.EnableAutoDespatch,
                                 HubProcessor.Instance.objPolicy.EnableBidding,
                                 AutoModeType = HubProcessor.Instance.objPolicy.AutoDespatchDriverCategoryPriority,
                                 airports,
-                                BookingSortBy = "Lead",
-                                Currency = "£",
-                                ShowMsgToAllDriver = true,
-                                IsVisibleNoShow = true,
-                                ShowDriverShortCutPanicButton = true,
-                                ShowDriverShortCut = true,
-                                ShowPlot = true,
-                              //  ShowAppSetting = true,
-                                FaresSetting = true,
+
+                                EnableNoofHours = EnableNoofHoursSetting,
+                                EnbaleDriverHourlyCommission = EnbaleDriverHourlyCommissionSetting,
+                                IsCompanyWiseHourlyFare = IsCompanyWiseHourlyFareSetting,
+                                BookingSortBy = bookingSortBySetting.SetVal,
+                                Currency = CurrencySetting.SetVal,
+                                ShowMsgToAllDriver = ShowMsgToAllDriverSetting.SetVal,
+                                IsVisibleNoShow = IsVisibleNoShowSetting.SetVal,
+                                ShowDriverShortCutPanicButton = ShowDriverShortCutPanicButtonSetting.SetVal,
+                                ShowDriverShortCut = ShowDriverShortCutSetting.SetVal,
+                                ShowPlot = ShowPlotSetting.SetVal,
+                                //  ShowAppSetting = true,
+                                FaresSetting = FaresSettingSetting.SetVal,
                                 // EnableBookingRecipt = true,
                                 // ShowMultiDispatchJob = true
-                                ShowMultiBooking,
-                                MultiVehicle=true,
-                                IsBookingPayment = true,
-                                EnableNoofHours = false,
-                                EnbaleDriverHourlyCommission = false,
-                                IsCompanyWiseHourlyFare = false,
-                                EnableCongestionCharges = true,
-                                EnableCongestionSubCompanyWise = true,
-                                ShowDashboardMap = true
+                                ShowMultiBooking = ShowMultiBookingSetting.SetVal,
+                                MultiVehicle = MultiVehicleSetting.SetVal,
+                                IsBookingPayment = IsBookingPaymentSetting.SetVal,
+                                EnableUnblockDriver = EnableUnblockDriverSetting.SetVal,
+                                EnableCongestionCharges = EnableCongestionChargesSetting.SetVal
                             };
 
 
@@ -206,11 +270,11 @@ namespace SignalRHub.Controllers
                                 BookingColumns = bookingcolumns,
                                 SysSettings = objSettings,
                                 IsAdmin = IsAdmin,
-                                ShowETA = true,
-                                ShowCompleteJob = true,
+                                ShowETA = ShowETASetting.SetVal,
+                                ShowCompleteJob = ShowCompleteJobSetting.SetVal,
                                 ListofUserRights = ListofUserRights,
-                                EnableBookingCharges = true,
-                                BookingPayment = true
+                                EnableBookingCharges = EnableBookingChargesSetting.SetVal,
+                                BookingPayment = BookingPaymentSetting.SetVal
                             };
 
 

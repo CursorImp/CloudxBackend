@@ -64,6 +64,13 @@ namespace SignalRHub.WebApiClasses
         public bool IsQuotation { get; set; }
 
     }
+    public class AppSetting
+    {
+        public long Id { get; set; }
+        public string SetKey { get; set; }
+        public string SetVal { get; set; }
+        public string description { get; set; }
+    }
     public class ClsOnlineBooking
     {
         public long Id { get; set; }
