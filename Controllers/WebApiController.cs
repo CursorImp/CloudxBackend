@@ -1201,9 +1201,9 @@ namespace SignalRHub.Controllers
 
 
                 var list = (from a in db.Fleet_DriverQueueLists
-                            where a.DriverId != null && a.Status == true && a.Fleet_Driver.IsActive == true
-                            //&& (a.Fleet_Driver.SubcompanyId == AppVars.DefaultDriverSubCompanyId || AppVars.DefaultDriverSubCompanyId == 0) && (a.ZoneId == null || a.ZoneId != null && a.Gen_Zone.ZoneName != "SIN BIN")
-                            && (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK)
+                            where a.DriverId != null && a.Status == true && a.Fleet_Driver.IsActive == true && (obj.AllocateAnyDriver == true
+                            || (a.Status == true && (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK))
+                            )
 
                             orderby a.QueueDateTime
                             select new

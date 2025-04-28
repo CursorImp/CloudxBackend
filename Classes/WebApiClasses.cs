@@ -1327,6 +1327,7 @@ namespace SignalRHub.WebApiClasses
 
     public class RequestWebApi
     {
+        public bool? AllocateAnyDriver { get; set; }
         public string MACAddress { get; set; }
         public int SendType { get; set; }
 
