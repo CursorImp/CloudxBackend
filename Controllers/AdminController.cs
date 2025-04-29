@@ -11366,6 +11366,14 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         var MessRequrid = "Company must be requried";
                         return Json(MessRequrid, JsonRequestBehavior.AllowGet);
                     }
+                    decimal netAmount = 0.00m;
+                    if (count > 0)
+                    {
+                        for (int k = 0; k < AccountInvoicelist.Count; k++)
+                        {
+                            netAmount += AccountInvoicelist[k].Charges.ToDecimal() + AccountInvoicelist[k].ParkingCharges.ToDecimal() + AccountInvoicelist[k].WaitingCharges.ToDecimal() + AccountInvoicelist[k].ExtraDropCharges.ToDecimal();
+                        }
+                    }
                     var company = db.Gen_Companies.ToList();
                     var subcompany = db.Gen_SubCompanies.ToList();
                     var users = db.UM_Users.ToList();
@@ -11396,7 +11404,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                              CompanyLogo1 = s.CompanyLogo != null ? Convert.ToBase64String(s.CompanyLogo.ToArray()) : null,
                                              BankName = s.BankName,
                                              AdminFeeLabel = u.UserName,
-                                             AdminFees = c.AdminFees,
+                                             AdminFees = c.AdminFeeType.ToStr().ToLower() == "percent" ? Math.Round(netAmount * (c.AdminFees.ToDecimal() / 100), 2) : Math.Round(c.AdminFees.ToDecimal(), 2),
                                              IbanNumber = s.IbanNumber,
                                              BlcNumber = s.BlcNumber,
                                              HasVat = c.HasVat,
