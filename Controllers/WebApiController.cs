@@ -230,7 +230,9 @@ namespace SignalRHub.Controllers
                                 MultiVehicle = MultiVehicleSetting.SetVal,
                                 IsBookingPayment = IsBookingPaymentSetting.SetVal,
                                 EnableUnblockDriver = EnableUnblockDriverSetting.SetVal,
-                                EnableCongestionCharges = EnableCongestionChargesSetting.SetVal
+                                EnableCongestionCharges = true,
+                                EnableCongestionSubCompanyWise = true,
+                                ShowDashboardMap = true
                             };
 
 
