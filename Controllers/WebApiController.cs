@@ -1201,7 +1201,7 @@ namespace SignalRHub.Controllers
 
 
                 var list = (from a in db.Fleet_DriverQueueLists
-                            where a.DriverId != null && a.Status == true && a.Fleet_Driver.IsActive == true && (obj.AllocateAnyDriver == true
+                            where a.DriverId != null && a.Fleet_Driver.IsActive == true && (obj.AllocateAnyDriver == true
                             || (a.Status == true && (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK))
                             )
 
