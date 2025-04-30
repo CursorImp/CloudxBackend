@@ -80,6 +80,7 @@ namespace SignalRHub.Controllers
                             new AppSetting { SetKey = "EnbaleDriverHourlyCommission", SetVal = "false", description = "Enbale Driver Hourly Commission" },
                             new AppSetting { SetKey = "IsCompanyWiseHourlyFare", SetVal = "false", description = "Is Company Wise Hourly Fare" },
                             new AppSetting { SetKey = "showCommandLine", SetVal = "true", description = "showCommandLine" },
+                            new AppSetting { SetKey = "showExtraCharges", SetVal = "false", description = "Show Extra Charges" },
                         };
 
             using (var db = new TaxiDataContext())
