@@ -10848,7 +10848,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                                                         Amount = a.Amount.ToDecimal(),//a.Cells[COL_FARES.AMOUNT].Value.ToDecimal(),
                                                                         Percentage = a.Percentage.ToInt(), //a.Cells[COL_FARES.PERCENTAGE].Value.ToInt(),
                                                                         VehicleTypeId = a.VehicleTypeId.ToIntorNull(), //a.Cells[COL_FARES.VEHICLETYPEID].Value.ToIntorNull(),
-                                                                        Operator = a.Operator.ToStr() //a.Cells[COL_FARES.OPERATOR].Value.ToStr()
+                                                                        Operator = a.Operator.ToStr(), //a.Cells[COL_FARES.OPERATOR].Value.ToStr()
+                                                                        VehicleTypeName = a.VehicleTypeName
                                                                     }).ToList();
 
                     IList<Gen_SysPolicy_FaresSetting> savedListFares = sysPolicyBO.Current.Gen_SysPolicy_FaresSettings;
@@ -10928,7 +10929,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         HubProcessor.Instance.objPolicy = General.GetObject<Gen_SysPolicy_Configuration>(c => c.SysPolicyId == 1);
 
                     int defaultVehicleTypeId = HubProcessor.Instance.objPolicy.DefaultVehicleTypeId.ToInt();
-                    string query = @"Select VT.Id,VT.VehicleType,FS.IsAmountWise,FS.Percentage,FS.Amount,FS.Id FareSettingId,FS.Operator from Fleet_VehicleTypes VT 
+                    string query = @"Select VT.Id,VT.VehicleType,FS.IsAmountWise,FS.Percentage,FS.Amount,FS.Id FareSettingId,FS.Operator,FS.VehicleTypeName from Fleet_VehicleTypes VT 
                                     Left Join Gen_SysPolicy_FaresSettings FS On VT.Id = FS.VehicleTypeId
                                     Where VT.Id != " + defaultVehicleTypeId + "" +
                                     " Order By VT.OrderNo";
