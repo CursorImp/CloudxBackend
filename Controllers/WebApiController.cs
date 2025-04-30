@@ -3758,7 +3758,14 @@ namespace SignalRHub.Controllers
                         result = result.Substring(0, lastIndex);
 
                         var res = Newtonsoft.Json.JsonConvert.DeserializeObject<ClsDispatchFares>(result);
-
+                        try
+                        {
+                            var FareSett = CalculateFareSetting(obj, res);
+                            res.Fare = FareSett.fareVal;
+                            res.ReturnFare = FareSett.returnFares.ToDecimal() > 0 ? FareSett.returnFares.ToDecimal() : 0;
+                        }
+                        catch {
+                        }
                         try
                         {
                             var CongestionCharges = GetCongestionCharges(obj.routeInfo.legs, info.PickupDateTime, info.SubCompanyId);
@@ -3925,6 +3932,307 @@ namespace SignalRHub.Controllers
             return result;
         }
 
+        public FareSettings CalculateFareSetting(WebApiClasses.RequestWebApi obj, ClsDispatchFares res)
+        {
+            FareSettings set = new FareSettings();
+
+            decimal AddedAmount = 0.00m;
+            decimal returnAddedAmount = 0.00m;
+            string op = string.Empty;
+            int actualVehicleTypeId = obj.routeInfo.VehicleTypeId.ToInt();
+            decimal fareVal = res.Fare.ToDecimal();
+            decimal returnFares = res.ReturnFare.ToDecimal();
+            decimal companyPrice = res.CompanyPrice.ToDecimal();
+            Gen_SysPolicy_FaresSetting objFare = General.GetObject<Gen_SysPolicy_FaresSetting>(c => c.SysPolicyId != null && c.VehicleTypeId == actualVehicleTypeId);
+
+            if (objFare != null)
+            {
+                op = objFare.Operator.ToStr();
+
+                Gen_SysPolicy_Configuration confg = General.GetObject<Gen_SysPolicy_Configuration>(c => c.SysPolicyId != null);
+
+
+                if (objFare.IsAmountWise.ToBool() && objFare.Percentage.ToInt() > 0 && objFare.VehicleTypeName.ToStr().Trim().Length > 0 && objFare.VehicleTypeName.ToStr().Trim().IsNumeric() && objFare.VehicleTypeName.ToStr().Trim().ToInt() > 0)
+                {
+
+                    int ValueAddedType = objFare.VehicleTypeName.ToStr().Trim().ToInt();
+
+                    decimal AddedPercentage = 0.00m;
+                    decimal returnAddedPercentage = 0.00m;
+
+                    decimal onlyAmount = objFare.Amount.ToDecimal();
+
+                    AddedPercentage = ((fareVal + confg.ViaPointExtraCharges.ToDecimal()) * objFare.Percentage.ToDecimal()) / 100;
+                    returnAddedPercentage = ((returnFares + confg.ViaPointExtraCharges.ToDecimal()) * objFare.Percentage.ToDecimal()) / 100;
+
+
+
+                    AddedAmount = objFare.Amount.ToDecimal() + confg.ViaPointExtraCharges.ToDecimal();
+                    returnAddedAmount = objFare.Amount.ToDecimal() + confg.ViaPointExtraCharges.ToDecimal();
+
+
+
+                    if (ValueAddedType == 1)
+                    {
+                        if (AddedPercentage < onlyAmount)
+                        {
+                            AddedPercentage = 0;
+                            returnAddedAmount = 0;
+
+                        }
+                        else
+                        {
+                            AddedAmount = AddedPercentage + confg.ViaPointExtraCharges.ToDecimal();
+                            returnAddedAmount = returnAddedPercentage + confg.ViaPointExtraCharges.ToDecimal();
+
+                        }
+
+                    }
+                    else if (ValueAddedType == 2)
+                    {
+                        if (AddedPercentage > onlyAmount)
+                        {
+
+                            AddedPercentage = 0;
+                            returnAddedAmount = 0;
+                            if (obj.routeInfo.JourneyTypeId != 2 ||
+                                (obj.routeInfo.JourneyTypeId == 2 && obj.routeInfo.VehicleTypeId.ToInt() > 0 && actualVehicleTypeId == obj.routeInfo.VehicleTypeId.ToInt()))
+                                confg.ViaPointExtraCharges = 0;
+
+
+
+
+                        }
+                        else
+                        {
+                            AddedAmount = AddedPercentage + confg.ViaPointExtraCharges.ToDecimal();
+                            returnAddedAmount = returnAddedPercentage + confg.ViaPointExtraCharges.ToDecimal();
+
+                        }
+
+
+                    }
+
+
+                    if (obj.routeInfo.JourneyTypeId != 2 ||
+                            (obj.routeInfo.JourneyTypeId == 2 && obj.routeInfo.VehicleTypeId.ToInt() > 0 && actualVehicleTypeId == obj.routeInfo.VehicleTypeId.ToInt()))
+                        confg.ViaPointExtraCharges = 0;
+                    //  }
+
+
+                    if (obj.routeInfo.JourneyTypeId == 2 && obj.routeInfo.VehicleTypeId.ToInt() > 0 && actualVehicleTypeId != obj.routeInfo.VehicleTypeId.ToInt())
+                    {
+
+
+                        objFare = General.GetObject<Gen_SysPolicy_FaresSetting>(c => c.SysPolicyId != null && c.VehicleTypeId == obj.routeInfo.VehicleTypeId.ToInt());
+
+                        if (objFare != null)
+                        {
+
+
+                            returnAddedPercentage = ((returnFares + confg.ViaPointExtraCharges.ToDecimal()) * objFare.Percentage.ToDecimal()) / 100;
+
+
+                            returnAddedAmount = objFare.Amount.ToDecimal() + confg.ViaPointExtraCharges.ToDecimal();
+
+                            if (ValueAddedType == 1)
+                            {
+                                if (returnAddedPercentage < returnAddedAmount)
+                                {
+                                    returnAddedPercentage = 0;
+                                    returnAddedAmount = 0;
+
+
+                                    confg.ViaPointExtraCharges = 0;
+
+                                }
+                                else
+                                {
+
+                                    returnAddedAmount = returnAddedPercentage;
+
+                                }
+
+                            }
+                            else if (ValueAddedType == 2)
+                            {
+                                if (returnAddedPercentage > returnAddedAmount)
+                                {
+
+                                    returnAddedAmount = returnAddedPercentage;
+
+
+
+                                }
+                                else
+                                {
+
+                                    returnAddedPercentage = 0;
+                                    returnAddedAmount = 0;
+
+                                    confg.ViaPointExtraCharges = 0;
+                                }
+
+
+                            }
+
+
+
+
+
+                        }
+                        else
+                            returnAddedAmount = 0.00m;
+                    }
+
+                }
+                else
+                {
+
+
+                    if (objFare.IsAmountWise == false)
+                    {
+
+                        AddedAmount = ((fareVal + confg.ViaPointExtraCharges.ToDecimal()) * objFare.Percentage.ToDecimal()) / 100;
+                        returnAddedAmount = ((returnFares + confg.ViaPointExtraCharges.ToDecimal()) * objFare.Percentage.ToDecimal()) / 100;
+                    }
+                    else
+                    {
+                        AddedAmount = objFare.Amount.ToDecimal() + confg.ViaPointExtraCharges.ToDecimal();
+                        returnAddedAmount = objFare.Amount.ToDecimal() + confg.ViaPointExtraCharges.ToDecimal();
+
+                        if (obj.routeInfo.JourneyTypeId != 2 ||
+                                (obj.routeInfo.JourneyTypeId == 2 && obj.routeInfo.VehicleTypeId.ToInt() > 0 && actualVehicleTypeId == obj.routeInfo.VehicleTypeId.ToInt()))
+                            confg.ViaPointExtraCharges = 0;
+                    }
+
+
+                    if (obj.routeInfo.JourneyTypeId == 2 && obj.routeInfo.VehicleTypeId.ToInt() > 0 && actualVehicleTypeId != obj.routeInfo.VehicleTypeId.ToInt())
+                    {
+
+
+                        objFare = General.GetObject<Gen_SysPolicy_FaresSetting>(c => c.SysPolicyId != null && c.VehicleTypeId == obj.routeInfo.VehicleTypeId.ToInt());
+
+                        if (objFare != null)
+                        {
+                            if (objFare.IsAmountWise == false)
+                            {
+
+                                returnAddedAmount = ((returnFares + confg.ViaPointExtraCharges.ToDecimal()) * objFare.Percentage.ToDecimal()) / 100;
+                            }
+                            else
+                            {
+
+                                returnAddedAmount = objFare.Amount.ToDecimal() + confg.ViaPointExtraCharges.ToDecimal();
+                                confg.ViaPointExtraCharges = 0;
+                            }
+
+                        }
+                        else
+                            returnAddedAmount = 0.00m;
+                    }
+
+                }
+
+
+                //cls.ExtraViaCharges = 0.00m;
+
+                switch (op)
+                {
+                    case "+":
+
+                        if (AddedAmount > 0)
+                            fareVal = (decimal)Math.Ceiling((fareVal + AddedAmount) / 0.1m) * 0.1m;
+
+                        if (returnAddedAmount > 0)
+                            returnFares = (decimal)Math.Ceiling((returnFares + returnAddedAmount) / 0.1m) * 0.1m;
+
+                        if (companyPrice > 0 && companyPrice == fareVal && AddedAmount > 0)
+                            companyPrice = (decimal)Math.Ceiling((companyPrice + AddedAmount) / 0.1m) * 0.1m;
+                        break;
+
+                    case "-":
+                        //fareVal = fareVal - AddedAmount;
+                        //returnFares = returnFares + returnAddedAmount;
+                        if (AddedAmount > 0)
+                            fareVal = (decimal)Math.Ceiling((fareVal - AddedAmount) / 0.1m) * 0.1m;
+
+                        if (returnAddedAmount > 0)
+                            returnFares = (decimal)Math.Ceiling((returnFares - returnAddedAmount) / 0.1m) * 0.1m;
+                        break;
+
+                    default:
+                        if (companyPrice > 0 && companyPrice == fareVal && AddedAmount > 0)
+                            companyPrice = (decimal)Math.Ceiling((companyPrice + AddedAmount) / 0.1m) * 0.1m;
+
+                        if (AddedAmount > 0)
+                            fareVal = (decimal)Math.Ceiling((fareVal + AddedAmount) / 0.1m) * 0.1m;
+
+                        if (returnAddedAmount > 0)
+                            returnFares = (decimal)Math.Ceiling((returnFares + returnAddedAmount) / 0.1m) * 0.1m;
+                        break;
+
+
+                        //   rtnFare = (decimal)Math.Ceiling(rtnFare / 0.5m) * 0.5m;
+
+                }
+
+
+                decimal roundUp = confg.RoundUpTo.ToDecimal();
+                if (roundUp > 0)
+                {
+                    //fareVal = (decimal)Math.Ceiling(fareVal / roundUp) * roundUp;
+                    //returnFares = (decimal)Math.Ceiling(returnFares / roundUp) * roundUp;
+
+                    //if (ENABLECMACBOOKINGCALCULATION == true)
+                    //{
+                    //    if (objMaster.Current != null)
+                    //    {
+                    //        companyPrice = objMaster.Current.CompanyPrice.ToDecimal();
+                    //    }
+                    //    else
+                    //    {
+                    //        if (companyPrice > 0 && companyPrice == fareVal)
+                    //        {
+                    //            companyPrice = (decimal)Math.Ceiling(companyPrice / roundUp) * roundUp;
+
+
+                    //        }
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    if (companyPrice > 0 && companyPrice == fareVal)
+                    //    {
+                    //        companyPrice = (decimal)Math.Ceiling(companyPrice / roundUp) * roundUp;
+
+
+                    //    }
+                    //}
+                    fareVal = (decimal)Math.Ceiling(fareVal / roundUp) * roundUp;
+                    returnFares = (decimal)Math.Ceiling(returnFares / roundUp) * roundUp;
+
+                    if (companyPrice > 0 && companyPrice == fareVal)
+                    {
+                        companyPrice = (decimal)Math.Ceiling(companyPrice / roundUp) * roundUp;
+
+
+                    }
+
+                }
+
+            }
+
+            set = new FareSettings
+            {
+                fareVal = fareVal,
+                returnFares = returnFares,
+                companyPrice = companyPrice
+
+
+            };
+            return set;
+        }
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]

@@ -1652,8 +1652,15 @@ namespace SignalRHub.WebApiClasses
         public int Noofhours { get; set; }
         public int FareCalculationSetting { get; set; }
         public List<RouteLeg> legs;
+        public int? JourneyTypeId { get; set; }
 
 
+    }
+    public class FareSettings
+    {
+        public decimal fareVal { get; set; }
+        public decimal returnFares { get; set; }
+        public decimal companyPrice { get; set; }
     }
 
     public class RouteCoords
