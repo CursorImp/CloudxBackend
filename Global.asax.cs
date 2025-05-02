@@ -81,6 +81,7 @@ namespace SignalRHub
 
         public static AutoDispatchSetting AutoDispatchSetting = null;
         public static List<clsSTCReminder> listofSTCReminder = new List<clsSTCReminder>();
+        public static List<AppSetting> AppSettings = new List<AppSetting>();
 
         public static string EnableViaAction = "0";
         public static string EnablaDriverDocuments = "";
@@ -422,7 +423,7 @@ namespace SignalRHub
 
         //    }
         //}
-
+       
         protected void Application_Start(object sender, EventArgs e)
         {
             GlobalHost.Configuration.DisconnectTimeout = TimeSpan.FromSeconds(10);
@@ -439,12 +440,9 @@ namespace SignalRHub
                 EnsureRequiredAppSettings();
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    var settings = db.ExecuteQuery<AppSetting>("SELECT SetKey, SetVal FROM AppSettings WHERE IsLogin=0").ToList();
+                     AppSettings = db.ExecuteQuery<AppSetting>("SELECT SetKey, SetVal FROM AppSettings WHERE IsLogin=0").ToList();
 
-                    foreach (var setting in settings)
-                    {
-                        UpdateAppSetting(setting.SetKey, setting.SetVal);
-                    }
+                   
                 }
                 ReloadMeterList();
 
@@ -461,6 +459,24 @@ namespace SignalRHub
                 File.AppendAllText(physicalPath + "\\applicationstart_exception.txt", DateTime.Now.ToStr() + " Defaultclientid:" + DefaultClientId.ToStr()+ ",exception:"+ex.Message+ Environment.NewLine);
 
             }
+        }
+        public static T GetAppSetting<T>(string key, T defaultValue = default)
+        {
+            var setting = AppSettings.FirstOrDefault(s => s.SetKey == key);
+
+            if (setting != null && !string.IsNullOrEmpty(setting.SetVal))
+            {
+                try
+                {
+                    return (T)Convert.ChangeType(setting.SetVal, typeof(T));
+                }
+                catch
+                {
+                    // Optionally log the error
+                }
+            }
+
+            return defaultValue;
         }
         public void AddColumnIfNotExists(string tableName, string columnName, string columnDefinition)
         {
@@ -497,8 +513,8 @@ namespace SignalRHub
                             new AppSetting { SetKey = "DS_Password", SetVal = "Cabtds123", description = "DS Password" , IsLogin = false },
                             new AppSetting { SetKey = "DS_SendingMsgPort", SetVal = "0", description = "DS Sending Msg Port" , IsLogin = false },
                             new AppSetting { SetKey = "DS_ReceivingMsgPort", SetVal = "0", description = "DS Receiving Msg Port", IsLogin = false  },
-                            new AppSetting { SetKey = "ConnectionString", SetVal = "aEJpkEUQcq1itQ0oc/3N1Gv9xjW92NgUXkZNTtlZ7xUwijoqG5Z4cWQZ5fBFnJHyDJOs06+Gwq94AqEPtfCLV84v5zfFNLI7Ff/2IA1kUKqMu6/gnRMI60FmmccRydKpvdLP3dYiZjCYjpWDa0RJdfycR3GDAdH7", description = "Encrypted DB Connection String", IsLogin = false  },
-                            new AppSetting { SetKey = "socketurl", SetVal = "https://server17.ctcloudxapi.com:18014", description = "Socket URL", IsLogin = false  },
+                            //new AppSetting { SetKey = "ConnectionString", SetVal = "aEJpkEUQcq1itQ0oc/3N1Gv9xjW92NgUXkZNTtlZ7xUwijoqG5Z4cWQZ5fBFnJHyDJOs06+Gwq94AqEPtfCLV84v5zfFNLI7Ff/2IA1kUKqMu6/gnRMI60FmmccRydKpvdLP3dYiZjCYjpWDa0RJdfycR3GDAdH7", description = "Encrypted DB Connection String", IsLogin = false  },
+                            //new AppSetting { SetKey = "socketurl", SetVal = "https://server17.ctcloudxapi.com:18014", description = "Socket URL", IsLogin = false  },
                             new AppSetting { SetKey = "enableRingBack", SetVal = "0", description = "Enable Ring Back" , IsLogin = false },
                             new AppSetting { SetKey = "enableCallOffice", SetVal = "1", description = "Enable Call Office" , IsLogin = false },
                             new AppSetting { SetKey = "enableAccountCharges", SetVal = "0", description = "Enable Account Charges" },
@@ -525,6 +541,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "socketapplicationurl", SetVal = "http://188.40.67.161/setting/default.aspx?PoolName=UniquePersonnel_sock", description = "Socket Application URL", IsLogin = false  },
                             new AppSetting { SetKey = "PageSize", SetVal = "1500", description = "Page Size" , IsLogin = false},
                             new AppSetting { SetKey = "aspnet:MaxJsonDeserializerMembers", SetVal = "15000000", description = "Max JSON Deserializer Members" , IsLogin = false},
+                            new AppSetting { SetKey = "VoipUrl", SetVal = "https://recordings.emeraldtel.co.uk", description = "VoipUrl" , IsLogin = false},
                         };
 
             using (var db = new TaxiDataContext())
@@ -544,23 +561,7 @@ namespace SignalRHub
                
             }
         }
-        public void UpdateAppSetting(string key, string value)
-        {
-            var config = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration("~");
-            var settings = config.AppSettings.Settings;
-
-            if (settings[key] == null)
-            {
-                settings.Add(key, value);
-            }
-            else
-            {
-                settings[key].Value = value;
-            }
-
-            config.Save(ConfigurationSaveMode.Modified);
-            ConfigurationManager.RefreshSection("appSettings");
-        }
+        
 
         private void setTimer()
         {
@@ -998,23 +999,23 @@ namespace SignalRHub
                             try
                             {
 
-                                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["CallerId_EnableHotDesk"]))
+                                if (!string.IsNullOrEmpty(GetAppSetting<string>("CallerId_EnableHotDesk") ))
                                 {
-                                    CallerId_EnableHotDesk = ConfigurationManager.AppSettings["CallerId_EnableHotDesk"].ToStr();
+                                    CallerId_EnableHotDesk = GetAppSetting<string>("CallerId_EnableHotDesk").ToStr();
 
                                 }
 
 
-                                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["CallerID_FromExt"]))
+                                if (!string.IsNullOrEmpty(GetAppSetting<string>("CallerID_FromExt")))
                                 {
-                                    CallerID_FromExt = ConfigurationManager.AppSettings["CallerID_FromExt"].ToInt();
+                                    CallerID_FromExt = GetAppSetting<string>("CallerID_FromExt").ToInt();
 
                                 }
 
 
-                                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["CallerID_TillExt"]))
+                                if (!string.IsNullOrEmpty(GetAppSetting<string>("CallerID_TillExt")))
                                 {
-                                    CallerID_TillExt = ConfigurationManager.AppSettings["CallerID_TillExt"].ToInt();
+                                    CallerID_TillExt = GetAppSetting<string>("CallerID_TillExt").ToInt();
 
                                 }
                             }
@@ -1101,9 +1102,9 @@ namespace SignalRHub
                 DefaultClientId = Instance.objPolicy.DefaultClientId.ToStr();
                 Int16 _selectgateway = 0;
 
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SelectedGateway"]))
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("SelectedGateway")))
                 {
-                    if (Int16.TryParse(ConfigurationManager.AppSettings["SelectedGateway"], out _selectgateway) == true)
+                    if (Int16.TryParse(GetAppSetting<string>("SelectedGateway"), out _selectgateway) == true)
                     {
                         if (_selectgateway == 1)
                         {
@@ -1120,18 +1121,18 @@ namespace SignalRHub
                 {
                     HMSMS_Settings = new HypermediaSettings()
                     {
-                        ServerIPAddress = ConfigurationManager.AppSettings["HM_ServerIPAddress"],
-                        Port = Convert.ToInt32(ConfigurationManager.AppSettings["HM_Port"]),
-                        Password = ConfigurationManager.AppSettings["HM_Password"],
+                        ServerIPAddress = GetAppSetting<string>("HM_ServerIPAddress") ,
+                        Port = Convert.ToInt32(GetAppSetting<string>("HM_Port")),
+                        Password = GetAppSetting<string>("HM_Password"),
                         CanReceiveSMS = true,
                         DefaultClientId = DefaultClientId
                     };
 
-                    if (ConfigurationManager.AppSettings["CanReceiveSMS"] == "0" || Convert.ToString(ConfigurationManager.AppSettings["CanReceiveSMS"]).ToLower() == "no")
+                    if (GetAppSetting<string>("CanReceiveSMS")  == "0" || Convert.ToString(GetAppSetting<string>("CanReceiveSMS")).ToLower() == "no")
                     {
                         HMSMS_Settings.CanReceiveSMS = false;
                     }
-                    else if (ConfigurationManager.AppSettings["CanReceiveSMS"] == "1" || Convert.ToString(ConfigurationManager.AppSettings["CanReceiveSMS"]).ToLower() == "yes")
+                    else if (GetAppSetting<string>("CanReceiveSMS") == "1" || Convert.ToString(GetAppSetting<string>("CanReceiveSMS")).ToLower() == "yes")
                     {
                         HMSMS_Settings.CanReceiveSMS = true;
                     }
@@ -1159,32 +1160,32 @@ namespace SignalRHub
 
                     DSSMS_Settings = new DinstarSettings()
                     {
-                        ServerBaseURL = ConfigurationManager.AppSettings["DS_ServerBaseURL"],
-                        UserName = ConfigurationManager.AppSettings["DS_UserName"],
-                        Password = ConfigurationManager.AppSettings["DS_Password"],
+                        ServerBaseURL = GetAppSetting<string>("DS_ServerBaseURL") ,
+                        UserName = GetAppSetting<string>("DS_UserName"),
+                        Password = GetAppSetting<string>("DS_Password") ,
                         CanReceiveSMS = true,
                         DefaultClientId = DefaultClientId,
                         SendingMsgPort = new int[] { 0 },
                         ReceivingMsgPort = new int[] { 0 }
                     };
 
-                    if (ConfigurationManager.AppSettings["CanReceiveSMS"] == "0" || Convert.ToString(ConfigurationManager.AppSettings["CanReceiveSMS"]).ToLower() == "no")
+                    if ( GetAppSetting<string>("CanReceiveSMS") == "0" || Convert.ToString(GetAppSetting<string>("CanReceiveSMS")).ToLower() == "no")
                     {
                         DSSMS_Settings.CanReceiveSMS = false;
                     }
-                    else if (ConfigurationManager.AppSettings["CanReceiveSMS"] == "1" || Convert.ToString(ConfigurationManager.AppSettings["CanReceiveSMS"]).ToLower() == "yes")
+                    else if (GetAppSetting<string>("CanReceiveSMS") == "1" || Convert.ToString(GetAppSetting<string>("CanReceiveSMS")).ToLower() == "yes")
                     {
                         DSSMS_Settings.CanReceiveSMS = true;
                     }
 
-                    if (ConfigurationManager.AppSettings["DS_SendingMsgPort"] != null && !string.IsNullOrEmpty(ConfigurationManager.AppSettings["DS_SendingMsgPort"]))
+                    if (GetAppSetting<string>("DS_SendingMsgPort") != null && !string.IsNullOrEmpty(GetAppSetting<string>("DS_SendingMsgPort")))
                     {
-                        DSSMS_Settings.SendingMsgPort = ConfigurationManager.AppSettings["DS_SendingMsgPort"].Split(',').Select(m => Convert.ToInt32(m)).ToArray();
+                        DSSMS_Settings.SendingMsgPort = GetAppSetting<string>("DS_SendingMsgPort").Split(',').Select(m => Convert.ToInt32(m)).ToArray();
                     }
 
-                    if (ConfigurationManager.AppSettings["DS_ReceivingMsgPort"] != null && !string.IsNullOrEmpty(ConfigurationManager.AppSettings["DS_ReceivingMsgPort"]))
+                    if (GetAppSetting<string>("DS_ReceivingMsgPort") != null && !string.IsNullOrEmpty(GetAppSetting<string>("DS_ReceivingMsgPort")))
                     {
-                        DSSMS_Settings.ReceivingMsgPort = ConfigurationManager.AppSettings["DS_ReceivingMsgPort"].Split(',').Select(m => Convert.ToInt32(m)).ToArray();
+                        DSSMS_Settings.ReceivingMsgPort = GetAppSetting<string>("DS_ReceivingMsgPort").Split(',').Select(m => Convert.ToInt32(m)).ToArray();
                     }
 
                     Gen_SysPolicy_SMSConfiguration objSMSConfig = null;
@@ -1253,9 +1254,9 @@ namespace SignalRHub
 
                     try
                     {
-                        if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["SMSInbox"]))
+                        if (!string.IsNullOrEmpty(GetAppSetting<string>("SMSInbox")))
                         {
-                            smsInbox = ConfigurationManager.AppSettings["SMSInbox"].ToStr();
+                            smsInbox = GetAppSetting<string>("SMSInbox").ToStr();
 
                         }
                     }
@@ -1274,116 +1275,116 @@ namespace SignalRHub
 
                 // InitializeDefaultSettings
 
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["enableRingBack"]))
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("enableRingBack")))
                 {
-                    enableRingBack = ConfigurationManager.AppSettings["enableRingBack"].ToStr();
+                    enableRingBack = GetAppSetting<string>("enableRingBack").ToStr();
 
                 }
 
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["enableAccountCharges"]))
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("enableAccountCharges")))
                 {
-                    enableAccountCharges = ConfigurationManager.AppSettings["enableAccountCharges"].ToStr();
+                    enableAccountCharges = GetAppSetting<string>("enableAccountCharges").ToStr();
 
                 }
 
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["enableClearJobText"]))
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("enableClearJobText")))
                 {
-                    enableClearJobText = ConfigurationManager.AppSettings["enableClearJobText"].ToStr();
+                    enableClearJobText = GetAppSetting<string>("enableClearJobText").ToStr();
 
                 }
 
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["enableCallOffice"]))
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("enableCallOffice")))
                 {
-                    enableCallOffice = ConfigurationManager.AppSettings["enableCallOffice"].ToStr();
-
-                }
-
-                //
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["customOfficeNumber"]))
-                {
-                    customerOfficeNumber = ConfigurationManager.AppSettings["customOfficeNumber"].ToStr();
+                    enableCallOffice = GetAppSetting<string>("enableCallOffice").ToStr();
 
                 }
 
                 //
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["driverPayLiveDetails"]))
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("customOfficeNumber")))
                 {
-                    driverPayLiveDetails = ConfigurationManager.AppSettings["driverPayLiveDetails"].ToStr();
+                    customerOfficeNumber = GetAppSetting<string>("customOfficeNumber").ToStr();
 
                 }
 
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["EnableBidOnPlots"]))
+                //
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("driverPayLiveDetails")))
                 {
-                    EnableBidOnPlots = ConfigurationManager.AppSettings["EnableBidOnPlots"].ToStr();
+                    driverPayLiveDetails = GetAppSetting<string>("driverPayLiveDetails").ToStr();
 
                 }
 
-
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["DriverPay"]))
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableBidOnPlots")))
                 {
-                    DriverPay = ConfigurationManager.AppSettings["DriverPay"].ToStr();
-
-                }
-
-
-
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["NoPickupRestrictionMins"]))
-                {
-                    NoPickupRestrictionMins = ConfigurationManager.AppSettings["NoPickupRestrictionMins"].ToStr();
-
-                }
-
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["enableChangePlotUpdateDestination"]))
-                {
-                    enableChangePlotUpdateDestination = ConfigurationManager.AppSettings["enableChangePlotUpdateDestination"].ToStr();
+                    EnableBidOnPlots = GetAppSetting<string>("EnableBidOnPlots").ToStr();
 
                 }
 
 
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["EnableWaitingAfterArrive"]))
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("DriverPay")))
                 {
-                    EnableWaitingAfterArrive = ConfigurationManager.AppSettings["EnableWaitingAfterArrive"].ToStr();
-
-                }
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["AcceptJobAdditional"]))
-                {
-                    AcceptJobAdditional = ConfigurationManager.AppSettings["AcceptJobAdditional"].ToStr();
+                    DriverPay = GetAppSetting<string>("DriverPay").ToStr();
 
                 }
 
 
 
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["AutoSTC"]))
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("NoPickupRestrictionMins")))
                 {
-                    AutoSTC = ConfigurationManager.AppSettings["AutoSTC"].ToStr();
+                    NoPickupRestrictionMins = GetAppSetting<string>("NoPickupRestrictionMins").ToStr();
 
                 }
 
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["enableReceiptOnCompleteJob"]))
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("enableChangePlotUpdateDestination")))
                 {
-                    enableReceiptOnCompleteJob = ConfigurationManager.AppSettings["enableReceiptOnCompleteJob"].ToStr();
-
-                }
-
-
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["enableEmaiLReceipt"]))
-                {
-                    enableEmaiLReceipt = ConfigurationManager.AppSettings["enableEmaiLReceipt"].ToStr();
+                    enableChangePlotUpdateDestination = GetAppSetting<string>("enableChangePlotUpdateDestination").ToStr();
 
                 }
 
 
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["EnablaDriverDocuments"]))
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableWaitingAfterArrive")))
                 {
-                    EnablaDriverDocuments = ConfigurationManager.AppSettings["EnablaDriverDocuments"].ToStr();
+                    EnableWaitingAfterArrive = GetAppSetting<string>("EnableWaitingAfterArrive").ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("AcceptJobAdditional")))
+                {
+                    AcceptJobAdditional = GetAppSetting<string>("AcceptJobAdditional").ToStr();
 
                 }
 
 
 
-                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["EnableViaAction"]))
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("AutoSTC")))
                 {
-                    EnableViaAction = ConfigurationManager.AppSettings["EnableViaAction"].ToStr();
+                    AutoSTC = GetAppSetting<string>("AutoSTC").ToStr();
+
+                }
+
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("enableReceiptOnCompleteJob")))
+                {
+                    enableReceiptOnCompleteJob = GetAppSetting<string>("enableReceiptOnCompleteJob").ToStr();
+
+                }
+
+
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("enableEmaiLReceipt")))
+                {
+                    enableEmaiLReceipt = GetAppSetting<string>("enableEmaiLReceipt").ToStr();
+
+                }
+
+
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnablaDriverDocuments")))
+                {
+                    EnablaDriverDocuments = GetAppSetting<string>("EnablaDriverDocuments").ToStr();
+
+                }
+
+
+
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableViaAction")))
+                {
+                    EnableViaAction = GetAppSetting<string>("EnableViaAction").ToStr();
 
                 }
 

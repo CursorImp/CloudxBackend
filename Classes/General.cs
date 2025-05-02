@@ -2473,6 +2473,291 @@ namespace SignalRHub
                 }
                 else
                 {
+                    string alterProcedureScript = @"
+                        ALTER PROCEDURE [dbo].[stp_UpdateJob]                                                                                        
+                                                
+(                                                                                        
+                                               
+  @jobId as bigint,                                                                                        
+                                                
+  @DriverId as int,                                                                                        
+                                                
+  @JobStatusId as int,                                                                                        
+                                                
+  @DriverWorkStatusId int,                                                                                        
+                                                
+  @SinBinTimer int                                                                                        
+                                                
+)                                                                                        
+                                                
+                                                
+AS                                                                                        
+                                               
+SET NOCOUNT ON                                                                                        
+                                                
+Begin                                                                                        
+                                                
+      Declare @DestZoneId int                                                                                        
+                                                
+      Declare @DriverCurrentJobId bigint                                                                                        
+                                                
+      DECLARE @BookingTypeId int                                                                                        
+                                                
+      declare @sinbinMins int                                                                                       
+                                                
+                                                
+ if( (@JobStatusId=10 or @JobStatusId=11 or @JobStatusId=12))                                                                                       
+    select @sinbinMins=SinBinMinutes from Gen_SysPolicy_SinBinSettings where sinbintypeid=@JobStatusId                                                                                        
+                                                
+                                                
+         if(@JobStatusId=10 or @JobStatusId=11 or @JobStatusId=12 or @JobStatusId=13 or @jobstatusid=2)                                                                                        
+                                                
+                                                
+            set @DriverCurrentJobId=NULL                                                                                        
+                                                
+                                                
+        else                                                                                        
+                                                
+                                                
+       set @DriverCurrentJobId=@JobId                                                                                        
+                                                
+       if(@JobStatusId=5 or @JobStatusId=11)                                                                                        
+                
+       begin               
+                                                
+                                                
+        declare @fleetMasterId int               
+  --set @fleetMasterId=null                                                          
+                     declare @currstatusid int                             
+                                                
+            select @fleetMasterId=fleetMasterId,@currstatusid=DriverWorkStatusId from fleet_DriverQueueList where driverId=@driverId and status=1                                                                                    
+                                                
+                                   
+            Declare @AcceptedDateTime DateTime                                  
+                                                
+                                                
+            if(@JobStatusId=5)                                          
+                                                
+              SET  @AccepteddateTime=getdate()                                                           
+                                                 
+              DECLARE @pickup varchar(200)                                                              
+                                                
+              DECLARE @Destination varchar(200)                                                             
+                                                
+              if(@JobStatusId=5)                               
+                                                
+              begin                                                           
+                                                
+                                                
+    Update booking set BookingStatusId=@JobStatusId,FleetMasterId=@fleetMasterId,AcceptedDateTime=@AcceptedDateTime ,DriverId=@DriverId                                                                                        
+                                                
+                                                
+    where id=@jobId                                                                                        
+                                                
+                            
+                             if(@currstatusid=7)                              
+       Update fleet_driver_location set plotdate=getdate(),ZoneId=null,PrevZoneId=null,NewZoneName='',PreviousZone='', PickupPoint='',SinBinTillOn=null ,Destination='',disableautoplotting=0,LastActiveZoneName='' where driverid=@driverId                        
+                             
+                  else                            
+                        Update fleet_driver_location set plotdate=getdate(),PickupPoint='',Destination='',disableautoplotting=0,LastActiveZoneName='' where driverid=@driverId                                                                   
+                                   
+               end                                                                    
+                                                
+               else                                                                                  
+                                                
+               begin                                                                                  
+                                                
+      Update booking set BookingStatusId=@JobStatusId,FleetMasterId=@fleetMasterId,AcceptedDateTime=@AcceptedDateTime,IsBidding=1,AutoDespatch=1                                                                                          
+                   ,@pickup=FromAddress,@Destination=ToAddress ,IsConfirmedDriver=0                                                                                  
+  
+     where id=@jobId and DriverId=@DriverId                                                                          
+                  
+                            
+         Update fleet_driver_location set plotdate=getdate(),PickupPoint='',Destination='',disableautoplotting=0 where driverid=@driverId                                                                   
+                                   
+               end                                                                                  
+                    
+                                                
+            --  Update fleet_driver_location set plotdate=getdate(),PickupPoint='',Destination='',disableautoplotting=0 where driverid=@driverId                                      
+                                                
+                                                
+    if(@JobStatusId=5)                                                                                      
+                     
+             begin                                                                           
+                                                
+                                                
+      declare @drvNo varchar(100)                          
+                                                
+                                                
+                                                
+     select @drvNo=DriverNo from Fleet_Driver where id=@driverId                     
+                                           
+     insert into Booking_Log values(@jobid,'','','Job accepted by Driver ('+ISNULL(@drvNo,'')+')',getdate(),NULL)                       
+                             
+             end                                                                                                         
+       END                                                                                        
+                                                
+                                                
+       ELSE                                                                         
+                                                
+       begin                                                                                        
+                                       
+                                                
+      if(@JobStatusId=6)  -- Arrive                                                                                        
+                                           
+            BEGIN                                                                                                                  
+               Update booking set BookingStatusId=@JobStatusId,ArrivalDateTime=getdate()                                                                                        
+                         
+                     where  id=@jobId and driverid=@driverid                                                                                      
+                                
+            END                                                                                                                            
+                                                
+    else  if(@JobStatusId=7)    -- POB                                                                                                                   
+     BEGIN                                                                                                                          
+                                                
+     declare @journeytypeId int                                                      
+                declare @PickupZoneId int                                                      
+                                                                      
+                                          
+               Update booking set BookingStatusId=@JobStatusId,POBDateTime=getdate(),@DestZoneId=dropoffzoneid ,@journeytypeId=journeytypeid, @PickupZoneId=zoneid  where  id=@jobId and driverid=@driverid                                                                              
+                              if(@journeytypeId=3)                                             
+                         begin                                                          
+                                                                                   
+                            if(@PickupZoneId is not NULL)                                  
+       begin                               
+       if exists(select * from gen_zones where id=@PickupZoneId and (DisableDriverRank is null or DisableDriverRank=0))                                
+        begin                                
+                                                       
+          Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@PickupZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@PickupZoneId,previouszone='',newzonename='' where driverid= @driverId                    
+                                             
+                              end                                
+         else                                
+      
+         begin                                
+          select @PickupZoneId=BackupZone1Id from Gen_Zone_Backups where zoneid=@PickupZoneId                                
+                                
+               if(@PickupZoneId is not null and @PickupZoneId>0)                                
+          Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@PickupZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@PickupZoneId,previouszone='',newzonename='' where driverid= @driverId              
+           
+         end                                
+                       
+       end                                
+                                                                                   
+                         end                                                          
+                         else                                                          
+                         begin                                                          
+                                                                          
+                          if(@DestZoneId is not NULL)                                 
+        begin                                
+       if exists(select * from gen_zones where id=@DestZoneId and (DisableDriverRank is null or DisableDriverRank=0))                                
+                  begin                                
+                      --  select @DestZoneId=BackupZone1Id from Gen_Zone_Backups where zoneid=@DestZoneId                                
+                                
+              -- if(@DestZoneId is not null and @DestZoneId>0)                                
+            Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@DestZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@DestZoneId,previouszone='',newzonename='' where driverid=@driverId                 
+                                          
+                end                                 
+          else                                
+                                
+   begin                                
+                    select @DestZoneId=BackupZone1Id from Gen_Zone_Backups where zoneid=@DestZoneId                                
+                                
+               if(@DestZoneId is not null and @DestZoneId>0)                             
+            Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@DestZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@DestZoneId,previouszone='',newzonename='' where driverid=@driverId                 
+                  
+          end                                
+                                 
+       end                                          
+                         end                                
+                                  
+                                           
+                                                
+ --                                       if(@DestZoneId is not NULL)                                             
+                                                
+  --  Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@DestZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@DestZoneId,PrevZoneId=@DestZoneId,previouszone='',newzonename='' where driverid=@driverId
+                                         
+    END                                                                                    
+                                   
+                                                
+   else  if(@JobStatusId=8)  -- STC                                                                                        
+                                    
+            BEGIN                                                                                        
+                               
+               Update booking set BookingStatusId=@JobStatusId,STCDateTime=getdate()             
+                         
+                     where  id=@jobId and driverid=@driverid                                                                                 
+            END                                                                                        
+                                  
+            else  if(@JobStatusId=2)  --  DISPATCHED OR COMPLETED                                                                                        
+                     
+            BEGIN                                                                                        
+                              
+               Update booking set BookingStatusId=@JobStatusId,ClearedDateTime=getdate()                                    
+                         
+                     where  id=@jobId and driverid=@driverid                                                                                        
+                                   
+            END                                                                                        
+                                
+             else  if(@JobStatusId=3 or @JobStatusId=13 ) -- Cancel                                                                                        
+                                                
+            BEGIN                                                                                        
+                                                
+               Update booking set BookingStatusId=@JobStatusId                                   
+                 
+                                                
+                     where  id=@jobId                                                    
+                                                
+                                                
+                                                
+            END                                                                                        
+                                                
+            else  if(@JobStatusId=10) -- No Show                                                                                        
+                                                
+                                                
+                                               
+     BEGIN                                                                                        
+                                                
+                      
+               Update booking set BookingStatusId=@JobStatusId,ArrivalDateTime=getdate(),AutoDespatch=0,IsBidding=0                                                         
+                                                
+                                                
+                     where  id=@jobId and driverid=@driverid                                                                                        
+                                                
+                                                
+            END                                                                                        
+                                                                                 
+    else  if(@JobStatusId=1) -- Waiting                                 
+                                                
+                                                
+            BEGIN                                                                                        
+                 
+               Update booking set BookingStatusId=@JobStatusId,ArrivalDateTime=NULL ,IsConfirmedDriver=0,AutoDespatch=0,IsBidding=0   where  id=@jobId                                                                                       
+                                                
+                                                
+                                 
+                     --     ,DriverId=NULL                                                                                        
+
+                   --  where  id=@jobId                                                                        
+ 
+                         INSERT INTO dbo.Fleet_Driver_RejectJobs (DriverId,BookingId,RejectedDateTime,BookingStatusId)                                                                                                    
+               values (@DriverId,@JobId,getdate(),10)                                                  
+ 
+            END                                                                                        
+  
+         else  if(@JobStatusId=12) -- Not Accepted                                                                                        
+                                                 
+                                     
+begin                                                               
+                                          
+    Update booking set BookingStatusId=@JobStatusId                                                             
+                                     
+                     where  id=@jobId                                                                                        
+                                                 
+    END                                                                                        
+                                         
+       END";
+
+                    (new TaxiDataContext()).ExecuteCommand(alterProcedureScript);
                     (new TaxiDataContext()).stp_UpdateJob(jobId, driverId, bookingStatusId, driverStatusId, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
                 }
 
@@ -2612,6 +2897,291 @@ namespace SignalRHub
 
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
+                    string alterProcedureScript = @"
+                        ALTER PROCEDURE [dbo].[stp_UpdateJob]                                                                                        
+                                                
+(                                                                                        
+                                               
+  @jobId as bigint,                                                                                        
+                                                
+  @DriverId as int,                                                                                        
+                                                
+  @JobStatusId as int,                                                                                        
+                                                
+  @DriverWorkStatusId int,                                                                                        
+                                                
+  @SinBinTimer int                                                                                        
+                                                
+)                                                                                        
+                                                
+                                                
+AS                                                                                        
+                                               
+SET NOCOUNT ON                                                                                        
+                                                
+Begin                                                                                        
+                                                
+      Declare @DestZoneId int                                                                                        
+                                                
+      Declare @DriverCurrentJobId bigint                                                                                        
+                                                
+      DECLARE @BookingTypeId int                                                                                        
+                                                
+      declare @sinbinMins int                                                                                       
+                                                
+                                                
+ if( (@JobStatusId=10 or @JobStatusId=11 or @JobStatusId=12))                                                                                       
+    select @sinbinMins=SinBinMinutes from Gen_SysPolicy_SinBinSettings where sinbintypeid=@JobStatusId                                                                                        
+                                                
+                                                
+         if(@JobStatusId=10 or @JobStatusId=11 or @JobStatusId=12 or @JobStatusId=13 or @jobstatusid=2)                                                                                        
+                                                
+                                                
+            set @DriverCurrentJobId=NULL                                                                                        
+                                                
+                                                
+        else                                                                                        
+                                                
+                                                
+       set @DriverCurrentJobId=@JobId                                                                                        
+                                                
+       if(@JobStatusId=5 or @JobStatusId=11)                                                                                        
+                
+       begin               
+                                                
+                                                
+        declare @fleetMasterId int               
+  --set @fleetMasterId=null                                                          
+                     declare @currstatusid int                             
+                                                
+            select @fleetMasterId=fleetMasterId,@currstatusid=DriverWorkStatusId from fleet_DriverQueueList where driverId=@driverId and status=1                                                                                    
+                                                
+                                   
+            Declare @AcceptedDateTime DateTime                                  
+                                                
+                                                
+            if(@JobStatusId=5)                                          
+                                                
+              SET  @AccepteddateTime=getdate()                                                           
+                                                 
+              DECLARE @pickup varchar(200)                                                              
+                                                
+              DECLARE @Destination varchar(200)                                                             
+                                                
+              if(@JobStatusId=5)                               
+                                                
+              begin                                                           
+                                                
+                                                
+    Update booking set BookingStatusId=@JobStatusId,FleetMasterId=@fleetMasterId,AcceptedDateTime=@AcceptedDateTime ,DriverId=@DriverId                                                                                        
+                                                
+                                                
+    where id=@jobId                                                                                        
+                                                
+                            
+                             if(@currstatusid=7)                              
+       Update fleet_driver_location set plotdate=getdate(),ZoneId=null,PrevZoneId=null,NewZoneName='',PreviousZone='', PickupPoint='',SinBinTillOn=null ,Destination='',disableautoplotting=0,LastActiveZoneName='' where driverid=@driverId                        
+                             
+                  else                            
+                        Update fleet_driver_location set plotdate=getdate(),PickupPoint='',Destination='',disableautoplotting=0,LastActiveZoneName='' where driverid=@driverId                                                                   
+                                   
+               end                                                                    
+                                                
+               else                                                                                  
+                                                
+               begin                                                                                  
+                                                
+      Update booking set BookingStatusId=@JobStatusId,FleetMasterId=@fleetMasterId,AcceptedDateTime=@AcceptedDateTime,IsBidding=1,AutoDespatch=1                                                                                          
+                   ,@pickup=FromAddress,@Destination=ToAddress ,IsConfirmedDriver=0                                                                                  
+  
+     where id=@jobId and DriverId=@DriverId                                                                          
+                  
+                            
+         Update fleet_driver_location set plotdate=getdate(),PickupPoint='',Destination='',disableautoplotting=0 where driverid=@driverId                                                                   
+                                   
+               end                                                                                  
+                    
+                                                
+            --  Update fleet_driver_location set plotdate=getdate(),PickupPoint='',Destination='',disableautoplotting=0 where driverid=@driverId                                      
+                                                
+                                                
+    if(@JobStatusId=5)                                                                                      
+                     
+             begin                                                                           
+                                                
+                                                
+      declare @drvNo varchar(100)                          
+                                                
+                                                
+                                                
+     select @drvNo=DriverNo from Fleet_Driver where id=@driverId                     
+                                           
+     insert into Booking_Log values(@jobid,'','','Job accepted by Driver ('+ISNULL(@drvNo,'')+')',getdate(),NULL)                       
+                             
+             end                                                                                                         
+       END                                                                                        
+                                                
+                                                
+       ELSE                                                                         
+                                                
+       begin                                                                                        
+                                       
+                                                
+      if(@JobStatusId=6)  -- Arrive                                                                                        
+                                           
+            BEGIN                                                                                                                  
+               Update booking set BookingStatusId=@JobStatusId,ArrivalDateTime=getdate()                                                                                        
+                         
+                     where  id=@jobId and driverid=@driverid                                                                                      
+                                
+            END                                                                                                                            
+                                                
+    else  if(@JobStatusId=7)    -- POB                                                                                                                   
+     BEGIN                                                                                                                          
+                                                
+     declare @journeytypeId int                                                      
+                declare @PickupZoneId int                                                      
+                                                                      
+                                          
+               Update booking set BookingStatusId=@JobStatusId,POBDateTime=getdate(),@DestZoneId=dropoffzoneid ,@journeytypeId=journeytypeid, @PickupZoneId=zoneid  where  id=@jobId and driverid=@driverid                                                                              
+                              if(@journeytypeId=3)                                             
+                         begin                                                          
+                                                                                   
+                            if(@PickupZoneId is not NULL)                                  
+       begin                               
+       if exists(select * from gen_zones where id=@PickupZoneId and (DisableDriverRank is null or DisableDriverRank=0))                                
+        begin                                
+                                                       
+          Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@PickupZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@PickupZoneId,previouszone='',newzonename='' where driverid= @driverId                    
+                                             
+                              end                                
+         else                                
+      
+         begin                                
+          select @PickupZoneId=BackupZone1Id from Gen_Zone_Backups where zoneid=@PickupZoneId                                
+                                
+               if(@PickupZoneId is not null and @PickupZoneId>0)                                
+          Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@PickupZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@PickupZoneId,previouszone='',newzonename='' where driverid= @driverId              
+           
+         end                                
+                       
+       end                                
+                                                                                   
+                         end                                                          
+                         else                                                          
+                         begin                                                          
+                                                                          
+                          if(@DestZoneId is not NULL)                                 
+        begin                                
+       if exists(select * from gen_zones where id=@DestZoneId and (DisableDriverRank is null or DisableDriverRank=0))                                
+                  begin                                
+                      --  select @DestZoneId=BackupZone1Id from Gen_Zone_Backups where zoneid=@DestZoneId                                
+                                
+              -- if(@DestZoneId is not null and @DestZoneId>0)                                
+            Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@DestZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@DestZoneId,previouszone='',newzonename='' where driverid=@driverId                 
+                                          
+                end                                 
+          else                                
+                                
+   begin                                
+                    select @DestZoneId=BackupZone1Id from Gen_Zone_Backups where zoneid=@DestZoneId                                
+                                
+               if(@DestZoneId is not null and @DestZoneId>0)                             
+            Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@DestZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@DestZoneId,previouszone='',newzonename='' where driverid=@driverId                 
+                  
+          end                                
+                                 
+       end                                          
+                         end                                
+                                  
+                                           
+                                                
+ --                                       if(@DestZoneId is not NULL)                                             
+                                                
+  --  Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@DestZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@DestZoneId,PrevZoneId=@DestZoneId,previouszone='',newzonename='' where driverid=@driverId
+                                         
+    END                                                                                    
+                                   
+                                                
+   else  if(@JobStatusId=8)  -- STC                                                                                        
+                                    
+            BEGIN                                                                                        
+                               
+               Update booking set BookingStatusId=@JobStatusId,STCDateTime=getdate()             
+                         
+                     where  id=@jobId and driverid=@driverid                                                                                 
+            END                                                                                        
+                                  
+            else  if(@JobStatusId=2)  --  DISPATCHED OR COMPLETED                                                                                        
+                     
+            BEGIN                                                                                        
+                              
+               Update booking set BookingStatusId=@JobStatusId,ClearedDateTime=getdate()                                    
+                         
+                     where  id=@jobId and driverid=@driverid                                                                                        
+                                   
+            END                                                                                        
+                                
+             else  if(@JobStatusId=3 or @JobStatusId=13 ) -- Cancel                                                                                        
+                                                
+            BEGIN                                                                                        
+                                                
+               Update booking set BookingStatusId=@JobStatusId                                   
+                 
+                                                
+                     where  id=@jobId                                                    
+                                                
+                                                
+                                                
+            END                                                                                        
+                                                
+            else  if(@JobStatusId=10) -- No Show                                                                                        
+                                                
+                                                
+                                               
+     BEGIN                                                                                        
+                                                
+                      
+               Update booking set BookingStatusId=@JobStatusId,ArrivalDateTime=getdate(),AutoDespatch=0,IsBidding=0                                                         
+                                                
+                                                
+                     where  id=@jobId and driverid=@driverid                                                                                        
+                                                
+                                                
+            END                                                                                        
+                                                                                 
+    else  if(@JobStatusId=1) -- Waiting                                 
+                                                
+                                                
+            BEGIN                                                                                        
+                 
+               Update booking set BookingStatusId=@JobStatusId,ArrivalDateTime=NULL ,IsConfirmedDriver=0,AutoDespatch=0,IsBidding=0   where  id=@jobId                                                                                       
+                                                
+                                                
+                                 
+                     --     ,DriverId=NULL                                                                                        
+
+                   --  where  id=@jobId                                                                        
+ 
+                         INSERT INTO dbo.Fleet_Driver_RejectJobs (DriverId,BookingId,RejectedDateTime,BookingStatusId)                                                                                                    
+               values (@DriverId,@JobId,getdate(),10)                                                  
+ 
+            END                                                                                        
+  
+         else  if(@JobStatusId=12) -- Not Accepted                                                                                        
+                                                 
+                                     
+begin                                                               
+                                          
+    Update booking set BookingStatusId=@JobStatusId                                                             
+                                     
+                     where  id=@jobId                                                                                        
+                                                 
+    END                                                                                        
+                                         
+       END";
+
+                    db.ExecuteCommand(alterProcedureScript);
                     db.stp_UpdateJob(jobId, driverId, Enums.BOOKINGSTATUS.CANCELLED, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
 
                 }
