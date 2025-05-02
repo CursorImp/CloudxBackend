@@ -1,0 +1,2 @@
+5/2/2025 4:35:13 PM Defaultclientid:demo12,exception:Invalid column name 'IsLogin'.
+5/2/2025 4:48:36 PM Defaultclientid:Un!QuEPersoNNel,exception:Invalid column name 'IsLogin'.
