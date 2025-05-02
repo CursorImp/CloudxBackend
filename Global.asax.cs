@@ -27,6 +27,7 @@ using DotNetCoords;
 using System.Threading;
 using System.Data;
 using System.Xml;
+using SignalRHub.WebApiClasses;
 
 namespace SignalRHub
 {
@@ -435,9 +436,16 @@ namespace SignalRHub
                 //
                 //   // ////////
                 File.AppendAllText(physicalPath + "\\log_applicationstart.txt", DateTime.Now.ToStr() + " Defaultclientid:" + DefaultClientId.ToStr() + ",ringback:" + Global.enableRingBack + ",accountcharges:" + Global.enableAccountCharges + ",cleartext:" + Global.enableClearJobText + ",calloffice:" + Global.enableCallOffice + Environment.NewLine);
+                EnsureRequiredAppSettings();
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var settings = db.ExecuteQuery<AppSetting>("SELECT SetKey, SetVal FROM AppSettings WHERE IsLogin=0").ToList();
 
-
-
+                    foreach (var setting in settings)
+                    {
+                        UpdateAppSetting(setting.SetKey, setting.SetVal);
+                    }
+                }
                 ReloadMeterList();
 
                 AreaRegistration.RegisterAllAreas();
@@ -454,7 +462,105 @@ namespace SignalRHub
 
             }
         }
+        public void AddColumnIfNotExists(string tableName, string columnName, string columnDefinition)
+        {
+            using (TaxiDataContext db = new TaxiDataContext())
+            {
 
+                string sql = $@"
+        IF NOT EXISTS (
+            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_NAME = '{tableName}'
+              AND COLUMN_NAME = '{columnName}'
+        )
+        BEGIN
+            ALTER TABLE {tableName}
+            ADD {columnName} {columnDefinition};
+        END;
+    ";
+
+                db.ExecuteQuery<int>(sql);
+            }
+        }
+        public void EnsureRequiredAppSettings()
+        {
+            AddColumnIfNotExists("AppSettings", "IsLogin", "BIT");
+            var requiredSettings = new List<AppSetting>
+                                                {
+                            new AppSetting { SetKey = "SelectedGateway", SetVal = "2", description = "Selected Gateway", IsLogin = false  },
+                            new AppSetting { SetKey = "CanReceiveSMS", SetVal = "1", description = "Can Receive SMS", IsLogin = false  },
+                            new AppSetting { SetKey = "HM_ServerIPAddress", SetVal = "networks8.servebbs.net", description = "HM Server IP Address", IsLogin = false  },
+                            new AppSetting { SetKey = "HM_Port", SetVal = "63333", description = "HM Port" , IsLogin = false },
+                            new AppSetting { SetKey = "HM_Password", SetVal = "admin", description = "HM Password", IsLogin = false  },
+                            new AppSetting { SetKey = "DS_ServerBaseURL", SetVal = "http://81.130.136.62:54541", description = "DS Server Base URL" , IsLogin = false },
+                            new AppSetting { SetKey = "DS_UserName", SetVal = "admin", description = "DS User Name" , IsLogin = false },
+                            new AppSetting { SetKey = "DS_Password", SetVal = "Cabtds123", description = "DS Password" , IsLogin = false },
+                            new AppSetting { SetKey = "DS_SendingMsgPort", SetVal = "0", description = "DS Sending Msg Port" , IsLogin = false },
+                            new AppSetting { SetKey = "DS_ReceivingMsgPort", SetVal = "0", description = "DS Receiving Msg Port", IsLogin = false  },
+                            new AppSetting { SetKey = "ConnectionString", SetVal = "aEJpkEUQcq1itQ0oc/3N1Gv9xjW92NgUXkZNTtlZ7xUwijoqG5Z4cWQZ5fBFnJHyDJOs06+Gwq94AqEPtfCLV84v5zfFNLI7Ff/2IA1kUKqMu6/gnRMI60FmmccRydKpvdLP3dYiZjCYjpWDa0RJdfycR3GDAdH7", description = "Encrypted DB Connection String", IsLogin = false  },
+                            new AppSetting { SetKey = "socketurl", SetVal = "https://server17.ctcloudxapi.com:18014", description = "Socket URL", IsLogin = false  },
+                            new AppSetting { SetKey = "enableRingBack", SetVal = "0", description = "Enable Ring Back" , IsLogin = false },
+                            new AppSetting { SetKey = "enableCallOffice", SetVal = "1", description = "Enable Call Office" , IsLogin = false },
+                            new AppSetting { SetKey = "enableAccountCharges", SetVal = "0", description = "Enable Account Charges" },
+                            new AppSetting { SetKey = "enableClearJobText", SetVal = "1", description = "Enable Clear Job Text" , IsLogin = false },
+                            new AppSetting { SetKey = "enableReceiptOnCompleteJob", SetVal = "0", description = "Enable Receipt On Complete Job" , IsLogin = false },
+                            new AppSetting { SetKey = "driverPayLiveDetails", SetVal = "0", description = "Driver Pay Live Details" , IsLogin = false },
+                            new AppSetting { SetKey = "EnableBidOnPlots", SetVal = "1", description = "Enable Bid On Plots" , IsLogin = false },
+                            new AppSetting { SetKey = "DriverPay", SetVal = "0", description = "Driver Pay" , IsLogin = false },
+                            new AppSetting { SetKey = "SMSInbox", SetVal = "0", description = "SMS Inbox" , IsLogin = false },
+                            new AppSetting { SetKey = "CallerId_EnableHotDesk", SetVal = "0", description = "Caller ID Enable Hot Desk", IsLogin = false  },
+                            new AppSetting { SetKey = "CallerID_FromExt", SetVal = "200", description = "Caller ID From Extension" , IsLogin = false },
+                            new AppSetting { SetKey = "CallerID_TillExt", SetVal = "250", description = "Caller ID Till Extension", IsLogin = false  },
+                            new AppSetting { SetKey = "NoPickupRestrictionMins", SetVal = "3", description = "No Pickup Restriction (mins)", IsLogin = false  },
+                            new AppSetting { SetKey = "enableChangePlotUpdateDestination", SetVal = "0", description = "Enable Change Plot Update Destination" , IsLogin = false },
+                            new AppSetting { SetKey = "AutoSTC", SetVal = "0", description = "Auto STC" , IsLogin = false },
+                            new AppSetting { SetKey = "enableEmaiLReceipt", SetVal = "0", description = "Enable Email Receipt" , IsLogin = false },
+                            new AppSetting { SetKey = "EnablaDriverDocuments", SetVal = "0", description = "Enable Driver Documents" , IsLogin = false },
+                            new AppSetting { SetKey = "EnableViaAction", SetVal = "0", description = "Enable Via Action" , IsLogin = false },
+                            new AppSetting { SetKey = "StripeAPIBaseURL", SetVal = "https://k0nnectpay.com", description = "Stripe API Base URL" , IsLogin = false },
+                            new AppSetting { SetKey = "DefaultCurrency", SetVal = "GBP", description = "Default Currency" , IsLogin = false },
+                            new AppSetting { SetKey = "DefaultClientLocation", SetVal = "UK", description = "Default Client Location" , IsLogin = false },
+                            new AppSetting { SetKey = "huburl", SetVal = "", description = "Hub URL" , IsLogin = false},
+                            new AppSetting { SetKey = "applicationurl", SetVal = "http://188.40.67.161/setting/default.aspx?PoolName=UniquePersonnel", description = "Application URL" , IsLogin = false},
+                            new AppSetting { SetKey = "socketapplicationurl", SetVal = "http://188.40.67.161/setting/default.aspx?PoolName=UniquePersonnel_sock", description = "Socket Application URL", IsLogin = false  },
+                            new AppSetting { SetKey = "PageSize", SetVal = "1500", description = "Page Size" , IsLogin = false},
+                            new AppSetting { SetKey = "aspnet:MaxJsonDeserializerMembers", SetVal = "15000000", description = "Max JSON Deserializer Members" , IsLogin = false},
+                        };
+
+            using (var db = new TaxiDataContext())
+            {
+                var existingSettings = db.ExecuteQuery<AppSetting>(
+                    @"SELECT SetKey, SetVal, description FROM AppSettings WHERE IsLogin=0").ToList();
+
+                foreach (var setting in requiredSettings)
+                {
+                    if (!existingSettings.Any(a => a.SetKey == setting.SetKey))
+                    {
+                        db.ExecuteCommand(
+                            @"INSERT INTO AppSettings (SetKey, SetVal, description,IsLogin) VALUES ({0}, {1}, {2},{3})",
+                            setting.SetKey, setting.SetVal, setting.description,false);
+                    }
+                }
+               
+            }
+        }
+        public void UpdateAppSetting(string key, string value)
+        {
+            var config = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration("~");
+            var settings = config.AppSettings.Settings;
+
+            if (settings[key] == null)
+            {
+                settings.Add(key, value);
+            }
+            else
+            {
+                settings[key].Value = value;
+            }
+
+            config.Save(ConfigurationSaveMode.Modified);
+            ConfigurationManager.RefreshSection("appSettings");
+        }
 
         private void setTimer()
         {

@@ -70,6 +70,7 @@ namespace SignalRHub.WebApiClasses
         public string SetKey { get; set; }
         public string SetVal { get; set; }
         public string description { get; set; }
+        public bool IsLogin { get;  set; }
     }
     public class ClsOnlineBooking
     {
@@ -1651,7 +1652,10 @@ namespace SignalRHub.WebApiClasses
         public RouteCoordinates RouteCoordinates;
         public int Noofhours { get; set; }
         public int FareCalculationSetting { get; set; }
+       
+
         public List<RouteLeg> legs;
+
         public int? JourneyTypeId { get; set; }
 
 
@@ -1662,7 +1666,6 @@ namespace SignalRHub.WebApiClasses
         public decimal returnFares { get; set; }
         public decimal companyPrice { get; set; }
     }
-
     public class RouteCoords
     {
         public double? Latitude;

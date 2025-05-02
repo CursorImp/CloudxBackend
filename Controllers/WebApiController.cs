@@ -59,45 +59,45 @@ namespace SignalRHub.Controllers
         {
             var requiredSettings = new List<AppSetting>
                         {
-                            new AppSetting { SetKey = "BookingSortBy", SetVal = "Lead", description = "Booking Sort By" },
-                            new AppSetting { SetKey = "Currency", SetVal = "£", description = "Currency" },
-                            new AppSetting { SetKey = "ShowMsgToAllDriver", SetVal = "true", description = "Show Msg To All Driver" },
-                            new AppSetting { SetKey = "IsVisibleNoShow", SetVal = "true", description = "Is Visible No Show" },
-                            new AppSetting { SetKey = "ShowDriverShortCutPanicButton", SetVal = "true", description = "Show Driver ShortCut Panic Button" },
-                            new AppSetting { SetKey = "ShowDriverShortCut", SetVal = "true", description = "Show Driver ShortCut" },
-                            new AppSetting { SetKey = "ShowPlot", SetVal = "true", description = "Show Plot" },
-                            new AppSetting { SetKey = "FaresSetting", SetVal = "true", description = "Fares Setting" },
-                            new AppSetting { SetKey = "ShowMultiBooking", SetVal = "true", description = "Show Multi Booking" },
-                            new AppSetting { SetKey = "MultiVehicle", SetVal = "true", description = "Multi Vehicle" },
-                            new AppSetting { SetKey = "IsBookingPayment", SetVal = "true", description = "Is Booking Payment" },
-                            new AppSetting { SetKey = "EnableUnblockDriver", SetVal = "true", description = "Enable Unblock Driver" },
-                            new AppSetting { SetKey = "EnableCongestionCharges", SetVal = "true", description = "Enable Congestion Charges" },
-                            new AppSetting { SetKey = "ShowETA", SetVal = "true", description = "Show ETA" },
-                            new AppSetting { SetKey = "ShowCompleteJob", SetVal = "true", description = "Show Complete Job" },
-                            new AppSetting { SetKey = "EnableBookingCharges", SetVal = "true", description = "Enable Booking Charges" },
-                            new AppSetting { SetKey = "BookingPayment", SetVal = "true", description = "Booking Payment" },
-                            new AppSetting { SetKey = "EnableNoofHours", SetVal = "false", description = "Enable No of Hours" },
-                            new AppSetting { SetKey = "EnbaleDriverHourlyCommission", SetVal = "false", description = "Enbale Driver Hourly Commission" },
-                            new AppSetting { SetKey = "IsCompanyWiseHourlyFare", SetVal = "false", description = "Is Company Wise Hourly Fare" },
-                            new AppSetting { SetKey = "showCommandLine", SetVal = "true", description = "showCommandLine" },
-                            new AppSetting { SetKey = "showExtraCharges", SetVal = "false", description = "Show Extra Charges" },
+                            new AppSetting { SetKey = "BookingSortBy", SetVal = "Lead", description = "Booking Sort By" , IsLogin = true },
+                            new AppSetting { SetKey = "Currency", SetVal = "£", description = "Currency"  , IsLogin = true},
+                            new AppSetting { SetKey = "ShowMsgToAllDriver", SetVal = "true", description = "Show Msg To All Driver"  , IsLogin = true},
+                            new AppSetting { SetKey = "IsVisibleNoShow", SetVal = "true", description = "Is Visible No Show"  , IsLogin = true},
+                            new AppSetting { SetKey = "ShowDriverShortCutPanicButton", SetVal = "true", description = "Show Driver ShortCut Panic Button"  , IsLogin = true},
+                            new AppSetting { SetKey = "ShowDriverShortCut", SetVal = "true", description = "Show Driver ShortCut"  , IsLogin = true},
+                            new AppSetting { SetKey = "ShowPlot", SetVal = "true", description = "Show Plot"  , IsLogin = true},
+                            new AppSetting { SetKey = "FaresSetting", SetVal = "true", description = "Fares Setting"  , IsLogin = true},
+                            new AppSetting { SetKey = "ShowMultiBooking", SetVal = "true", description = "Show Multi Booking" , IsLogin = true },
+                            new AppSetting { SetKey = "MultiVehicle", SetVal = "true", description = "Multi Vehicle"  , IsLogin = true},
+                            new AppSetting { SetKey = "IsBookingPayment", SetVal = "true", description = "Is Booking Payment"  , IsLogin = true},
+                            new AppSetting { SetKey = "EnableUnblockDriver", SetVal = "true", description = "Enable Unblock Driver"  , IsLogin = true},
+                            new AppSetting { SetKey = "EnableCongestionCharges", SetVal = "true", description = "Enable Congestion Charges"  , IsLogin = true},
+                            new AppSetting { SetKey = "ShowETA", SetVal = "true", description = "Show ETA"  , IsLogin = true},
+                            new AppSetting { SetKey = "ShowCompleteJob", SetVal = "true", description = "Show Complete Job" , IsLogin = true},
+                            new AppSetting { SetKey = "EnableBookingCharges", SetVal = "true", description = "Enable Booking Charges" , IsLogin = true },
+                            new AppSetting { SetKey = "BookingPayment", SetVal = "true", description = "Booking Payment" , IsLogin = true },
+                            new AppSetting { SetKey = "EnableNoofHours", SetVal = "false", description = "Enable No of Hours"  , IsLogin = true},
+                            new AppSetting { SetKey = "EnbaleDriverHourlyCommission", SetVal = "false", description = "Enbale Driver Hourly Commission" , IsLogin = true},
+                            new AppSetting { SetKey = "IsCompanyWiseHourlyFare", SetVal = "false", description = "Is Company Wise Hourly Fare"  , IsLogin = true},
+                            new AppSetting { SetKey = "showCommandLine", SetVal = "true", description = "showCommandLine" , IsLogin = true },
+                            new AppSetting { SetKey = "showExtraCharges", SetVal = "false", description = "Show Extra Charges"  , IsLogin = true},
                         };
 
             using (var db = new TaxiDataContext())
             {
                 var existingSettings = db.ExecuteQuery<AppSetting>(
-                    @"SELECT SetKey, SetVal, description FROM AppSettings").ToList();
+                    @"SELECT SetKey, SetVal, description FROM AppSettings WHERE IsLogin=1").ToList();
 
                 foreach (var setting in requiredSettings)
                 {
                     if (!existingSettings.Any(a => a.SetKey == setting.SetKey))
                     {
                         db.ExecuteCommand(
-                            @"INSERT INTO AppSettings (SetKey, SetVal, description) VALUES ({0}, {1}, {2})",
-                            setting.SetKey, setting.SetVal, setting.description);
+                            @"INSERT INTO AppSettings (SetKey, SetVal, description,IsLogin) VALUES ({0}, {1}, {2},{3})",
+                            setting.SetKey, setting.SetVal, setting.description,true);
                     }
                 }
-                var AppSettings = db.ExecuteQuery<AppSetting>(@"SELECT SetKey, SetVal, description FROM AppSettings").ToList();
+                
             }
         }
 
@@ -143,7 +143,7 @@ namespace SignalRHub.Controllers
                             EnsureRequiredAppSettings();
 
                      
-                            var AppSettings = db.ExecuteQuery<AppSetting>(@"SELECT SetKey, SetVal, description FROM AppSettings").ToList();
+                            var AppSettings = db.ExecuteQuery<AppSetting>(@"SELECT SetKey, SetVal, description FROM AppSettings WHERE IsLogin=1").ToList();
                           
                             var ShowETASetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowETA");
                             var ShowCompleteJobSetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowCompleteJob");
