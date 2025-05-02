@@ -74,6 +74,7 @@ namespace SignalRHub
         public static string enableChangePlotUpdateDestination = "0";
 
         public static string EnableWaitingAfterArrive = "0";
+        public static string AcceptJobAdditional = "0";
 
         public static string AutoSTC = "0";
 
@@ -1236,6 +1237,11 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["EnableWaitingAfterArrive"]))
                 {
                     EnableWaitingAfterArrive = ConfigurationManager.AppSettings["EnableWaitingAfterArrive"].ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["AcceptJobAdditional"]))
+                {
+                    AcceptJobAdditional = ConfigurationManager.AppSettings["AcceptJobAdditional"].ToStr();
 
                 }
 
