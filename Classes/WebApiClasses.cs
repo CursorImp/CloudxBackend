@@ -627,6 +627,7 @@ namespace SignalRHub.WebApiClasses
         public int? AgentCommissionPercent { get; set; }
 
         public string Userlog { get; set; }
+        public string RecordingUrl { get; set; }
         public bool? IsFixNoOfHours { get; set; }
         public bool? IsFixedDriverCommission { get; set; }
         public int? DriverCommissionTypeId { get; set; }
