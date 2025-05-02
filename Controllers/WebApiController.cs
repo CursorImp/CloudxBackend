@@ -3471,6 +3471,12 @@ namespace SignalRHub.Controllers
                         if (HubProcessor.Instance.objPolicy.MapType.ToInt() == 1)
                             KEY = db.ExecuteQuery<string>("select APIKey from mapkeys where maptype='google'").FirstOrDefault().ToStr().Trim();
 
+                        string routeType = "short";
+                        if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='EnableFastestRoute'").FirstOrDefault().ToStr().Trim() == "1")
+                        {
+                            routeType = "fastest";
+                        }
+
                         var objX = new
                         {
                             originLat = Convert.ToDouble(obj.routeInfo.pickupAddress.Latitude),
@@ -3481,7 +3487,7 @@ namespace SignalRHub.Controllers
                             keys = KEY,
                             MapType = HubProcessor.Instance.objPolicy.MapType.ToInt(),
                             sourceType = "hubapi",
-                            routeType = "short",
+                            routeType = routeType,
                             vias = vias
                             //vias = obj.routeInfo.viaAddresses.Select(args => new {Via=args.Latitude +","+args.Longitude })
                         };
