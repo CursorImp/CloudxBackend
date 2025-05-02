@@ -84,6 +84,7 @@ namespace SignalRHub.Controllers
                             new AppSetting { SetKey = "showExtraCharges", SetVal = "false", description = "Show Extra Charges"  , IsLogin = true},
                             new AppSetting { SetKey = "EnableFastestRoute", SetVal = "false", description = "Enable Fastest Route"  , IsLogin = true},
                             new AppSetting { SetKey = "ShowBookingPlayRecording", SetVal = "false", description = "Show Booking Play Recording"  , IsLogin = true},
+                            new AppSetting { SetKey = "EnableChangeDriverPositionOnNoPickup", SetVal = "false", description = "Enable Change Driver Position On NoPickup"  , IsLogin = true},
                         };
 
             using (var db = new TaxiDataContext())
