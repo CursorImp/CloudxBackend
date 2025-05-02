@@ -555,6 +555,37 @@ namespace SignalRHub.Classes
         #endregion
         public string CustomerMobileNo { get; set; }
         public FareIncrement FareIncrement { get; set; }
+        public string ZoneId { get; set; }
+    }
+    public class FareDto
+    {
+        public int Id { get; set; }
+        public int? VehicleTypeId { get; set; }
+        public DateTime? EffectiveDate { get; set; }
+        public DateTime? AddOn { get; set; }
+        public int? AddBy { get; set; }
+        public DateTime? EditOn { get; set; }
+        public int? EditBy { get; set; }
+        public bool? IsVehicleWise { get; set; }
+        public bool? IsCompanyWise { get; set; }
+        public int? CompanyId { get; set; }
+        public int? SubCompanyId { get; set; }
+        public decimal? PerMinJourneyCharges { get; set; }
+        public bool? IsDayWise { get; set; }
+        public string DayValue { get; set; }
+        public decimal? StartRate { get; set; }
+        public decimal? StartRateValidMiles { get; set; }
+        public string FromDayName { get; set; }
+        public string TillDayName { get; set; }
+        public string SpecialDayName { get; set; }
+        public DateTime? FromSpecialDate { get; set; }
+        public DateTime? TillSpecialDate { get; set; }
+        public DateTime? FromDateTime { get; set; }
+        public DateTime? TillDateTime { get; set; }
+        public string ZoneId { get; set; }
+
+
+
     }
     #region Fare Increment
     public class FareIncrement
