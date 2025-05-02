@@ -71,8 +71,9 @@ namespace SignalRHub.Controllers
                             new AppSetting { SetKey = "ShowMultiBooking", SetVal = "true", description = "Show Multi Booking" , IsLogin = true },
                             new AppSetting { SetKey = "MultiVehicle", SetVal = "true", description = "Multi Vehicle"  , IsLogin = true},
                             new AppSetting { SetKey = "IsBookingPayment", SetVal = "true", description = "Is Booking Payment"  , IsLogin = true},
-                            new AppSetting { SetKey = "EnableUnblockDriver", SetVal = "true", description = "Enable Unblock Driver"  , IsLogin = true},
-                            new AppSetting { SetKey = "EnableCongestionCharges", SetVal = "true", description = "Enable Congestion Charges"  , IsLogin = true},
+                            new AppSetting { SetKey = "EnableUnblockDriver", SetVal = "false", description = "Enable Unblock Driver"  , IsLogin = true},
+                            new AppSetting { SetKey = "EnableCongestionCharges", SetVal = "false", description = "Enable Congestion Charges"  , IsLogin = true},
+                            new AppSetting { SetKey = "EnableCongestionSubCompanyWise", SetVal = "false", description = "Enable Congestion Charges"  , IsLogin = true},
                             new AppSetting { SetKey = "ShowETA", SetVal = "true", description = "Show ETA"  , IsLogin = true},
                             new AppSetting { SetKey = "ShowCompleteJob", SetVal = "true", description = "Show Complete Job" , IsLogin = true},
                             new AppSetting { SetKey = "EnableBookingCharges", SetVal = "true", description = "Enable Booking Charges" , IsLogin = true },
@@ -84,7 +85,7 @@ namespace SignalRHub.Controllers
                             new AppSetting { SetKey = "showExtraCharges", SetVal = "false", description = "Show Extra Charges"  , IsLogin = true},
                             new AppSetting { SetKey = "EnableFastestRoute", SetVal = "false", description = "Enable Fastest Route"  , IsLogin = true},
                             new AppSetting { SetKey = "ShowBookingPlayRecording", SetVal = "false", description = "Show Booking Play Recording"  , IsLogin = true},
-                            new AppSetting { SetKey = "EnableChangeDriverPositionOnNoPickup", SetVal = "false", description = "Enable Change Driver Position On NoPickup"  , IsLogin = true},
+                            new AppSetting { SetKey = "EnableChangeDriverPositionOnNoPickup", SetVal = "0", description = "Enable Change Driver Position On NoPickup"  , IsLogin = true},
                         };
 
             using (var db = new TaxiDataContext())

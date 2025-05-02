@@ -4206,82 +4206,54 @@ namespace SignalRHub.Controllers
         [System.Web.Http.Route("GetFareListByVehicleType")]
         public JsonResult GetFareListByVehicleType(AdminApi obj)
         {
-            //
-
             ResponseAdminApi response = new ResponseAdminApi();
+
             try
             {
-
-
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
+                    string query = $@"
+                SELECT 
+                    Id,
+                    VehicleTypeId,
+                    EffectiveDate,
+                    AddOn,
+                    AddBy,
+                    EditOn,
+                    EditBy,
+                    IsVehicleWise,
+                    IsCompanyWise,
+                    CompanyId,
+                    SubCompanyId,
+                    PerMinJourneyCharges,
+                    IsDayWise,
+                    DayValue,
+                    StartRate,
+                    StartRateValidMiles,
+                    FromDayName,
+                    TillDayName,
+                    SpecialDayName,
+                    FromSpecialDate,
+                    TillSpecialDate,
+                    FromDateTime,
+                    TillDateTime,
+                    ZoneId
+                FROM 
+                    Fare
+                WHERE 
+                    (VehicleTypeId = {(obj.fare.VehicleTypeId ?? 0)}) AND 
+                    (SubCompanyId = {(obj.fare.SubCompanyId ?? 0)}) AND 
+                    ((CompanyId = {(obj.fare.CompanyId ?? 0)}) OR ({(obj.fare.CompanyId.HasValue ? "0" : "1")} = 1 AND CompanyId IS NULL))
+                    ";
 
-                    int? companyId = null;
-                    if (obj.fare.CompanyId != null)
-                    {
-                        companyId = obj.fare.CompanyId;
-                    }
-
-                    var listFare = (from a in General.GetQueryable<Fare>(null)
-                                    where (a.VehicleTypeId == obj.fare.VehicleTypeId)
-                                    && (a.SubCompanyId == obj.fare.SubCompanyId)
-                                    && ((a.CompanyId == companyId) || (companyId == null && a.CompanyId == null))
-                                    //&& ((a.CompanyId == null || a.CompanyId == obj.fare.CompanyId))
-                                    select new
-                                    {
-                                        Id = a.Id,
-                                        VehicleTypeId = a.VehicleTypeId,
-                                        EffectiveDate = a.EffectiveDate,
-                                        //AddOnstr=String.Format("{0:dd/MM/yyyy}", a.AddOn.ToDateTimeorNull()),  create property
-                                        AddOn = a.AddOn,
-                                        AddBy = a.AddBy,
-                                        //EditOnstr=String.Format("{0:dd/MM/yyyy}", a.EditOn.ToDateTimeorNull()),  create property
-                                        EditOn = a.EditOn,
-                                        EditBy = a.EditBy,
-                                        IsVehicleWise = a.IsVehicleWise,
-                                        IsCompanyWise = a.IsCompanyWise,
-                                        CompanyId = a.CompanyId,
-                                        SubCompanyId = a.SubCompanyId,
-                                        PerMinJourneyCharges = a.PerMinJourneyCharges,
-                                        IsDayWise = a.IsDayWise,
-                                        DayValue = a.DayValue,
-                                        StartRate = a.StartRate,
-                                        StartRateValidMiles = a.StartRateValidMiles,
-                                        FromDayName = a.FromDayName,
-                                        TillDayName = a.TillDayName,
-                                        SpecialDayName = a.SpecialDayName,
-                                        FromSpecialDate = a.FromSpecialDate,
-                                        //FromSpecialDatestr=String.Format("{0:dd/MM/yyyy}", a.FromSpecialDate.ToDateTimeorNull()),  create property
-
-                                        TillSpecialDate = a.TillSpecialDate,
-                                        //TillSpecialDatestr=String.Format("{0:dd/MM/yyyy}", a.TillSpecialDate.ToDateTimeorNull()),  create property
-
-                                        FromDateTime = a.FromDateTime,
-                                        //FromDateTimestr=String.Format("{0:dd/MM/yyyy}", a.FromDateTime.ToDateTimeorNull()),  create property
-                                        TillDateTime = a.TillDateTime,
-                                        //TillDateTimestr=String.Format("{0:dd/MM/yyyy}", a.TillDateTime.ToDateTimeorNull()),  create property
-
-
-                                        //DepartmentId               = a.DepartmentId,
-                                        //WaitingCharges             = a.WaitingCharges,
-                                        //WaitingChargesPerSeconds   = a.WaitingChargesPerSeconds,
-                                        //WaitingSecondsFree         = a.WaitingSecondsFree,
-                                        //ZoneId                     = a.ZoneId
-
-                                    }).ToList();
-
-
-
+                    var list = db.ExecuteQuery<FareDto>(query).ToList();
 
                     response.Data = new
                     {
-                        listFare = Newtonsoft.Json.JsonConvert.SerializeObject(listFare.ToList()),
+                        listFare = Newtonsoft.Json.JsonConvert.SerializeObject(list),
 
                     };
-
                 }
-
-
             }
             catch (Exception ex)
             {
@@ -4289,10 +4261,97 @@ namespace SignalRHub.Controllers
                 response.Message = ex.Message;
             }
 
-
             return Json(response, JsonRequestBehavior.AllowGet);
-
         }
+        //public JsonResult GetFareListByVehicleType(AdminApi obj)
+        //{
+        //    //
+
+        //    ResponseAdminApi response = new ResponseAdminApi();
+        //    try
+        //    {
+
+
+        //        using (TaxiDataContext db = new TaxiDataContext())
+        //        {
+
+        //            int? companyId = null;
+        //            if (obj.fare.CompanyId != null)
+        //            {
+        //                companyId = obj.fare.CompanyId;
+        //            }
+
+        //            var listFare = (from a in General.GetQueryable<Fare>(null)
+        //                            where (a.VehicleTypeId == obj.fare.VehicleTypeId)
+        //                            && (a.SubCompanyId == obj.fare.SubCompanyId)
+        //                            && ((a.CompanyId == companyId) || (companyId == null && a.CompanyId == null))
+        //                            //&& ((a.CompanyId == null || a.CompanyId == obj.fare.CompanyId))
+        //                            select new
+        //                            {
+        //                                Id = a.Id,
+        //                                VehicleTypeId = a.VehicleTypeId,
+        //                                EffectiveDate = a.EffectiveDate,
+        //                                //AddOnstr=String.Format("{0:dd/MM/yyyy}", a.AddOn.ToDateTimeorNull()),  create property
+        //                                AddOn = a.AddOn,
+        //                                AddBy = a.AddBy,
+        //                                //EditOnstr=String.Format("{0:dd/MM/yyyy}", a.EditOn.ToDateTimeorNull()),  create property
+        //                                EditOn = a.EditOn,
+        //                                EditBy = a.EditBy,
+        //                                IsVehicleWise = a.IsVehicleWise,
+        //                                IsCompanyWise = a.IsCompanyWise,
+        //                                CompanyId = a.CompanyId,
+        //                                SubCompanyId = a.SubCompanyId,
+        //                                PerMinJourneyCharges = a.PerMinJourneyCharges,
+        //                                IsDayWise = a.IsDayWise,
+        //                                DayValue = a.DayValue,
+        //                                StartRate = a.StartRate,
+        //                                StartRateValidMiles = a.StartRateValidMiles,
+        //                                FromDayName = a.FromDayName,
+        //                                TillDayName = a.TillDayName,
+        //                                SpecialDayName = a.SpecialDayName,
+        //                                FromSpecialDate = a.FromSpecialDate,
+        //                                //FromSpecialDatestr=String.Format("{0:dd/MM/yyyy}", a.FromSpecialDate.ToDateTimeorNull()),  create property
+
+        //                                TillSpecialDate = a.TillSpecialDate,
+        //                                //TillSpecialDatestr=String.Format("{0:dd/MM/yyyy}", a.TillSpecialDate.ToDateTimeorNull()),  create property
+
+        //                                FromDateTime = a.FromDateTime,
+        //                                //FromDateTimestr=String.Format("{0:dd/MM/yyyy}", a.FromDateTime.ToDateTimeorNull()),  create property
+        //                                TillDateTime = a.TillDateTime,
+        //                                //TillDateTimestr=String.Format("{0:dd/MM/yyyy}", a.TillDateTime.ToDateTimeorNull()),  create property
+
+
+        //                                //DepartmentId               = a.DepartmentId,
+        //                                //WaitingCharges             = a.WaitingCharges,
+        //                                //WaitingChargesPerSeconds   = a.WaitingChargesPerSeconds,
+        //                                //WaitingSecondsFree         = a.WaitingSecondsFree,
+        //                                //ZoneId                     = a.ZoneId
+
+        //                            }).ToList();
+
+
+
+
+        //            response.Data = new
+        //            {
+        //                listFare = Newtonsoft.Json.JsonConvert.SerializeObject(listFare.ToList()),
+
+        //            };
+
+        //        }
+
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        response.HasError = true;
+        //        response.Message = ex.Message;
+        //    }
+
+
+        //    return Json(response, JsonRequestBehavior.AllowGet);
+
+        //}
 
 
         [System.Web.Http.HttpGet]
@@ -4625,6 +4684,18 @@ namespace SignalRHub.Controllers
                                                                                                                                                                                                                                                 //objFare.Current.WaitingSecondsFree = obj.fare.WaitingSecondsFree   //numwaitingfreemins.Value.ToInt(); //? Field missing and property
                                                                                                                                                                                                                                                 //objFare.Current.ZoneId = obj.fare.ZoneId;  //? Field missing and property
                 objFare.Save();
+
+                try
+                {
+                    string zoneId = obj.ZoneId != null ? obj.ZoneId : "NULL";
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        db.ExecuteQuery<int>("Update Fare set ZoneId = " + zoneId + " where Id = " + objFare.Current.Id + " ");
+                    }
+                }
+                catch {
+                }
+
                 //if (obj.ddlZone.Visible)
                 //{
                 //    string zoneId = ddlZone.SelectedValue != null ? ddlZone.SelectedValue.ToInt().ToStr() : "NULL";
