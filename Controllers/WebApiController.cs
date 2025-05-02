@@ -19,6 +19,7 @@ using System.Text;
 using System.Threading;
 using System.Configuration;
 using System.Dynamic;
+using System.Xml.Linq;
 
 namespace SignalRHub.Controllers
 {
@@ -81,6 +82,9 @@ namespace SignalRHub.Controllers
                             new AppSetting { SetKey = "IsCompanyWiseHourlyFare", SetVal = "false", description = "Is Company Wise Hourly Fare"  , IsLogin = true},
                             new AppSetting { SetKey = "showCommandLine", SetVal = "true", description = "showCommandLine" , IsLogin = true },
                             new AppSetting { SetKey = "showExtraCharges", SetVal = "false", description = "Show Extra Charges"  , IsLogin = true},
+                            new AppSetting { SetKey = "EnableFastestRoute", SetVal = "false", description = "Enable Fastest Route"  , IsLogin = true},
+                            new AppSetting { SetKey = "ShowBookingPlayRecording", SetVal = "false", description = "Show Booking Play Recording"  , IsLogin = true},
+                            new AppSetting { SetKey = "EnableChangeDriverPositionOnNoPickup", SetVal = "false", description = "Enable Change Driver Position On NoPickup"  , IsLogin = true},
                         };
 
             using (var db = new TaxiDataContext())
@@ -1460,7 +1464,29 @@ namespace SignalRHub.Controllers
                     {
 
                     }
-
+                    var userName = db.CallerIdVOIP_Configurations.FirstOrDefault().UserName.ToStr();
+                    string VoipUrl = System.Configuration.ConfigurationManager.AppSettings["VoipUrl"];
+                    var callerData= (from a in db.CallHistories
+                                     join b in db.Gen_SubCompanies on a.CalledToNumber equals b.ConnectionString into table2
+                                     from b in table2.DefaultIfEmpty()
+                                     where 
+                                      (a.PhoneNumber.Trim() == obj.bookingInfo.CustomerMobileNo || a.PhoneNumber.Trim() == obj.bookingInfo.CustomerPhoneNo)
+                                      && (a.CallDuration  == obj.bookingInfo.CallRefNo)
+                                     orderby a.CallDateTime descending
+                                     select new
+                                     {
+                                         Sno = a.Sno,
+                                         Name = a.Name,
+                                         PhoneNumber = a.PhoneNumber,
+                                         CallDateTime = string.Format("{0:dd/MM/yyyy hh:mm}", a.CallDateTime),
+                                         AnsweredDateTime = string.Format("{0:dd/MM/yyyy hh:mm}", a.AnsweredDateTime),
+                                         Line = a.Line,
+                                         STN = a.STN,
+                                         Duration = a.CallDuration,
+                                         IsMissed = (a.IsAccepted != null && a.IsAccepted == true) ? "1" : "0",
+                                         Company = b != null && b.CompanyName != "" ? b.CompanyName : a.CalledToNumber,
+                                         RecordingUrl = a.CallDuration.Contains(".") ? VoipUrl + "/" + userName + "/inbound/" + a.CallDuration + "_" + (a.PhoneNumber.StartsWith("0") ? a.PhoneNumber.Substring(1) : a.PhoneNumber) : ""
+                                     }).FirstOrDefault();
                     Booking_DriverCommsiion booking_DriverCommsiion = new Booking_DriverCommsiion();
                     try
                     {
@@ -1477,7 +1503,11 @@ namespace SignalRHub.Controllers
                     catch
                     {
                     }
-
+                    if (callerData != null)
+                    {
+                        obj.bookingInfo.RecordingUrl = callerData.RecordingUrl;
+                    }
+                   
                     response.Data = obj.bookingInfo;
 
 
