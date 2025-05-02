@@ -10462,7 +10462,7 @@ namespace SignalRHub
                         pda.SyncMessageTemplates = "1";
 
                         pda.SyncBookingHistory = "1";
-                        pda.EnableWaitingAfterArrive = "0";
+                        pda.EnableWaitingAfterArrive = Global.EnableWaitingAfterArrive;
                         //
                         pda.EnableOnlineStatus = "1";
 
@@ -10479,7 +10479,7 @@ namespace SignalRHub
                         pda.EnableDriverDocuments = "2";
 
                         pda.DisableEarning = "2";
-                     //   pda.AcceptJobAdditional = "1";
+                       pda.AcceptJobAdditional = Global.AcceptJobAdditional;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
