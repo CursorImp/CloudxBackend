@@ -542,6 +542,9 @@ namespace SignalRHub
                             new AppSetting { SetKey = "PageSize", SetVal = "1500", description = "Page Size" , IsLogin = false},
                             new AppSetting { SetKey = "aspnet:MaxJsonDeserializerMembers", SetVal = "15000000", description = "Max JSON Deserializer Members" , IsLogin = false},
                             new AppSetting { SetKey = "VoipUrl", SetVal = "https://recordings.emeraldtel.co.uk", description = "VoipUrl" , IsLogin = false},
+                            new AppSetting { SetKey = "EnableWaitingAfterArrive", SetVal = "0", description = "Enable Waiting After Arrive" , IsLogin = false},
+                            new AppSetting { SetKey = "customOfficeNumber", SetVal = "", description = "custom Office Number" , IsLogin = false},
+                            new AppSetting { SetKey = "AcceptJobAdditional", SetVal = "0", description = "AcceptJobAdditional" , IsLogin = false},
                         };
 
             using (var db = new TaxiDataContext())
