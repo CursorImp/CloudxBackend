@@ -427,6 +427,19 @@ namespace SignalRHub
         protected void Application_Start(object sender, EventArgs e)
         {
             GlobalHost.Configuration.DisconnectTimeout = TimeSpan.FromSeconds(10);
+            try
+            {
+                EnsureRequiredAppSettings();
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    AppSettings = db.ExecuteQuery<AppSetting>("SELECT SetKey, SetVal FROM AppSettings").ToList();
+
+
+                }
+            }
+            catch {
+
+            }
             initializeSettings();
 
 
@@ -437,13 +450,6 @@ namespace SignalRHub
                 //
                 //   // ////////
                 File.AppendAllText(physicalPath + "\\log_applicationstart.txt", DateTime.Now.ToStr() + " Defaultclientid:" + DefaultClientId.ToStr() + ",ringback:" + Global.enableRingBack + ",accountcharges:" + Global.enableAccountCharges + ",cleartext:" + Global.enableClearJobText + ",calloffice:" + Global.enableCallOffice + Environment.NewLine);
-                EnsureRequiredAppSettings();
-                using (TaxiDataContext db = new TaxiDataContext())
-                {
-                     AppSettings = db.ExecuteQuery<AppSetting>("SELECT SetKey, SetVal FROM AppSettings WHERE IsLogin=0").ToList();
-
-                   
-                }
                 ReloadMeterList();
 
                 AreaRegistration.RegisterAllAreas();
@@ -547,7 +553,7 @@ namespace SignalRHub
             using (var db = new TaxiDataContext())
             {
                 var existingSettings = db.ExecuteQuery<AppSetting>(
-                    @"SELECT SetKey, SetVal, description FROM AppSettings WHERE IsLogin=0").ToList();
+                    @"SELECT SetKey, SetVal, description FROM AppSettings").ToList();
 
                 foreach (var setting in requiredSettings)
                 {

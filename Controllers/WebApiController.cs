@@ -88,13 +88,13 @@ namespace SignalRHub.Controllers
                             new AppSetting { SetKey = "EnableChangeDriverPositionOnNoPickup", SetVal = "0", description = "Enable Change Driver Position On NoPickup"  , IsLogin = true},
                             new AppSetting { SetKey = "EnableSentPDAMsgOnNoPickupToOther", SetVal = "0", description = "EnableSentPDAMsgOnNoPickupToOther"  , IsLogin = false},
                             new AppSetting { SetKey = "EnableWaitingAfterArrive", SetVal = "0", description = "EnableWaitingAfterArrive"  , IsLogin = false},
-                            new AppSetting { SetKey = "AcceptJobAdditional", SetVal = "0", description = "AcceptJobAdditional"  , IsLogin = true},
+                            new AppSetting { SetKey = "AcceptJobAdditional", SetVal = "0", description = "AcceptJobAdditional"  , IsLogin = false},
                         };
 
             using (var db = new TaxiDataContext())
             {
                 var existingSettings = db.ExecuteQuery<AppSetting>(
-                    @"SELECT SetKey, SetVal, description FROM AppSettings WHERE IsLogin=1").ToList();
+                    @"SELECT SetKey, SetVal, description FROM AppSettings").ToList();
 
                 foreach (var setting in requiredSettings)
                 {
