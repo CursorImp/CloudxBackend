@@ -484,73 +484,83 @@ namespace SignalRHub
 
             return defaultValue;
         }
-        public void AddColumnIfNotExists(string tableName, string columnName, string columnDefinition)
-        {
-            using (TaxiDataContext db = new TaxiDataContext())
-            {
 
-                string sql = $@"
-        IF NOT EXISTS (
-            SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_NAME = '{tableName}'
-              AND COLUMN_NAME = '{columnName}'
-        )
-        BEGIN
-            ALTER TABLE {tableName}
-            ADD {columnName} {columnDefinition};
-        END;
-    ";
-
-                db.ExecuteQuery<int>(sql);
-            }
-        }
         public void EnsureRequiredAppSettings()
         {
-            AddColumnIfNotExists("AppSettings", "IsLogin", "BIT");
+            
             var requiredSettings = new List<AppSetting>
                                                 {
-                            new AppSetting { SetKey = "SelectedGateway", SetVal = "2", description = "Selected Gateway", IsLogin = false  },
-                            new AppSetting { SetKey = "CanReceiveSMS", SetVal = "1", description = "Can Receive SMS", IsLogin = false  },
-                            new AppSetting { SetKey = "HM_ServerIPAddress", SetVal = "networks8.servebbs.net", description = "HM Server IP Address", IsLogin = false  },
-                            new AppSetting { SetKey = "HM_Port", SetVal = "63333", description = "HM Port" , IsLogin = false },
-                            new AppSetting { SetKey = "HM_Password", SetVal = "admin", description = "HM Password", IsLogin = false  },
-                            new AppSetting { SetKey = "DS_ServerBaseURL", SetVal = "http://81.130.136.62:54541", description = "DS Server Base URL" , IsLogin = false },
-                            new AppSetting { SetKey = "DS_UserName", SetVal = "admin", description = "DS User Name" , IsLogin = false },
-                            new AppSetting { SetKey = "DS_Password", SetVal = "Cabtds123", description = "DS Password" , IsLogin = false },
-                            new AppSetting { SetKey = "DS_SendingMsgPort", SetVal = "0", description = "DS Sending Msg Port" , IsLogin = false },
-                            new AppSetting { SetKey = "DS_ReceivingMsgPort", SetVal = "0", description = "DS Receiving Msg Port", IsLogin = false  },
-                            //new AppSetting { SetKey = "ConnectionString", SetVal = "aEJpkEUQcq1itQ0oc/3N1Gv9xjW92NgUXkZNTtlZ7xUwijoqG5Z4cWQZ5fBFnJHyDJOs06+Gwq94AqEPtfCLV84v5zfFNLI7Ff/2IA1kUKqMu6/gnRMI60FmmccRydKpvdLP3dYiZjCYjpWDa0RJdfycR3GDAdH7", description = "Encrypted DB Connection String", IsLogin = false  },
-                            //new AppSetting { SetKey = "socketurl", SetVal = "https://server17.ctcloudxapi.com:18014", description = "Socket URL", IsLogin = false  },
-                            new AppSetting { SetKey = "enableRingBack", SetVal = "0", description = "Enable Ring Back" , IsLogin = false },
-                            new AppSetting { SetKey = "enableCallOffice", SetVal = "1", description = "Enable Call Office" , IsLogin = false },
+                            new AppSetting { SetKey = "SelectedGateway", SetVal = "2", description = "Selected Gateway"  },
+                            new AppSetting { SetKey = "CanReceiveSMS", SetVal = "1", description = "Can Receive SMS"  },
+                            new AppSetting { SetKey = "HM_ServerIPAddress", SetVal = "networks8.servebbs.net", description = "HM Server IP Address"  },
+                            new AppSetting { SetKey = "HM_Port", SetVal = "63333", description = "HM Port"  },
+                            new AppSetting { SetKey = "HM_Password", SetVal = "admin", description = "HM Password"  },
+                            new AppSetting { SetKey = "DS_ServerBaseURL", SetVal = "http://81.130.136.62:54541", description = "DS Server Base URL"  },
+                            new AppSetting { SetKey = "DS_UserName", SetVal = "admin", description = "DS User Name"  },
+                            new AppSetting { SetKey = "DS_Password", SetVal = "Cabtds123", description = "DS Password"  },
+                            new AppSetting { SetKey = "DS_SendingMsgPort", SetVal = "0", description = "DS Sending Msg Port"  },
+                            new AppSetting { SetKey = "DS_ReceivingMsgPort", SetVal = "0", description = "DS Receiving Msg Port"  },
+                            //new AppSetting { SetKey = "ConnectionString", SetVal = "aEJpkEUQcq1itQ0oc/3N1Gv9xjW92NgUXkZNTtlZ7xUwijoqG5Z4cWQZ5fBFnJHyDJOs06+Gwq94AqEPtfCLV84v5zfFNLI7Ff/2IA1kUKqMu6/gnRMI60FmmccRydKpvdLP3dYiZjCYjpWDa0RJdfycR3GDAdH7", description = "Encrypted DB Connection String"  },
+                            //new AppSetting { SetKey = "socketurl", SetVal = "https://server17.ctcloudxapi.com:18014", description = "Socket URL"  },
+                            new AppSetting { SetKey = "enableRingBack", SetVal = "0", description = "Enable Ring Back"  },
+                            new AppSetting { SetKey = "enableCallOffice", SetVal = "1", description = "Enable Call Office"  },
                             new AppSetting { SetKey = "enableAccountCharges", SetVal = "0", description = "Enable Account Charges" },
-                            new AppSetting { SetKey = "enableClearJobText", SetVal = "1", description = "Enable Clear Job Text" , IsLogin = false },
-                            new AppSetting { SetKey = "enableReceiptOnCompleteJob", SetVal = "0", description = "Enable Receipt On Complete Job" , IsLogin = false },
-                            new AppSetting { SetKey = "driverPayLiveDetails", SetVal = "0", description = "Driver Pay Live Details" , IsLogin = false },
-                            new AppSetting { SetKey = "EnableBidOnPlots", SetVal = "1", description = "Enable Bid On Plots" , IsLogin = false },
-                            new AppSetting { SetKey = "DriverPay", SetVal = "0", description = "Driver Pay" , IsLogin = false },
-                            new AppSetting { SetKey = "SMSInbox", SetVal = "0", description = "SMS Inbox" , IsLogin = false },
-                            new AppSetting { SetKey = "CallerId_EnableHotDesk", SetVal = "0", description = "Caller ID Enable Hot Desk", IsLogin = false  },
-                            new AppSetting { SetKey = "CallerID_FromExt", SetVal = "200", description = "Caller ID From Extension" , IsLogin = false },
-                            new AppSetting { SetKey = "CallerID_TillExt", SetVal = "250", description = "Caller ID Till Extension", IsLogin = false  },
-                            new AppSetting { SetKey = "NoPickupRestrictionMins", SetVal = "3", description = "No Pickup Restriction (mins)", IsLogin = false  },
-                            new AppSetting { SetKey = "enableChangePlotUpdateDestination", SetVal = "0", description = "Enable Change Plot Update Destination" , IsLogin = false },
-                            new AppSetting { SetKey = "AutoSTC", SetVal = "0", description = "Auto STC" , IsLogin = false },
-                            new AppSetting { SetKey = "enableEmaiLReceipt", SetVal = "0", description = "Enable Email Receipt" , IsLogin = false },
-                            new AppSetting { SetKey = "EnablaDriverDocuments", SetVal = "0", description = "Enable Driver Documents" , IsLogin = false },
-                            new AppSetting { SetKey = "EnableViaAction", SetVal = "0", description = "Enable Via Action" , IsLogin = false },
-                            new AppSetting { SetKey = "StripeAPIBaseURL", SetVal = "https://k0nnectpay.com", description = "Stripe API Base URL" , IsLogin = false },
-                            new AppSetting { SetKey = "DefaultCurrency", SetVal = "GBP", description = "Default Currency" , IsLogin = false },
-                            new AppSetting { SetKey = "DefaultClientLocation", SetVal = "UK", description = "Default Client Location" , IsLogin = false },
-                            new AppSetting { SetKey = "huburl", SetVal = "", description = "Hub URL" , IsLogin = false},
-                            new AppSetting { SetKey = "applicationurl", SetVal = "http://188.40.67.161/setting/default.aspx?PoolName=UniquePersonnel", description = "Application URL" , IsLogin = false},
-                            new AppSetting { SetKey = "socketapplicationurl", SetVal = "http://188.40.67.161/setting/default.aspx?PoolName=UniquePersonnel_sock", description = "Socket Application URL", IsLogin = false  },
-                            new AppSetting { SetKey = "PageSize", SetVal = "1500", description = "Page Size" , IsLogin = false},
-                            new AppSetting { SetKey = "aspnet:MaxJsonDeserializerMembers", SetVal = "15000000", description = "Max JSON Deserializer Members" , IsLogin = false},
-                            new AppSetting { SetKey = "VoipUrl", SetVal = "https://recordings.emeraldtel.co.uk", description = "VoipUrl" , IsLogin = false},
-                            new AppSetting { SetKey = "EnableWaitingAfterArrive", SetVal = "0", description = "Enable Waiting After Arrive" , IsLogin = false},
-                            new AppSetting { SetKey = "customOfficeNumber", SetVal = "", description = "custom Office Number" , IsLogin = false},
-                            new AppSetting { SetKey = "AcceptJobAdditional", SetVal = "0", description = "AcceptJobAdditional" , IsLogin = false},
+                            new AppSetting { SetKey = "enableClearJobText", SetVal = "1", description = "Enable Clear Job Text"  },
+                            new AppSetting { SetKey = "enableReceiptOnCompleteJob", SetVal = "0", description = "Enable Receipt On Complete Job"  },
+                            new AppSetting { SetKey = "driverPayLiveDetails", SetVal = "0", description = "Driver Pay Live Details"  },
+                            new AppSetting { SetKey = "EnableBidOnPlots", SetVal = "1", description = "Enable Bid On Plots"  },
+                            new AppSetting { SetKey = "DriverPay", SetVal = "0", description = "Driver Pay"  },
+                            new AppSetting { SetKey = "SMSInbox", SetVal = "0", description = "SMS Inbox"  },
+                            new AppSetting { SetKey = "CallerId_EnableHotDesk", SetVal = "0", description = "Caller ID Enable Hot Desk"  },
+                            new AppSetting { SetKey = "CallerID_FromExt", SetVal = "200", description = "Caller ID From Extension"  },
+                            new AppSetting { SetKey = "CallerID_TillExt", SetVal = "250", description = "Caller ID Till Extension"  },
+                            new AppSetting { SetKey = "NoPickupRestrictionMins", SetVal = "3", description = "No Pickup Restriction (mins)"  },
+                            new AppSetting { SetKey = "enableChangePlotUpdateDestination", SetVal = "0", description = "Enable Change Plot Update Destination"  },
+                            new AppSetting { SetKey = "AutoSTC", SetVal = "0", description = "Auto STC"  },
+                            new AppSetting { SetKey = "enableEmaiLReceipt", SetVal = "0", description = "Enable Email Receipt"  },
+                            new AppSetting { SetKey = "EnablaDriverDocuments", SetVal = "0", description = "Enable Driver Documents"  },
+                            new AppSetting { SetKey = "EnableViaAction", SetVal = "0", description = "Enable Via Action"  },
+                            new AppSetting { SetKey = "StripeAPIBaseURL", SetVal = "https://k0nnectpay.com", description = "Stripe API Base URL"  },
+                            new AppSetting { SetKey = "DefaultCurrency", SetVal = "GBP", description = "Default Currency"  },
+                            new AppSetting { SetKey = "DefaultClientLocation", SetVal = "UK", description = "Default Client Location"  },
+                            new AppSetting { SetKey = "huburl", SetVal = "", description = "Hub URL" },
+                            new AppSetting { SetKey = "applicationurl", SetVal = "http://188.40.67.161/setting/default.aspx?PoolName=UniquePersonnel", description = "Application URL" },
+                            new AppSetting { SetKey = "socketapplicationurl", SetVal = "http://188.40.67.161/setting/default.aspx?PoolName=UniquePersonnel_sock", description = "Socket Application URL"  },
+                            new AppSetting { SetKey = "PageSize", SetVal = "1500", description = "Page Size" },
+                            new AppSetting { SetKey = "aspnet:MaxJsonDeserializerMembers", SetVal = "15000000", description = "Max JSON Deserializer Members" },
+                            new AppSetting { SetKey = "VoipUrl", SetVal = "https://recordings.emeraldtel.co.uk", description = "VoipUrl" },
+                            new AppSetting { SetKey = "EnableWaitingAfterArrive", SetVal = "0", description = "Enable Waiting After Arrive" },
+                            new AppSetting { SetKey = "customOfficeNumber", SetVal = "", description = "custom Office Number" },
+                            new AppSetting { SetKey = "AcceptJobAdditional", SetVal = "0", description = "AcceptJobAdditional" },
+                             new AppSetting { SetKey = "BookingSortBy", SetVal = "Lead", description = "Booking Sort By"  },
+                            new AppSetting { SetKey = "Currency", SetVal = "£", description = "Currency"  },
+                            new AppSetting { SetKey = "ShowMsgToAllDriver", SetVal = "true", description = "Show Msg To All Driver"  },
+                            new AppSetting { SetKey = "IsVisibleNoShow", SetVal = "true", description = "Is Visible No Show"  },
+                            new AppSetting { SetKey = "ShowDriverShortCutPanicButton", SetVal = "true", description = "Show Driver ShortCut Panic Button"  },
+                            new AppSetting { SetKey = "ShowDriverShortCut", SetVal = "true", description = "Show Driver ShortCut"  },
+                            new AppSetting { SetKey = "ShowPlot", SetVal = "true", description = "Show Plot"  },
+                            new AppSetting { SetKey = "FaresSetting", SetVal = "true", description = "Fares Setting"  },
+                            new AppSetting { SetKey = "ShowMultiBooking", SetVal = "true", description = "Show Multi Booking"  },
+                            new AppSetting { SetKey = "MultiVehicle", SetVal = "true", description = "Multi Vehicle"  },
+                            new AppSetting { SetKey = "IsBookingPayment", SetVal = "true", description = "Is Booking Payment"  },
+                            new AppSetting { SetKey = "EnableUnblockDriver", SetVal = "false", description = "Enable Unblock Driver"  },
+                            new AppSetting { SetKey = "EnableCongestionCharges", SetVal = "false", description = "Enable Congestion Charges"  },
+                            new AppSetting { SetKey = "EnableCongestionSubCompanyWise", SetVal = "false", description = "Enable Congestion Charges"  },
+                            new AppSetting { SetKey = "ShowETA", SetVal = "true", description = "Show ETA"  },
+                            new AppSetting { SetKey = "ShowCompleteJob", SetVal = "true", description = "Show Complete Job" },
+                            new AppSetting { SetKey = "EnableBookingCharges", SetVal = "true", description = "Enable Booking Charges"  },
+                            new AppSetting { SetKey = "BookingPayment", SetVal = "true", description = "Booking Payment"  },
+                            new AppSetting { SetKey = "EnableNoofHours", SetVal = "false", description = "Enable No of Hours"  },
+                            new AppSetting { SetKey = "EnbaleDriverHourlyCommission", SetVal = "false", description = "Enbale Driver Hourly Commission" },
+                            new AppSetting { SetKey = "IsCompanyWiseHourlyFare", SetVal = "false", description = "Is Company Wise Hourly Fare"  },
+                            new AppSetting { SetKey = "showCommandLine", SetVal = "true", description = "showCommandLine"  },
+                            new AppSetting { SetKey = "showExtraCharges", SetVal = "false", description = "Show Extra Charges"  },
+                            new AppSetting { SetKey = "EnableFastestRoute", SetVal = "false", description = "Enable Fastest Route"  },
+                            new AppSetting { SetKey = "ShowBookingPlayRecording", SetVal = "false", description = "Show Booking Play Recording"  },
+                            new AppSetting { SetKey = "EnableChangeDriverPositionOnNoPickup", SetVal = "0", description = "Enable Change Driver Position On NoPickup"  },
+                            new AppSetting { SetKey = "EnableSentPDAMsgOnNoPickupToOther", SetVal = "0", description = "EnableSentPDAMsgOnNoPickupToOther"  },
+                            new AppSetting { SetKey = "EnableWaitingAfterArrive", SetVal = "0", description = "EnableWaitingAfterArrive"  },
+                            new AppSetting { SetKey = "AcceptJobAdditional", SetVal = "0", description = "AcceptJobAdditional"  },
                         };
 
             using (var db = new TaxiDataContext())
@@ -563,8 +573,8 @@ namespace SignalRHub
                     if (!existingSettings.Any(a => a.SetKey == setting.SetKey))
                     {
                         db.ExecuteCommand(
-                            @"INSERT INTO AppSettings (SetKey, SetVal, description,IsLogin) VALUES ({0}, {1}, {2},{3})",
-                            setting.SetKey, setting.SetVal, setting.description,false);
+                            @"INSERT INTO AppSettings (SetKey, SetVal, description) VALUES ({0}, {1}, {2},{3})",
+                            setting.SetKey, setting.SetVal, setting.description);
                     }
                 }
                
