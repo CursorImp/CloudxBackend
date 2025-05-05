@@ -36,7 +36,7 @@ namespace SignalRHub
         public string DispatchTripID { get; set; }
         public string SupplierTripID { get; set; }
         public string SupplierID { get; set; }
-      
+
         public string FromUser { get; set; }
         public string ToUser { get; set; }
         public string MessageText { get; set; }
@@ -49,7 +49,7 @@ namespace SignalRHub
 
         private bool LoginDrvOnExpiredDoc = false;
         string physicalPath = AppContext.BaseDirectory;
-        string physicalPathSyslogfolder = AppContext.BaseDirectory+"\\logs\\systemlogs\\";
+        string physicalPathSyslogfolder = AppContext.BaseDirectory + "\\logs\\systemlogs\\";
 
         int LicenseDays = 0;
         int InsuranceDays = 0;
@@ -2074,7 +2074,7 @@ begin
                 }
 
 
-              //  File.AppendAllText(physicalPath + "\\" + "Sendacknowledgement.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request + Environment.NewLine);
+                //  File.AppendAllText(physicalPath + "\\" + "Sendacknowledgement.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request + Environment.NewLine);
             }
             catch (Exception ex)
             {
@@ -2411,7 +2411,7 @@ begin
 
                                     //   objcls.MessageTypeId = eMessageTypes.JOB;
 
-                                   General.BroadCastMessage("**onbid despatch>>" + objcls.JobId + ">>" + objcls.DriverId + ">>" + msg);
+                                    General.BroadCastMessage("**onbid despatch>>" + objcls.JobId + ">>" + objcls.DriverId + ">>" + msg);
                                     //
 
                                     try
@@ -3241,14 +3241,14 @@ begin
 
 
 
-//
+                        //
 
 
 
                         //Send message to PDA
 
 
-                        if (jobId == 0  && objcls.MessageTypeId == eMessageTypes.JOB)
+                        if (jobId == 0 && objcls.MessageTypeId == eMessageTypes.JOB)
                         {
                             //string jobMessage = objcls.JobMessage.ToStr();
                             //Clients.Caller.despatchBooking(jobMessage);
@@ -3260,7 +3260,7 @@ begin
                             {
 
 
-                              //  File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGjobapi.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
+                                //  File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGjobapi.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
                                 Instance.listofJobs.Remove(objcls);
                             }
                             catch
@@ -3553,7 +3553,7 @@ begin
                                         General.SP_SaveBid(objcls.JobId, objcls.DriverId, objcls.Price, 2, "", "Job Despatched");
 
 
-                                       General.BroadCastMessage("**onbid despatch>>" + objcls.JobId + ">>" + objcls.DriverId + ">>" + msg);
+                                        General.BroadCastMessage("**onbid despatch>>" + objcls.JobId + ">>" + objcls.DriverId + ">>" + msg);
 
                                         Instance.listofJobs.Remove(objcls);
                                     }
@@ -4697,7 +4697,7 @@ begin
         {
             string response = string.Empty;
 
-           
+
             return response;
         }
 
@@ -4816,7 +4816,7 @@ begin
 
 
 
-    
+
         private void DispatchJobSMS(long jobId, int jobStatusId)
         {
             try
@@ -5607,7 +5607,8 @@ begin
 
 
 
-                                var objBooker = db.Bookings.Select(args => new {
+                                var objBooker = db.Bookings.Select(args => new
+                                {
                                     args.Id,
                                     args.JourneyTypeId,
                                     args.FromAddress,
@@ -5737,7 +5738,7 @@ begin
 
 
                                     }
-                            //        return resp;
+                                    //        return resp;
                                 }
 
                             }
@@ -5752,7 +5753,7 @@ begin
                         try
                         {
 
-                            if (resp.Message.ToStr().Trim().Length==0)
+                            if (resp.Message.ToStr().Trim().Length == 0)
                             {
                                 string alterProcedureScript = @"
                         ALTER PROCEDURE [dbo].[stp_UpdateJob]                                                                                        
@@ -6041,7 +6042,7 @@ begin
                                 db.ExecuteCommand(alterProcedureScript);
 
                                 db.stp_UpdateJob(jobId, obj.DrvId.ToInt(), Enums.BOOKINGSTATUS.STC, 5, 0);
-                            
+
                                 General.BroadCastMessage("**action>>" + jobId.ToStr() + ">>" + obj.DrvId.ToStr() + ">>" + Enums.BOOKINGSTATUS.STC);
 
 
@@ -6250,7 +6251,7 @@ begin
             {
 
 
-            
+
                 int driverId = objData.DrvId.ToInt();
 
 
@@ -6350,15 +6351,15 @@ begin
                         if (Global.customerOfficeNumber.ToStr().Trim().Length == 0)
                         {
 
-                                if (subcompanyId == 0)
-                                {
-                                    subcompanyId = db.Bookings.Where(c => c.Id == jobId).Select(c => c.SubcompanyId).FirstOrDefault().ToInt();
-                                }
+                            if (subcompanyId == 0)
+                            {
+                                subcompanyId = db.Bookings.Where(c => c.Id == jobId).Select(c => c.SubcompanyId).FirstOrDefault().ToInt();
+                            }
 
-                                if (subcompanyId > 0)
-                                    response = db.Gen_SubCompanies.Where(c => c.Id == subcompanyId).Select(c => c.TelephoneNo).FirstOrDefault().ToStr().Trim();
+                            if (subcompanyId > 0)
+                                response = db.Gen_SubCompanies.Where(c => c.Id == subcompanyId).Select(c => c.TelephoneNo).FirstOrDefault().ToStr().Trim();
 
-                          
+
                         }
                         else
                             response = Global.customerOfficeNumber.ToStr().Trim();
@@ -6457,7 +6458,7 @@ begin
 
                 }
 
-              
+
             }
             catch (Exception ex)
             {
@@ -6483,7 +6484,7 @@ begin
 
 
         public enum ResponseType { Direct = 1, Url = 2, MultipleGateways = 3 }
-       
+
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("requestMakePayment")]
@@ -6796,7 +6797,7 @@ begin
                             }
                         }
 
-                        
+
 
                         if (paymentGateway != null && paymentGateway.Count() > 1 && (gatewayName.ToLower().Trim() != "konnectpay" && item.PaymentGatewayId != 15))
                         { makePaymentResponse.ResponseType = (int)ResponseType.MultipleGateways; }
@@ -6951,7 +6952,7 @@ begin
                                 string result = "";
 
 
-                                
+
 
                                 var payload = new
                                 {
@@ -6961,7 +6962,7 @@ begin
                                     Currency = "GBP",
                                     APISecret = obj.PaypalID.ToStr(),
                                     CustomerId = objCard.StripeCustomerId.ToStr(),
-                                    Description = objCard.BookingNo.ToStr() + "/" + objCard.BookingId + "/"+HubProcessor.Instance.objPolicy.DefaultClientId.ToStr()
+                                    Description = objCard.BookingNo.ToStr() + "/" + objCard.BookingId + "/" + HubProcessor.Instance.objPolicy.DefaultClientId.ToStr()
                                 };
 
                                 Stripe3DS st = new Stripe3DS();
@@ -7262,7 +7263,7 @@ begin
 
 
                             //     listofsummary.Add(new BookingSummary { fieldname = "Tip", isedit = true, isvisible = true, label = "Tip", value = 0 });
-                                 listofsummary.Add(new BookingSummary { fieldname = "BookingFee", isedit = false, isvisible = true, label = "BookingFee", value = objAction.BookingFee.ToDecimal() });
+                            listofsummary.Add(new BookingSummary { fieldname = "BookingFee", isedit = false, isvisible = true, label = "BookingFee", value = objAction.BookingFee.ToDecimal() });
 
                             response = Newtonsoft.Json.JsonConvert.SerializeObject(listofsummary);
                             //response = "{ \"JobId\" :\"" + jobId.ToStr() +
@@ -8421,7 +8422,7 @@ begin
                 JobActionEx objAction = new JavaScriptSerializer().Deserialize<JobActionEx>(mesg.ToStr());
 
 
-               
+
 
                 int driverId = int.Parse(objAction.DrvId);  //values[0].ToInt();
                 string driverNo = objAction.DrvNo;  //values[1].ToStr();
@@ -9645,7 +9646,7 @@ begin
                             foreach (var item in arr)
                             {
 
-                                list.Add(new ClsPlotDetails { PlotName = item.ZoneName, PlotId = item.ZoneId.ToInt(), JobId = item.JobId, PickupAddress =  item.FromAddress, DropOff =  item.ToAddress });
+                                list.Add(new ClsPlotDetails { PlotName = item.ZoneName, PlotId = item.ZoneId.ToInt(), JobId = item.JobId, PickupAddress = item.FromAddress, DropOff = item.ToAddress });
                                 //
                                 //
                             }
@@ -9804,7 +9805,7 @@ begin
                             if (db.Gen_SysPolicy_PaymentDetails.Where(c => c.PaymentGatewayId == 9).Count() > 0)
                                 resp = "true";
                             //else
-                                //resp = "false:Your Card is not Registered";
+                            //resp = "false:Your Card is not Registered";
 
                         }
 
@@ -11825,7 +11826,7 @@ begin
 
                         pda.FareMeterType = ((obj.FareMeterType.ToStr().Trim() == string.Empty ? " " : obj.FareMeterType.ToStr().Trim())); // index 35
 
-                        pda.EnableOptMeter =  "0"; // index 36
+                        pda.EnableOptMeter = "0"; // index 36
                         pda.DisableMeterForAccJob = ((obj.DisableFareMeterOnAccJob.ToBool() ? "1" : "0"));// index 37
 
                         pda.Courier = "0"; // index 38
@@ -11872,11 +11873,11 @@ begin
 
                         pda.showDestAfterPob = (obj.ShowDestinationAfterPOB.ToBool() ? "1" : "0");
 
-                      //  pda.EnableBidOnPlots = Global.EnableBidOnPlots;
-                      //  pda.DriverPay = Global.DriverPay;
+                        //  pda.EnableBidOnPlots = Global.EnableBidOnPlots;
+                        //  pda.DriverPay = Global.DriverPay;
                         pda.enableCallOffice = Global.enableCallOffice;
                         pda.isRingback = Global.enableRingBack;
-                    //    pda.SyncBookingHistory = "1";
+                        //    pda.SyncBookingHistory = "1";
                         // new 598
                         pda.isDriverConnectEnabled = ((obj.EnableDriverConnect.ToBool() ? "1" : "0"));
 
@@ -11895,16 +11896,16 @@ begin
                         //if (pda.EnableCompanyCars == "1")
                         //    pda.EnableDriverPinLogin = "1";
                         //else
-                            pda.EnableDriverPinLogin = "0";
+                        pda.EnableDriverPinLogin = "0";
                         pda.EnableSocketIO = "1";
                         pda.EnableLocationAck = "1";
                         pda.CheckJobStatus = "1";
 
-                        if(Global.EnablaDriverDocuments.ToStr()=="1")
-                        pda.EnableDriverDocuments = "2";
+                        if (Global.EnablaDriverDocuments.ToStr() == "1")
+                            pda.EnableDriverDocuments = "2";
 
                         pda.DisableEarning = "2";
-                       pda.AcceptJobAdditional = Global.AcceptJobAdditional;
+                        pda.AcceptJobAdditional = Global.AcceptJobAdditional;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
@@ -11946,7 +11947,7 @@ begin
                                 DriverName = pda.DrvName,
                                 DriverNo = pda.DrvNo,
                                 Bookings = bookingscount,
-                                Rating =obj.Fleet_Driver.AvgRating==null?5.0m: obj.Fleet_Driver.AvgRating.ToDecimal(),
+                                Rating = obj.Fleet_Driver.AvgRating == null ? 5.0m : obj.Fleet_Driver.AvgRating.ToDecimal(),
                                 Address = obj.Fleet_Driver.Address,
                                 Mobile = obj.Fleet_Driver.MobileNo,
                                 WorkingSince = workingSince,
@@ -11978,7 +11979,7 @@ begin
 
                         string json = Newtonsoft.Json.JsonConvert.SerializeObject(pda);
 
-                   
+
 
                         res.Data = "update settings<<<" + json;
                         res.IsSuccess = true;
@@ -11994,7 +11995,7 @@ begin
             {
                 res.Data = null;
                 res.IsSuccess = false;
-              //  res.Message = ex.Message;
+                //  res.Message = ex.Message;
 
 
                 try
@@ -12087,10 +12088,10 @@ begin
                                     {
                                         try
                                         {
-                                           
 
 
-                                            if ((pdaversion.ToDecimal()>100.00m))
+
+                                            if ((pdaversion.ToDecimal() > 100.00m))
                                             {
                                                 //
                                                 string driverPay = GetDriverPay(driverId, objDriver, pdaversion.ToStr());
@@ -12100,18 +12101,18 @@ begin
                                                     msg = msg.Replace("true", "balance:");
                                                     msg += driverPay;
 
-                                                 //   Clients.Caller.shiftLogin(msg.ToStr());
-                                                 //   return;
+                                                    //   Clients.Caller.shiftLogin(msg.ToStr());
+                                                    //   return;
 
                                                     res.Data = msg;
-                                                  //  res.Data = new JavaScriptSerializer().Serialize(msg.ToStr());
-                                                        res.IsSuccess = true;
-                                                        res.Message = msg;
-                                               //     return res;
+                                                    //  res.Data = new JavaScriptSerializer().Serialize(msg.ToStr());
+                                                    res.IsSuccess = true;
+                                                    res.Message = msg;
+                                                    //     return res;
                                                 }
                                             }
 
-                                        
+
                                         }
                                         catch (Exception ex)
                                         {
@@ -12361,7 +12362,7 @@ begin
                                     });
                                 }
 
-                             
+
                                 if (vehicle.Length > 0)
                                 {
                                     string vehNo = vehicle;
@@ -12694,7 +12695,7 @@ begin
                                         }
                                     }
 
-                                   
+
 
 
                                 }
@@ -13295,14 +13296,14 @@ begin
                     if (values.Count() >= 9)
                     {
 
-                       db.stp_LogoutDriverPenalty(values[1].ToInt(), false, true);
+                        db.stp_LogoutDriverPenalty(values[1].ToInt(), false, true);
                         General.BroadCastMessage("**logout>>" + values[1] + ">>" + values[7] + ">>Driver " + values[7] + " is Logout(OverBreak)");
                     }
                     else
                     {
-                       
-                            db.stp_LoginLogoutDriver(values[1].ToInt(), false, null);
-                       
+
+                        db.stp_LoginLogoutDriver(values[1].ToInt(), false, null);
+
 
                         General.BroadCastMessage("**logout>>Driver " + values[2] + " is Logout");
                     }
@@ -13450,7 +13451,7 @@ begin
 
                                 if (obj.JobSummary.TotalCash == null)
                                 {
-//
+                                    //
                                     obj.JobSummary.TotalCash = 0.00m;
                                     obj.JobSummary.TotalCashJobs = 0;
                                     obj.JobSummary.TotalCharges = 0.00m;
@@ -13642,23 +13643,23 @@ begin
                         res.Data = response;
                         res.IsSuccess = true;
                         res.Message = "You cannot go OnBreak at this time";
-                  
 
-                    if (response == "true")
-                    {
-                        //    if (issuccess == false)
-                        //   {
-                        db.stp_ChangeDriverStatus(values[1].ToInt(), values[2].ToInt());
-                        //    }
 
-                        General.BroadCastMessage("**changed driver status");
+                        if (response == "true")
+                        {
+                            //    if (issuccess == false)
+                            //   {
+                            db.stp_ChangeDriverStatus(values[1].ToInt(), values[2].ToInt());
+                            //    }
 
-                        //-----------------------------------------------------------
-                        res.Data = response;
-                        res.IsSuccess = true;
-                        res.Message = "**changed driver status";
+                            General.BroadCastMessage("**changed driver status");
+
+                            //-----------------------------------------------------------
+                            res.Data = response;
+                            res.IsSuccess = true;
+                            res.Message = "**changed driver status";
+                        }
                     }
-                }
 
 
                 }
@@ -13674,14 +13675,14 @@ begin
             {
                 try
                 {
-                   
+
                     DriverDetail req = Newtonsoft.Json.JsonConvert.DeserializeObject<DriverDetail>(mesg);
 
                     string response = "true";
 
-                   
-                   
-                     if (req.DStatus.ToStr() == "3")
+
+
+                    if (req.DStatus.ToStr() == "3")
                     {
                         using (TaxiDataContext db = new TaxiDataContext())
                         {
@@ -13701,7 +13702,7 @@ begin
                             }
                         }
                     }
-                     else if(req.JobId.ToStr().Trim().Length>0 && req.JobId.ToStr().Trim().ToLong()>0)
+                    else if (req.JobId.ToStr().Trim().Length > 0 && req.JobId.ToStr().Trim().ToLong() > 0)
                     {
 
                         response = "false:You cannot go OnBreak at this time";
@@ -13758,7 +13759,7 @@ begin
         }
 
 
-     
+
 
 
         [System.Web.Http.HttpGet]
@@ -13794,7 +13795,7 @@ begin
                 General.BroadCastMessage("**changed driver status");
 
 
-               
+
                 res.Data = "true";
                 res.IsSuccess = true;
                 res.Message = "**changed driver status";
@@ -13802,7 +13803,7 @@ begin
             }
             catch (Exception ex)
             {
-               
+
 
                 res.Data = null;
                 res.IsSuccess = false;
@@ -13931,7 +13932,7 @@ begin
                     }
 
 
-                 //   Clients.Caller.responseRingback(resp);
+                    //   Clients.Caller.responseRingback(resp);
 
 
                     ///Clients.Caller.responseRingback(resp);----------------------------------------------------------
@@ -14068,7 +14069,7 @@ begin
             ResponseData res = new ResponseData();
             try
             {
-              
+
 
                 string dataValue = mesg;
                 dataValue = dataValue.Trim();
@@ -14265,7 +14266,7 @@ begin
         public ResponseData requestJobLate(string mesg)
         {
             ResponseData res = new ResponseData();
-           
+
 
             string dataValue = mesg;
             dataValue = dataValue.Trim();
@@ -14333,7 +14334,7 @@ begin
             ResponseData data = new ResponseData();
             try
             {
-             
+
 
                 string dataValue = mesg;
                 dataValue = dataValue.Trim();
@@ -14444,7 +14445,7 @@ begin
                             int driverId = values[6].ToInt();
                             var obj = db.Fleet_Driver_Locations.Where(c => c.DriverId == driverId).Select(args => new { args.Latitude, args.Longitude }).FirstOrDefault();
 
-                            pickup =General.GetLocationName(obj.Latitude, obj.Longitude).ToStr().ToUpper();
+                            pickup = General.GetLocationName(obj.Latitude, obj.Longitude).ToStr().ToUpper();
 
 
 
@@ -14596,7 +14597,7 @@ begin
 
                         respo += "," + isMeter;
 
-                        int meterType =3;
+                        int meterType = 3;
 
                         respo += "," + HubProcessor.Instance.objPolicy.FareMeterRoundedCalc.ToDecimal() + "," + meterType;
 
@@ -14649,8 +14650,8 @@ begin
             return resp;
         }
 
-     
-      
+
+
 
 
         [System.Web.Http.HttpPost]
@@ -14845,7 +14846,7 @@ begin
         }
 
 
-    
+
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -14855,7 +14856,7 @@ begin
             ResponseData res = new ResponseData();
             try
             {
-               
+
 
                 string dataValue = mesg;
                 dataValue = dataValue.Trim();
@@ -15124,7 +15125,7 @@ begin
 
             try
             {
-               
+
 
                 string dataValue = mesg;
                 dataValue = dataValue.Trim();
@@ -16209,7 +16210,7 @@ begin
                 {
 
 
-                    File.AppendAllText(physicalPath + "\\requestVehicles.txt", DateTime.Now + ",request:"+mesg+ Environment.NewLine);
+                    File.AppendAllText(physicalPath + "\\requestVehicles.txt", DateTime.Now + ",request:" + mesg + Environment.NewLine);
                 }
                 catch
                 { }
@@ -16219,7 +16220,7 @@ begin
                     try
                     {
 
-                      var lista=    db.Fleet_Masters.Select(args => new {args.Id,args.VehicleID }).ToList();
+                        var lista = db.Fleet_Masters.Select(args => new { args.Id, args.VehicleID }).ToList();
 
                         string[] arr = lista.Select(args => args.VehicleID).ToArray<string>();
 
@@ -16229,9 +16230,9 @@ begin
                         var list = db.Fleet_Driver_CompanyVehicles.Where(c => c.DriverId == driverId).Select(c => c.FleetMasterId).ToList();
 
 
-                        if(list.Count>0)
+                        if (list.Count > 0)
                         {
-                            arr =lista.Where(c=>list.Count(a=>a== c.Id)>0).Select(args => args.VehicleID).ToArray<string>();
+                            arr = lista.Where(c => list.Count(a => a == c.Id) > 0).Select(args => args.VehicleID).ToArray<string>();
 
 
                         }
@@ -16353,7 +16354,7 @@ begin
                     {
                         long jobId = objAction.JobId.ToLong();
 
-                        var data = db.Bookings.Where(c => c.Id == jobId).Select(args => new { args.FromAddress, args.ToAddress, args.CompanyId,args.FareRate,args.ExtraDropCharges }).FirstOrDefault();
+                        var data = db.Bookings.Where(c => c.Id == jobId).Select(args => new { args.FromAddress, args.ToAddress, args.CompanyId, args.FareRate, args.ExtraDropCharges }).FirstOrDefault();
                         objAction.Pickup = data.FromAddress.ToStr().ToUpper().Trim();
                         objAction.Dropoff = data.ToAddress.ToStr().ToUpper().Trim();
 
@@ -16424,11 +16425,11 @@ begin
 
                         decimal totalFares = data.FareRate.ToDecimal() + data.ExtraDropCharges.ToDecimal();
                         int driverId = objAction.DrvId.ToInt();
-                        var driverDetails=  db.Fleet_Drivers.Where(c => c.Id == driverId).Select(c => new {c.DriverTypeId,c.DriverCommissionPerBooking }).FirstOrDefault();
+                        var driverDetails = db.Fleet_Drivers.Where(c => c.Id == driverId).Select(c => new { c.DriverTypeId, c.DriverCommissionPerBooking }).FirstOrDefault();
 
-                        if(driverDetails.DriverTypeId.ToInt()==2)
+                        if (driverDetails.DriverTypeId.ToInt() == 2)
                         {
-                            var comm = (totalFares * driverDetails.DriverCommissionPerBooking.ToDecimal())/100;
+                            var comm = (totalFares * driverDetails.DriverCommissionPerBooking.ToDecimal()) / 100;
                             totalFares = totalFares - comm;
 
                         }
@@ -17272,7 +17273,7 @@ begin
                     {
 
                         using (TaxiDataContext db = new TaxiDataContext())
-                           db.stp_UpdateJobAndRoute(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), "", values[5].ToDecimal(), null);
+                            db.stp_UpdateJobAndRoute(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), "", values[5].ToDecimal(), null);
                     }
                     else
                     {
@@ -18494,7 +18495,7 @@ begin
 
                                     db.ExecuteCommand(alterProcedureScript);
                                     db.stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
-                                } 
+                                }
                             }
 
                             //   }
@@ -18515,8 +18516,8 @@ begin
 
                         respo = "true";
 
-                        using(TaxiDataContext db=new TaxiDataContext())
-                        db.stp_UpdateJobAndRoute(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), "", 0, null);
+                        using (TaxiDataContext db = new TaxiDataContext())
+                            db.stp_UpdateJobAndRoute(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), "", 0, null);
                     }
                     else
                     {
@@ -18879,7 +18880,30 @@ begin
                     {
 
                     }
+                    if (jobStatusId.ToInt() == Enums.BOOKINGSTATUS.NOSHOW)
+                    {
+                        try
+                        {
+                            var objDriver = new List<int>();
+                            var EnableSentPDAMsgOnNoPickupToOther = "0";
+                            using (TaxiDataContext db = new TaxiDataContext())
+                            {
+                                objDriver = db.Fleet_Drivers.Where(c => c.Id != values[2].ToInt()).Select(c => c.Id).ToList();
+                                EnableSentPDAMsgOnNoPickupToOther = db.ExecuteQuery<string>("Select SetVal from AppSettings where SetKey = 'EnableSentPDAMsgOnNoPickupToOther'").FirstOrDefault();
+                            }
 
+                            if (EnableSentPDAMsgOnNoPickupToOther == "1" && objDriver != null && objDriver.Count > 0)
+                            {
+                                foreach (int itemId in objDriver)
+                                {
+                                    General.requestPDA("request pda=" + itemId + "=" + 0 + "=" + "Message>>Driver Priority - No Show>>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4");
+                                }
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -19005,17 +19029,17 @@ begin
                                     {
 
 
-                                       
-                                          
-                                            int? objBooker = db.Bookings.Where(c => c.Id == jobId)
-                                            .Select(args => args.OnHoldWaitingMins).FirstOrDefault();
 
-                                            if (objBooker != null)
-                                            {
-                                                //   
-                                                RemoveRestriction = objBooker.ToInt();
-                                            }
-                                       
+
+                                        int? objBooker = db.Bookings.Where(c => c.Id == jobId)
+                                        .Select(args => args.OnHoldWaitingMins).FirstOrDefault();
+
+                                        if (objBooker != null)
+                                        {
+                                            //   
+                                            RemoveRestriction = objBooker.ToInt();
+                                        }
+
                                     }
                                     catch (Exception ex)
                                     {
@@ -19601,7 +19625,7 @@ begin
                         }
                         else
                         {
-                      //      respo = objAction.Message;
+                            //      respo = objAction.Message;
 
                         }
                         // if(respo.StartsWith("failed")==false)
@@ -19622,7 +19646,7 @@ begin
 
                 }
 
-                if(respo=="false")
+                if (respo == "false")
                 {
 
                     res.IsSuccess = false;
@@ -19630,7 +19654,7 @@ begin
 
                 }
                 else
-                res.IsSuccess = true;
+                    res.IsSuccess = true;
 
 
             }
@@ -19836,23 +19860,23 @@ begin
                                     {
                                         try
                                         {
-                                            
 
 
-                                                if (Global.EnableViaAction=="1")
-                                                {
-                                                   
-                                                    FareMeterSettings fareJsonArr = new FareMeterSettings(true);
-                                                    fareJsonArr.EnableViaAction = "2";
 
-                                                    //if ((values[7].ToDecimal() >= 102.63m && values[7].ToDecimal() < 120))
-                                                    //    fareJsonArr.EnableViaAction = "3";
+                                            if (Global.EnableViaAction == "1")
+                                            {
 
-                                                    fareJson = ",jsonstring|" + new JavaScriptSerializer().Serialize(fareJsonArr).Replace(",", "|");
+                                                FareMeterSettings fareJsonArr = new FareMeterSettings(true);
+                                                fareJsonArr.EnableViaAction = "2";
 
-                                                    
-                                                }
-                                          
+                                                //if ((values[7].ToDecimal() >= 102.63m && values[7].ToDecimal() < 120))
+                                                //    fareJsonArr.EnableViaAction = "3";
+
+                                                fareJson = ",jsonstring|" + new JavaScriptSerializer().Serialize(fareJsonArr).Replace(",", "|");
+
+
+                                            }
+
                                         }
                                         catch
                                         {
@@ -19864,22 +19888,22 @@ begin
                                 {
                                     try
                                     {
-                                       
 
 
-                                            if (Global.EnableViaAction.ToStr()=="1")
-                                            {
-                                               
-                                                FareMeterSettings fareJsonArr = new FareMeterSettings(true);
-                                                fareJsonArr.EnableViaAction = "2";
-                                                //if ((values[7].ToDecimal() >= 102.63m && values[7].ToDecimal() < 120))
-                                                //    fareJsonArr.EnableViaAction = "3";
 
-                                                fareJson = ",jsonstring|" + new JavaScriptSerializer().Serialize(fareJsonArr).Replace(",", "|");
+                                        if (Global.EnableViaAction.ToStr() == "1")
+                                        {
 
-                                               
-                                            }
-                                        
+                                            FareMeterSettings fareJsonArr = new FareMeterSettings(true);
+                                            fareJsonArr.EnableViaAction = "2";
+                                            //if ((values[7].ToDecimal() >= 102.63m && values[7].ToDecimal() < 120))
+                                            //    fareJsonArr.EnableViaAction = "3";
+
+                                            fareJson = ",jsonstring|" + new JavaScriptSerializer().Serialize(fareJsonArr).Replace(",", "|");
+
+
+                                        }
+
                                     }
                                     catch
                                     {
@@ -20215,7 +20239,7 @@ begin
                             HubProcessor.Instance.listofJobs.RemoveAll(c => c.DriverId == values[2].ToInt() && c.JobId == values[1].ToLong());
                         }
 
-                      
+
                     }
                     catch (Exception ex)
                     {
@@ -20327,7 +20351,7 @@ begin
                           || (objAction.ChangePlot == 1 && Global.enableChangePlotUpdateDestination == "1"))
                         && objAction.Latitude != null && objAction.Latitude > 0)
                     {
-                        string dropOff =General.GetLocationName(objAction.Latitude, objAction.Longitude);
+                        string dropOff = General.GetLocationName(objAction.Latitude, objAction.Longitude);
 
 
                         objAction.Dropoff = dropOff;
@@ -20421,7 +20445,7 @@ begin
                             db.stp_UpdateJobAndRoute(objAction.JobId.ToStr().ToLong(), objAction.DrvId.ToInt(), objAction.JStatus.ToInt(), objAction.DStatus.ToInt(), objAction.Dropoff.ToStr(), objAction.Miles, null);
 
 
-                         
+
                         }
 
 
@@ -20571,7 +20595,7 @@ begin
                     try
                     {
 
-                        if (objAction.JobId.ToLong() > 0 && HubProcessor.Instance.objPolicy.DespatchTextForPDA.ToStr().Trim().Length > 0 )
+                        if (objAction.JobId.ToLong() > 0 && HubProcessor.Instance.objPolicy.DespatchTextForPDA.ToStr().Trim().Length > 0)
                         {
                             DispatchJobSMS(objAction.JobId.ToLong(), Enums.BOOKINGSTATUS.DISPATCHED.ToInt());
 
@@ -20608,7 +20632,7 @@ begin
                     }
 
 
-                  
+
 
                 }
                 else if (objAction.JStatus.ToStr().ToLower() == "jobcharges")
@@ -20718,7 +20742,7 @@ begin
                           || (objAction.ChangePlot == 1 && Global.enableChangePlotUpdateDestination == "1"))
                         && objAction.Latitude != null && objAction.Latitude > 0)
                     {
-                        string dropOff =General.GetLocationName(objAction.Latitude, objAction.Longitude);
+                        string dropOff = General.GetLocationName(objAction.Latitude, objAction.Longitude);
 
 
                         objAction.Dropoff = dropOff;
@@ -21316,36 +21340,36 @@ begin
                         toDoorNo = toDoorNo + "-";
 
 
-                 //   "\", \"Destination\":\"" + (toDoorNo + toAddress + dropOffPlot) + "\"," +
+                    //   "\", \"Destination\":\"" + (toDoorNo + toAddress + dropOffPlot) + "\"," +
 
 
-                   //string msg = FOJJob + startJobPrefix + "{ \"JobId\" :\"" + objBooking.Id.ToStr() +
-                   //               "\", \"Pickup\":\"" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? fromdoorno + "-" + fromAddress + pickUpPlot : fromAddress + pickUpPlot) +
-                   //               "\", \"Destination\":\"" + (!string.IsNullOrEmpty(objBooking.ToDoorNo) ? objBooking.ToDoorNo + "-" + toAddress + dropOffPlot : toAddress + dropOffPlot) + "\"," +
-                   //               "\"PickupDateTime\":\"" + string.Format("{0:dd/MM/yyyy   HH:mm}", objBooking.PickupDateTime) + "\"" +
-                   //               ",\"Cust\":\"" + objBooking.CustomerName + "\",\"Mob\":\"" + mobileNo + " " + "\",\"Fare\":\"" + string.Format("{0:0.00}", pdafares) + "\",\"Vehicle\":\"" + objBooking.Fleet_VehicleType.VehicleType + "\",\"Account\":\"" + companyName + " " + "\"" +
-                   //                 ",\"Lug\":\"" + objBooking.NoofLuggages.ToInt() + "\",\"Passengers\":\"" + objBooking.NoofPassengers.ToInt() + "\",\"Journey\":\"" + journey + "\",\"Payment\":\"" + paymentType + "\",\"Special\":\"" + specialRequirements + " " + "\",\"Extra\":\"" + IsExtra + "\",\"Via\":\"" + viaP + " " + "\"" +
+                    //string msg = FOJJob + startJobPrefix + "{ \"JobId\" :\"" + objBooking.Id.ToStr() +
+                    //               "\", \"Pickup\":\"" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? fromdoorno + "-" + fromAddress + pickUpPlot : fromAddress + pickUpPlot) +
+                    //               "\", \"Destination\":\"" + (!string.IsNullOrEmpty(objBooking.ToDoorNo) ? objBooking.ToDoorNo + "-" + toAddress + dropOffPlot : toAddress + dropOffPlot) + "\"," +
+                    //               "\"PickupDateTime\":\"" + string.Format("{0:dd/MM/yyyy   HH:mm}", objBooking.PickupDateTime) + "\"" +
+                    //               ",\"Cust\":\"" + objBooking.CustomerName + "\",\"Mob\":\"" + mobileNo + " " + "\",\"Fare\":\"" + string.Format("{0:0.00}", pdafares) + "\",\"Vehicle\":\"" + objBooking.Fleet_VehicleType.VehicleType + "\",\"Account\":\"" + companyName + " " + "\"" +
+                    //                 ",\"Lug\":\"" + objBooking.NoofLuggages.ToInt() + "\",\"Passengers\":\"" + objBooking.NoofPassengers.ToInt() + "\",\"Journey\":\"" + journey + "\",\"Payment\":\"" + paymentType + "\",\"Special\":\"" + specialRequirements + " " + "\",\"Extra\":\"" + IsExtra + "\",\"Via\":\"" + viaP + " " + "\"" +
 
-                   //                 ",\"CompanyId\":\"" + objBooking.CompanyId.ToInt() + "\",\"SubCompanyId\":\"" + objBooking.SubcompanyId.ToInt() + "\",\"QuotedPrice\":\"" + (objBooking.IsQuotedPrice.ToBool() ? "1" : "0") + "\"" +
-
-
-                   //                 parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", objBooking.FareRate) + "\"" +
-                   //              agentDetails +
-                   //                 ",\"Did\":\"" + objJobAction.DrvId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + appendString + " }";
-
-                   string msg = FOJJob + startJobPrefix + "{ \"JobId\" :\"" + objBooking.Id.ToStr() +
-                                   "\", \"Pickup\":\"" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? fromdoorno + "-" + fromAddress + pickUpPlot : fromAddress + pickUpPlot) +
-                                  "\", \"Destination\":\"" + (toDoorNo + toAddress + dropOffPlot) + "\"," +
-                                   "\"PickupDateTime\":\"" + string.Format("{0:dd/MM/yyyy   HH:mm}", objBooking.PickupDateTime) + "\"" +
-                                   ",\"Cust\":\"" + objBooking.CustomerName + "\",\"Mob\":\"" + mobileNo + " " + "\",\"Fare\":\"" + string.Format("{0:0.00}", pdafares) + "\",\"Vehicle\":\"" + objBooking.Fleet_VehicleType.VehicleType + "\",\"Account\":\"" + companyName + " " + "\"" +
-                                     ",\"Lug\":\"" + objBooking.NoofLuggages.ToInt() + "\",\"Passengers\":\"" + objBooking.NoofPassengers.ToInt() + "\",\"Journey\":\"" + journey + "\",\"Payment\":\"" + paymentType + "\",\"Special\":\"" + specialRequirements + " " + "\",\"Extra\":\"" + IsExtra + "\",\"Via\":\"" + viaP + " " + "\"" +
-
-                                     ",\"CompanyId\":\"" + objBooking.CompanyId.ToInt() + "\",\"SubCompanyId\":\"" + objBooking.SubcompanyId.ToInt() + "\",\"QuotedPrice\":\"" + (objBooking.IsQuotedPrice.ToBool() ? "1" : "0") + "\"" +
+                    //                 ",\"CompanyId\":\"" + objBooking.CompanyId.ToInt() + "\",\"SubCompanyId\":\"" + objBooking.SubcompanyId.ToInt() + "\",\"QuotedPrice\":\"" + (objBooking.IsQuotedPrice.ToBool() ? "1" : "0") + "\"" +
 
 
-                                     parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", objBooking.FareRate) + "\"" +
-                                  agentDetails +
-                                     ",\"Did\":\"" + objJobAction.DrvId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + appendString + " }";
+                    //                 parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", objBooking.FareRate) + "\"" +
+                    //              agentDetails +
+                    //                 ",\"Did\":\"" + objJobAction.DrvId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + appendString + " }";
+
+                    string msg = FOJJob + startJobPrefix + "{ \"JobId\" :\"" + objBooking.Id.ToStr() +
+                                    "\", \"Pickup\":\"" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? fromdoorno + "-" + fromAddress + pickUpPlot : fromAddress + pickUpPlot) +
+                                   "\", \"Destination\":\"" + (toDoorNo + toAddress + dropOffPlot) + "\"," +
+                                    "\"PickupDateTime\":\"" + string.Format("{0:dd/MM/yyyy   HH:mm}", objBooking.PickupDateTime) + "\"" +
+                                    ",\"Cust\":\"" + objBooking.CustomerName + "\",\"Mob\":\"" + mobileNo + " " + "\",\"Fare\":\"" + string.Format("{0:0.00}", pdafares) + "\",\"Vehicle\":\"" + objBooking.Fleet_VehicleType.VehicleType + "\",\"Account\":\"" + companyName + " " + "\"" +
+                                      ",\"Lug\":\"" + objBooking.NoofLuggages.ToInt() + "\",\"Passengers\":\"" + objBooking.NoofPassengers.ToInt() + "\",\"Journey\":\"" + journey + "\",\"Payment\":\"" + paymentType + "\",\"Special\":\"" + specialRequirements + " " + "\",\"Extra\":\"" + IsExtra + "\",\"Via\":\"" + viaP + " " + "\"" +
+
+                                      ",\"CompanyId\":\"" + objBooking.CompanyId.ToInt() + "\",\"SubCompanyId\":\"" + objBooking.SubcompanyId.ToInt() + "\",\"QuotedPrice\":\"" + (objBooking.IsQuotedPrice.ToBool() ? "1" : "0") + "\"" +
+
+
+                                      parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", objBooking.FareRate) + "\"" +
+                                   agentDetails +
+                                      ",\"Did\":\"" + objJobAction.DrvId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + appendString + " }";
 
 
 
@@ -21494,9 +21518,9 @@ begin
                 //}
                 //else
                 //{
-                    //calling web method (HttpGet, HttpPost), not a local method
-                    strLoginOrShiftLogin = requestShiftLogin(mesg).Data;
-              //  }
+                //calling web method (HttpGet, HttpPost), not a local method
+                strLoginOrShiftLogin = requestShiftLogin(mesg).Data;
+                //  }
 
                 //calling web method (HttpGet, HttpPost), not a local method
                 string strPara = "=" + req.DrvId.ToString();

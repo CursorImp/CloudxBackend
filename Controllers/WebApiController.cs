@@ -102,10 +102,10 @@ namespace SignalRHub.Controllers
                     {
                         db.ExecuteCommand(
                             @"INSERT INTO AppSettings (SetKey, SetVal, description,IsLogin) VALUES ({0}, {1}, {2},{3})",
-                            setting.SetKey, setting.SetVal, setting.description,true);
+                            setting.SetKey, setting.SetVal, setting.description, true);
                     }
                 }
-                
+
             }
         }
 
@@ -150,14 +150,14 @@ namespace SignalRHub.Controllers
                             //List<SignalRHub.Classes.AppSetting> AppSettings = new List<SignalRHub.Classes.AppSetting>();
                             EnsureRequiredAppSettings();
 
-                     
+
                             var AppSettings = db.ExecuteQuery<AppSetting>(@"SELECT SetKey, SetVal, description FROM AppSettings WHERE IsLogin=1").ToList();
-                          
+
                             var ShowETASetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowETA");
                             var ShowCompleteJobSetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowCompleteJob");
                             var EnableBookingChargesSetting = AppSettings.FirstOrDefault(a => a.SetKey == "EnableBookingCharges");
                             var BookingPaymentSetting = AppSettings.FirstOrDefault(a => a.SetKey == "BookingPayment");
-                          
+
                             //bool showCommandLine = false;
                             // showCommandLine= db.UM_SecurityGroup_Permissions.Where(c => c.SecurityGroupId == objUser.SecurityGroupId && c.UM_FormFunction.UM_Function.FunctionName == "SHOW COMMAND LINE").Count() > 0;
                             //showCommandLine = true;
@@ -1260,8 +1260,10 @@ namespace SignalRHub.Controllers
                                 DriverName = (a.Fleet_Driver.DriverNo + " - " + a.Fleet_Driver.DriverName + " [" + a.Fleet_Driver.Fleet_VehicleType.VehicleType + "]")
                                 //         ,
                                 //   a.IsManualLogin
-                                 ,a.Fleet_Driver.SubcompanyId
-                                ,a.Fleet_Driver.VehicleTypeId
+                                 ,
+                                a.Fleet_Driver.SubcompanyId
+                                ,
+                                a.Fleet_Driver.VehicleTypeId
                             }).Distinct().ToList();
 
                 response.Data = list;
@@ -1470,27 +1472,27 @@ namespace SignalRHub.Controllers
                     }
                     var userName = db.CallerIdVOIP_Configurations.FirstOrDefault().UserName.ToStr();
                     string VoipUrl = System.Configuration.ConfigurationManager.AppSettings["VoipUrl"];
-                    var callerData= (from a in db.CallHistories
-                                     join b in db.Gen_SubCompanies on a.CalledToNumber equals b.ConnectionString into table2
-                                     from b in table2.DefaultIfEmpty()
-                                     where 
-                                      (a.PhoneNumber.Trim() == obj.bookingInfo.CustomerMobileNo || a.PhoneNumber.Trim() == obj.bookingInfo.CustomerPhoneNo)
-                                      && (a.CallDuration  == obj.bookingInfo.CallRefNo)
-                                     orderby a.CallDateTime descending
-                                     select new
-                                     {
-                                         Sno = a.Sno,
-                                         Name = a.Name,
-                                         PhoneNumber = a.PhoneNumber,
-                                         CallDateTime = string.Format("{0:dd/MM/yyyy hh:mm}", a.CallDateTime),
-                                         AnsweredDateTime = string.Format("{0:dd/MM/yyyy hh:mm}", a.AnsweredDateTime),
-                                         Line = a.Line,
-                                         STN = a.STN,
-                                         Duration = a.CallDuration,
-                                         IsMissed = (a.IsAccepted != null && a.IsAccepted == true) ? "1" : "0",
-                                         Company = b != null && b.CompanyName != "" ? b.CompanyName : a.CalledToNumber,
-                                         RecordingUrl = a.CallDuration.Contains(".") ? VoipUrl + "/" + userName + "/inbound/" + a.CallDuration + "_" + (a.PhoneNumber.StartsWith("0") ? a.PhoneNumber.Substring(1) : a.PhoneNumber) : ""
-                                     }).FirstOrDefault();
+                    var callerData = (from a in db.CallHistories
+                                      join b in db.Gen_SubCompanies on a.CalledToNumber equals b.ConnectionString into table2
+                                      from b in table2.DefaultIfEmpty()
+                                      where
+                                       (a.PhoneNumber.Trim() == obj.bookingInfo.CustomerMobileNo || a.PhoneNumber.Trim() == obj.bookingInfo.CustomerPhoneNo)
+                                       && (a.CallDuration == obj.bookingInfo.CallRefNo)
+                                      orderby a.CallDateTime descending
+                                      select new
+                                      {
+                                          Sno = a.Sno,
+                                          Name = a.Name,
+                                          PhoneNumber = a.PhoneNumber,
+                                          CallDateTime = string.Format("{0:dd/MM/yyyy hh:mm}", a.CallDateTime),
+                                          AnsweredDateTime = string.Format("{0:dd/MM/yyyy hh:mm}", a.AnsweredDateTime),
+                                          Line = a.Line,
+                                          STN = a.STN,
+                                          Duration = a.CallDuration,
+                                          IsMissed = (a.IsAccepted != null && a.IsAccepted == true) ? "1" : "0",
+                                          Company = b != null && b.CompanyName != "" ? b.CompanyName : a.CalledToNumber,
+                                          RecordingUrl = a.CallDuration.Contains(".") ? VoipUrl + "/" + userName + "/inbound/" + a.CallDuration + "_" + (a.PhoneNumber.StartsWith("0") ? a.PhoneNumber.Substring(1) : a.PhoneNumber) : ""
+                                      }).FirstOrDefault();
                     Booking_DriverCommsiion booking_DriverCommsiion = new Booking_DriverCommsiion();
                     try
                     {
@@ -1511,7 +1513,7 @@ namespace SignalRHub.Controllers
                     {
                         obj.bookingInfo.RecordingUrl = callerData.RecordingUrl;
                     }
-                   
+
                     response.Data = obj.bookingInfo;
 
 
@@ -1621,7 +1623,7 @@ namespace SignalRHub.Controllers
                  {
                      Id = datarow.Field<int>("Id"),
                      CompanyName = datarow.Field<string>("CompanyName"),
-                    // HasVat = datarow.Field<bool>("HasVat")
+                     // HasVat = datarow.Field<bool>("HasVat")
                  });
 
 
@@ -2058,42 +2060,42 @@ namespace SignalRHub.Controllers
                                 {
 
 
-                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime), AfterUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", objMaster.Current.PickupDateTime), UpdateDate = DateTime.Now});
+                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime), AfterUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", objMaster.Current.PickupDateTime), UpdateDate = DateTime.Now });
 
                                 }
                                 if (obj.editbookingInfo.FromAddress.ToStr().ToUpper() != objMaster.Current.FromAddress.ToStr().ToUpper())
                                 {
 
 
-                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Pickup:" + obj.editbookingInfo.FromAddress.ToStr(), AfterUpdate = "Pickup:" + objMaster.Current.FromAddress, UpdateDate = DateTime.Now});
+                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Pickup:" + obj.editbookingInfo.FromAddress.ToStr(), AfterUpdate = "Pickup:" + objMaster.Current.FromAddress, UpdateDate = DateTime.Now });
 
                                 }
                                 if (obj.editbookingInfo.ToAddress.ToStr().ToUpper() != objMaster.Current.ToAddress.ToStr().ToUpper())
                                 {
 
 
-                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Destination:" + obj.editbookingInfo.ToAddress.ToStr(), AfterUpdate = "Destination:" + objMaster.Current.ToAddress, UpdateDate = DateTime.Now});
+                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Destination:" + obj.editbookingInfo.ToAddress.ToStr(), AfterUpdate = "Destination:" + objMaster.Current.ToAddress, UpdateDate = DateTime.Now });
 
                                 }
                                 if (obj.editbookingInfo.FareRate.ToDecimal() != objMaster.Current.FareRate.ToDecimal())
                                 {
 
 
-                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Fares:" + obj.editbookingInfo.FareRate.ToStr(), AfterUpdate = "Fares:" + objMaster.Current.FareRate, UpdateDate = DateTime.Now});
+                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Fares:" + obj.editbookingInfo.FareRate.ToStr(), AfterUpdate = "Fares:" + objMaster.Current.FareRate, UpdateDate = DateTime.Now });
 
                                 }
                                 if (obj.editbookingInfo.CustomerName.ToStr().ToUpper() != objMaster.Current.CustomerName.ToStr().ToUpper())
                                 {
 
 
-                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Customer Name:" + obj.editbookingInfo.CustomerName.ToStr(), AfterUpdate = "Customer Name:" + objMaster.Current.CustomerName, UpdateDate = DateTime.Now});
+                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Customer Name:" + obj.editbookingInfo.CustomerName.ToStr(), AfterUpdate = "Customer Name:" + objMaster.Current.CustomerName, UpdateDate = DateTime.Now });
 
                                 }
                                 if (obj.editbookingInfo.CustomerMobileNo.ToStr().ToUpper() != objMaster.Current.CustomerMobileNo.ToStr().ToUpper())
                                 {
 
 
-                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Customer Mobile No:" + obj.editbookingInfo.CustomerMobileNo.ToStr(), AfterUpdate = "Customer Mobile No:" + objMaster.Current.CustomerMobileNo, UpdateDate = DateTime.Now});
+                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Customer Mobile No:" + obj.editbookingInfo.CustomerMobileNo.ToStr(), AfterUpdate = "Customer Mobile No:" + objMaster.Current.CustomerMobileNo, UpdateDate = DateTime.Now });
 
                                 }
                                 if (obj.editbookingInfo.DriverId.ToInt() != objMaster.Current.DriverId.ToInt())
@@ -2101,11 +2103,11 @@ namespace SignalRHub.Controllers
 
                                     if (obj.editbookingInfo.DriverId == null && objMaster.Current.DriverId != null)
                                     {
-                                        objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Driver:", AfterUpdate = "Driver:" + db.Fleet_Drivers.Where(c => c.Id == objMaster.Current.Id).Select(c => c.DriverNo).FirstOrDefault(), UpdateDate = DateTime.Now});
+                                        objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Driver:", AfterUpdate = "Driver:" + db.Fleet_Drivers.Where(c => c.Id == objMaster.Current.Id).Select(c => c.DriverNo).FirstOrDefault(), UpdateDate = DateTime.Now });
                                     }
                                     else if (obj.editbookingInfo.DriverId != null && objMaster.Current.DriverId != null)
                                     {
-                                        objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Driver:" + db.Fleet_Drivers.Where(c => c.Id == obj.editbookingInfo.DriverId).Select(c => c.DriverNo).FirstOrDefault(), AfterUpdate = "Driver:" + db.Fleet_Drivers.Where(c => c.Id == objMaster.Current.DriverId).Select(c => c.DriverNo).FirstOrDefault(), UpdateDate = DateTime.Now});
+                                        objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Driver:" + db.Fleet_Drivers.Where(c => c.Id == obj.editbookingInfo.DriverId).Select(c => c.DriverNo).FirstOrDefault(), AfterUpdate = "Driver:" + db.Fleet_Drivers.Where(c => c.Id == objMaster.Current.DriverId).Select(c => c.DriverNo).FirstOrDefault(), UpdateDate = DateTime.Now });
                                     }
                                 }
                             }
@@ -2797,21 +2799,21 @@ namespace SignalRHub.Controllers
 
                 }
 
-             
-                    string msg = string.Empty;
-                    using (TaxiDataContext db = new TaxiDataContext())
+
+                string msg = string.Empty;
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    if (obj.DriverIds != null && obj.DriverIds.Length > 0)
                     {
-                        if (obj.DriverIds != null && obj.DriverIds.Length > 0)
+                        string[] DriverIds = obj.DriverIds;
+                        foreach (var item in DriverIds)
                         {
-                            string[] DriverIds = obj.DriverIds;
-                            foreach (var item in DriverIds)
-                            {
-                                General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == int.Parse(item)), obj.bookingInfo.BookingTypeId.ToInt(), true);
-                            }
+                            General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == int.Parse(item)), obj.bookingInfo.BookingTypeId.ToInt(), true);
                         }
-                        else
-                        {
-                        if (obj.bookingInfo.DriverId.ToInt() == 0 && obj.bookingInfo.BookingTypeId.ToInt()!=4)
+                    }
+                    else
+                    {
+                        if (obj.bookingInfo.DriverId.ToInt() == 0 && obj.bookingInfo.BookingTypeId.ToInt() != 4)
                         {
                             response.HasError = true;
                             response.Message = "Please select a driver";
@@ -2822,16 +2824,16 @@ namespace SignalRHub.Controllers
                             if (obj.bookingInfo.BookingTypeId.ToInt() == 4)
                             {
 
-                                 int? driverId= db.Bookings.Where(c => c.Id == obj.bookingInfo.Id).Select(c => c.DriverId).FirstOrDefault().ToIntorNull();
+                                int? driverId = db.Bookings.Where(c => c.Id == obj.bookingInfo.Id).Select(c => c.DriverId).FirstOrDefault().ToIntorNull();
 
-                                if (driverId==null && obj.bookingInfo.DriverId.ToInt() == 0 )
+                                if (driverId == null && obj.bookingInfo.DriverId.ToInt() == 0)
                                 {
                                     response.HasError = true;
                                     response.Message = "Please select a driver";
                                     //
                                 }
                                 else
-                                msg = General.AllocateDriver(db, HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt());
+                                    msg = General.AllocateDriver(db, HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt());
 
 
 
@@ -2892,16 +2894,16 @@ namespace SignalRHub.Controllers
                             }
                         }
                     }
-                        
 
 
-                    }
-                    //using (TaxiDataContext db = new TaxiDataContext())
-                    //{
-                    //    General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt());
 
-                    //}
-                
+                }
+                //using (TaxiDataContext db = new TaxiDataContext())
+                //{
+                //    General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt());
+
+                //}
+
 
                 response.Data = obj.bookingInfo.Id;
             }
@@ -3684,7 +3686,7 @@ namespace SignalRHub.Controllers
                         //  info.RouteCoordinates = "-1";
                         // info.VehicleTypeId = obj.routeInfo.VehicleTypeId.ToInt();
 
-                       //
+                        //
                         try
                         {
                             info.VehicleTypeId = -1;
@@ -3730,7 +3732,7 @@ namespace SignalRHub.Controllers
                         ////
 
 
-                    //    info.Vehicle = db.Fleet_VehicleTypes.Where(a => a.Id == info.VehicleTypeId).Select(a => a.VehicleType).FirstOrDefault().ToStr();
+                        //    info.Vehicle = db.Fleet_VehicleTypes.Where(a => a.Id == info.VehicleTypeId).Select(a => a.VehicleType).FirstOrDefault().ToStr();
                         //needtouncomment
                         //try
                         //{
@@ -3805,7 +3807,8 @@ namespace SignalRHub.Controllers
                             res.Fare = FareSett.fareVal;
                             res.ReturnFare = FareSett.returnFares.ToDecimal() > 0 ? FareSett.returnFares.ToDecimal() : 0;
                         }
-                        catch {
+                        catch
+                        {
                         }
                         try
                         {
@@ -4302,366 +4305,367 @@ namespace SignalRHub.Controllers
                             var locationName = locationList.Select(x => x.AddressLine).ToList();
                             response.Data = locationList;
                         }
-                        else { 
-                        //
-                        string postCode = General.GetPostCodeMatchOpt(searchValue);
-
-                        string doorNo = string.Empty;
-                        string place = string.Empty;
-
-
-
-
-                        if (postCode.Length == 0 && searchValue.Trim().Contains(" ") && searchValue.Trim().Contains(".") == false && searchValue.Trim().Contains("#") == false
-                          && searchValue[0].ToStr().IsAlpha() && searchValue.Split(new char[] { ' ' }).Any(c => c.IsAlpha() == false))
-                        //    && (searchValue.Trim().Substring(0, searchValue.Trim().IndexOf(' ')).ToStr().IsAlpha() == false || searchValue.Trim().Substring(searchValue.Trim().IndexOf(' ') + 1)[0].ToStr().IsAlpha()))
+                        else
                         {
-                            var arrData = searchValue.Split(new char[] { ' ' });
+                            //
+                            string postCode = General.GetPostCodeMatchOpt(searchValue);
+
+                            string doorNo = string.Empty;
+                            string place = string.Empty;
 
 
 
-                            if (arrData.Count() == 2)
+
+                            if (postCode.Length == 0 && searchValue.Trim().Contains(" ") && searchValue.Trim().Contains(".") == false && searchValue.Trim().Contains("#") == false
+                              && searchValue[0].ToStr().IsAlpha() && searchValue.Split(new char[] { ' ' }).Any(c => c.IsAlpha() == false))
+                            //    && (searchValue.Trim().Substring(0, searchValue.Trim().IndexOf(' ')).ToStr().IsAlpha() == false || searchValue.Trim().Substring(searchValue.Trim().IndexOf(' ') + 1)[0].ToStr().IsAlpha()))
                             {
-                                postCode = General.GetPostCodeMatchOpt(arrData.FirstOrDefault(c => c.IsAlpha() == false));
+                                var arrData = searchValue.Split(new char[] { ' ' });
 
-                            }
-                            else if (arrData.Count() > 2)
-                            {
 
-                                if (arrData[1][0].ToStr().IsNumeric())
-                                    postCode = General.GetPostCodeMatchOpt((arrData.FirstOrDefault(c => c.IsAlpha() == false) + " " + arrData[1]).Trim());
-                                else if (arrData[1].ToStr().IsAlpha() == false && arrData[2].ToStr().IsAlpha() == false)
-                                    postCode = General.GetPostCodeMatchOpt((arrData.FirstOrDefault(c => c.IsAlpha() == false) + " " + arrData[2]).Trim());
-                                else
+
+                                if (arrData.Count() == 2)
+                                {
                                     postCode = General.GetPostCodeMatchOpt(arrData.FirstOrDefault(c => c.IsAlpha() == false));
-                            }
 
-
-                        }
-
-                        if (!string.IsNullOrEmpty(postCode) && postCode.IsAlpha() == true)
-                            postCode = string.Empty;
-
-                        string street = searchValue;
-
-                        if (postCode.Length > 0)
-                        {
-                            street = street.Replace(postCode, "").Trim();
-                        }
-
-
-                        if (!string.IsNullOrEmpty(street) && !string.IsNullOrEmpty(postCode) && street.IsAlpha() == false && street.Length < 4 && searchValue.IndexOf(postCode) < searchValue.IndexOf(street))
-                        {
-                            street = "";
-                            postCode = searchValue;
-                        }
-
-
-                        if (street.Length > 0)
-                        {
-
-                            if (char.IsNumber(street[0]))
-                            {
-
-                                for (int i = 0; i <= 3; i++)
+                                }
+                                else if (arrData.Count() > 2)
                                 {
 
-                                    try
-                                    {
-                                        if (char.IsNumber(street[i]) || (doorNo.Length > 0 && doorNo.Length == i && char.IsLetter(street[i])))
-                                            doorNo += street[i];
-                                        else
-                                            break;
-                                    }
-                                    catch
-                                    {
-
-
-                                    }
+                                    if (arrData[1][0].ToStr().IsNumeric())
+                                        postCode = General.GetPostCodeMatchOpt((arrData.FirstOrDefault(c => c.IsAlpha() == false) + " " + arrData[1]).Trim());
+                                    else if (arrData[1].ToStr().IsAlpha() == false && arrData[2].ToStr().IsAlpha() == false)
+                                        postCode = General.GetPostCodeMatchOpt((arrData.FirstOrDefault(c => c.IsAlpha() == false) + " " + arrData[2]).Trim());
+                                    else
+                                        postCode = General.GetPostCodeMatchOpt(arrData.FirstOrDefault(c => c.IsAlpha() == false));
                                 }
+
+
                             }
-                        }
 
+                            if (!string.IsNullOrEmpty(postCode) && postCode.IsAlpha() == true)
+                                postCode = string.Empty;
 
-                        if (street.Contains("#"))
-                        {
-                            street = street.Replace("#", "").Trim();
-                            place = "p=";
-                        }
+                            string street = searchValue;
 
-                        if (doorNo.Length > 0 && place.Length == 0)
-                        {
-                            street = street.Replace(doorNo, "").Trim();
-
-
-                        }
-
-
-                        if (postCode.Length == 0 && street.Length < 3 && street != "//")
-                        {
-                            //   e.Cancel = true;
-                            //   return;
-
-                        }
-
-
-                        if (street.Length > 1 || postCode.Length > 0)
-                        {
                             if (postCode.Length > 0)
                             {
-                                if (doorNo.Length > 0 && postCode == General.GetPostCodeMatch(postCode))
+                                street = street.Replace(postCode, "").Trim();
+                            }
+
+
+                            if (!string.IsNullOrEmpty(street) && !string.IsNullOrEmpty(postCode) && street.IsAlpha() == false && street.Length < 4 && searchValue.IndexOf(postCode) < searchValue.IndexOf(street))
+                            {
+                                street = "";
+                                postCode = searchValue;
+                            }
+
+
+                            if (street.Length > 0)
+                            {
+
+                                if (char.IsNumber(street[0]))
                                 {
-                                    doorNo = string.Empty;
+
+                                    for (int i = 0; i <= 3; i++)
+                                    {
+
+                                        try
+                                        {
+                                            if (char.IsNumber(street[i]) || (doorNo.Length > 0 && doorNo.Length == i && char.IsLetter(street[i])))
+                                                doorNo += street[i];
+                                            else
+                                                break;
+                                        }
+                                        catch
+                                        {
+
+
+                                        }
+                                    }
                                 }
+                            }
+
+
+                            if (street.Contains("#"))
+                            {
+                                street = street.Replace("#", "").Trim();
+                                place = "p=";
+                            }
+
+                            if (doorNo.Length > 0 && place.Length == 0)
+                            {
+                                street = street.Replace(doorNo, "").Trim();
+
 
                             }
 
-                            if (postCode.Length >= 5 && postCode.Contains(" ") == false)
+
+                            if (postCode.Length == 0 && street.Length < 3 && street != "//")
                             {
+                                //   e.Cancel = true;
+                                //   return;
+
+                            }
 
 
-                                //string resultPostCode = AppVars.listOfAddress.FirstOrDefault(a => a.PostalCode.Strip(' ') == postCode).DefaultIfEmpty().PostalCode.ToStr().Trim();
+                            if (street.Length > 1 || postCode.Length > 0)
+                            {
+                                if (postCode.Length > 0)
+                                {
+                                    if (doorNo.Length > 0 && postCode == General.GetPostCodeMatch(postCode))
+                                    {
+                                        doorNo = string.Empty;
+                                    }
+
+                                }
+
+                                if (postCode.Length >= 5 && postCode.Contains(" ") == false)
+                                {
 
 
-                                //if (resultPostCode.Length >= 5 && resultPostCode.Contains(" "))
+                                    //string resultPostCode = AppVars.listOfAddress.FirstOrDefault(a => a.PostalCode.Strip(' ') == postCode).DefaultIfEmpty().PostalCode.ToStr().Trim();
+
+
+                                    //if (resultPostCode.Length >= 5 && resultPostCode.Contains(" "))
+                                    //{
+                                    //    postCode = resultPostCode;
+
+                                    //}
+
+                                }
+
+
+                                //if (POIWorker == null || POIWorker.CancellationPending || ((sender as BackgroundWorker) == null || (sender as BackgroundWorker).CancellationPending))
                                 //{
-                                //    postCode = resultPostCode;
-
+                                //    e.Cancel = true;
+                                //    return;
                                 //}
 
-                            }
-
-
-                            //if (POIWorker == null || POIWorker.CancellationPending || ((sender as BackgroundWorker) == null || (sender as BackgroundWorker).CancellationPending))
-                            //{
-                            //    e.Cancel = true;
-                            //    return;
-                            //}
 
 
 
 
 
-
-                            //if (text.Contains(" ") && text.Length < 13 && text.WordCount() == 2 && text.Remove(text.IndexOf(' ')).Trim().Length <= 3 && text.Strip(' ').IsAlpha()==false
-                            //    && (AppVars.keyLocations.Contains(text.Split(new char[] { ' ' })[0])))
-                            //{
-                            //  aTxt.ListBoxElement.Items.Clear();
-                            if (searchValue.Contains(" ") && searchValue.Length < 20 && searchValue.WordCount() == 2 && searchValue.Contains(".") == false && searchValue.Strip(' ').IsAlpha() == false)
-                            {
-
-                                string[] arr = searchValue.Split(new char[] { ' ' });
-
-                                if (arr.Count() == 2)
+                                //if (text.Contains(" ") && text.Length < 13 && text.WordCount() == 2 && text.Remove(text.IndexOf(' ')).Trim().Length <= 3 && text.Strip(' ').IsAlpha()==false
+                                //    && (AppVars.keyLocations.Contains(text.Split(new char[] { ' ' })[0])))
+                                //{
+                                //  aTxt.ListBoxElement.Items.Clear();
+                                if (searchValue.Contains(" ") && searchValue.Length < 20 && searchValue.WordCount() == 2 && searchValue.Contains(".") == false && searchValue.Strip(' ').IsAlpha() == false)
                                 {
-                                    if (arr[0].IsAlpha())
+
+                                    string[] arr = searchValue.Split(new char[] { ' ' });
+
+                                    if (arr.Count() == 2)
                                     {
-                                        string pcode = General.GetPostCodeMatch(arr[1].ToStr().ToUpper());
-
-                                        if (pcode.ToStr().Length > 0)
+                                        if (arr[0].IsAlpha())
                                         {
-                                            response.Data = (from a in db.Gen_Locations.Where(c => (c.Gen_LocationType.ShortCutKey == arr[0]) && c.PostCode.StartsWith(pcode))
-                                                             select (a.PostCode != string.Empty ? a.LocationName + ", " + a.PostCode : a.LocationName)
-                                              ).ToArray<string>();
+                                            string pcode = General.GetPostCodeMatch(arr[1].ToStr().ToUpper());
 
-                                            if (response.Data != null && (response.Data as string[]).Count() == 0)
-                                                response.Data = null;
+                                            if (pcode.ToStr().Length > 0)
+                                            {
+                                                response.Data = (from a in db.Gen_Locations.Where(c => (c.Gen_LocationType.ShortCutKey == arr[0]) && c.PostCode.StartsWith(pcode))
+                                                                 select (a.PostCode != string.Empty ? a.LocationName + ", " + a.PostCode : a.LocationName)
+                                                  ).ToArray<string>();
 
+                                                if (response.Data != null && (response.Data as string[]).Count() == 0)
+                                                    response.Data = null;
+
+                                            }
                                         }
                                     }
+
                                 }
 
-                            }
 
 
 
-
-                            if (response.Data == null)
-                            {
-
-                                if (doorNo.Length > 0 && street.Strip(' ').IsAlpha() == false)
+                                if (response.Data == null)
                                 {
-                                    postCode = General.GetPostCodeMatch(street);
-                                    if (postCode.Length > 0)
+
+                                    if (doorNo.Length > 0 && street.Strip(' ').IsAlpha() == false)
                                     {
-
-                                        street = street.Replace(postCode, "").Trim();
-                                    }
-                                }
-                                else if (postCode.Length > 0 && street.Length == 0 && postCode.Count(c => c == ' ') > 1)
-                                {
-                                    string originalPostCode = postCode;
-                                    postCode = postCode.Substring(0, postCode.LastIndexOf(' '));
-
-                                    doorNo = originalPostCode.Replace(postCode, "").ToStr().Trim();
-                                }
-                                else if (street.Length > 3 && street.Contains(' ') && street.IsAlpha() == false && doorNo.Length == 0)
-                                {
-
-
-                                    for (int i = 0; i < street.Length; i++)
-                                    {
-                                        if (Char.IsDigit(street[i]))
+                                        postCode = General.GetPostCodeMatch(street);
+                                        if (postCode.Length > 0)
                                         {
-                                            if (i > 0 && street[i - 1] == ' ')
-                                            {
 
-                                                doorNo += street[i];
-                                            }
-                                            else if (i == 0)
+                                            street = street.Replace(postCode, "").Trim();
+                                        }
+                                    }
+                                    else if (postCode.Length > 0 && street.Length == 0 && postCode.Count(c => c == ' ') > 1)
+                                    {
+                                        string originalPostCode = postCode;
+                                        postCode = postCode.Substring(0, postCode.LastIndexOf(' '));
+
+                                        doorNo = originalPostCode.Replace(postCode, "").ToStr().Trim();
+                                    }
+                                    else if (street.Length > 3 && street.Contains(' ') && street.IsAlpha() == false && doorNo.Length == 0)
+                                    {
+
+
+                                        for (int i = 0; i < street.Length; i++)
+                                        {
+                                            if (Char.IsDigit(street[i]))
                                             {
-                                                doorNo += street[i];
-                                            }
-                                            else if (doorNo.Length > 0)
-                                            {
-                                                doorNo += street[i];
+                                                if (i > 0 && street[i - 1] == ' ')
+                                                {
+
+                                                    doorNo += street[i];
+                                                }
+                                                else if (i == 0)
+                                                {
+                                                    doorNo += street[i];
+                                                }
+                                                else if (doorNo.Length > 0)
+                                                {
+                                                    doorNo += street[i];
+
+                                                }
+
 
                                             }
 
-
                                         }
 
+
+                                        if (doorNo.Length > 0)
+                                            street = street.Replace(doorNo, "").Trim();
                                     }
-
-
-                                    if (doorNo.Length > 0)
-                                        street = street.Replace(doorNo, "").Trim();
-                                }
-                                else if (postCode.Length > 0 && postCode.Contains(" ") == false && street.Length == 0 && doorNo.Length == 0 && place.Length == 0)
-                                {
-                                    //    IF LENGTH IS 5
-                                    //THEN
-                                    //E11AA=> IF 3RD CHARACTER IS NUMERIC THEN E1 1AA
-
-
-                                    //IF LENGTH IS 6
-                                    //THEN
-                                    //HA20DU=> IF 4TH CHARACTER IS NUMERIC THEN HA2 0DU
-
-                                    //IF LENGTH IS 7
-                                    //THEN 
-                                    //WC1A1AB=> IF 5TH CHARACTER IS NUMERIC THEN WC1A 1AB
-
-
-
-                                    if (postCode.Length == 5)
+                                    else if (postCode.Length > 0 && postCode.Contains(" ") == false && street.Length == 0 && doorNo.Length == 0 && place.Length == 0)
                                     {
-                                        if (postCode[2].ToStr().IsNumeric())
+                                        //    IF LENGTH IS 5
+                                        //THEN
+                                        //E11AA=> IF 3RD CHARACTER IS NUMERIC THEN E1 1AA
+
+
+                                        //IF LENGTH IS 6
+                                        //THEN
+                                        //HA20DU=> IF 4TH CHARACTER IS NUMERIC THEN HA2 0DU
+
+                                        //IF LENGTH IS 7
+                                        //THEN 
+                                        //WC1A1AB=> IF 5TH CHARACTER IS NUMERIC THEN WC1A 1AB
+
+
+
+                                        if (postCode.Length == 5)
                                         {
-                                            postCode = postCode.Insert(2, " ");
+                                            if (postCode[2].ToStr().IsNumeric())
+                                            {
+                                                postCode = postCode.Insert(2, " ");
+
+                                            }
 
                                         }
-
-                                    }
-                                    else if (postCode.Length == 6)
-                                    {
-                                        if (postCode[3].ToStr().IsNumeric())
+                                        else if (postCode.Length == 6)
                                         {
-                                            postCode = postCode.Insert(3, " ");
+                                            if (postCode[3].ToStr().IsNumeric())
+                                            {
+                                                postCode = postCode.Insert(3, " ");
+
+                                            }
 
                                         }
-
-                                    }
-                                    else if (postCode.Length == 7)
-                                    {
-                                        if (postCode[4].ToStr().IsNumeric())
+                                        else if (postCode.Length == 7)
                                         {
-                                            postCode = postCode.Insert(4, " ");
+                                            if (postCode[4].ToStr().IsNumeric())
+                                            {
+                                                postCode = postCode.Insert(4, " ");
+
+                                            }
+
+                                        }
+                                    }
+
+
+
+
+
+                                    if (street == "//" && obj.addressInfo.customerinfo.ToStr().Length > 0)
+                                    {
+                                        try
+                                        {
+
+                                            response.Data = db.ExecuteQuery<string>("exec stp_getcustomerhistoryaddresses {0}", obj.addressInfo.customerinfo.ToStr()).ToArray<string>();
+                                        }
+                                        catch
+                                        {
+
+
+                                        }
+                                    }
+                                    else
+                                    {
+
+
+
+
+
+
+                                        var finalList = db.ExecuteQuery<stp_GetByRoadLevelDataResult>("exec stp_GetByRoadLevelData {0},{1},{2},{3}", postCode, doorNo, street, place)
+                                            .Select(c => c.AddressLine1).Where(c => c != null).ToArray<string>();
+
+
+
+                                        var localization = db.stp_GetLocalizationDetails().Where(c => c.MasterId == null).Select(c => c.PostCode).ToArray<string>();
+
+                                        var finalList2 = (from a in localization
+                                                          from b in finalList
+                                                          where b.Contains(a) && (b.Substring(b.IndexOf(a), a.Length) == a && (b.IndexOf(a) - 1) >= 0 && b[b.IndexOf(a) - 1] == ' ' && GeneralBLL.GetHalfPostCodeMatch(b) == a)
+
+                                                          select b).ToArray<string>();
+
+
+                                        if (finalList2.Count() > 0)
+                                        {
+
+
+
+                                            finalList = finalList2.Union(finalList).ToArray<string>();
+
+
+                                            //finalList2 = (from a in finalList2
+                                            //                 where General.GetPostCodeMatch(a).Length == 0
+                                            //                 select a).ToArray<string>();
+
+
+                                            //    finalList = finalList2.Union(finalList).ToArray<string>();
 
                                         }
 
-                                    }
-                                }
+                                        response.Data = finalList;
+                                        //else
+                                        //{
+                                        //    finalList = resValue;
 
-
-
-
-
-                                if (street == "//" && obj.addressInfo.customerinfo.ToStr().Length > 0)
-                                {
-                                    try
-                                    {
-
-                                        response.Data = db.ExecuteQuery<string>("exec stp_getcustomerhistoryaddresses {0}", obj.addressInfo.customerinfo.ToStr()).ToArray<string>();
-                                    }
-                                    catch
-                                    {
-
-
-                                    }
-                                }
-                                else
-                                {
-
-
-
-
-
-
-                                    var finalList = db.ExecuteQuery<stp_GetByRoadLevelDataResult>("exec stp_GetByRoadLevelData {0},{1},{2},{3}", postCode, doorNo, street, place)
-                                        .Select(c => c.AddressLine1).Where(c => c != null).ToArray<string>();
-
-
-
-                                    var localization = db.stp_GetLocalizationDetails().Where(c => c.MasterId == null).Select(c => c.PostCode).ToArray<string>();
-
-                                    var finalList2 = (from a in localization
-                                                      from b in finalList
-                                                      where b.Contains(a) && (b.Substring(b.IndexOf(a), a.Length) == a && (b.IndexOf(a) - 1) >= 0 && b[b.IndexOf(a) - 1] == ' ' && GeneralBLL.GetHalfPostCodeMatch(b) == a)
-
-                                                      select b).ToArray<string>();
-
-
-                                    if (finalList2.Count() > 0)
-                                    {
-
-
-
-                                        finalList = finalList2.Union(finalList).ToArray<string>();
-
-
-                                        //finalList2 = (from a in finalList2
-                                        //                 where General.GetPostCodeMatch(a).Length == 0
-                                        //                 select a).ToArray<string>();
+                                        //    var finalList2 = (from a in resValue
+                                        //                      where General.GetPostCodeMatch(a).Length == 0
+                                        //                      select a).ToArray<string>();
 
 
                                         //    finalList = finalList2.Union(finalList).ToArray<string>();
+                                        //}
 
+
+                                        //    }
+
+                                        //}
                                     }
-
-                                    response.Data = finalList;
-                                    //else
-                                    //{
-                                    //    finalList = resValue;
-
-                                    //    var finalList2 = (from a in resValue
-                                    //                      where General.GetPostCodeMatch(a).Length == 0
-                                    //                      select a).ToArray<string>();
-
-
-                                    //    finalList = finalList2.Union(finalList).ToArray<string>();
-                                    //}
+                                    //   }
 
 
                                     //    }
-
-                                    //}
                                 }
-                                //   }
 
 
-                                //    }
+
+
+
+
+
+
                             }
-
-
-
-
-
-
-
-
                         }
-                    }
 
                         //
 
@@ -5368,7 +5372,7 @@ begin
                                          
        END";
 
-                       db.ExecuteCommand(alterProcedureScript);
+                        db.ExecuteCommand(alterProcedureScript);
                         db.stp_UpdateJob(obj.bookingInfo.Id, driverId, Enums.BOOKINGSTATUS.NOPICKUP, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
                         //   }
 
@@ -5694,8 +5698,8 @@ begin
                             if (username.Length == 0)
                                 username = "system";
                             //s
-                          //  db.ExecuteQuery<int>("exec stp_BookingLog {0},{1},{2},{3} ", obj.bookingInfo.Id, obj.UserName.ToStr(), "Job is Recovered by Controller", DateTime.Now.GetUtcTimeZone());
-                             db.stp_BookingLog(obj.bookingInfo.Id, username, "Job is Recovered by Controller");
+                            //  db.ExecuteQuery<int>("exec stp_BookingLog {0},{1},{2},{3} ", obj.bookingInfo.Id, obj.UserName.ToStr(), "Job is Recovered by Controller", DateTime.Now.GetUtcTimeZone());
+                            db.stp_BookingLog(obj.bookingInfo.Id, username, "Job is Recovered by Controller");
                         }
                         catch
                         {
@@ -9251,292 +9255,6 @@ begin
                             }
                             else
                             {
-                                string alterProcedureScript = @"
-                        ALTER PROCEDURE [dbo].[stp_UpdateJob]                                                                                        
-                                                
-(                                                                                        
-                                               
-  @jobId as bigint,                                                                                        
-                                                
-  @DriverId as int,                                                                                        
-                                                
-  @JobStatusId as int,                                                                                        
-                                                
-  @DriverWorkStatusId int,                                                                                        
-                                                
-  @SinBinTimer int                                                                                        
-                                                
-)                                                                                        
-                                                
-                                                
-AS                                                                                        
-                                               
-SET NOCOUNT ON                                                                                        
-                                                
-Begin                                                                                        
-                                                
-      Declare @DestZoneId int                                                                                        
-                                                
-      Declare @DriverCurrentJobId bigint                                                                                        
-                                                
-      DECLARE @BookingTypeId int                                                                                        
-                                                
-      declare @sinbinMins int                                                                                       
-                                                
-                                                
- if( (@JobStatusId=10 or @JobStatusId=11 or @JobStatusId=12))                                                                                       
-    select @sinbinMins=SinBinMinutes from Gen_SysPolicy_SinBinSettings where sinbintypeid=@JobStatusId                                                                                        
-                                                
-                                                
-         if(@JobStatusId=10 or @JobStatusId=11 or @JobStatusId=12 or @JobStatusId=13 or @jobstatusid=2)                                                                                        
-                                                
-                                                
-            set @DriverCurrentJobId=NULL                                                                                        
-                                                
-                                                
-        else                                                                                        
-                                                
-                                                
-       set @DriverCurrentJobId=@JobId                                                                                        
-                                                
-       if(@JobStatusId=5 or @JobStatusId=11)                                                                                        
-                
-       begin               
-                                                
-                                                
-        declare @fleetMasterId int               
-  --set @fleetMasterId=null                                                          
-                     declare @currstatusid int                             
-                                                
-            select @fleetMasterId=fleetMasterId,@currstatusid=DriverWorkStatusId from fleet_DriverQueueList where driverId=@driverId and status=1                                                                                    
-                                                
-                                   
-            Declare @AcceptedDateTime DateTime                                  
-                                                
-                                                
-            if(@JobStatusId=5)                                          
-                                                
-              SET  @AccepteddateTime=getdate()                                                           
-                                                 
-              DECLARE @pickup varchar(200)                                                              
-                                                
-              DECLARE @Destination varchar(200)                                                             
-                                                
-              if(@JobStatusId=5)                               
-                                                
-              begin                                                           
-                                                
-                                                
-    Update booking set BookingStatusId=@JobStatusId,FleetMasterId=@fleetMasterId,AcceptedDateTime=@AcceptedDateTime ,DriverId=@DriverId                                                                                        
-                                                
-                                                
-    where id=@jobId                                                                                        
-                                                
-                            
-                             if(@currstatusid=7)                              
-       Update fleet_driver_location set plotdate=getdate(),ZoneId=null,PrevZoneId=null,NewZoneName='',PreviousZone='', PickupPoint='',SinBinTillOn=null ,Destination='',disableautoplotting=0,LastActiveZoneName='' where driverid=@driverId                        
-                             
-                  else                            
-                        Update fleet_driver_location set plotdate=getdate(),PickupPoint='',Destination='',disableautoplotting=0,LastActiveZoneName='' where driverid=@driverId                                                                   
-                                   
-               end                                                                    
-                                                
-               else                                                                                  
-                                                
-               begin                                                                                  
-                                                
-      Update booking set BookingStatusId=@JobStatusId,FleetMasterId=@fleetMasterId,AcceptedDateTime=@AcceptedDateTime,IsBidding=1,AutoDespatch=1                                                                                          
-                   ,@pickup=FromAddress,@Destination=ToAddress ,IsConfirmedDriver=0                                                                                  
-  
-     where id=@jobId and DriverId=@DriverId                                                                          
-                  
-                            
-         Update fleet_driver_location set plotdate=getdate(),PickupPoint='',Destination='',disableautoplotting=0 where driverid=@driverId                                                                   
-                                   
-               end                                                                                  
-                    
-                                                
-            --  Update fleet_driver_location set plotdate=getdate(),PickupPoint='',Destination='',disableautoplotting=0 where driverid=@driverId                                      
-                                                
-                                                
-    if(@JobStatusId=5)                                                                                      
-                     
-             begin                                                                           
-                                                
-                                                
-      declare @drvNo varchar(100)                          
-                                                
-                                                
-                                                
-     select @drvNo=DriverNo from Fleet_Driver where id=@driverId                     
-                                           
-     insert into Booking_Log values(@jobid,'','','Job accepted by Driver ('+ISNULL(@drvNo,'')+')',getdate(),NULL)                       
-                             
-             end                                                                                                         
-       END                                                                                        
-                                                
-                                                
-       ELSE                                                                         
-                                                
-       begin                                                                                        
-                                       
-                                                
-      if(@JobStatusId=6)  -- Arrive                                                                                        
-                                           
-            BEGIN                                                                                                                  
-               Update booking set BookingStatusId=@JobStatusId,ArrivalDateTime=getdate()                                                                                        
-                         
-                     where  id=@jobId and driverid=@driverid                                                                                      
-                                
-            END                                                                                                                            
-                                                
-    else  if(@JobStatusId=7)    -- POB                                                                                                                   
-     BEGIN                                                                                                                          
-                                                
-     declare @journeytypeId int                                                      
-                declare @PickupZoneId int                                                      
-                                                                      
-                                          
-               Update booking set BookingStatusId=@JobStatusId,POBDateTime=getdate(),@DestZoneId=dropoffzoneid ,@journeytypeId=journeytypeid, @PickupZoneId=zoneid  where  id=@jobId and driverid=@driverid                                                                              
-                              if(@journeytypeId=3)                                             
-                         begin                                                          
-                                                                                   
-                            if(@PickupZoneId is not NULL)                                  
-       begin                               
-       if exists(select * from gen_zones where id=@PickupZoneId and (DisableDriverRank is null or DisableDriverRank=0))                                
-        begin                                
-                                                       
-          Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@PickupZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@PickupZoneId,previouszone='',newzonename='' where driverid= @driverId                    
-                                             
-                              end                                
-         else                                
-      
-         begin                                
-          select @PickupZoneId=BackupZone1Id from Gen_Zone_Backups where zoneid=@PickupZoneId                                
-                                
-               if(@PickupZoneId is not null and @PickupZoneId>0)                                
-          Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@PickupZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@PickupZoneId,previouszone='',newzonename='' where driverid= @driverId              
-           
-         end                                
-                       
-       end                                
-                                                                                   
-                         end                                                          
-                         else                                                          
-                         begin                                                          
-                                                                          
-                          if(@DestZoneId is not NULL)                                 
-        begin                                
-       if exists(select * from gen_zones where id=@DestZoneId and (DisableDriverRank is null or DisableDriverRank=0))                                
-                  begin                                
-                      --  select @DestZoneId=BackupZone1Id from Gen_Zone_Backups where zoneid=@DestZoneId                                
-                                
-              -- if(@DestZoneId is not null and @DestZoneId>0)                                
-            Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@DestZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@DestZoneId,previouszone='',newzonename='' where driverid=@driverId                 
-                                          
-                end                                 
-          else                                
-                                
-   begin                                
-                    select @DestZoneId=BackupZone1Id from Gen_Zone_Backups where zoneid=@DestZoneId                                
-                                
-               if(@DestZoneId is not null and @DestZoneId>0)                             
-            Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@DestZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@DestZoneId,previouszone='',newzonename='' where driverid=@driverId                 
-                  
-          end                                
-                                 
-       end                                          
-                         end                                
-                                  
-                                           
-                                                
- --                                       if(@DestZoneId is not NULL)                                             
-                                                
-  --  Update fleet_driver_location set plotdate=(case when zoneid is not null and zoneid!=@DestZoneId then getdate() else plotdate END),disableautoplotting=1,ZoneId=@DestZoneId,PrevZoneId=@DestZoneId,previouszone='',newzonename='' where driverid=@driverId
-                                         
-    END                                                                                    
-                                   
-                                                
-   else  if(@JobStatusId=8)  -- STC                                                                                        
-                                    
-            BEGIN                                                                                        
-                               
-               Update booking set BookingStatusId=@JobStatusId,STCDateTime=getdate()             
-                         
-                     where  id=@jobId and driverid=@driverid                                                                                 
-            END                                                                                        
-                                  
-            else  if(@JobStatusId=2)  --  DISPATCHED OR COMPLETED                                                                                        
-                     
-            BEGIN                                                                                        
-                              
-               Update booking set BookingStatusId=@JobStatusId,ClearedDateTime=getdate()                                    
-                         
-                     where  id=@jobId and driverid=@driverid                                                                                        
-                                   
-            END                                                                                        
-                                
-             else  if(@JobStatusId=3 or @JobStatusId=13 ) -- Cancel                                                                                        
-                                                
-            BEGIN                                                                                        
-                                                
-               Update booking set BookingStatusId=@JobStatusId                                   
-                 
-                                                
-                     where  id=@jobId                                                    
-                                                
-                                                
-                                                
-            END                                                                                        
-                                                
-            else  if(@JobStatusId=10) -- No Show                                                                                        
-                                                
-                                                
-                                               
-     BEGIN                                                                                        
-                                                
-                      
-               Update booking set BookingStatusId=@JobStatusId,ArrivalDateTime=getdate(),AutoDespatch=0,IsBidding=0                                                         
-                                                
-                                                
-                     where  id=@jobId and driverid=@driverid                                                                                        
-                                                
-                                                
-            END                                                                                        
-                                                                                 
-    else  if(@JobStatusId=1) -- Waiting                                 
-                                                
-                                                
-            BEGIN                                                                                        
-                 
-               Update booking set BookingStatusId=@JobStatusId,ArrivalDateTime=NULL ,IsConfirmedDriver=0,AutoDespatch=0,IsBidding=0   where  id=@jobId                                                                                       
-                                                
-                                                
-                                 
-                     --     ,DriverId=NULL                                                                                        
-
-                   --  where  id=@jobId                                                                        
- 
-                         INSERT INTO dbo.Fleet_Driver_RejectJobs (DriverId,BookingId,RejectedDateTime,BookingStatusId)                                                                                                    
-               values (@DriverId,@JobId,getdate(),10)                                                  
- 
-            END                                                                                        
-  
-         else  if(@JobStatusId=12) -- Not Accepted                                                                                        
-                                                 
-                                     
-begin                                                               
-                                          
-    Update booking set BookingStatusId=@JobStatusId                                                             
-                                     
-                     where  id=@jobId                                                                                        
-                                                 
-    END                                                                                        
-                                         
-       END";
-
-                                db.ExecuteCommand(alterProcedureScript);
-
                                 db.stp_UpdateJob(jobId, driverId, JobStatusId.ToIntorNull(), DriverStatusId.ToIntorNull(), -1);
 
                             }
@@ -9547,8 +9265,28 @@ begin
                             //  General.CallGetDashboardData();
                             //     General.BroadCastMessage("**broadcast close auth job");
                             General.BroadCastMessage("**broadcast close auth job>>" + Environment.MachineName + ">>" + obj.authInfo.Message.ToStr().Replace(">>", "<<") + ">>allow");
+                            try
+                            {
+                                if (JobStatusId == Enums.BOOKINGSTATUS.NOSHOW)
+                                {
+                                    var objDriver = new List<int>();
+                                    var EnableSentPDAMsgOnNoPickupToOther = "0";
 
+                                    objDriver = db.Fleet_Drivers.Where(c => c.Id != driverId.ToInt()).Select(c => c.Id).ToList();
+                                    EnableSentPDAMsgOnNoPickupToOther = db.ExecuteQuery<string>("Select SetVal from AppSettings where SetKey = 'EnableSentPDAMsgOnNoPickupToOther'").FirstOrDefault();
 
+                                    if (EnableSentPDAMsgOnNoPickupToOther == "1" && objDriver != null && objDriver.Count > 0)
+                                    {
+                                        foreach (int itemId in objDriver)
+                                        {
+                                            General.requestPDA("request pda=" + itemId + "=" + 0 + "=" + "Message>>Driver Priority - No Show>>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4");
+                                        }
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                            }
                             //if (JobStatusId == Enums.BOOKINGSTATUS.NOPICKUP)
                             //{
                             //    if (AppVars.objPolicyConfiguration.SMSNoPickup.ToStr().Trim().Length > 0)
