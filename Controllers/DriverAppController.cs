@@ -15004,8 +15004,9 @@ namespace SignalRHub
                         if (jobStatusId != Enums.BOOKINGSTATUS.ONROUTE && jobStatusId != Enums.BOOKINGSTATUS.ARRIVED && jobStatusId != Enums.BOOKINGSTATUS.STC)
                         {
                             using (TaxiDataContext db = new TaxiDataContext())
+                            {
                                 db.stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
-
+                            }
                         }
 
                         if (jobStatusId == Enums.BOOKINGSTATUS.ARRIVED)
@@ -15137,8 +15138,9 @@ namespace SignalRHub
                                 if (respo == "true")
                                 {
                                     using (TaxiDataContext db = new TaxiDataContext())
+                                    {
                                         db.stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
-
+                                    }
                                     //  DispatchJobSMS(values[1].ToLong(), jobStatusId);
 
                                 }
@@ -15360,7 +15362,9 @@ namespace SignalRHub
                             if (respo == "true")
                             {
                                 using (TaxiDataContext db = new TaxiDataContext())
+                                {
                                     db.stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
+                                }
                             }
 
                             //   }
@@ -15411,7 +15415,6 @@ namespace SignalRHub
                             }
                             else
                             {
-
                                 db.stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
                             }
 
@@ -15460,7 +15463,30 @@ namespace SignalRHub
                     {
 
                     }
+                    if (jobStatusId.ToInt() == Enums.BOOKINGSTATUS.NOPICKUP)
+                    {
+                        try
+                        {
+                            var objDriver = new List<int>();
+                            var EnableSentPDAMsgOnNoPickupToOther = "0";
+                            using (TaxiDataContext db = new TaxiDataContext())
+                            {
+                                objDriver = db.Fleet_Drivers.Where(c => c.Id != values[2].ToInt()).Select(c => c.Id).ToList();
+                                EnableSentPDAMsgOnNoPickupToOther = db.ExecuteQuery<string>("Select SetVal from AppSettings where SetKey = 'EnableSentPDAMsgOnNoPickupToOther'").FirstOrDefault();
+                            }
 
+                            if (EnableSentPDAMsgOnNoPickupToOther == "1" && objDriver != null && objDriver.Count > 0)
+                            {
+                                foreach (int itemId in objDriver)
+                                {
+                                    General.requestPDA("request pda=" + itemId + "=" + 0 + "=" + "Message>>Driver Priority - No Show>>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4");
+                                }
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
                 }
             }
             catch (Exception ex)
