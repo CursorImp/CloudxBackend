@@ -561,6 +561,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableSentPDAMsgOnNoPickupToOther", SetVal = "0", description = "EnableSentPDAMsgOnNoPickupToOther"  },
                             new AppSetting { SetKey = "EnableWaitingAfterArrive", SetVal = "0", description = "EnableWaitingAfterArrive"  },
                             new AppSetting { SetKey = "AcceptJobAdditional", SetVal = "0", description = "AcceptJobAdditional"  },
+                            new AppSetting { SetKey = "viapointmixedfare", SetVal = "false", description = "viapointmixedfare via milage formula"  },
                         };
 
             using (var db = new TaxiDataContext())
