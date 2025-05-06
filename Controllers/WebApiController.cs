@@ -3750,18 +3750,18 @@ namespace SignalRHub.Controllers
                         result = result.Substring(0, lastIndex);
 
                         var res = Newtonsoft.Json.JsonConvert.DeserializeObject<ClsDispatchFares>(result);
+                        //try
+                        //{
+                        //    var FareSett = CalculateFareSetting(obj, res);
+                        //    res.Fare = FareSett.fareVal;
+                        //    res.ReturnFare = FareSett.returnFares.ToDecimal() > 0 ? FareSett.returnFares.ToDecimal() : 0;
+                        //}
+                        //catch
+                        //{
+                        //}
                         try
                         {
-                            var FareSett = CalculateFareSetting(obj, res);
-                            res.Fare = FareSett.fareVal;
-                            res.ReturnFare = FareSett.returnFares.ToDecimal() > 0 ? FareSett.returnFares.ToDecimal() : 0;
-                        }
-                        catch
-                        {
-                        }
-                        try
-                        {
-                            var CongestionCharges = GetCongestionCharges(obj.routeInfo.legs, info.PickupDateTime, info.SubCompanyId);
+                            var CongestionCharges = GetCongestionCharges(obj.routeInfo.legs, info.PickupDateTime, obj.routeInfo.SubCompanyId);
                             Newtonsoft.Json.Linq.JObject jsonObj = Newtonsoft.Json.Linq.JObject.Parse(CongestionCharges);
                             decimal congestion = jsonObj["Data"]["FareRate"].ToObject<decimal>();
                             res.Congestion = congestion;

@@ -1656,6 +1656,7 @@ namespace SignalRHub.WebApiClasses
        
 
         public List<RouteLeg> legs;
+        public int? SubCompanyId { get; set; }
 
         public int? JourneyTypeId { get; set; }
 
