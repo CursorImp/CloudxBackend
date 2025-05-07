@@ -562,6 +562,8 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableWaitingAfterArrive", SetVal = "0", description = "EnableWaitingAfterArrive"  },
                             new AppSetting { SetKey = "AcceptJobAdditional", SetVal = "0", description = "AcceptJobAdditional"  },
                             new AppSetting { SetKey = "viapointmixedfare", SetVal = "false", description = "viapointmixedfare via milage formula"  },
+                            new AppSetting { SetKey = "ShowDashboardMap", SetVal = "true", description = "ShowDashboardMap"  },
+                            new AppSetting { SetKey = "ShowMapBydefaultOndashboard", SetVal = "true", description = "ShowMapBydefaultOndashboard"  },
                         };
 
             using (var db = new TaxiDataContext())
