@@ -106,6 +106,7 @@ namespace SignalRHub.Controllers
                             var ShowCompleteJobSetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowCompleteJob");
                             var EnableBookingChargesSetting = AppSettings.FirstOrDefault(a => a.SetKey == "EnableBookingCharges");
                             var BookingPaymentSetting = AppSettings.FirstOrDefault(a => a.SetKey == "BookingPayment");
+                            var ShowMapBydefaultOndashboard = AppSettings.FirstOrDefault(a => a.SetKey == "ShowMapBydefaultOndashboard");
 
                             //bool showCommandLine = false;
                             // showCommandLine= db.UM_SecurityGroup_Permissions.Where(c => c.SecurityGroupId == objUser.SecurityGroupId && c.UM_FormFunction.UM_Function.FunctionName == "SHOW COMMAND LINE").Count() > 0;
@@ -207,7 +208,8 @@ namespace SignalRHub.Controllers
                                 ShowCompleteJob = ShowCompleteJobSetting.SetVal,
                                 ListofUserRights = ListofUserRights,
                                 EnableBookingCharges = EnableBookingChargesSetting.SetVal,
-                                BookingPayment = BookingPaymentSetting.SetVal
+                                BookingPayment = BookingPaymentSetting.SetVal,
+                                ShowMapBydefaultOndashboard = ShowMapBydefaultOndashboard.SetVal
                             };
 
 
