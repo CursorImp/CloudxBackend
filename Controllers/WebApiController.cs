@@ -97,9 +97,9 @@ namespace SignalRHub.Controllers
                         if (objUser != null)
                         {
                             //List<SignalRHub.Classes.AppSetting> AppSettings = new List<SignalRHub.Classes.AppSetting>();
-                            
 
 
+                            Global.EnsureRequiredAppSettings();
                             var AppSettings = db.ExecuteQuery<AppSetting>(@"SELECT SetKey, SetVal, description FROM AppSettings").ToList();
 
                             var ShowETASetting = AppSettings.FirstOrDefault(a => a.SetKey == "ShowETA");

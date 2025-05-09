@@ -485,7 +485,7 @@ namespace SignalRHub
             return defaultValue;
         }
 
-        public void EnsureRequiredAppSettings()
+        public static void EnsureRequiredAppSettings()
         {
             
             var requiredSettings = new List<AppSetting>
