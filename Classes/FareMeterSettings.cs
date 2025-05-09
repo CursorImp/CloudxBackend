@@ -16,6 +16,7 @@ namespace SignalRHub
         public string ChangePlotOnAsDirected;
         public List<MeterTarrif> meterTarrif;
         public string EnableViaAction;
+        public string EnableDropOffAction;
 
         public FareMeterSettings()
         {

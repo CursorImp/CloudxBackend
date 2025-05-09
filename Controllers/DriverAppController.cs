@@ -5835,7 +5835,19 @@ namespace SignalRHub
                             listofsummary.Add(new BookingSummary { fieldname = "Fares", isedit = EditFares.ToBool(), isvisible = objPaymentColumns.ShowFares.ToBool(), label = "Fares", value = price });
                             listofsummary.Add(new BookingSummary { fieldname = "Parking", isedit = EditParking.ToBool(), isvisible = objPaymentColumns.ShowFares.ToBool(), label = "Parking", value = parking });
                             listofsummary.Add(new BookingSummary { fieldname = "Waiting", isedit = EditWaiting.ToBool(), isvisible = objPaymentColumns.ShowFares.ToBool(), label = "Waiting", value = waiting });
-                            listofsummary.Add(new BookingSummary { fieldname = "ExtraDropCharges", isedit = false, isvisible = true, label = "Extras", value = objAction.ExtraDropCharges.ToDecimal() });
+                            listofsummary.Add(new BookingSummary { fieldname = "ExtraDropCharges", isedit = true, isvisible = true, label = "Extras", value = objAction.ExtraDropCharges.ToDecimal() });
+                            if (!string.IsNullOrEmpty(objAction.EnableDropOffAction) && objAction.EnableDropOffAction != "0")
+                            {
+                                if (objAction.PaymentType.ToLower() == "credit card")
+                                {
+                                    listofsummary.Add(new BookingSummary { fieldname = "Tip", isedit = true, isvisible = true, label = "Tip", value = 0 });
+                                }
+
+                            }
+                            else
+                            {
+                                listofsummary.Add(new BookingSummary { fieldname = "Tip", isedit = true, isvisible = true, label = "Tip", value = 0 });
+                            }
 
                             //      listofsummary.Add(new BookingSummary { fieldname = "Surcharge", isedit = false, isvisible = true, label = "Surcharge", value = 0.3m });
 
@@ -13110,7 +13122,7 @@ namespace SignalRHub
 
                                                  }).ToList();
 
-
+                                fareJsonArr.EnableDropOffAction = "3";
                                 fareJsonArr.meterTarrif = new List<MeterTarrif>();
 
                                 decimal roundJourneyMile = HubProcessor.Instance.objPolicy.RoundJourneyMiles.ToDecimal();
@@ -16093,7 +16105,7 @@ namespace SignalRHub
 
 
                                         fareJsonArr.meterTarrif = new List<MeterTarrif>();
-
+                                        fareJsonArr.EnableDropOffAction = "3";
                                         //    Global.listMeterTariff = new List<MeterTarrif>();
                                         decimal roundJourneyMile = HubProcessor.Instance.objPolicy.RoundJourneyMiles.ToDecimal();
                                         foreach (var item in jobTariff)
