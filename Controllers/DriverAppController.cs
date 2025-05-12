@@ -5822,7 +5822,11 @@ namespace SignalRHub
 
                             if (objAction.IsMeter.ToStr() == "1")
                             {
-                                price = objAction.Fares.ToDecimal();
+                                var enableFareMeterOnDriverPDA = db.Fleet_Driver_PDASettings.Where(c => c.DriverId == driverId).Select(x=> x.EnableFareMeter).FirstOrDefault().ToBool();
+                                if (enableFareMeterOnDriverPDA)
+                                {
+                                    price = objAction.Fares.ToDecimal();
+                                }
                                 parking = objAction.ParkingCharges.ToDecimal();
                                 waiting = objAction.WaitingCharges.ToDecimal();
 
