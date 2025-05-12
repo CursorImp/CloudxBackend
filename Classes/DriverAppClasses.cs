@@ -172,6 +172,7 @@ namespace SignalRHub
         public string TransactionMessage { get; set; }
         public string TransactionId { get; set; }
         public string TransactionUrl { get; set; }
+        public string KonnectAccId { get; set; }
         public List<dynamic> Gateways { get; set; }
         public string isKonnectPayEnable { get; set; }
     }
