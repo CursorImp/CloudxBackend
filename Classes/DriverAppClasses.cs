@@ -219,6 +219,7 @@ namespace SignalRHub
         public string fieldname;
         public bool isvisible;
         public bool isedit;
+        public string DisableChangePayment;
 
 
 

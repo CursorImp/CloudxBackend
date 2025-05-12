@@ -5832,7 +5832,7 @@ namespace SignalRHub
 
 
                             List<BookingSummary> listofsummary = new List<BookingSummary>();
-                            listofsummary.Add(new BookingSummary { fieldname = "Fares", isedit = EditFares.ToBool(), isvisible = objPaymentColumns.ShowFares.ToBool(), label = "Fares", value = price });
+                            listofsummary.Add(new BookingSummary { fieldname = "Fares", isedit = EditFares.ToBool(), isvisible = objPaymentColumns.ShowFares.ToBool(), label = "Fares", value = price, DisableChangePayment = "1" });
                             listofsummary.Add(new BookingSummary { fieldname = "Parking", isedit = EditParking.ToBool(), isvisible = objPaymentColumns.ShowFares.ToBool(), label = "Parking", value = parking });
                             listofsummary.Add(new BookingSummary { fieldname = "Waiting", isedit = EditWaiting.ToBool(), isvisible = objPaymentColumns.ShowFares.ToBool(), label = "Waiting", value = waiting });
                             listofsummary.Add(new BookingSummary { fieldname = "ExtraDropCharges", isedit = true, isvisible = true, label = "Extras", value = objAction.ExtraDropCharges.ToDecimal() });
