@@ -77,6 +77,7 @@ namespace SignalRHub
 
         public static string EnableWaitingAfterArrive = "0";
         public static string AcceptJobAdditional = "0";
+        public static string EnableWaitingOnAddStop = "0";
 
         public static string AutoSTC = "0";
 
@@ -576,7 +577,8 @@ namespace SignalRHub
                             new AppSetting { SetKey = "viapointmixedfare", SetVal = "false", description = "viapointmixedfare via milage formula"  },
                             new AppSetting { SetKey = "ShowDashboardMap", SetVal = "true", description = "ShowDashboardMap"  },
                             new AppSetting { SetKey = "ShowMapBydefaultOndashboard", SetVal = "true", description = "ShowMapBydefaultOndashboard"  },
-                            new AppSetting { SetKey = "BookingAlertExpiryNoticeInMins", SetVal = "false", description = "BookingAlertExpiryNoticeInMins"  }
+                            new AppSetting { SetKey = "BookingAlertExpiryNoticeInMins", SetVal = "false", description = "BookingAlertExpiryNoticeInMins"  },
+                            new AppSetting { SetKey = "EnableWaitingOnAddStop", SetVal = "0", description = "EnableWaitingOnAddStop"  }
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1389,6 +1391,11 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("AcceptJobAdditional")))
                 {
                     AcceptJobAdditional = GetAppSetting<string>("AcceptJobAdditional").ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableWaitingOnAddStop")))
+                {
+                    EnableWaitingOnAddStop = GetAppSetting<string>("EnableWaitingOnAddStop").ToStr();
 
                 }
 

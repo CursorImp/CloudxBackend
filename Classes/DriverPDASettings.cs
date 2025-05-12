@@ -108,6 +108,7 @@ namespace SignalRHub
         public string EnableDriverDocuments = "";
         public string DisableEarning = "";
         public string AcceptJobAdditional = "";
+        public string EnableWaitingOnAddStop = "";
 
     }
 }

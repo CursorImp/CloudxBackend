@@ -5229,10 +5229,17 @@ namespace SignalRHub
                         }
                         else if (!string.IsNullOrEmpty(gatewayName) && (gatewayName.ToLower().Trim() == "konnectpay" || item.PaymentGatewayId == 15))
                         {
+                            try
+                            {
+                                makePaymentResponse.KonnectAccId = db.Gen_SysPolicy_PaymentDetails.Where(c => c.PaymentGatewayId == 15).Select(c => c.PaypalID).FirstOrDefault();
+
+
+                            }
+                            catch { }
+
 
                             long jobId = input.jobId.ToLong();
                             bool IsAuthorize = false;
-                            // bool IsMultipleOptions = false;
                             JavaScriptSerializer s = new JavaScriptSerializer();
                             Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == jobId);
                             decimal Price = input.Fare;
@@ -5249,123 +5256,106 @@ namespace SignalRHub
                             {
                                 Gen_SysPolicy_PaymentDetail obj = null;
 
-                                Booking_Log TerminalLog = null;
                                 makePaymentResponse.isKonnectPayEnable = "1";
-                                if (objBooking.Booking_Logs != null)
+
+                                if (!string.IsNullOrEmpty(objBooking.CustomerCreditCardDetails) && (objBooking.CustomerCreditCardDetails.ToStr().Trim().StartsWith("pm_") || objBooking.CustomerCreditCardDetails.ToStr().Trim().StartsWith("cus_")) && !objBooking.CustomerCreditCardDetails.ToStr().Trim().Contains("secret_"))
                                 {
-                                    // check Terminal payment intent is created against this booking
-                                    TerminalLog = objBooking.Booking_Logs.Where(c => c.AfterUpdate.ToLower().Contains("secure") && c.AfterUpdate.ToLower().Contains("terminal") && c.AfterUpdate.ToLower().Contains("transaction")).FirstOrDefault();
-                                }
-                                //check PI is created for payment
-                                if (!string.IsNullOrEmpty(objBooking.CustomerCreditCardDetails) && objBooking.CustomerCreditCardDetails.ToStr().Trim().StartsWith("pi_") && (!objBooking.CustomerCreditCardDetails.ToStr().Trim().Contains("secret_") || TerminalLog == null))
-                                {
+                                    Customer objcustomer = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo && c.Id == objBooking.CustomerId);
+                                    CustomerCardDetails CardDetails = null;
+                                    CardDetails = GetCardDetailsKP(objcustomer?.Id, objBooking?.CustomerCreditCardDetails);
                                     obj = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
                                     IsAuthorize = true;
-                                    makePaymentResponse.Gateways.Add(new { GatewayName = "konnectpay" });
+                                    // makePaymentResponse.Gateways.Add(new { GatewayName = "konnectpay" });
                                     makePaymentResponse.ResponseType = (int)ResponseType.Direct;
                                     try
                                     {
-                                        File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", Booking is Authorize for : " + mesg + " KP-Config:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                                        File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",card is registered for Booking  : " + mesg + " booking-details:" + new JavaScriptSerializer().Serialize(objBooking) + Environment.NewLine);
                                     }
                                     catch
                                     {
                                     }
-
-                                }
-                                //check for no option selected for payment / check for If PI is created for terminal payment
-                                else if ((string.IsNullOrEmpty(objBooking.CustomerCreditCardDetails)) || (!string.IsNullOrEmpty(objBooking.CustomerCreditCardDetails) && TerminalLog != null))
-                                {
-                                    IsAuthorize = false;
-                                    //setting up payment options for Konnect pay
-                                    Gen_SysPolicy_PaymentDetail KPSettings = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.SysPolicyId != 0 && (c.PaymentGatewayId == 15));
-                                    dynamic ConnectGatewayDetails = GetKonnectPayGatewayDetails(KPSettings, input.driverId);//Getting PAYMENT OPTIONS for KonnectPay 
-                                    if (ConnectGatewayDetails != null) { makePaymentResponse.Gateways.AddRange(ConnectGatewayDetails); }
-                                    makePaymentResponse.ResponseType = (int)ResponseType.MultipleGateways;
-
-                                    continue;
-                                }
-                                else
-                                {
-                                    IsAuthorize = false;
-                                    //setting up payment options for Konnect pay
-                                    Gen_SysPolicy_PaymentDetail KPSettings = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.SysPolicyId != 0 && (c.PaymentGatewayId == 15));
-                                    dynamic ConnectGatewayDetails = GetKonnectPayGatewayDetails(KPSettings, input.driverId);//Getting PAYMENT OPTIONS for KonnectPay 
-                                    if (ConnectGatewayDetails != null) { makePaymentResponse.Gateways.AddRange(ConnectGatewayDetails); }
-                                    makePaymentResponse.ResponseType = (int)ResponseType.MultipleGateways;
-
-                                    continue;
-                                }
-
-                                if (obj != null)
-                                {
-
-                                    ClsPaymentInformation objPaymentDetails = new ClsPaymentInformation();
-
-                                    objPaymentDetails.BookingNo = objBooking.BookingNo.ToStr().Trim();
-
-                                    objPaymentDetails.Price = Price;
-
-                                    objPaymentDetails.Total = Price.ToStr();
-
-                                    objPaymentDetails.PaymentGatewayID = obj.PaymentGatewayId.ToStr();
-                                    objPaymentDetails.TokenDetails = objBooking.CustomerCreditCardDetails.ToStr();
-                                    objPaymentDetails.BookingId = objBooking.Id.ToStr();
-
-                                    try
-                                    {
-                                        if (objBooking.CustomerId != null)
-                                        { objPaymentDetails.StripeCustomerId = db.Customers.Where(c => c.Id == objBooking.CustomerId).Select(c => c.CreditCardDetails).FirstOrDefault().ToStr(); }
-                                    }
-                                    catch
+                                    if (obj != null)
                                     {
 
-                                    }
-                                    //Calling New Payment Method for stripe KonnectPay
-                                    string response = MakePaymentKonnectPay(obj, objPaymentDetails, objBooking, IsAuthorize);
-                                    makePaymentResponse.ResponseType = (int)ResponseType.Direct;
-                                    if (!string.IsNullOrEmpty(response) && response.StartsWith("success:"))
-                                    {
-                                        makePaymentResponse.TransactionId = response.Replace("success:", "").Trim();
-                                        makePaymentResponse.IsTransactionSuccess = true;
+                                        ClsPaymentInformation objPaymentDetails = new ClsPaymentInformation();
+
+                                        objPaymentDetails.BookingNo = objBooking.BookingNo.ToStr().Trim();
+
+                                        objPaymentDetails.Price = Price;
+
+                                        objPaymentDetails.Total = Price.ToStr();
+
+                                        objPaymentDetails.PaymentGatewayID = obj.PaymentGatewayId.ToStr();
+                                        objPaymentDetails.TokenDetails = objBooking.CustomerCreditCardDetails.ToStr();
+                                        objPaymentDetails.BookingId = objBooking.Id.ToStr();
+
+                                        if (objcustomer != null)
+                                        { objPaymentDetails.StripeCustomerId = objcustomer?.CreditCardDetails; }
+
+                                        //Calling New Payment Method for stripe KonnectPay
+                                        string response = MakePaymentCardTokenKonnectPay(obj, objPaymentDetails, objBooking);
                                         makePaymentResponse.ResponseType = (int)ResponseType.Direct;
-                                        makePaymentResponse.TransactionMessage = "Payment Successfull";
+                                        if (!string.IsNullOrEmpty(response) && response.StartsWith("success:"))
+                                        {
+                                            makePaymentResponse.TransactionId = response.Replace("success:", "").Trim();
+                                            makePaymentResponse.IsTransactionSuccess = true;
+                                            makePaymentResponse.ResponseType = (int)ResponseType.Direct;
+                                            makePaymentResponse.TransactionMessage = "Payment Successfull";
 
-                                        res.Data = Newtonsoft.Json.JsonConvert.SerializeObject(makePaymentResponse);
-                                        res.IsSuccess = true;
-                                        res.Message = makePaymentResponse.TransactionMessage;
+                                            res.Data = Newtonsoft.Json.JsonConvert.SerializeObject(makePaymentResponse);
+                                            res.IsSuccess = true;
+                                            res.Message = makePaymentResponse.TransactionMessage;
+
+                                        }
+                                        else
+                                        {
+                                            makePaymentResponse.IsTransactionSuccess = false;
+                                            makePaymentResponse.TransactionMessage = response?.ToLower().Replace("failed:", "").Trim();
+                                            makePaymentResponse.TransactionId = "";
+
+
+                                            dynamic ConnectGatewayDetails = GetKonnectPayGatewayDetails(obj, input.driverId);//Getting PAYMENT OPTIONS for KonnectPay 
+                                            if (ConnectGatewayDetails != null) { makePaymentResponse.Gateways.AddRange(ConnectGatewayDetails); }
+                                            makePaymentResponse.ResponseType = (int)ResponseType.MultipleGateways;
+                                            res.Message = makePaymentResponse.TransactionMessage;
+                                            res.Data = Newtonsoft.Json.JsonConvert.SerializeObject(makePaymentResponse);
+                                            res.IsSuccess = true;
+
+                                        }
+                                        try
+                                        {
+                                            File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",KonnectPay Response : " + response + " returnObj:" + new JavaScriptSerializer().Serialize(makePaymentResponse) + Environment.NewLine);
+                                        }
+                                        catch
+                                        {
+                                        }
+                                        return res;
 
                                     }
-                                    else
-                                    {
-                                        makePaymentResponse.IsTransactionSuccess = false;
-                                        makePaymentResponse.TransactionMessage = response?.ToLower().Replace("failed:", "").Trim();
-                                        makePaymentResponse.TransactionId = "";
-
-                                        res.Message = makePaymentResponse.TransactionMessage;
-                                        res.Data = Newtonsoft.Json.JsonConvert.SerializeObject(makePaymentResponse);
-                                        res.IsSuccess = false;
-
-                                    }
-                                    try
-                                    {
-                                        File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",KonnectPay Response : " + response + Environment.NewLine);
-                                    }
-                                    catch
-                                    {
-                                    }
-                                    return res;
 
                                 }
+
                                 else
                                 {
-                                    makePaymentResponse.TransactionId = "";
-                                    makePaymentResponse.ResponseType = (int)ResponseType.Direct;
-                                    makePaymentResponse.TransactionMessage = "KonnectPay configuration not available!";
-                                    res.Data = Newtonsoft.Json.JsonConvert.SerializeObject(makePaymentResponse);
-                                    res.IsSuccess = false;
-                                    res.Message = "KonnectPay configuration not available!";
-                                    return res;
+                                    if (objBooking.CustomerCreditCardDetails.ToStr().Trim().StartsWith("pi_") && objBooking.CustomerCreditCardDetails.ToStr().Trim().Contains("secret_"))
+                                    {
+
+                                        db.ExecuteQuery<int>("update booking set CustomerCreditCardDetails='',PaymentComments='' where id=" + jobId);
+
+                                    }
+
+
+                                    IsAuthorize = false;
+                                    //setting up payment options for Konnect pay
+                                    Gen_SysPolicy_PaymentDetail KPSettings = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.SysPolicyId != 0 && (c.PaymentGatewayId == 15));
+                                    dynamic ConnectGatewayDetails = GetKonnectPayGatewayDetails(KPSettings, input.driverId);//Getting PAYMENT OPTIONS for KonnectPay 
+                                    if (ConnectGatewayDetails != null) { makePaymentResponse.Gateways.AddRange(ConnectGatewayDetails); }
+                                    makePaymentResponse.ResponseType = (int)ResponseType.MultipleGateways;
+
                                 }
+
+
+
                             }
 
                             else
@@ -5373,8 +5363,8 @@ namespace SignalRHub
                                 // makePaymentResponse.ResponseType = (int)ResponseType.Direct;
                                 makePaymentResponse.TransactionId = "success:" + objBookingPayment.AuthCode.ToStr();
                             }
-                        }
 
+                        }
 
 
                         if (paymentGateway != null && paymentGateway.Count() > 1 && (gatewayName.ToLower().Trim() != "konnectpay" && item.PaymentGatewayId != 15))
@@ -5822,7 +5812,11 @@ namespace SignalRHub
 
                             if (objAction.IsMeter.ToStr() == "1")
                             {
-                                price = objAction.Fares.ToDecimal();
+                                var enableFareMeterOnDriverPDA = db.Fleet_Driver_PDASettings.Where(c => c.DriverId == driverId).Select(x=> x.EnableFareMeter).FirstOrDefault().ToBool();
+                                if (enableFareMeterOnDriverPDA)
+                                {
+                                    price = objAction.Fares.ToDecimal();
+                                }
                                 parking = objAction.ParkingCharges.ToDecimal();
                                 waiting = objAction.WaitingCharges.ToDecimal();
 
@@ -5963,7 +5957,216 @@ namespace SignalRHub
 
         #region KonnectPay
 
+        private CustomerCardDetails GetCardDetailsKP(int? CustomerId, string CardToken)
+        {
+            CustomerCardDetails CCDetail = new CustomerCardDetails();
 
+            try
+            {
+                KonnectCardDetails CardDetails = new KonnectCardDetails();
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+                    CardDetails = db.ExecuteQuery<KonnectCardDetails>("select Id,CCDetails,PaymentMethodId,Lastfour,ExpiryMonth,ExpiryYear,Brand,FingerPrint from Customer_CCDetails where customerId=" + CustomerId.ToInt() + "and PaymentMethodId=" + CardToken.Trim()).LastOrDefault();
+
+                }
+                if (CardDetails != null && CardDetails.Lastfour > 0 && CardDetails.ExpiryMonth > 0 && CardDetails.ExpiryYear > 0)
+                {
+                    CCDetail.CustomerCardToken = CardDetails.PaymentMethodId;
+                    CCDetail.Lastfour = CardDetails.Lastfour.ToStr();
+                    CCDetail.expiry = CardDetails.ExpiryMonth + "/" + CardDetails.ExpiryYear;
+                    CCDetail.cardType = CardDetails.Brand;
+
+                }
+            }
+            catch
+            {
+                try
+                {
+                    ClsCCDetails CardDetails = new ClsCCDetails();
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+
+                        CardDetails = db.ExecuteQuery<ClsCCDetails>("select Id,CCDetails,IsDefault from Customer_CCDetails where customerId=" + CustomerId.ToInt() + "and CCDetails like '%" + CardToken + "%'").FirstOrDefault();
+
+                    }
+
+                    if (CardDetails != null && !string.IsNullOrEmpty(CardDetails.CCDetails) && CardDetails.CCDetails.ToLower().Contains("konnectpaytoken"))
+                    {
+                        var CCDetails = CardDetails.CCDetails.Split('|');
+                        string Token = CCDetails[0];
+                        if (!string.IsNullOrEmpty(Token)) { CCDetail.CustomerCardToken = Token.Replace("KonnectPayToken:", "").Trim(); }
+                        if (!string.IsNullOrEmpty(CCDetails[1]))
+                        {
+                            var CardInfo = CCDetails[1].Split(',');
+                            if (CardInfo != null)
+                            {
+                                if (CardInfo[0] != null && CardInfo[0].ToLower().Contains("last four"))
+                                {
+                                    CCDetail.Lastfour = CardInfo[0].Replace("last four", "");
+                                    CCDetail.Lastfour = CCDetail.Lastfour.Replace(":", "").Trim();
+                                }
+                                if (CardInfo[1] != null && CardInfo[1].ToLower().Contains("expiry"))
+                                {
+                                    CCDetail.expiry = CardInfo[1].Replace("expiry", "");
+                                    CCDetail.expiry = CCDetail.expiry.Replace(":", "").Trim();
+
+
+                                }
+                                if (CardInfo[2] != null && CardInfo[2].ToLower().Contains("cardtype"))
+                                {
+                                    CCDetail.cardType = CardInfo[2].Replace("cardType", "");
+                                    CCDetail.cardType = CCDetail.cardType.Replace(":", "").Trim();
+                                }
+
+
+                            }
+                        }
+                    }
+
+                }
+                catch
+                {
+
+                }
+            }
+
+            try
+            {
+                File.AppendAllText(AppContext.BaseDirectory + "\\GetCardDetailsKP.txt", DateTime.Now.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(CCDetail) + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
+            return CCDetail;
+        }
+
+        private string MakePaymentCardTokenKonnectPay(Gen_SysPolicy_PaymentDetail obj, ClsPaymentInformation objCard, Booking objBooking)
+        {
+            string rtn = string.Empty;
+            string DefaultCurrency = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrency"];
+
+            string DefaultClientLocation = System.Configuration.ConfigurationManager.AppSettings["DefaultClientLocation"];
+            PaymentCaptureResponse resp = new PaymentCaptureResponse();
+            string json = string.Empty;
+            try
+            {
+                if (objCard.TokenDetails.ToStr().StartsWith("pm_") || objCard.TokenDetails.ToStr().StartsWith("cus_"))
+                {
+
+                    try
+                    {
+                        File.AppendAllText(physicalPath + "\\MakePaymentCardTokenKonnectPay.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",payment dto:" + new JavaScriptSerializer().Serialize(objCard) + ",gatway obj:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    }
+                    catch { }
+
+                    if (string.IsNullOrEmpty(obj?.ApplicationId) || string.IsNullOrEmpty(obj?.PaypalID))
+                    {
+                        rtn = "failed: gateway details not found!";
+                        return rtn;
+                    }
+
+                    StripePaymentRequestDto st = new StripePaymentRequestDto();
+                    int amount = Math.Round((Convert.ToDouble(objCard.Price) * 100), 0).ToInt();
+
+                    st.isAuthorized = false;
+                    st.bookingId = objBooking.Id;
+                    st.description = objBooking?.Gen_SubCompany?.CompanyName + " | " + objBooking?.BookingNo.ToStr() + " | " + "Fares : " + objCard?.Price + " " + DefaultCurrency;
+                    st.bookingRef = objBooking?.BookingNo.ToStr();
+                    st.countryId = obj.ApplicationId.ToInt();
+                    st.connectedAccountId = obj.PaypalID.ToStr();
+                    st.applicationFee = 0;
+                    st.otherCharges = 0;
+                    st.key = "";
+                    st.secret = "";
+                    st.amount = Convert.ToInt64(objCard.Price * 100);// amount.ToInt();
+                    st.ReturnAmount = 0;
+                    st.displayAmount = objCard.Price.ToDecimal();
+                    st.currency = DefaultCurrency;
+                    st.defaultClientId = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr();
+                    st.location = DefaultClientLocation;
+                    st.companyName = objBooking?.Gen_SubCompany?.CompanyName ?? "";
+                    st.paymentMethodId = objCard.TokenDetails.ToStr();
+                    st.customerId = objCard?.StripeCustomerId.ToStr();//"";
+                    st.customerName = objBooking.CustomerName.ToStr();
+                    st.email = objBooking.CustomerEmail.ToStr();
+                    st.phoneNumber = objBooking.CustomerMobileNo.ToStr();
+                    st.lastfour = objCard?.CardNumber ?? "";
+                    st.expiry = objCard?.ExpiryDate ?? "";
+                    st.cardtype = objCard?.CardType ?? "";
+                    var DataObj = Newtonsoft.Json.JsonConvert.SerializeObject(st);
+                    string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
+                    using (var client = new HttpClient())
+                    {
+                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                        client.BaseAddress = new Uri(StripeAPIBaseURL);
+                        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                        var content = new StringContent(DataObj, Encoding.UTF8, "application/json");
+                        var postTask = client.PostAsync(StripeAPIBaseURL + "/v1/PaymentWithExistingCustomer", content).Result;
+                        string PayResp = postTask.Content.ReadAsStringAsync().Result;
+                        resp = new JavaScriptSerializer().Deserialize<PaymentCaptureResponse>(PayResp);
+
+                    }
+
+                    if (resp.isSuccess)
+                    {
+
+                        rtn = "success:" + resp.paymentintentId.ToStr();
+                        try
+                        {
+                            if (!string.IsNullOrEmpty(resp.paymentintentId))
+                            {
+                                using (TaxiDataContext db = new TaxiDataContext())
+                                {
+                                    if ((db.ExecuteQuery<int>("select count(*) from booking_payment where bookingId=" + objBooking.Id).FirstOrDefault()) == 0)
+                                    {
+                                        db.ExecuteQuery<int>("insert into Booking_Payment(bookingid,PaymentGatewayId,AuthCode,Status,TotalAmount)VALUES(" + objBooking.Id + ",15,'" + resp.paymentintentId.ToStr() + "','Paid'," + objCard.Price + ")");
+                                    }
+                                }
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+                    else
+                    { rtn = "failed:" + resp.error.ToStr(); }
+
+                    try
+                    {
+                        File.AppendAllText(physicalPath + "\\MakePaymentCardTokenKonnectPay.txt", DateTime.Now.ToStr() + ":  json:" + new JavaScriptSerializer().Serialize(st) + Environment.NewLine + "bookingno:" + objCard.BookingNo.ToStr() + Environment.NewLine + ",response:" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                    }
+                    catch
+                    {
+
+
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                rtn = "failed:" + ex.Message.ToStr();
+
+                try
+                {
+                    File.AppendAllText(physicalPath + "\\stripeKP_Authpayment_exception.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+
+                }
+
+            }
+
+
+
+            return rtn;
+        }
 
         /// <summary>
         /// This Method is to make payment for Konnect Pay Account
@@ -10496,6 +10699,7 @@ namespace SignalRHub
 
                         pda.DisableEarning = "2";
                         pda.AcceptJobAdditional = Global.AcceptJobAdditional;
+                        pda.EnableWaitingOnAddStop = Global.EnableWaitingOnAddStop;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
