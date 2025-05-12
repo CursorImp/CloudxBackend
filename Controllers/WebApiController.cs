@@ -1428,7 +1428,7 @@ namespace SignalRHub.Controllers
                                       from b in table2.DefaultIfEmpty()
                                       where
                                        (a.PhoneNumber.Trim() == obj.bookingInfo.CustomerMobileNo || a.PhoneNumber.Trim() == obj.bookingInfo.CustomerPhoneNo)
-                                       && (a.CallDuration == obj.bookingInfo.CallRefNo)
+                                       && (a.Id == obj.bookingInfo.CallRefNo.ToInt())
                                       orderby a.CallDateTime descending
                                       select new
                                       {
@@ -1825,6 +1825,9 @@ namespace SignalRHub.Controllers
 
                                 if (objMaster.Current.Id > 0)
                                 {
+                                    if (item.Name == "CallRefNo")
+                                        continue;
+
                                     if (item.Name == "BookingStatusId")
                                         continue;
 
@@ -5418,6 +5421,7 @@ namespace SignalRHub.Controllers
                                      select new
                                      {
                                          Sno = a.Sno,
+                                         Id = a.Id,
                                          Name = a.Name,
                                          PhoneNumber = a.PhoneNumber,
                                          CallDateTime = string.Format("{0:dd/MM/yyyy HH:mm:ss}", a.CallDateTime),
