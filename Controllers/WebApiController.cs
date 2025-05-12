@@ -5365,14 +5365,9 @@ namespace SignalRHub.Controllers
         public JsonResult GetCallHistory(WebApiClasses.RequestWebApi obj)
         {
             //
-
-
-
-
             ResponseWebApi response = new ResponseWebApi();
             try
             {
-
                 //
                 try
                 {
@@ -5380,16 +5375,13 @@ namespace SignalRHub.Controllers
                 }
                 catch
                 {
-
                 }
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
                     DateTime? fromDate = null;
                     DateTime? tillDate = null;
-
                     if (obj.callerInfo != null)
                     {
-
                         fromDate = obj.callerInfo.FromDate;
                         tillDate = obj.callerInfo.TillDate;
                     }
@@ -5397,27 +5389,21 @@ namespace SignalRHub.Controllers
                     {
                         fromDate = DateTime.Now.ToDate();
                         tillDate = DateTime.Now.AddDays(1).ToDate();
-
-
-
                     }
-
                     string name = string.Empty;
                     string line = string.Empty;
                     string phone = string.Empty;
-
                     if (obj.callerInfo != null)
                     {
-
                         name = obj.callerInfo.Name.ToStr().Trim().ToLower();
                         line = obj.callerInfo.Extension.ToStr().Trim();
                         phone = obj.callerInfo.PhoneNumber.ToStr().Trim();
                     }
-
+                    string VoipUrl = System.Configuration.ConfigurationManager.AppSettings["VoipUrl"];
+                    var userName = db.CallerIdVOIP_Configurations.FirstOrDefault().UserName.ToStr();
                     response.Data = (from a in db.CallHistories
                                      join b in db.Gen_SubCompanies on a.CalledToNumber equals b.ConnectionString into table2
                                      from b in table2.DefaultIfEmpty()
-
                                      where (fromDate == null || a.CallDateTime.Value.Date >= fromDate)
                                       && (tillDate == null || a.CallDateTime.Value.Date <= tillDate)
                                      && (name == string.Empty || a.Name.Trim().ToLower() == name)
@@ -5438,11 +5424,11 @@ namespace SignalRHub.Controllers
                                          STN = a.STN,
                                          Duration = a.CallDuration,
                                          IsMissed = (a.IsAccepted != null && a.IsAccepted == true) ? "1" : "0",
-                                         Company = b != null && b.CompanyName != "" ? b.CompanyName : a.CalledToNumber
+                                         Company = b != null && b.CompanyName != "" ? b.CompanyName : a.CalledToNumber,
+                                         //  RecordingUrl = a.CallDuration.Contains(".") ? VoipUrl + "/" + userName + "/inbound/" + a.CallDuration + "_" + a.PhoneNumber : ""
+                                         RecordingUrl = a.CallDuration.Contains(".") ? VoipUrl + "/" + userName + "/inbound/" + a.CallDuration + "_" + (a.PhoneNumber.StartsWith("0") ? "44" + a.PhoneNumber.Substring(1) : a.PhoneNumber) : ""
                                      }).ToList();
                 }
-
-
             }
             catch (Exception ex)
             {
@@ -5450,18 +5436,13 @@ namespace SignalRHub.Controllers
                 {
                     response.HasError = true;
                     response.Message = ex.Message;
-
                     System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetCallHistory_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
-
                 }
             }
-
-
             return new CustomJsonResult { Data = response };
-
         }
 
 
