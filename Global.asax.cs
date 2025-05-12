@@ -70,8 +70,8 @@ namespace SignalRHub
         public static string DriverPay = "0";
         public static string NoPickupRestrictionMins = "0";
         public static string CallerId_EnableHotDesk = "0";
-        public  int CallerID_FromExt = 200;
-        public  int CallerID_TillExt = 250;
+        public int CallerID_FromExt = 200;
+        public int CallerID_TillExt = 250;
         public static string enableChangePlotUpdateDestination = "0";
 
         public static string EnableWaitingAfterArrive = "0";
@@ -197,7 +197,7 @@ namespace SignalRHub
                     {
 
                     }
-                //    //
+                    //    //
                     return;
                 }
 
@@ -274,7 +274,7 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(AppContext.BaseDirectory + "\\log_calleridanswered.txt", DateTime.Now.ToStr() + ": " + phone.ToStr()  +",ext:"+ line.ToStr().Trim()+ Environment.NewLine);
+                    File.AppendAllText(AppContext.BaseDirectory + "\\log_calleridanswered.txt", DateTime.Now.ToStr() + ": " + phone.ToStr() + ",ext:" + line.ToStr().Trim() + Environment.NewLine);
                 }
                 catch
                 {
@@ -298,7 +298,7 @@ namespace SignalRHub
 
 
 
-     
+
 
 
 
@@ -423,7 +423,7 @@ namespace SignalRHub
 
         //    }
         //}
-       
+
         protected void Application_Start(object sender, EventArgs e)
         {
             GlobalHost.Configuration.DisconnectTimeout = TimeSpan.FromSeconds(10);
@@ -437,7 +437,8 @@ namespace SignalRHub
 
                 }
             }
-            catch {
+            catch
+            {
 
             }
             initializeSettings();
@@ -460,9 +461,9 @@ namespace SignalRHub
                 IsSendingSMS = false;
                 setTimer();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                File.AppendAllText(physicalPath + "\\applicationstart_exception.txt", DateTime.Now.ToStr() + " Defaultclientid:" + DefaultClientId.ToStr()+ ",exception:"+ex.Message+ Environment.NewLine);
+                File.AppendAllText(physicalPath + "\\applicationstart_exception.txt", DateTime.Now.ToStr() + " Defaultclientid:" + DefaultClientId.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
 
             }
         }
@@ -487,8 +488,9 @@ namespace SignalRHub
 
         public static void EnsureRequiredAppSettings()
         {
-            
-            var requiredSettings = new List<AppSetting>
+            try
+            {
+                var requiredSettings = new List<AppSetting>
                                                 {
                             new AppSetting { SetKey = "SelectedGateway", SetVal = "2", description = "Selected Gateway"  },
                             new AppSetting { SetKey = "CanReceiveSMS", SetVal = "1", description = "Can Receive SMS"  },
@@ -567,24 +569,29 @@ namespace SignalRHub
                             new AppSetting { SetKey = "BookingAlertExpiryNoticeInMins", SetVal = "false", description = "BookingAlertExpiryNoticeInMins"  }
                         };
 
-            using (var db = new TaxiDataContext())
-            {
-                var existingSettings = db.ExecuteQuery<AppSetting>(
-                    @"SELECT SetKey, SetVal, description FROM AppSettings").ToList();
-
-                foreach (var setting in requiredSettings)
+                using (var db = new TaxiDataContext())
                 {
-                    if (!existingSettings.Any(a => a.SetKey == setting.SetKey))
+                    var existingSettings = db.ExecuteQuery<AppSetting>(
+                        @"SELECT SetKey, SetVal, description FROM AppSettings").ToList();
+
+                    foreach (var setting in requiredSettings)
                     {
-                        db.ExecuteCommand(
-                            @"INSERT INTO AppSettings (SetKey, SetVal, description) VALUES ({0}, {1}, {2},{3})",
-                            setting.SetKey, setting.SetVal, setting.description);
+                        if (!existingSettings.Any(a => a.SetKey == setting.SetKey))
+                        {
+                            db.ExecuteCommand(
+                                @"INSERT INTO AppSettings (SetKey, SetVal, description) VALUES ({0}, {1}, {2},{3})",
+                                setting.SetKey, setting.SetVal, setting.description);
+                        }
                     }
+
                 }
-               
+
+            }
+            catch
+            {
             }
         }
-        
+
 
         private void setTimer()
         {
@@ -1022,7 +1029,7 @@ namespace SignalRHub
                             try
                             {
 
-                                if (!string.IsNullOrEmpty(GetAppSetting<string>("CallerId_EnableHotDesk") ))
+                                if (!string.IsNullOrEmpty(GetAppSetting<string>("CallerId_EnableHotDesk")))
                                 {
                                     CallerId_EnableHotDesk = GetAppSetting<string>("CallerId_EnableHotDesk").ToStr();
 
@@ -1050,8 +1057,8 @@ namespace SignalRHub
 
                             if (CallerIdType == 2)
                             {
-                                if(Global.CallerId_EnableHotDesk=="1")
-                                      manager.NewState += new NewStateEventHandler(Manager_NewStateHotDesk);
+                                if (Global.CallerId_EnableHotDesk == "1")
+                                    manager.NewState += new NewStateEventHandler(Manager_NewStateHotDesk);
                                 else
                                     manager.NewState += new NewStateEventHandler(Manager_NewState);
                             }
@@ -1144,14 +1151,14 @@ namespace SignalRHub
                 {
                     HMSMS_Settings = new HypermediaSettings()
                     {
-                        ServerIPAddress = GetAppSetting<string>("HM_ServerIPAddress") ,
+                        ServerIPAddress = GetAppSetting<string>("HM_ServerIPAddress"),
                         Port = Convert.ToInt32(GetAppSetting<string>("HM_Port")),
                         Password = GetAppSetting<string>("HM_Password"),
                         CanReceiveSMS = true,
                         DefaultClientId = DefaultClientId
                     };
 
-                    if (GetAppSetting<string>("CanReceiveSMS")  == "0" || Convert.ToString(GetAppSetting<string>("CanReceiveSMS")).ToLower() == "no")
+                    if (GetAppSetting<string>("CanReceiveSMS") == "0" || Convert.ToString(GetAppSetting<string>("CanReceiveSMS")).ToLower() == "no")
                     {
                         HMSMS_Settings.CanReceiveSMS = false;
                     }
@@ -1183,16 +1190,16 @@ namespace SignalRHub
 
                     DSSMS_Settings = new DinstarSettings()
                     {
-                        ServerBaseURL = GetAppSetting<string>("DS_ServerBaseURL") ,
+                        ServerBaseURL = GetAppSetting<string>("DS_ServerBaseURL"),
                         UserName = GetAppSetting<string>("DS_UserName"),
-                        Password = GetAppSetting<string>("DS_Password") ,
+                        Password = GetAppSetting<string>("DS_Password"),
                         CanReceiveSMS = true,
                         DefaultClientId = DefaultClientId,
                         SendingMsgPort = new int[] { 0 },
                         ReceivingMsgPort = new int[] { 0 }
                     };
 
-                    if ( GetAppSetting<string>("CanReceiveSMS") == "0" || Convert.ToString(GetAppSetting<string>("CanReceiveSMS")).ToLower() == "no")
+                    if (GetAppSetting<string>("CanReceiveSMS") == "0" || Convert.ToString(GetAppSetting<string>("CanReceiveSMS")).ToLower() == "no")
                     {
                         DSSMS_Settings.CanReceiveSMS = false;
                     }
@@ -1257,7 +1264,7 @@ namespace SignalRHub
                         }
                         catch
                         {
-                      //  //    //
+                            //  //    //
                         }
                     }
                     else
@@ -1566,7 +1573,7 @@ namespace SignalRHub
                     {
 
 
-                      
+
                         string connectedLineNum = string.Empty;
                         string callerName = string.Empty;
                         try
@@ -1629,7 +1636,7 @@ namespace SignalRHub
 
                             ////
                             CreateLog(callerName, number.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
-                            
+
 
                         }
                     }
@@ -1640,8 +1647,8 @@ namespace SignalRHub
                 if (desc.ToString().ToUpper() == "UP")
                 {
 
-                  
-                  
+
+
                     string connectedLineNum = string.Empty;
 
                     try
@@ -1699,7 +1706,7 @@ namespace SignalRHub
 
                                 if (extension.IsNumeric() && extension.ToInt() >= CallerID_FromExt && extension.ToInt() <= CallerID_TillExt)
                                 {
-                                    
+
                                     number = e.CallerIdNum.ToStr();
 
 
@@ -1914,7 +1921,7 @@ namespace SignalRHub
                             try
                             {
 
-                               
+
                                 if (!string.IsNullOrEmpty(callerName))
                                 {
                                     item = callerName + " - " + number + "-" + string.Format("{0:HH:mm}", DateTime.Now);
@@ -2139,7 +2146,7 @@ namespace SignalRHub
                         }
 
                         //
-                      General.BroadCastMessage("**cti_remoteincomingcall>>" + callerNumber.ToStr() + ">>" + "XXX" + ">>ring>>" + item);
+                        General.BroadCastMessage("**cti_remoteincomingcall>>" + callerNumber.ToStr() + ">>" + "XXX" + ">>ring>>" + item);
 
                         CreateLog(callerName, callerNumber.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
 
@@ -2241,9 +2248,9 @@ namespace SignalRHub
 
                     try
                     {
-                         e.Attributes.TryGetValue("linkedid", out uniqueId);
+                        e.Attributes.TryGetValue("linkedid", out uniqueId);
 
-                     //   uniqueId = e.UniqueId;
+                        //   uniqueId = e.UniqueId;
                     }
                     catch
                     {
@@ -2447,7 +2454,7 @@ namespace SignalRHub
                         else
                             manager.NewState += new NewStateEventHandler(Manager_NewState);
 
-                       
+
                     }
                     else if (CallerIdType == 4)
                     {
@@ -2585,8 +2592,8 @@ namespace SignalRHub
 
                         DSSMS_smsgateway = new DSSMS.SmsGateway(DSSMS_Settings.ServerBaseURL, DSSMS_Settings.UserName, DSSMS_Settings.Password, DSSMS_Settings.CanReceiveSMS, DSSMS_Settings.SendingMsgPort, DSSMS_Settings.ReceivingMsgPort);
 
-                        if(smsInbox=="1")
-                        DSSMS_smsgateway.OnPostMessageIn += DSSMS_smsgateway_OnPostMessageIn;
+                        if (smsInbox == "1")
+                            DSSMS_smsgateway.OnPostMessageIn += DSSMS_smsgateway_OnPostMessageIn;
                         resp = "SMS Service Restarted Successfully!";
                         try
                         {
@@ -2658,7 +2665,7 @@ namespace SignalRHub
 
 
 
-     
+
 
 
 
@@ -2718,7 +2725,7 @@ namespace SignalRHub
                                 {
                                     File.AppendAllText(physicalPath + "\\autodespatchcatchlog.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
 
-                                   
+
                                     //
                                 }
                                 catch
@@ -6599,8 +6606,8 @@ namespace SignalRHub
 
                             foreach (var job in bookings)
                             {
-                                IsUpdated= SendJobOnBid(job);
-                              
+                                IsUpdated = SendJobOnBid(job);
+
                             }
                         }
                     }
@@ -7110,7 +7117,7 @@ namespace SignalRHub
 
                     File.AppendAllText(AppContext.BaseDirectory + "\\ondespatching_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
                 }
-                catch 
+                catch
                 {
 
 
@@ -7129,7 +7136,7 @@ namespace SignalRHub
         {
             try
             {
-               //yte[] inputBuffer = Encoding.UTF8.GetBytes(mesg);
+                //yte[] inputBuffer = Encoding.UTF8.GetBytes(mesg);
 
                 string dataValue = mesg;
                 dataValue = dataValue.Trim();
@@ -7295,17 +7302,17 @@ namespace SignalRHub
 
 
 
-                    //Instance.listofJobs.Add(new clsPDA
-                    //{
-                    //    JobId = values[1].ToLong(),
-                    //    DriverId = values[2].ToInt(),
-                    //    MessageDateTime = DateTime.Now,
-                    //    JobMessage = values[3].ToStr().Trim(),
-                    //    MessageTypeId = values[4].ToInt(),
-                    //    DriverNo = values[5].ToStr()
-                    //});
+                        //Instance.listofJobs.Add(new clsPDA
+                        //{
+                        //    JobId = values[1].ToLong(),
+                        //    DriverId = values[2].ToInt(),
+                        //    MessageDateTime = DateTime.Now,
+                        //    JobMessage = values[3].ToStr().Trim(),
+                        //    MessageTypeId = values[4].ToInt(),
+                        //    DriverNo = values[5].ToStr()
+                        //});
 
-                    string recordId = Guid.NewGuid().ToString();
+                        string recordId = Guid.NewGuid().ToString();
 
                         Instance.listofJobs.Add(new clsPDA
                         {
@@ -7985,15 +7992,15 @@ namespace SignalRHub
             bool isupdated = false;
             try
             {
-               
-                    if (Global.AutoDispatchSetting == null)
-                    {
-                        int modeType = Instance.objPolicy.AutoDespatchDriverCategoryPriority.ToInt();
-                    using(TaxiDataContext db=new TaxiDataContext())
+
+                if (Global.AutoDispatchSetting == null)
+                {
+                    int modeType = Instance.objPolicy.AutoDespatchDriverCategoryPriority.ToInt();
+                    using (TaxiDataContext db = new TaxiDataContext())
                         Global.AutoDispatchSetting = db.ExecuteQuery<AutoDispatchSetting>("SELECT * FROM autodispatchsettings where autodispatchmodetype=" + modeType).FirstOrDefault();
 
-                    }
-              
+                }
+
 
                 if (job.IsBidding.ToBool() && job.bookingstatusId.ToInt() != Enums.BOOKINGSTATUS.BID && job.EnableZoneBidding.ToBool() && Global.AutoDispatchSetting.EnableBid.ToBool())
 
