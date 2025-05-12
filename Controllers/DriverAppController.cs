@@ -14731,14 +14731,14 @@ namespace SignalRHub
 
                         decimal totalFares = data.FareRate.ToDecimal() + data.ExtraDropCharges.ToDecimal();
                         int driverId = objAction.DrvId.ToInt();
-                        var driverDetails = db.Fleet_Drivers.Where(c => c.Id == driverId).Select(c => new { c.DriverTypeId, c.DriverCommissionPerBooking }).FirstOrDefault();
+                        //var driverDetails = db.Fleet_Drivers.Where(c => c.Id == driverId).Select(c => new { c.DriverTypeId, c.DriverCommissionPerBooking }).FirstOrDefault();
 
-                        if (driverDetails.DriverTypeId.ToInt() == 2)
-                        {
-                            var comm = (totalFares * driverDetails.DriverCommissionPerBooking.ToDecimal()) / 100;
-                            totalFares = totalFares - comm;
+                        //if (driverDetails.DriverTypeId.ToInt() == 2)
+                        //{
+                        //    var comm = (totalFares * driverDetails.DriverCommissionPerBooking.ToDecimal()) / 100;
+                        //    totalFares = totalFares - comm;
 
-                        }
+                        //}
                         //
 
                         resp.Data = new
@@ -16059,15 +16059,17 @@ namespace SignalRHub
                                 InitializeMeterList();
 
                                 if (Global.listofMeter != null && Global.listofMeter.Count > 0)
+                                //if (1==1)
                                 {
 
-                                    bool enableFareMeter = Global.listofMeter.FirstOrDefault(c => c.VehicleTypeId == vehicleTypeId).DefaultIfEmpty().HasMeter.ToBool();
+                                    //bool enableFareMeter = Global.listofMeter.FirstOrDefault(c => c.VehicleTypeId == vehicleTypeId).DefaultIfEmpty().HasMeter.ToBool();
+                                    bool enableFareMeter = true;
 
                                     if (enableFareMeter)
                                     {
-                                        isMeter = "1";
+                                        //isMeter = "1";
 
-
+                                        isMeter = Global.listofMeter != null && Global.listofMeter.Count > 0 && Global.listofMeter.FirstOrDefault(c => c.VehicleTypeId == vehicleTypeId).DefaultIfEmpty().HasMeter.ToBool() ? "1" : "0";
 
                                         isMeter = objDetails.DisableDriverSMS.ToBool() == true ? "0" : "1";
 
