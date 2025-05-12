@@ -7162,24 +7162,22 @@ namespace SignalRHub
                                 //var objBooking = db.Bookings.Where(c => c.Id == jobId).FirstOrDefault();
                                 //if (objBooking != null && objBooking.CustomerId > 0 && !string.IsNullOrEmpty(obj.customerid))
                                 //{
-                                if (objBooking != null && !string.IsNullOrEmpty(obj.customerid))
-                                {
-                                    // if (objBooking.CustomerId == null || objBooking.CustomerId == 0)
-                                    //{
-                                    Customer objcustomer = db.Customers.Where(c => c.MobileNo == objBooking.CustomerMobileNo).FirstOrDefault();
-                                    objBooking.CustomerId = objcustomer.Id;
-                                    // }
-                                    db.ExecuteQuery<int>("update Customer set CreditCardDetails='" + obj.customerid.ToStr() + "' where Id=" + objBooking.CustomerId);
-                                    if ((db.ExecuteQuery<int>("select count(*) from Customer_CCDetails where CustomerId=" + objBooking.CustomerId.ToLong()).FirstOrDefault()) > 0)
-                                    {
-                                        db.ExecuteQuery<int>("update Customer_CCDetails set IsDefault=0 where CustomerId=" + objBooking.CustomerId);
-                                    }
+                                //if (objBooking != null && !string.IsNullOrEmpty(obj.customerid))
+                                //{
+                                //    Customer objcustomer = db.Customers.Where(c => c.MobileNo == objBooking.CustomerMobileNo).FirstOrDefault();
+                                //    objBooking.CustomerId = objcustomer.Id;
+                                  
+                                //    db.ExecuteQuery<int>("update Customer set CreditCardDetails='" + obj.customerid.ToStr() + "' where Id=" + objBooking.CustomerId);
+                                //    if ((db.ExecuteQuery<int>("select count(*) from Customer_CCDetails where CustomerId=" + objBooking.CustomerId.ToLong()).FirstOrDefault()) > 0)
+                                //    {
+                                //        db.ExecuteQuery<int>("update Customer_CCDetails set IsDefault=0 where CustomerId=" + objBooking.CustomerId);
+                                //    }
 
-                                    // string CardDetails = $"Token: {obj.paymentMethodId} | {obj.message}";
-                                    string CardDetails = $"KonnectPayToken: {obj.paymentMethodId} | {obj.message}";
-                                    db.ExecuteQuery<int>("insert into Customer_CCDetails(CustomerId,CCDetails,AddOn,AddBy,IsDefault)VALUES(" + objBooking.CustomerId + ",'" + CardDetails + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','Eurosoft',1)");
+                                //    // string CardDetails = $"Token: {obj.paymentMethodId} | {obj.message}";
+                                //    string CardDetails = $"KonnectPayToken: {obj.paymentMethodId} | {obj.message}";
+                                //    db.ExecuteQuery<int>("insert into Customer_CCDetails(CustomerId,CCDetails,AddOn,AddBy,IsDefault)VALUES(" + objBooking.CustomerId + ",'" + CardDetails + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','Eurosoft',1)");
 
-                                }
+                                //}
                             }
                             catch
                             {
@@ -7330,24 +7328,24 @@ namespace SignalRHub
                                 //var objBooking = db.Bookings.Where(c => c.Id == jobId).FirstOrDefault();
                                 //if (objBooking != null && objBooking.CustomerId > 0 && !string.IsNullOrEmpty(obj.customerid))
                                 //{
-                                if (objBooking != null && !string.IsNullOrEmpty(obj.customerid))
-                                {
-                                    //if (objBooking.CustomerId == null || objBooking.CustomerId == 0)
-                                    // {
-                                    Customer objcustomer = db.Customers.Where(c => c.MobileNo == objBooking.CustomerMobileNo).FirstOrDefault();
-                                    objBooking.CustomerId = objcustomer.Id;
-                                    // }
-                                    db.ExecuteQuery<int>("update Customer set CreditCardDetails='" + obj.customerid.ToStr() + "' where Id=" + objBooking.CustomerId);
-                                    if ((db.ExecuteQuery<int>("select count(*) from Customer_CCDetails where CustomerId=" + objBooking.CustomerId.ToLong()).FirstOrDefault()) > 0)
-                                    {
-                                        db.ExecuteQuery<int>("update Customer_CCDetails set IsDefault=0 where CustomerId=" + objBooking.CustomerId);
-                                    }
+                                //if (objBooking != null && !string.IsNullOrEmpty(obj.customerid))
+                                //{
+                                //    //if (objBooking.CustomerId == null || objBooking.CustomerId == 0)
+                                //    // {
+                                //    Customer objcustomer = db.Customers.Where(c => c.MobileNo == objBooking.CustomerMobileNo).FirstOrDefault();
+                                //    objBooking.CustomerId = objcustomer.Id;
+                                //    // }
+                                //    db.ExecuteQuery<int>("update Customer set CreditCardDetails='" + obj.customerid.ToStr() + "' where Id=" + objBooking.CustomerId);
+                                //    if ((db.ExecuteQuery<int>("select count(*) from Customer_CCDetails where CustomerId=" + objBooking.CustomerId.ToLong()).FirstOrDefault()) > 0)
+                                //    {
+                                //        db.ExecuteQuery<int>("update Customer_CCDetails set IsDefault=0 where CustomerId=" + objBooking.CustomerId);
+                                //    }
 
-                                    // string CardDetails = $"Token: {obj.paymentMethodId} | {obj.message}";
-                                    string CardDetails = $"KonnectPayToken: {obj.paymentMethodId} | {obj.message}";
-                                    db.ExecuteQuery<int>("insert into Customer_CCDetails(CustomerId,CCDetails,AddOn,AddBy,IsDefault)VALUES(" + objBooking.CustomerId + ",'" + CardDetails + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','Eurosoft',1)");
+                                //    // string CardDetails = $"Token: {obj.paymentMethodId} | {obj.message}";
+                                //    string CardDetails = $"KonnectPayToken: {obj.paymentMethodId} | {obj.message}";
+                                //    db.ExecuteQuery<int>("insert into Customer_CCDetails(CustomerId,CCDetails,AddOn,AddBy,IsDefault)VALUES(" + objBooking.CustomerId + ",'" + CardDetails + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','Eurosoft',1)");
 
-                                }
+                                //}
                             }
                             catch
                             {
@@ -7452,19 +7450,19 @@ namespace SignalRHub
                         db.stp_BookingLog(obj.bookingId.ToLong(), "Customer", "Secure Card Transaction " + obj.paymentIntentId.ToStr() + " | " + obj.message.ToStr() + " | Pre-authorised " + DefaultCurrencySign + obj.amount);
 
                         var objBooking = db.Bookings.Where(c => c.Id == obj.bookingId).FirstOrDefault();
-                        if (objBooking != null && objBooking.CustomerId > 0 && !string.IsNullOrEmpty(obj.customerid))
-                        {
-                            db.ExecuteQuery<int>("update Customer set CreditCardDetails='" + obj.customerid.ToStr() + "' where Id=" + objBooking.CustomerId);
-                            if ((db.ExecuteQuery<int>("select count(*) from Customer_CCDetails where CustomerId=" + objBooking.CustomerId.ToLong()).FirstOrDefault()) > 0)
-                            {
-                                db.ExecuteQuery<int>("update Customer_CCDetails set IsDefault=0 where CustomerId=" + objBooking.CustomerId);
-                            }
+                        //if (objBooking != null && objBooking.CustomerId > 0 && !string.IsNullOrEmpty(obj.customerid))
+                        //{
+                        //    db.ExecuteQuery<int>("update Customer set CreditCardDetails='" + obj.customerid.ToStr() + "' where Id=" + objBooking.CustomerId);
+                        //    if ((db.ExecuteQuery<int>("select count(*) from Customer_CCDetails where CustomerId=" + objBooking.CustomerId.ToLong()).FirstOrDefault()) > 0)
+                        //    {
+                        //        db.ExecuteQuery<int>("update Customer_CCDetails set IsDefault=0 where CustomerId=" + objBooking.CustomerId);
+                        //    }
 
-                            // string CardDetails = $"Token: {obj.paymentMethodId} | {obj.message}";
-                            string CardDetails = $"KonnectPayToken: {obj.paymentMethodId} | {obj.message}";
-                            db.ExecuteQuery<int>("insert into Customer_CCDetails(CustomerId,CCDetails,AddOn,AddBy,IsDefault)VALUES(" + objBooking.CustomerId + ",'" + CardDetails + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','Eurosoft',1)");
+                        //    // string CardDetails = $"Token: {obj.paymentMethodId} | {obj.message}";
+                        //    string CardDetails = $"KonnectPayToken: {obj.paymentMethodId} | {obj.message}";
+                        //    db.ExecuteQuery<int>("insert into Customer_CCDetails(CustomerId,CCDetails,AddOn,AddBy,IsDefault)VALUES(" + objBooking.CustomerId + ",'" + CardDetails + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','Eurosoft',1)");
 
-                        }
+                        //}
 
                     }
                     else
@@ -8498,21 +8496,21 @@ namespace SignalRHub
                                     General.UpdateJobToDriverPDA(db2.Bookings.FirstOrDefault(c => c.Id == jobId), "Credit Card(PAID)");
                                 }
 
-                                if (objBooking != null && !string.IsNullOrEmpty(obj.customerid))
-                                {
-                                    Customer objcustomer = db.Customers.Where(c => c.MobileNo == objBooking.CustomerMobileNo).FirstOrDefault();
-                                    objBooking.CustomerId = objcustomer.Id;
+                                //if (objBooking != null && !string.IsNullOrEmpty(obj.customerid))
+                                //{
+                                //    Customer objcustomer = db.Customers.Where(c => c.MobileNo == objBooking.CustomerMobileNo).FirstOrDefault();
+                                //    objBooking.CustomerId = objcustomer.Id;
 
-                                    db.ExecuteQuery<int>("update Customer set CreditCardDetails='" + obj.customerid.ToStr() + "' where Id=" + objBooking.CustomerId);
-                                    if ((db.ExecuteQuery<int>("select count(*) from Customer_CCDetails where CustomerId=" + objBooking.CustomerId.ToLong()).FirstOrDefault()) > 0)
-                                    {
-                                        db.ExecuteQuery<int>("update Customer_CCDetails set IsDefault=0 where CustomerId=" + objBooking.CustomerId);
-                                    }
+                                //    db.ExecuteQuery<int>("update Customer set CreditCardDetails='" + obj.customerid.ToStr() + "' where Id=" + objBooking.CustomerId);
+                                //    if ((db.ExecuteQuery<int>("select count(*) from Customer_CCDetails where CustomerId=" + objBooking.CustomerId.ToLong()).FirstOrDefault()) > 0)
+                                //    {
+                                //        db.ExecuteQuery<int>("update Customer_CCDetails set IsDefault=0 where CustomerId=" + objBooking.CustomerId);
+                                //    }
 
-                                    string CardDetails = $"KonnectPayToken: {obj.paymentMethodId} | {obj.message}";
-                                    db.ExecuteQuery<int>("insert into Customer_CCDetails(CustomerId,CCDetails,AddOn,AddBy,IsDefault)VALUES(" + objBooking.CustomerId + ",'" + CardDetails + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','Eurosoft',1)");
+                                //    string CardDetails = $"KonnectPayToken: {obj.paymentMethodId} | {obj.message}";
+                                //    db.ExecuteQuery<int>("insert into Customer_CCDetails(CustomerId,CCDetails,AddOn,AddBy,IsDefault)VALUES(" + objBooking.CustomerId + ",'" + CardDetails + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','Eurosoft',1)");
 
-                                }
+                                //}
                             }
                             catch
                             {
