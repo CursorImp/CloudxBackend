@@ -460,6 +460,16 @@ namespace SignalRHub
                     value.SetValue(value.GetValue(3), 1);
                     ServicePointManager.ServerCertificateValidationCallback = (object s, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors) => true;
                     smtpClient.Send(mailMessage);
+                    try
+                    {
+                        using (TaxiDataContext db = new TaxiDataContext())
+                        {
+                            db.ExecuteCommand("exec insertInSendEmail {0}, {1}, {2}, {3}", subject, body, CompanyName, toEmail);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                    }
                 }
                 catch (Exception ex)
                 {
