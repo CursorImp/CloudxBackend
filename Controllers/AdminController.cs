@@ -59,6 +59,7 @@ namespace SignalRHub.Controllers
                             da.Fill(ds);
                         }
                     }
+
                     //var LocationTypes = ds.Tables[0].AsEnumerable()
                     //   .Select(datarow => new
                     //   {
