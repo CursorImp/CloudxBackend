@@ -1442,7 +1442,8 @@ namespace SignalRHub.Controllers
                                           Duration = a.CallDuration,
                                           IsMissed = (a.IsAccepted != null && a.IsAccepted == true) ? "1" : "0",
                                           Company = b != null && b.CompanyName != "" ? b.CompanyName : a.CalledToNumber,
-                                          RecordingUrl = a.CallDuration.Contains(".") ? VoipUrl + "/" + userName + "/inbound/" + a.CallDuration + "_" + (a.PhoneNumber.StartsWith("0") ? a.PhoneNumber.Substring(1) : a.PhoneNumber) : ""
+                                          //RecordingUrl = a.CallDuration.Contains(".") ? VoipUrl + "/" + userName + "/inbound/" + a.CallDuration + "_" + (a.PhoneNumber.StartsWith("0") ? a.PhoneNumber.Substring(1) : a.PhoneNumber) : ""
+                                          RecordingUrl = a.CallDuration.Contains(".") ? VoipUrl + "/" + userName + "/inbound/" + a.CallDuration + "_" + (a.PhoneNumber.StartsWith("0") ? "44" + a.PhoneNumber.Substring(1) : a.PhoneNumber) : ""
                                       }).FirstOrDefault();
                     Booking_DriverCommsiion booking_DriverCommsiion = new Booking_DriverCommsiion();
                     try
