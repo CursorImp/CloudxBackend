@@ -7723,7 +7723,7 @@ namespace SignalRHub.Controllers
                     if (obj2 != null)
                     {
 
-                        var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(args => new { args.SmtpHost, args.SmtpUserName, args.SmtpPassword, args.SmtpPort, args.SmtpHasSSL }).FirstOrDefault();
+                        var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(args => new { args.SmtpHost, args.SmtpUserName, args.SmtpPassword, args.SmtpPort, args.SmtpHasSSL, args.EmailCC }).FirstOrDefault();
                         if (obj.emailInfo.toEmailType == 0)
                         {
                             emailTo = obj2.CustomerName.ToStr();
@@ -8078,7 +8078,7 @@ namespace SignalRHub.Controllers
                             messageBody = StrBld.ToStr(),
                             fromEmail = obj.emailInfo.From,
                             toEmail = obj.emailInfo.To,
-                            //   CCEmail =,
+                            CCEmail = objSubCompany.EmailCC.ToStr(),
                             smtpHost = objSubCompany.SmtpHost,
                             smtpPwd = objSubCompany.SmtpPassword,
                             defaultclientid = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr(),
@@ -8127,7 +8127,20 @@ namespace SignalRHub.Controllers
                         }
                         else
                         {
-
+                            try
+                            {
+                                using (TaxiDataContext dbContext = new TaxiDataContext())
+                                {
+                                    dbContext.ExecuteCommand("exec insertInSendEmail {0}, {1}, {2}, {3}",
+                                        obja.subject,
+                                        obja.messageBody,
+                                        string.IsNullOrWhiteSpace(obj.UserName) ? obj.objUserInfo?.UserName : obj.UserName,
+                                        obja.toEmail);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                            }
                             response.Data = sd;
                         }
 
