@@ -10496,6 +10496,7 @@ namespace SignalRHub
 
                         pda.DisableEarning = "2";
                         pda.AcceptJobAdditional = Global.AcceptJobAdditional;
+                        pda.EnableWaitingOnAddStop = Global.EnableWaitingOnAddStop;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
