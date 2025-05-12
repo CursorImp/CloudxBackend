@@ -63,6 +63,7 @@ namespace SignalRHub.Classes.KonnectSupplier
         public decimal amount { get; set; }
         public bool isSuccess { get; set; }
         public string paymentId { get; set; }
+        public string paymentintentId { get; set; }
         public string error { get; set; }
 
     }
@@ -304,5 +305,33 @@ namespace SignalRHub.Classes.KonnectSupplier
         public string location { get; set; }
 
     }
+
+
+    public class KonnectCardDetails
+    {
+
+        public string customerName { get; set; }
+        public int Lastfour { get; set; }
+        public int ExpiryMonth { get; set; }
+        public int ExpiryYear { get; set; }
+
+        public string Brand { get; set; }
+
+        public string FingerPrint { get; set; }
+
+        public bool? IsDefault { get; set; }
+
+
+        public int RecordId { get; set; }
+
+        public long Id { get; set; }
+
+        public string CCDetails { get; set; }
+
+
+        public string PaymentMethodId { get; set; }
+        public string StripeCustomerId { get; set; }
+    }
+
 
 }
