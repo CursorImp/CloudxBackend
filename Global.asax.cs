@@ -317,10 +317,7 @@ namespace SignalRHub
                 {
                     db.CommandTimeout = 5;
                     var inserted= db.stp_AddCallLog(name, phoneNumber, date, duration, line, 1, calledNumber);
-                    var lastCall = db.CallHistories
-                   .OrderByDescending(ch => ch.Id)
-                   .FirstOrDefault();
-                    return lastCall.ToInt();
+                    return inserted.ToInt();
 
 
                 }
@@ -328,7 +325,7 @@ namespace SignalRHub
             catch (Exception ex)
             {
 
-                return -1;
+                return 0;
                 //  // File.AppendAllText(AppContext.BaseDirectory + "\\exception_CallerIDCreateLog.txt", DateTime.Now.ToStr() + ": " + ex.Message + "|" + ex.InnerException.StackTrace + "|" + ex.InnerException.Message + Environment.NewLine);
             }
         }
