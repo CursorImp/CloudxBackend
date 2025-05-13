@@ -167,6 +167,7 @@ namespace SignalRHub.Controllers
                             sysSettings["EnableAutoDespatch"] = HubProcessor.Instance.objPolicy.EnableAutoDespatch;
                             sysSettings["EnableBidding"] = HubProcessor.Instance.objPolicy.EnableBidding;
                             sysSettings["AutoModeType"] = HubProcessor.Instance.objPolicy.AutoDespatchDriverCategoryPriority;
+                            sysSettings["TransferBooking"] = IsAdmin;
 
                             var rights = db.UM_SecurityGroup_Permissions.Where(c => c.SecurityGroupId == objUser.SecurityGroupId);
 
@@ -7726,8 +7727,8 @@ namespace SignalRHub.Controllers
                     obj.emailInfo.toEmailType = 0;
                     if (obj2 != null)
                     {
-
-                        var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(args => new { args.SmtpHost, args.SmtpUserName, args.SmtpPassword, args.SmtpPort, args.SmtpHasSSL, args.EmailCC }).FirstOrDefault();
+                        var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).FirstOrDefault();
+                        //var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(args => new { args.SmtpHost, args.SmtpUserName, args.SmtpPassword, args.SmtpPort, args.SmtpHasSSL, args.EmailCC }).FirstOrDefault();
                         if (obj.emailInfo.toEmailType == 0)
                         {
                             emailTo = obj2.CustomerName.ToStr();
@@ -8090,63 +8091,68 @@ namespace SignalRHub.Controllers
                         };
 
 
-                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                        HttpClient httpClient = new HttpClient();
-                        var stringContent = new StringContent
-                        (Newtonsoft.Json.JsonConvert.SerializeObject(obja), Encoding.UTF8, "application/json");
+                        List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
+                        SignalRHub.Classes.ClsEmail.Send(obja.subject, obja.messageBody, obja.fromEmail, obja.toEmail, attachments, objSubCompany, "");
 
-                        HttpResponseMessage res = httpClient.PostAsync("https://cabtreasureappapi.co.uk/CabTreasureWebApi/Home/SendTPEmail", stringContent).Result;
-                        httpClient.Dispose();
-                        string sd = res.Content.ReadAsStringAsync().Result;
+                        response.Data = "Booking confirmation email sent successfully.";
 
+                        //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                        //HttpClient httpClient = new HttpClient();
+                        //var stringContent = new StringContent
+                        //(Newtonsoft.Json.JsonConvert.SerializeObject(obja), Encoding.UTF8, "application/json");
 
-
-                        if (sd.ToStr().Contains("\"success\"") == false)
-                        {
-                            ResponseData dt = null;
-                            try
-                            {
-                                dt = Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseData>(sd);
-
-                            }
-                            catch
-                            {
-
-                            }
-
-                            if (dt != null)
-                            {
-
-                                response.HasError = true;
-                                response.Message = dt.Message;
-
-                            }
-                            else
-                            {
-                                response.HasError = true;
-                                //  response.Message =
+                        //HttpResponseMessage res = httpClient.PostAsync("https://cabtreasureappapi.co.uk/CabTreasureWebApi/Home/SendTPEmail", stringContent).Result;
+                        //httpClient.Dispose();
+                        //string sd = res.Content.ReadAsStringAsync().Result;
 
 
-                            }
-                        }
-                        else
-                        {
-                            try
-                            {
-                                using (TaxiDataContext dbContext = new TaxiDataContext())
-                                {
-                                    dbContext.ExecuteCommand("exec insertInSendEmail {0}, {1}, {2}, {3}",
-                                        obja.subject,
-                                        obja.messageBody,
-                                        string.IsNullOrWhiteSpace(obj.UserName) ? obj.objUserInfo?.UserName : obj.UserName,
-                                        obja.toEmail);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                            }
-                            response.Data = sd;
-                        }
+
+                        //if (sd.ToStr().Contains("\"success\"") == false)
+                        //{
+                        //    ResponseData dt = null;
+                        //    try
+                        //    {
+                        //        dt = Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseData>(sd);
+
+                        //    }
+                        //    catch
+                        //    {
+
+                        //    }
+
+                        //    if (dt != null)
+                        //    {
+
+                        //        response.HasError = true;
+                        //        response.Message = dt.Message;
+
+                        //    }
+                        //    else
+                        //    {
+                        //        response.HasError = true;
+                        //        //  response.Message =
+
+
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    try
+                        //    {
+                        //        using (TaxiDataContext dbContext = new TaxiDataContext())
+                        //        {
+                        //            dbContext.ExecuteCommand("exec insertInSendEmail {0}, {1}, {2}, {3}",
+                        //                obja.subject,
+                        //                obja.messageBody,
+                        //                string.IsNullOrWhiteSpace(obj.UserName) ? obj.objUserInfo?.UserName : obj.UserName,
+                        //                obja.toEmail);
+                        //        }
+                        //    }
+                        //    catch (Exception ex)
+                        //    {
+                        //    }
+                        //    response.Data = sd;
+                        //}
 
 
 
