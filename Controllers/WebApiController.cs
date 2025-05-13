@@ -167,6 +167,7 @@ namespace SignalRHub.Controllers
                             sysSettings["EnableAutoDespatch"] = HubProcessor.Instance.objPolicy.EnableAutoDespatch;
                             sysSettings["EnableBidding"] = HubProcessor.Instance.objPolicy.EnableBidding;
                             sysSettings["AutoModeType"] = HubProcessor.Instance.objPolicy.AutoDespatchDriverCategoryPriority;
+                            sysSettings["TransferBooking"] = IsAdmin;
 
                             var rights = db.UM_SecurityGroup_Permissions.Where(c => c.SecurityGroupId == objUser.SecurityGroupId);
 
