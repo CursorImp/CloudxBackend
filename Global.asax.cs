@@ -7068,6 +7068,20 @@ namespace SignalRHub
                     if (specialRequirements.ToStr().Contains("\""))
                         specialRequirements = specialRequirements.ToStr().Replace("\"", "-").Trim();
 
+                    string summary = string.Empty;
+
+                    List<ChargesSummary> listofSummary = new List<ChargesSummary>();
+
+                    listofSummary.Add(new ChargesSummary { label = "Fares", value = string.Format("{0:0.00}", objBooking.FareRate.ToDecimal()) });
+
+                    listofSummary.Add(new ChargesSummary { label = "Parking", value = string.Format("{0:0.00}", objBooking.CongtionCharges.ToDecimal()) });
+                    listofSummary.Add(new ChargesSummary { label = "Waiting", value = string.Format("{0:0.00}", objBooking.MeetAndGreetCharges.ToDecimal()) });
+                    listofSummary.Add(new ChargesSummary { label = "Extras", value = string.Format("{0:0.00}", objBooking.ExtraDropCharges.ToDecimal()) });
+                    listofSummary.Add(new ChargesSummary { label = "Fee", value = string.Format("{0:0.00}", objBooking.AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal() + objBooking.ServiceCharges.ToDecimal()) });
+
+                    summary = ",\"Summary\":" + Newtonsoft.Json.JsonConvert.SerializeObject(listofSummary);
+
+
                     msg = FOJJob + startJobPrefix + "{ \"JobId\" :\"" + objBooking.Id.ToStr() +
                                    "\", \"Pickup\":\"" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? fromdoorno + "-" + fromAddress + pickUpPlot : fromAddress + pickUpPlot) +
                                    "\", \"Destination\":\"" + (!string.IsNullOrEmpty(objBooking.ToDoorNo) ? objBooking.ToDoorNo + "-" + toAddress + dropOffPlot : toAddress + dropOffPlot) + "\"," +
@@ -7080,7 +7094,7 @@ namespace SignalRHub
 
                                      parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", objBooking.FareRate) + "\"" +
                                   agentDetails +
-                                     ",\"Did\":\"" + ObjDriver.Id + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + appendString + " }";
+                                     ",\"Did\":\"" + ObjDriver.Id + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + appendString + summary + " }";
 
 
 

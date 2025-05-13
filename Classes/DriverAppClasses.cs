@@ -226,4 +226,16 @@ namespace SignalRHub
 
     }
 
+    public class ChargesSummary
+    {
+        public string label;
+        public string value;
+        public string fieldname;
+        public bool isvisible;
+        public bool isedit;
+
+
+
+    }
+
 }
