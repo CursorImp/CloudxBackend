@@ -6,6 +6,7 @@ using SignalRHub.Classes.KonnectPay;
 using SignalRHub.Classes.KonnectSupplier;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
@@ -18,11 +19,13 @@ using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Script.Serialization;
 using Taxi_BLL;
 using Taxi_Model;
 using Utils;
+using static SignalRHub.DriverAppController;
 
 namespace SignalRHub.Controllers
 {
@@ -23848,6 +23851,148 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
             }
         }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("CreateS700TerminalPaymentIntentKP")]
+        public JsonResult CreateS700TerminalPaymentIntentKP([FromBody] StripeKonnectPaymentRequestModel model)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+
+            try
+            {
+                if (model == null || model.jobId <= 0)
+                {
+                    response.HasError = true;
+                    response.Message = "Invalid job or fare data!";
+                    return Json(response, JsonRequestBehavior.AllowGet);
+                }
+
+                DriverAppController controller = new DriverAppController();
+                var stripeAPIResponse = controller.CreateTerminalPaymentIntentKP(JsonConvert.SerializeObject(model));
+                response.Data = stripeAPIResponse.Data;
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetTerminalTokenKP")]
+        public JsonResult GetTerminalTokenKP()
+        {
+            string StripeAPIBaseURL = ConfigurationManager.AppSettings["StripeAPIBaseURL"];
+            ResponseAdminApi responseAdmin = new ResponseAdminApi();
+
+            try
+            {
+                Gen_SysPolicy_PaymentDetail paymentGateway = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                using (var client = new HttpClient())
+                {
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"{StripeAPIBaseURL}/v1/terminal/token/"+paymentGateway.PaypalID);
+                    request.Headers.Add("Cookie", "ARRAffinity=feca2f43c86248ebbd849b8c2c1f826fbebf35d1e9b2cfef6a0425cce9266812; ARRAffinitySameSite=feca2f43c86248ebbd849b8c2c1f826fbebf35d1e9b2cfef6a0425cce9266812");
+
+                    var response = client.SendAsync(request).Result;
+                    response.EnsureSuccessStatusCode();
+                    var tokenResponse = new JavaScriptSerializer().Deserialize<TerminalTokenResponse>(response.Content.ReadAsStringAsync().Result);
+                    responseAdmin.Data = tokenResponse;
+                }
+            }
+            catch (Exception ex)
+            {
+                responseAdmin.HasError = true;
+                responseAdmin.Message = ex.Message;
+            }
+
+            return Json(responseAdmin, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetTerminalLocation")]
+        public JsonResult GetTerminalLocation()
+        {
+            ResponseAdminApi responseAdmin = new ResponseAdminApi();
+
+            try
+            {
+                var obj = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                StripeLocation LocationObj = new StripeLocation();
+                string TokenAPIURL = string.Empty;
+                string ClientLocationId = string.Empty;
+                string StripeError = string.Empty;
+                string StripeAccountId = obj.PaypalID;
+                string StripeCountryId = obj.ApplicationId;
+                string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
+
+
+
+                if (!string.IsNullOrEmpty(StripeAccountId) && !string.IsNullOrEmpty(StripeCountryId))
+                {
+                    // get client Terminal list
+                    StripeTerminalDTO StripeTerminals = GetTerminalList(StripeAccountId, StripeCountryId, StripeAPIBaseURL);
+
+                    if (StripeTerminals != null && StripeTerminals.isSuccess)
+                    {
+                        if (StripeTerminals?.terminals?.Count > 0)
+                        {
+                            ClientLocationId = StripeTerminals?.terminals[0].terminalLocationId;
+                            responseAdmin.Data = ClientLocationId;
+                        }
+                        else
+                        {
+                            responseAdmin.HasError = true;
+                            responseAdmin.Message = StripeTerminals.error;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                responseAdmin.HasError = true;
+                responseAdmin.Message = ex.Message;
+            }
+
+            return Json(responseAdmin, JsonRequestBehavior.AllowGet);
+        }
+        private StripeTerminalDTO GetTerminalList(string StripeAccountId, string StripeCountryId, string StripeAPIBaseURL)
+        {
+            StripeTerminalDTO TerminalsList = new StripeTerminalDTO();
+            try
+            {
+                if (!string.IsNullOrEmpty(StripeAPIBaseURL))
+                {
+                    using (var client = new System.Net.Http.HttpClient())
+                    {
+                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("text/plain"));
+                        string request = StripeAPIBaseURL + "/v1/terminal/location/" + StripeAccountId.Trim() + "?countryId=" + StripeCountryId;
+                        var APICall = client.GetAsync(request).Result;
+                        if (APICall.IsSuccessStatusCode) { }
+                        var APIRespnse = APICall.Content.ReadAsStringAsync().Result;
+                        if (APIRespnse != null)
+                        {
+                            TerminalsList = new JavaScriptSerializer().Deserialize<StripeTerminalDTO>(APIRespnse);
+
+                        }
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+            return TerminalsList;
+        }
+
+
         #endregion
 
         [System.Web.Http.HttpPost]
