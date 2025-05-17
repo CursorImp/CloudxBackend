@@ -20,6 +20,7 @@ using System.Threading;
 using System.Configuration;
 using System.Dynamic;
 using System.Xml.Linq;
+using System.Data.SqlClient;
 using static SignalRHub.DriverAppController;
 using System.Threading.Tasks;
 
@@ -169,6 +170,7 @@ namespace SignalRHub.Controllers
                             sysSettings["EnableAutoDespatch"] = HubProcessor.Instance.objPolicy.EnableAutoDespatch;
                             sysSettings["EnableBidding"] = HubProcessor.Instance.objPolicy.EnableBidding;
                             sysSettings["AutoModeType"] = HubProcessor.Instance.objPolicy.AutoDespatchDriverCategoryPriority;
+                            sysSettings["TransferBooking"] = IsAdmin;
 
                             var rights = db.UM_SecurityGroup_Permissions.Where(c => c.SecurityGroupId == objUser.SecurityGroupId);
 
@@ -1430,7 +1432,7 @@ namespace SignalRHub.Controllers
                                       from b in table2.DefaultIfEmpty()
                                       where
                                        (a.PhoneNumber.Trim() == obj.bookingInfo.CustomerMobileNo || a.PhoneNumber.Trim() == obj.bookingInfo.CustomerPhoneNo)
-                                       && (a.CallDuration == obj.bookingInfo.CallRefNo)
+                                       && (a.Id == obj.bookingInfo.CallRefNo.ToInt())
                                       orderby a.CallDateTime descending
                                       select new
                                       {
@@ -1827,6 +1829,9 @@ namespace SignalRHub.Controllers
 
                                 if (objMaster.Current.Id > 0)
                                 {
+                                    if (item.Name == "CallRefNo")
+                                        continue;
+
                                     if (item.Name == "BookingStatusId")
                                         continue;
 
@@ -2966,104 +2971,132 @@ namespace SignalRHub.Controllers
         [System.Web.Http.Route("GetCallerIdHistory")]
         public JsonResult GetCallerIdHistory(WebApiClasses.RequestWebApi obj)
         {
-            //
-
             ResponseWebApi response = new ResponseWebApi();
-
             try
             {
-
                 CustomerHistoryModel model = new CustomerHistoryModel();
-
-
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-
-
-
                     string phoneNumber = obj.callerInfo.PhoneNumber.ToStr();
+                    var historyList = new List<stp_getcustomerhistoryResultEx>();
+                    var pendingBookings = new List<WaitingCurrentHistoryList>();
+                    var completedBookings = new List<WaitingCurrentHistoryList>();
 
-                    // var list= db.stp_getcustomerhistory(obj.callerInfo.PhoneNumber.ToStr()).ToList();
-                    model.HistoryList = db.ExecuteQuery<stp_getcustomerhistoryResultEx>("exec stp_getcustomerhistory {0}", phoneNumber).ToList();
+                    using (SqlConnection conn = new SqlConnection(db.Connection.ConnectionString))
+                    {
+                        using (SqlCommand cmd = new SqlCommand("stp_getcustomerhistory_Update", conn))
+                        {
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.Parameters.AddWithValue("@PhoneNumber", phoneNumber);
+                            conn.Open();
+                            using (SqlDataReader reader = cmd.ExecuteReader())
+                            {
+                                // First result set: History
+                                while (reader.Read())
+                                {
+                                    historyList.Add(new stp_getcustomerhistoryResultEx
+                                    {
+                                        FromTypeId = reader["FromTypeId"] as int?,
+                                        FromId = reader["FromId"] as int?,
+                                        From = reader["From"] as string,
+                                        ViaString = reader["ViaString"] as string,
+                                        To = reader["To"] as string,
+                                        ToId = reader["ToId"] as int?,
+                                        ToTypeId = reader["ToTypeId"] as int?,
+                                        Fare = reader["Fare"] as decimal?,
+                                        Companyid = reader["Companyid"] as int?,
+                                        VehicleTypeId = Convert.ToInt32(reader["VehicleTypeId"]),
+                                        FromDoorNo = reader["FromDoorNo"] as string,
+                                        ToDoorNo = reader["ToDoorNo"] as string,
+                                        PickupDate = reader["PickupDate"] as DateTime?,
+                                        CancelledJobCount = reader["CancelledJobCount"] as int?,
+                                        NoPickupJobCount = reader["NoPickupJobCount"] as int?,
+                                        Completed = reader["Completed"] as int?
+                                    });
+                                }
+                                // Second result set: Waiting bookings
+                                if (reader.NextResult())
+                                {
+                                    while (reader.Read())
+                                    {
+                                        pendingBookings.Add(new WaitingCurrentHistoryList
+                                        {
+                                            BookingNo = reader["BookingNo"] as string,
+                                            PickupDateTime = Convert.ToDateTime(reader["PickupDateTime"]),
+                                            FromAddress = reader["FromAddress"] as string,
+                                            ToAddress = reader["ToAddress"] as string
+                                        });
+                                    }
+                                }
+                                // Third result set: OnRoute bookings
+                                if (reader.NextResult())
+                                {
 
-
+                                    while (reader.Read())
+                                    {
+                                        completedBookings.Add(new WaitingCurrentHistoryList
+                                        {
+                                            BookingNo = reader["BookingNo"] as string,
+                                            PickupDateTime = Convert.ToDateTime(reader["PickupDateTime"]),
+                                            FromAddress = reader["FromAddress"] as string,
+                                            ToAddress = reader["ToAddress"] as string
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    model.HistoryList = historyList;
+                    model.WaitingList = pendingBookings;
+                    model.OnRoute = completedBookings;
 
                     if (model.HistoryList != null && model.HistoryList.Count > 0)
                     {
-                        model.Cancelled = model.HistoryList.Sum(c => c.CancelledJobCount.ToInt());
-                        model.Used = model.HistoryList.Sum(c => c.Completed.ToInt());
-                        model.NoFares = model.HistoryList.Sum(c => c.NoPickupJobCount.ToInt());
-
-
-
-
-
-
-
-                        stp_GetCallerInfoResult objCustomer = null;
+                        model.Cancelled = model.HistoryList.Sum(c => c.CancelledJobCount ?? 0);
+                        model.Used = model.HistoryList.Sum(c => c.Completed ?? 0);
+                        model.NoFares = model.HistoryList.Sum(c => c.NoPickupJobCount ?? 0);
 
                         try
                         {
                             db.CommandTimeout = 4;
-                            objCustomer = db.stp_GetCallerInfo(phoneNumber, "").FirstOrDefault();
+                            var objCustomer = db.stp_GetCallerInfo(phoneNumber, "").FirstOrDefault();
+                            if (objCustomer != null)
+                            {
+                                model.CustomerName = objCustomer.Name.ToStr();
+                                model.Address = objCustomer.Address1.ToStr().Trim();
+                                model.DoorNo = objCustomer.DoorNo.ToStr().Trim();
+                                model.Email = objCustomer.DoorNo.ToStr().Trim();
+                                model.Notes = objCustomer.DoorNo.ToStr().Trim();
+                                model.IsBlackListed = objCustomer.BlackList.ToBool();
+                                model.BlackListReason = objCustomer.DoorNo.ToStr().Trim();
+                                model.IsAccount = objCustomer.IsAccount.ToBool();
+                                model.AccountId = objCustomer.AccountId;
+                                model.ExcludedDriverIds = objCustomer.ExcludedDriverIds.ToStr().Trim();
+                                model.SubCompanyId = objCustomer.SubCompanyId.ToInt();
+                                model.SubCompanyName = objCustomer.SubCompanyName.ToStr();
+
+                                if (model.ExcludedDriverIds.ToStr().Trim().Length > 0 && model.ExcludedDriverIds.ToStr().Trim().Contains(",") == false)
+                                    model.ExcludedDriverIds = "," + model.ExcludedDriverIds + ",";
+
+                            }
                         }
                         catch
                         {
 
                         }
-
-
-
-                        if (objCustomer != null)
-                        {
-
-                            //if (objCustomer.Name.ToStr().ToLower().StartsWith("driver "))
-                            //    return;
-
-
-                            model.CustomerName = objCustomer.Name.ToStr();
-                            model.Address = objCustomer.Address1.ToStr().Trim();
-                            model.DoorNo = objCustomer.DoorNo.ToStr().Trim();
-                            model.Email = objCustomer.DoorNo.ToStr().Trim();
-                            model.Notes = objCustomer.DoorNo.ToStr().Trim();
-                            model.IsBlackListed = objCustomer.BlackList.ToBool();
-                            model.BlackListReason = objCustomer.DoorNo.ToStr().Trim();
-                            model.IsAccount = objCustomer.IsAccount.ToBool();
-                            model.AccountId = objCustomer.AccountId;
-                            model.ExcludedDriverIds = objCustomer.ExcludedDriverIds.ToStr().Trim();
-                            model.SubCompanyId = objCustomer.SubCompanyId.ToInt();
-                            model.SubCompanyName = objCustomer.SubCompanyName.ToStr();
-
-
-
-
-                            if (model.ExcludedDriverIds.ToStr().Trim().Length > 0 && model.ExcludedDriverIds.ToStr().Trim().Contains(",") == false)
-                                model.ExcludedDriverIds = "," + model.ExcludedDriverIds + ",";
-                        }
-
-
                     }
-
-
-
                     response.Data = model;
-
                 }
-
-
 
             }
             catch (Exception ex)
             {
-
                 response.HasError = true;
                 response.Message = ex.Message;
             }
-
-
-
             return new CustomJsonResult { Data = response };
         }
+
 
 
 
@@ -5420,6 +5453,7 @@ namespace SignalRHub.Controllers
                                      select new
                                      {
                                          Sno = a.Sno,
+                                         Id = a.Id,
                                          Name = a.Name,
                                          PhoneNumber = a.PhoneNumber,
                                          CallDateTime = string.Format("{0:dd/MM/yyyy HH:mm:ss}", a.CallDateTime),
@@ -7724,8 +7758,8 @@ namespace SignalRHub.Controllers
                     obj.emailInfo.toEmailType = 0;
                     if (obj2 != null)
                     {
-
-                        var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(args => new { args.SmtpHost, args.SmtpUserName, args.SmtpPassword, args.SmtpPort, args.SmtpHasSSL }).FirstOrDefault();
+                        var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).FirstOrDefault();
+                        //var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(args => new { args.SmtpHost, args.SmtpUserName, args.SmtpPassword, args.SmtpPort, args.SmtpHasSSL, args.EmailCC }).FirstOrDefault();
                         if (obj.emailInfo.toEmailType == 0)
                         {
                             emailTo = obj2.CustomerName.ToStr();
@@ -8080,7 +8114,7 @@ namespace SignalRHub.Controllers
                             messageBody = StrBld.ToStr(),
                             fromEmail = obj.emailInfo.From,
                             toEmail = obj.emailInfo.To,
-                            //   CCEmail =,
+                            CCEmail = objSubCompany.EmailCC.ToStr(),
                             smtpHost = objSubCompany.SmtpHost,
                             smtpPwd = objSubCompany.SmtpPassword,
                             defaultclientid = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr(),
@@ -8088,50 +8122,68 @@ namespace SignalRHub.Controllers
                         };
 
 
-                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                        HttpClient httpClient = new HttpClient();
-                        var stringContent = new StringContent
-                        (Newtonsoft.Json.JsonConvert.SerializeObject(obja), Encoding.UTF8, "application/json");
+                        List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
+                        SignalRHub.Classes.ClsEmail.Send(obja.subject, obja.messageBody, obja.fromEmail, obja.toEmail, attachments, objSubCompany, "");
 
-                        HttpResponseMessage res = httpClient.PostAsync("https://cabtreasureappapi.co.uk/CabTreasureWebApi/Home/SendTPEmail", stringContent).Result;
-                        httpClient.Dispose();
-                        string sd = res.Content.ReadAsStringAsync().Result;
+                        response.Data = "Booking confirmation email sent successfully.";
 
+                        //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                        //HttpClient httpClient = new HttpClient();
+                        //var stringContent = new StringContent
+                        //(Newtonsoft.Json.JsonConvert.SerializeObject(obja), Encoding.UTF8, "application/json");
 
-
-                        if (sd.ToStr().Contains("\"success\"") == false)
-                        {
-                            ResponseData dt = null;
-                            try
-                            {
-                                dt = Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseData>(sd);
-
-                            }
-                            catch
-                            {
-
-                            }
-
-                            if (dt != null)
-                            {
-
-                                response.HasError = true;
-                                response.Message = dt.Message;
-
-                            }
-                            else
-                            {
-                                response.HasError = true;
-                                //  response.Message =
+                        //HttpResponseMessage res = httpClient.PostAsync("https://cabtreasureappapi.co.uk/CabTreasureWebApi/Home/SendTPEmail", stringContent).Result;
+                        //httpClient.Dispose();
+                        //string sd = res.Content.ReadAsStringAsync().Result;
 
 
-                            }
-                        }
-                        else
-                        {
 
-                            response.Data = sd;
-                        }
+                        //if (sd.ToStr().Contains("\"success\"") == false)
+                        //{
+                        //    ResponseData dt = null;
+                        //    try
+                        //    {
+                        //        dt = Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseData>(sd);
+
+                        //    }
+                        //    catch
+                        //    {
+
+                        //    }
+
+                        //    if (dt != null)
+                        //    {
+
+                        //        response.HasError = true;
+                        //        response.Message = dt.Message;
+
+                        //    }
+                        //    else
+                        //    {
+                        //        response.HasError = true;
+                        //        //  response.Message =
+
+
+                        //    }
+                        //}
+                        //else
+                        //{
+                        //    try
+                        //    {
+                        //        using (TaxiDataContext dbContext = new TaxiDataContext())
+                        //        {
+                        //            dbContext.ExecuteCommand("exec insertInSendEmail {0}, {1}, {2}, {3}",
+                        //                obja.subject,
+                        //                obja.messageBody,
+                        //                string.IsNullOrWhiteSpace(obj.UserName) ? obj.objUserInfo?.UserName : obj.UserName,
+                        //                obja.toEmail);
+                        //        }
+                        //    }
+                        //    catch (Exception ex)
+                        //    {
+                        //    }
+                        //    response.Data = sd;
+                        //}
 
 
 

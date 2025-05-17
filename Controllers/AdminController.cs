@@ -10263,6 +10263,20 @@ namespace SignalRHub.Controllers
             attachments.Add(pdfAttachment);
             ClsEmail Email = new ClsEmail();
             ClsEmail.Send(EmailSubject, body, from, ToEmail, attachments, objSubcompany, "");
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    db.ExecuteCommand("exec insertInSendEmail {0}, {1}, {2}, {3}",
+                        EmailSubject,
+                        body,
+                        string.IsNullOrWhiteSpace(obj.UserName) ? obj.user.UserName : obj.UserName,
+                        ToEmail);
+                }
+            }
+            catch (Exception ex)
+            {
+            }
             ///////save file for testing
             //byte[] fileBytes = new byte[file.ContentLength];
             //file.InputStream.Read(fileBytes, 0, file.ContentLength);

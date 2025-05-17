@@ -38,6 +38,7 @@ namespace SignalRHub
         public bool UpdateCharges;
 
         public string revertstatus = "";
+        public List<ChargesSummary> Summary;
     }
 
     public class DefaultPolicies

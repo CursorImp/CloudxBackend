@@ -7422,6 +7422,19 @@ namespace SignalRHub
                                 toDoorNo = toDoorNo + "-";
 
 
+                            string summary = string.Empty;
+
+                            List<ChargesSummary> listofSummary = new List<ChargesSummary>();
+
+                            listofSummary.Add(new ChargesSummary { label = "Fares", value = string.Format("{0:0.00}", objBooking.FareRate.ToDecimal()) });
+
+                            listofSummary.Add(new ChargesSummary { label = "Parking", value = string.Format("{0:0.00}", objBooking.CongtionCharges.ToDecimal()) });
+                            listofSummary.Add(new ChargesSummary { label = "Waiting", value = string.Format("{0:0.00}", objBooking.MeetAndGreetCharges.ToDecimal()) });
+                            listofSummary.Add(new ChargesSummary { label = "Extras", value = string.Format("{0:0.00}", objBooking.ExtraDropCharges.ToDecimal()) });
+                            listofSummary.Add(new ChargesSummary { label = "Fee", value = string.Format("{0:0.00}", objBooking.AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal() + objBooking.ServiceCharges.ToDecimal()) });
+
+                            summary = ",\"Summary\":" + Newtonsoft.Json.JsonConvert.SerializeObject(listofSummary);
+
 
 
                             msg = "{ \"JobId\" :\"" + objBooking.Id +
@@ -7438,7 +7451,7 @@ namespace SignalRHub
                                    agentDetails +
 
 
-                                 ",\"Did\":\"" + driverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + " }";
+                                 ",\"Did\":\"" + driverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + summary + " }";
 
 
 
@@ -7766,7 +7779,18 @@ namespace SignalRHub
                                 toDoorNo = toDoorNo + "-";
 
 
+                            string summary = string.Empty;
 
+                            List<ChargesSummary> listofSummary = new List<ChargesSummary>();
+
+                            listofSummary.Add(new ChargesSummary { label = "Fares", value = string.Format("{0:0.00}", objBooking.FareRate.ToDecimal()) });
+
+                            listofSummary.Add(new ChargesSummary { label = "Parking", value = string.Format("{0:0.00}", objBooking.CongtionCharges.ToDecimal()) });
+                            listofSummary.Add(new ChargesSummary { label = "Waiting", value = string.Format("{0:0.00}", objBooking.MeetAndGreetCharges.ToDecimal()) });
+                            listofSummary.Add(new ChargesSummary { label = "Extras", value = string.Format("{0:0.00}", objBooking.ExtraDropCharges.ToDecimal()) });
+                            listofSummary.Add(new ChargesSummary { label = "Fee", value = string.Format("{0:0.00}", objBooking.AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal() + objBooking.ServiceCharges.ToDecimal()) });
+
+                            summary = ",\"Summary\":" + Newtonsoft.Json.JsonConvert.SerializeObject(listofSummary);
 
                             msg = "{ \"JobId\" :\"" + objBooking.Id +
                                   "\", \"Pickup\":\"" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? fromdoorno + "-" + fromAddress + pickUpPlot : fromAddress + pickUpPlot) +
@@ -7782,7 +7806,7 @@ namespace SignalRHub
                                    agentDetails +
 
 
-                                 ",\"Did\":\"" + driverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + " }";
+                                 ",\"Did\":\"" + driverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + summary + " }";
 
 
 
@@ -12301,6 +12325,19 @@ namespace SignalRHub
 
                             else
                                 list = db.ExecuteQuery<JobModel>("exec stp_getjobdata {0},{1}", driverId, obj.JobId).ToList();
+
+                            foreach (JobModel job in list)
+                            {
+                                List<ChargesSummary> listofSummary = new List<ChargesSummary>();
+
+                                listofSummary.Add(new ChargesSummary { label = "Fares", value = string.Format("{0:0.00}", job.Fares.ToDecimal()) });
+                                listofSummary.Add(new ChargesSummary { label = "Parking", value = string.Format("{0:0.00}", job.Parking.ToDecimal()) });
+                                listofSummary.Add(new ChargesSummary { label = "Waiting", value = string.Format("{0:0.00}", job.Waiting.ToDecimal()) });
+                                listofSummary.Add(new ChargesSummary { label = "Extras", value = string.Format("{0:0.00}", job.Extra.ToDecimal()) });
+                                listofSummary.Add(new ChargesSummary { label = "Fee", value = string.Format("{0:0.00}", job.AgentFee.ToDecimal() + job.BookingFee.ToDecimal()) });
+
+                                job.Summary = listofSummary;
+                            }
 
                             obj.Joblist = list;
 

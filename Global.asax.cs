@@ -28,6 +28,7 @@ using System.Threading;
 using System.Data;
 using System.Xml;
 using SignalRHub.WebApiClasses;
+using System.Runtime.CompilerServices;
 
 namespace SignalRHub
 {
@@ -250,7 +251,8 @@ namespace SignalRHub
                 }
 
                 // //BroadCaster
-                var msg = "**cti_incomingcall>>" + phone.ToStr() + ">>" + line.ToStr().Trim() + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + calledNumber + ">>" + uniqueId;
+                long id = UpdateLog(name, phone, callDate, uniqueId, line, line, "", calledNumber);
+                var msg = "**cti_incomingcall>>" + phone.ToStr() + ">>" + line.ToStr().Trim() + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + calledNumber + ">>" + uniqueId + ">>" + id.ToStr();
 
                 //send message to all desktop users
                 //List<string> listOfConnections = new List<string>();
@@ -265,7 +267,7 @@ namespace SignalRHub
                 //
                 //if (true) // (EnabledMissedCallLogs)
                 //{//
-                UpdateLog(name, phone, callDate, uniqueId, line, line, "", calledNumber);
+              
                 //}
                 //else
                 //{
@@ -307,23 +309,28 @@ namespace SignalRHub
 
 
 
-        public void CreateLog(string name, string phoneNumber, DateTime date, string duration, string line, string calledNumber)
+        public int CreateLog(string name, string phoneNumber, DateTime date, string duration, string line, string calledNumber)
         {
             try
             {
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
                     db.CommandTimeout = 5;
-                    db.stp_AddCallLog(name, phoneNumber, date, duration, line, 1, calledNumber);
+                    var inserted= db.stp_AddCallLog(name, phoneNumber, date, duration, line, 1, calledNumber);
+                    return inserted.ToInt();
+
+
                 }
             }
             catch (Exception ex)
             {
+
+                return 0;
                 //  // File.AppendAllText(AppContext.BaseDirectory + "\\exception_CallerIDCreateLog.txt", DateTime.Now.ToStr() + ": " + ex.Message + "|" + ex.InnerException.StackTrace + "|" + ex.InnerException.Message + Environment.NewLine);
             }
         }
 
-        public void UpdateLog(string name, string phoneNumber, DateTime date, string duration, string line, string stn, string callType, string calledNumber)
+        public long UpdateLog(string name, string phoneNumber, DateTime date, string duration, string line, string stn, string callType, string calledNumber)
         {
 
             using (TaxiDataContext db = new TaxiDataContext())
@@ -373,6 +380,7 @@ namespace SignalRHub
                     {
 
                     }
+                    return obj.Id;
                 }
                 catch (Exception ex)
                 {
@@ -384,6 +392,7 @@ namespace SignalRHub
                     {
 
                     }
+                    return -1;
 
                 }
             }
@@ -1642,7 +1651,7 @@ namespace SignalRHub
                             }
 
                             ////
-                            CreateLog(callerName, number.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
+                            long id = CreateLog(callerName, number.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
 
 
                         }
@@ -1805,7 +1814,8 @@ namespace SignalRHub
                                         if (Exten.ToStr() == "750")
                                             Exten = "ABOP";
 
-                                        UpdateLog(name, newNumber, DateTime.Now, "00:00:00", Exten.ToStr(), Exten.ToStr(), "", connectedLineNum);
+                                       
+                                        long id = UpdateLog(name, newNumber, DateTime.Now, "00:00:00", Exten.ToStr(), Exten.ToStr(), "", connectedLineNum);
                                     }
                                     catch
                                     {
@@ -1953,8 +1963,9 @@ namespace SignalRHub
 
                             ////
                             ///
-                            General.BroadCastMessage("**cti_remoteincomingcall>>" + number.ToStr() + ">>" + "XXX" + ">>ring>>" + item);
-                            CreateLog(callerName, number.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
+                            long id = CreateLog(callerName, number.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
+                            General.BroadCastMessage("**cti_remoteincomingcall>>" + number.ToStr() + ">>" + "XXX" + ">>ring>>" + item + ">>" + id.ToStr());
+
                             try
                             {
                                 File.AppendAllText(AppContext.BaseDirectory + "\\log_calleridring2.txt", DateTime.Now.ToStr() + ": " + item + Environment.NewLine);
@@ -2153,9 +2164,10 @@ namespace SignalRHub
                         }
 
                         //
-                        General.BroadCastMessage("**cti_remoteincomingcall>>" + callerNumber.ToStr() + ">>" + "XXX" + ">>ring>>" + item);
+                        long id = CreateLog(callerName, callerNumber.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
+                        General.BroadCastMessage("**cti_remoteincomingcall>>" + callerNumber.ToStr() + ">>" + "XXX" + ">>ring>>" + item + ">>" + id.ToStr());
 
-                        CreateLog(callerName, callerNumber.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
+                        //CreateLog(callerName, callerNumber.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
 
                     }
                 }
@@ -2233,9 +2245,13 @@ namespace SignalRHub
                             }
 
                             //
-                            General.BroadCastMessage("**cti_remoteincomingcall>>" + callerNumber.ToStr() + ">>" + "XXX" + ">>ring>>" + item);
 
-                            CreateLog(callerName, callerNumber.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
+                           long id= CreateLog(callerName, callerNumber.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
+
+                            General.BroadCastMessage("**cti_remoteincomingcall>>" + callerNumber.ToStr() + ">>" + "XXX" + ">>ring>>" + item + ">>" + id.ToStr());
+                            //string message = $"**cti_remoteincomingcall>>{callerNumber.ToStr()}>>{id}>>ring>>{item}";
+
+                            //General.BroadCastMessage(message);
 
                         }
                     }
@@ -2373,7 +2389,8 @@ namespace SignalRHub
                 }
 
                 // //BroadCaster
-                var msg = "**cti_incomingcall>>" + phone.ToStr() + ">>" + line.ToStr().Trim() + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + calledNumber + ">>" + uniqueId;
+                long id = UpdateLog(name, phone, callDate, uniqueId, line, line, "", calledNumber);
+                var msg = "**cti_incomingcall>>" + phone.ToStr() + ">>" + line.ToStr().Trim() + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + calledNumber + ">>" + uniqueId + ">>" + id.ToStr();
 
                 //send message to all desktop users
                 //List<string> listOfConnections = new List<string>();
@@ -2387,7 +2404,7 @@ namespace SignalRHub
                 //
                 //if (true) // (EnabledMissedCallLogs)
                 //{
-                UpdateLog(name, phone, callDate, uniqueId, line, line, "", calledNumber);
+                
                 //}
                 //else
                 //{
@@ -7050,6 +7067,20 @@ namespace SignalRHub
                     if (specialRequirements.ToStr().Contains("\""))
                         specialRequirements = specialRequirements.ToStr().Replace("\"", "-").Trim();
 
+                    string summary = string.Empty;
+
+                    List<ChargesSummary> listofSummary = new List<ChargesSummary>();
+
+                    listofSummary.Add(new ChargesSummary { label = "Fares", value = string.Format("{0:0.00}", objBooking.FareRate.ToDecimal()) });
+
+                    listofSummary.Add(new ChargesSummary { label = "Parking", value = string.Format("{0:0.00}", objBooking.CongtionCharges.ToDecimal()) });
+                    listofSummary.Add(new ChargesSummary { label = "Waiting", value = string.Format("{0:0.00}", objBooking.MeetAndGreetCharges.ToDecimal()) });
+                    listofSummary.Add(new ChargesSummary { label = "Extras", value = string.Format("{0:0.00}", objBooking.ExtraDropCharges.ToDecimal()) });
+                    listofSummary.Add(new ChargesSummary { label = "Fee", value = string.Format("{0:0.00}", objBooking.AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal() + objBooking.ServiceCharges.ToDecimal()) });
+
+                    summary = ",\"Summary\":" + Newtonsoft.Json.JsonConvert.SerializeObject(listofSummary);
+
+
                     msg = FOJJob + startJobPrefix + "{ \"JobId\" :\"" + objBooking.Id.ToStr() +
                                    "\", \"Pickup\":\"" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? fromdoorno + "-" + fromAddress + pickUpPlot : fromAddress + pickUpPlot) +
                                    "\", \"Destination\":\"" + (!string.IsNullOrEmpty(objBooking.ToDoorNo) ? objBooking.ToDoorNo + "-" + toAddress + dropOffPlot : toAddress + dropOffPlot) + "\"," +
@@ -7062,7 +7093,7 @@ namespace SignalRHub
 
                                      parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", objBooking.FareRate) + "\"" +
                                   agentDetails +
-                                     ",\"Did\":\"" + ObjDriver.Id + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + appendString + " }";
+                                     ",\"Did\":\"" + ObjDriver.Id + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + appendString + summary + " }";
 
 
 
