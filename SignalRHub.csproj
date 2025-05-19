@@ -283,6 +283,7 @@
     <Compile Include="Classes\stp_GetBookingsDataResult.cs" />
     <Compile Include="Classes\Stripe3DS.cs" />
     <Compile Include="Classes\StripeToken.cs" />
+    <Compile Include="Classes\TerminalTokenResponse.cs" />
     <Compile Include="Classes\UDPReceiverClass.cs" />
     <Compile Include="Classes\UserConnections.cs" />
     <Compile Include="Classes\WebApiClasses.cs" />
