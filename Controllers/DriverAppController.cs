@@ -25,6 +25,7 @@ using System.Configuration;
 using SignalRHub.Classes;
 using System.Net.Http;
 using SignalRHub.Classes.KonnectSupplier;
+using System.Threading.Tasks;
 
 namespace SignalRHub
 {
@@ -18149,6 +18150,7 @@ namespace SignalRHub
 
             return res;
         }
+        
     }
 
 

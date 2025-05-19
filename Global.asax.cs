@@ -329,7 +329,7 @@ namespace SignalRHub
             catch (Exception ex)
             {
 
-                return -1;
+                return 0;
                 //  // File.AppendAllText(AppContext.BaseDirectory + "\\exception_CallerIDCreateLog.txt", DateTime.Now.ToStr() + ": " + ex.Message + "|" + ex.InnerException.StackTrace + "|" + ex.InnerException.Message + Environment.NewLine);
             }
         }
@@ -581,7 +581,11 @@ namespace SignalRHub
                             new AppSetting { SetKey = "ShowDashboardMap", SetVal = "true", description = "ShowDashboardMap"  },
                             new AppSetting { SetKey = "ShowMapBydefaultOndashboard", SetVal = "true", description = "ShowMapBydefaultOndashboard"  },
                             new AppSetting { SetKey = "BookingAlertExpiryNoticeInMins", SetVal = "false", description = "BookingAlertExpiryNoticeInMins"  },
-                            new AppSetting { SetKey = "EnableWaitingOnAddStop", SetVal = "0", description = "EnableWaitingOnAddStop"  }
+                            new AppSetting { SetKey = "EnableWaitingOnAddStop", SetVal = "0", description = "EnableWaitingOnAddStop"  },
+                            new AppSetting { SetKey = "DisableAcceptJob", SetVal = "false", description = "DisableAcceptJob"  },
+                            new AppSetting { SetKey = "airportpickupchargesapplyon", SetVal = "0", description = "airportpickupchargesapplyon (0,1 => on parking) (2=> on fare)"  },
+                            new AppSetting { SetKey = "airportdropoffchargesapplyon", SetVal = "0", description = "airportdropoffchargesapplyon (0,1 => on parking) (2=> on fare)"  },
+                            new AppSetting { SetKey = "EnableJourneyTimePerMinCalculation", SetVal = "false", description = "EnableJourneyTimePerMinCalculation"  },
                         };
 
                 using (var db = new TaxiDataContext())

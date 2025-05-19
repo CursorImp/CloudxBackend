@@ -217,8 +217,17 @@ namespace SignalRHub.WebApiClasses
         public string Notes { get; set; }
 
         public List<stp_getcustomerhistoryResultEx> HistoryList { get; set; }
+        public List<WaitingCurrentHistoryList> WaitingList { get; set; }
+        public List<WaitingCurrentHistoryList> OnRoute { get; set; }
     }
 
+    public class WaitingCurrentHistoryList
+    {
+        public string BookingNo { get; set; }
+        public DateTime PickupDateTime { get; set; }
+        public string FromAddress { get; set; }
+        public string ToAddress { get; set; }
+    }
 
     public class clsAuditTrial
     {
