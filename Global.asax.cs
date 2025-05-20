@@ -318,10 +318,7 @@ namespace SignalRHub
                 {
                     db.CommandTimeout = 5;
                     var inserted= db.stp_AddCallLog(name, phoneNumber, date, duration, line, 1, calledNumber);
-                    var lastCall = db.CallHistories
-                   .OrderByDescending(ch => ch.Id)
-                   .FirstOrDefault();
-                    return lastCall.Id.ToInt();
+                    return inserted;
 
 
                 }
