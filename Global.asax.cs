@@ -582,6 +582,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "airportpickupchargesapplyon", SetVal = "0", description = "airportpickupchargesapplyon (0,1 => on parking) (2=> on fare)"  },
                             new AppSetting { SetKey = "airportdropoffchargesapplyon", SetVal = "0", description = "airportdropoffchargesapplyon (0,1 => on parking) (2=> on fare)"  },
                             new AppSetting { SetKey = "EnableJourneyTimePerMinCalculation", SetVal = "false", description = "EnableJourneyTimePerMinCalculation"  },
+                            new AppSetting { SetKey = "EnableJobTimeFilter", SetVal = "false", description = "EnableJobTimeFilter"  },
                         };
 
                 using (var db = new TaxiDataContext())
