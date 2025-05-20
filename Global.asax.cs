@@ -568,7 +568,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "IsCompanyWiseHourlyFare", SetVal = "false", description = "Is Company Wise Hourly Fare"  },
                             new AppSetting { SetKey = "showCommandLine", SetVal = "true", description = "showCommandLine"  },
                             new AppSetting { SetKey = "showExtraCharges", SetVal = "false", description = "Show Extra Charges"  },
-                            new AppSetting { SetKey = "EnableFastestRoute", SetVal = "false", description = "Enable Fastest Route"  },
+                            new AppSetting { SetKey = "EnableFastestRoute", SetVal = "0", description = "Enable Fastest Route"  },
                             new AppSetting { SetKey = "ShowBookingPlayRecording", SetVal = "false", description = "Show Booking Play Recording"  },
                             new AppSetting { SetKey = "EnableChangeDriverPositionOnNoPickup", SetVal = "0", description = "Enable Change Driver Position On NoPickup"  },
                             new AppSetting { SetKey = "EnableSentPDAMsgOnNoPickupToOther", SetVal = "0", description = "EnableSentPDAMsgOnNoPickupToOther"  },
