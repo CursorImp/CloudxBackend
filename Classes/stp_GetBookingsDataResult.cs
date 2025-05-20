@@ -130,5 +130,6 @@ namespace SignalRHub
 
         [Column(Storage = "_VehicleID", DbType = "VarChar(500)")]
         public string VehicleID { get; set; }
+        public string BookingTypeName { get; set; }
     }
 }
