@@ -61,6 +61,7 @@ namespace SignalRHub
         public static string HEREKEY = "";
         public static string smsInbox = "0";
         public static string enableRingBack = "0";
+        public static string applicationurl = "0";
         public static string enableClearJobText = "0";
         public static string enableAccountCharges = "0";
         public static string enableCallOffice = "0";
@@ -317,7 +318,10 @@ namespace SignalRHub
                 {
                     db.CommandTimeout = 5;
                     var inserted= db.stp_AddCallLog(name, phoneNumber, date, duration, line, 1, calledNumber);
-                    return inserted.ToInt();
+                    var lastCall = db.CallHistories
+                   .OrderByDescending(ch => ch.Id)
+                   .FirstOrDefault();
+                    return lastCall.Id.ToInt();
 
 
                 }
@@ -536,7 +540,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "DefaultCurrency", SetVal = "GBP", description = "Default Currency"  },
                             new AppSetting { SetKey = "DefaultClientLocation", SetVal = "UK", description = "Default Client Location"  },
                             new AppSetting { SetKey = "huburl", SetVal = "", description = "Hub URL" },
-                            new AppSetting { SetKey = "applicationurl", SetVal = "http://188.40.67.161/setting/default.aspx?PoolName=UniquePersonnel", description = "Application URL" },
+                            //new AppSetting { SetKey = "applicationurl", SetVal = "http://188.40.67.161/setting/default.aspx?PoolName=UniquePersonnel", description = "Application URL" },
                             new AppSetting { SetKey = "socketapplicationurl", SetVal = "http://188.40.67.161/setting/default.aspx?PoolName=UniquePersonnel_sock", description = "Socket Application URL"  },
                             new AppSetting { SetKey = "PageSize", SetVal = "1500", description = "Page Size" },
                             new AppSetting { SetKey = "aspnet:MaxJsonDeserializerMembers", SetVal = "15000000", description = "Max JSON Deserializer Members" },
@@ -1324,6 +1328,11 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("enableRingBack")))
                 {
                     enableRingBack = GetAppSetting<string>("enableRingBack").ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("applicationurl")))
+                {
+                    applicationurl = GetAppSetting<string>("applicationurl").ToStr();
 
                 }
 

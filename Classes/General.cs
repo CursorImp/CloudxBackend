@@ -171,7 +171,8 @@ namespace SignalRHub
             {
                 using (System.Net.WebClient webClient = new System.Net.WebClient())
                 {
-                    var result = webClient.DownloadString(System.Configuration.ConfigurationManager.AppSettings["ApplicationUrl"].ToStr());
+                    var result = webClient.DownloadString(Global.applicationurl);
+                    //var result = webClient.DownloadString(System.Configuration.ConfigurationManager.AppSettings["ApplicationUrl"].ToStr());
                     //
                 }
             }

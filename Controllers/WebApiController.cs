@@ -156,6 +156,8 @@ namespace SignalRHub.Controllers
                                 var key = setting.SetKey.Replace(" ", "").Replace("-", "").Replace(".", "");
                                 sysSettings[key] = setting.SetVal;
                             }
+                            sysSettings["BookingAlertExpiryNoticeInMins"] = db.Gen_SysPolicy_Configurations
+                                                  .FirstOrDefault()?.BookingAlertExpiryNoticeInMins;
 
                             // Add extra values
                             sysSettings["DefaultVehicleTypeId"] = HubProcessor.Instance.objPolicy.DefaultVehicleTypeId;
@@ -433,6 +435,8 @@ namespace SignalRHub.Controllers
                 DateTime? dt = DateTime.Now.ToDateorNull();
                 DateTime recentDays = dt.Value.AddDays(-1);
                 DateTime dtNow = DateTime.Now;
+                General.RecyclePool();
+                Global.LoadDataList();
                 DateTime prebookingdays = dt.Value.AddDays(HubProcessor.Instance.objPolicy.HourControllerReport.ToInt()).ToDate();
 
 
@@ -7696,6 +7700,70 @@ namespace SignalRHub.Controllers
 
 
                         var data = new EmailInfo { SubCompanyId = obj2.SubcompanyId.ToInt(), From = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(c => c.SmtpUserName).FirstOrDefault(), Subject = subject, BookingId = obj2.Id, To = obj2.CustomerEmail, IsAccountJob = obj2.CompanyId != null ? true : false, PaymentTypeId = obj2.PaymentTypeId.ToInt() };
+
+
+                        response.Data = data;
+
+                    }
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    response.HasError = true;
+                    response.Message = ex.Message;
+
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingConfirmationDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+                }
+            }
+
+
+            //   return Json(response, JsonRequestBehavior.AllowGet);
+            return new CustomJsonResult { Data = response };
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetBookingDetailsForSMS")]
+        public JsonResult GetBookingDetailsForSMS(WebApiClasses.RequestWebApi obj)
+        {
+            //
+
+            try
+            {
+
+
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingDetailsForSMS.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+
+                    var obj2 = db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id);
+
+
+                    if (obj2 != null)
+                    {
+                        
+
+
+
+
+                        var data = new EmailInfo { SubCompanyId = obj2.SubcompanyId.ToInt(), From = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(c => c.SmtpUserName).FirstOrDefault(), BookingId = obj2.Id, CustomerName = obj2.CustomerName, To = obj2.CustomerMobileNo, IsAccountJob = obj2.CompanyId != null ? true : false, PaymentTypeId = obj2.PaymentTypeId.ToInt() };
 
 
                         response.Data = data;
