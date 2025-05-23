@@ -586,6 +586,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "airportpickupchargesapplyon", SetVal = "0", description = "airportpickupchargesapplyon (0,1 => on parking) (2=> on fare)"  },
                             new AppSetting { SetKey = "airportdropoffchargesapplyon", SetVal = "0", description = "airportdropoffchargesapplyon (0,1 => on parking) (2=> on fare)"  },
                             new AppSetting { SetKey = "EnableJourneyTimePerMinCalculation", SetVal = "false", description = "EnableJourneyTimePerMinCalculation"  },
+                            new AppSetting { SetKey = "EnableThirdPartyEmailSetting", SetVal = "false", description = "Enable Third Party Email Setting"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -598,7 +599,7 @@ namespace SignalRHub
                         if (!existingSettings.Any(a => a.SetKey == setting.SetKey))
                         {
                             db.ExecuteCommand(
-                                @"INSERT INTO AppSettings (SetKey, SetVal, description) VALUES ({0}, {1}, {2},{3})",
+                                @"INSERT INTO AppSettings (SetKey, SetVal, description) VALUES ({0}, {1}, {2})",
                                 setting.SetKey, setting.SetVal, setting.description);
                         }
                     }
