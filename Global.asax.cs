@@ -318,10 +318,7 @@ namespace SignalRHub
                 {
                     db.CommandTimeout = 5;
                     var inserted= db.stp_AddCallLog(name, phoneNumber, date, duration, line, 1, calledNumber);
-                    var lastCall = db.CallHistories
-                   .OrderByDescending(ch => ch.Id)
-                   .FirstOrDefault();
-                    return lastCall.Id.ToInt();
+                    return inserted;
 
 
                 }
@@ -571,7 +568,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "IsCompanyWiseHourlyFare", SetVal = "false", description = "Is Company Wise Hourly Fare"  },
                             new AppSetting { SetKey = "showCommandLine", SetVal = "true", description = "showCommandLine"  },
                             new AppSetting { SetKey = "showExtraCharges", SetVal = "false", description = "Show Extra Charges"  },
-                            new AppSetting { SetKey = "EnableFastestRoute", SetVal = "false", description = "Enable Fastest Route"  },
+                            new AppSetting { SetKey = "EnableFastestRoute", SetVal = "0", description = "Enable Fastest Route"  },
                             new AppSetting { SetKey = "ShowBookingPlayRecording", SetVal = "false", description = "Show Booking Play Recording"  },
                             new AppSetting { SetKey = "EnableChangeDriverPositionOnNoPickup", SetVal = "0", description = "Enable Change Driver Position On NoPickup"  },
                             new AppSetting { SetKey = "EnableSentPDAMsgOnNoPickupToOther", SetVal = "0", description = "EnableSentPDAMsgOnNoPickupToOther"  },
@@ -586,6 +583,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "airportpickupchargesapplyon", SetVal = "0", description = "airportpickupchargesapplyon (0,1 => on parking) (2=> on fare)"  },
                             new AppSetting { SetKey = "airportdropoffchargesapplyon", SetVal = "0", description = "airportdropoffchargesapplyon (0,1 => on parking) (2=> on fare)"  },
                             new AppSetting { SetKey = "EnableJourneyTimePerMinCalculation", SetVal = "false", description = "EnableJourneyTimePerMinCalculation"  },
+                            new AppSetting { SetKey = "EnableJobTimeFilter", SetVal = "false", description = "EnableJobTimeFilter"  },
                             new AppSetting { SetKey = "EnableThirdPartyEmailSetting", SetVal = "false", description = "Enable Third Party Email Setting"  },
                         };
 
