@@ -469,8 +469,7 @@ namespace SignalRHub.Controllers
 
                 data.listofrecentbookings = data.listofbookings.Where(c => c.StatusId == Enums.BOOKINGSTATUS.ONROUTE || c.StatusId == Enums.BOOKINGSTATUS.ARRIVED
                                                           || c.StatusId == Enums.BOOKINGSTATUS.POB || c.StatusId == Enums.BOOKINGSTATUS.STC
-                                                          || c.StatusId == Enums.BOOKINGSTATUS.FOJ
-                                                          || c.StatusId == Enums.BOOKINGSTATUS.PENDING_START).OrderBy(c => c.PickupDateTemp).ToList();
+                                                          || c.StatusId == Enums.BOOKINGSTATUS.FOJ).OrderBy(c => c.PickupDateTemp).ToList();
 
 
 
