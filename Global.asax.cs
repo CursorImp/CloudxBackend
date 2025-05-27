@@ -268,7 +268,7 @@ namespace SignalRHub
                 //
                 //if (true) // (EnabledMissedCallLogs)
                 //{//
-              
+
                 //}
                 //else
                 //{
@@ -317,7 +317,7 @@ namespace SignalRHub
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
                     db.CommandTimeout = 5;
-                    var inserted= db.stp_AddCallLog(name, phoneNumber, date, duration, line, 1, calledNumber);
+                    var inserted = db.stp_AddCallLog(name, phoneNumber, date, duration, line, 1, calledNumber);
                     return inserted;
 
 
@@ -687,7 +687,7 @@ namespace SignalRHub
                     //Send sms to all PDAs
 
 
-
+                    bool removeFromList = true;
                     //
                     try
                     {
@@ -696,6 +696,12 @@ namespace SignalRHub
                         File.AppendAllText(physicalPath + "\\smslogs.txt", DateTime.Now.ToStr() + " ::: " + mmsg + ", number : " + values[1] + Environment.NewLine);
 
 
+                    }
+                    catch (ThreadAbortException tex)
+                    {
+                        removeFromList = false;
+                        File.AppendAllText(physicalPath + "\\log_threadabort.txt", DateTime.Now.ToStr() + " ::: " + mmsg + ", number : " + values[1] + tex.Message + Environment.NewLine);
+                        Thread.ResetAbort();
                     }
                     catch (Exception ex)
                     {
@@ -714,8 +720,10 @@ namespace SignalRHub
 
                     try
                     {
-
-                        Instance.listofSMS.Remove(itemSMS);
+                        if (removeFromList)
+                        {
+                            Instance.listofSMS.Remove(itemSMS);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -1826,7 +1834,7 @@ namespace SignalRHub
                                         if (Exten.ToStr() == "750")
                                             Exten = "ABOP";
 
-                                       
+
                                         long id = UpdateLog(name, newNumber, DateTime.Now, "00:00:00", Exten.ToStr(), Exten.ToStr(), "", connectedLineNum);
                                     }
                                     catch
@@ -2258,7 +2266,7 @@ namespace SignalRHub
 
                             //
 
-                           long id= CreateLog(callerName, callerNumber.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
+                            long id = CreateLog(callerName, callerNumber.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
 
                             General.BroadCastMessage("**cti_remoteincomingcall>>" + callerNumber.ToStr() + ">>" + "XXX" + ">>ring>>" + item + ">>" + id.ToStr());
                             //string message = $"**cti_remoteincomingcall>>{callerNumber.ToStr()}>>{id}>>ring>>{item}";
@@ -2416,7 +2424,7 @@ namespace SignalRHub
                 //
                 //if (true) // (EnabledMissedCallLogs)
                 //{
-                
+
                 //}
                 //else
                 //{
