@@ -10928,18 +10928,23 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
 
                     string[] skipProperties = new string[] { "Gen_SysPolicy", "Fleet_VehicleType", "EnableForBookOnline" };
-                    List<Gen_SysPolicy_FaresSetting> listofFares = (from a in obj.Gen_SysPolicy_FaresSettings
-                                                                    select new Gen_SysPolicy_FaresSetting
-                                                                    {
-                                                                        Id = a.Id.ToInt(),//a.Cells[COL_FARES.ID].Value.ToInt(),
-                                                                        SysPolicyId = a.SysPolicyId, //objMaster.Current.Id,
-                                                                        IsAmountWise = a.IsAmountWise.ToBool(),//a.Cells[COL_FARES.AMOUNTWISE].Value.ToBool(),
-                                                                        Amount = a.Amount.ToDecimal(),//a.Cells[COL_FARES.AMOUNT].Value.ToDecimal(),
-                                                                        Percentage = a.Percentage.ToInt(), //a.Cells[COL_FARES.PERCENTAGE].Value.ToInt(),
-                                                                        VehicleTypeId = a.VehicleTypeId.ToIntorNull(), //a.Cells[COL_FARES.VEHICLETYPEID].Value.ToIntorNull(),
-                                                                        Operator = a.Operator.ToStr(), //a.Cells[COL_FARES.OPERATOR].Value.ToStr()
-                                                                        VehicleTypeName = a.VehicleTypeName
-                                                                    }).ToList();
+                    List<Gen_SysPolicy_FaresSetting> listofFares = new List<Gen_SysPolicy_FaresSetting>();
+
+                    if (obj.Gen_SysPolicy_FaresSettings != null)
+                    {
+                        listofFares = (from a in obj.Gen_SysPolicy_FaresSettings
+                                       select new Gen_SysPolicy_FaresSetting
+                                       {
+                                           Id = a.Id.ToInt(),
+                                           SysPolicyId = a.SysPolicyId,
+                                           IsAmountWise = a.IsAmountWise.ToBool(),
+                                           Amount = a.Amount.ToDecimal(),
+                                           Percentage = a.Percentage.ToInt(),
+                                           VehicleTypeId = a.VehicleTypeId.ToIntorNull(),
+                                           Operator = a.Operator.ToStr(),
+                                           VehicleTypeName = a.VehicleTypeName
+                                       }).ToList();
+                    }
 
                     IList<Gen_SysPolicy_FaresSetting> savedListFares = sysPolicyBO.Current.Gen_SysPolicy_FaresSettings;
 
