@@ -43,6 +43,7 @@ namespace SignalRHub
     public class SocketIO
     {
 
+        private static readonly object socketLock = new object();
         public static DateTime? LastAcknowledgementReceivedOn;
 
         public static Socket socket = null;
@@ -51,173 +52,284 @@ namespace SignalRHub
             try
             {
                 string URLSocketIO = ConfigurationManager.AppSettings["socketurl"].ToStr();
-                if (URLSocketIO.ToStr().Trim().Length > 0)
+                if (string.IsNullOrWhiteSpace(URLSocketIO)) return;
+
+                var loginjson = new JObject
                 {
+                    ["Data"] = request.Data.ToStr(),
+                    ["MethodName"] = request.Method,
+                    ["DriverId"] = request.DriverId,
+                    ["fromname"] = request.fromname,
+                    ["Id"] = request.Id
+                };
 
-
-
-
-
-
-                    var loginjson = new JObject();
-                    loginjson.Add("Data", request.Data.ToStr());
-                    loginjson.Add("MethodName", request.Method);
-                    loginjson.Add("DriverId", request.DriverId);
-                    loginjson.Add("fromname", request.fromname);
-                    loginjson.Add("Id", request.Id);
-
-
-
+                lock (socketLock)
+                {
                     if (socket == null)
                     {
-
-                        //  string URLSocketIO = ConfigurationManager.AppSettings["socketurl"].ToStr();
-
-
-                        var options = new IO.Options() { IgnoreServerCertificateValidation = true, AutoConnect = true, ForceNew = true };
+                        var options = new IO.Options
+                        {
+                            IgnoreServerCertificateValidation = true,
+                            AutoConnect = true,
+                            ForceNew = true
+                        };
 
                         socket = IO.Socket(URLSocketIO, options);
 
-
-                        socket.On(Socket.EVENT_CONNECT, (data) =>
+                        socket.On(Socket.EVENT_CONNECT, data =>
                         {
-
-                            try
-                            {
-                                //
-                                File.AppendAllText(AppContext.BaseDirectory + "\\Socket_EVENT_CONNECT.txt", DateTime.Now.ToStr() + ",ID:" + request.Id.ToStr() + ",data:" + request.Data + Environment.NewLine);
-                            }
-                            catch
-                            {
-
-                            }
-
-
-
-
+                            SafeLog("Socket_EVENT_CONNECT.txt", request.Id, request.Data);
                         });
 
-                        if (socket != null)
+                        socket.On("Ack", data2 =>
                         {
-                            socket.Emit("ServerResponseSend", loginjson);
-
-
-                            //
-
-                            socket.On("Ack", (data2) =>
-                            {
-                                try
-                                {
-                                    //
-                                    File.AppendAllText(AppContext.BaseDirectory + "\\AckReceived.txt", DateTime.Now.ToStr() + ",data:" + data2.ToStr() + Environment.NewLine);
-                                    LastAcknowledgementReceivedOn = DateTime.Now;
-                                }
-                                catch
-                                {
-
-                                }
-                            });
-                        }
-
-
-                        socket.On(Socket.EVENT_CONNECT_ERROR, (data) =>
-                        {
-                            try
-                            {
-                                //
-                                File.AppendAllText(AppContext.BaseDirectory + "\\Socket_EVENT_CONNECT_ERROR.txt", DateTime.Now.ToStr() + ",ID:" + request.Id.ToStr() + ",data:" + request.Data + Environment.NewLine);
-                            }
-                            catch
-                            {
-
-                            }
-
-                            socket.Off();
-                            socket = null;
-
-                        });
-
-                        socket.On(Socket.EVENT_CONNECT_TIMEOUT, (data) =>
-                        {
-
-                            try
-                            {
-                                //
-                                File.AppendAllText(AppContext.BaseDirectory + "\\Socket_EVENT_CONNECT_TIMEOUT.txt", DateTime.Now.ToStr() + ",ID:" + request.Id.ToStr() + ",data:" + request.Data + Environment.NewLine);
-                            }
-                            catch
-                            {
-
-                            }
-                            socket.Off();
-                            socket = null;
-                        });
-
-                        socket.On(Socket.EVENT_DISCONNECT, (data) =>
-                        {
-                            //
-
-                            try
-                            {
-                                //
-                                File.AppendAllText(AppContext.BaseDirectory + "\\Socket_EVENT_DISCONNECT.txt", DateTime.Now.ToStr() + ",ID:" + request.Id.ToStr() + ",data:" + request.Data + Environment.NewLine);
-                            }
-                            catch
-                            {
-
-                            }
-
-                            socket.Off();
-                            socket = null;
-                        });
-                    }
-                    else
-                    {
-                        socket.Emit("ServerResponseSend", loginjson);
-                    }
-
-
-
-
-
-                    if (LastAcknowledgementReceivedOn == null)
-                        LastAcknowledgementReceivedOn = DateTime.Now;
-
-
-                    if (DateTime.Now.Subtract(LastAcknowledgementReceivedOn.Value).TotalMinutes > 4)
-                    {
-                        try
-                        {
-                            //
-                            File.AppendAllText(AppContext.BaseDirectory + "\\AutoRecycle.txt", DateTime.Now.ToStr() + ",Last Ack recvd on:" + string.Format("dd/MM/yyyy HH:mm:ss", LastAcknowledgementReceivedOn) + ",data:" + request.Data + Environment.NewLine);
+                            SafeLog("AckReceived.txt", request.Id, data2.ToStr());
                             LastAcknowledgementReceivedOn = DateTime.Now;
-                            General.RecyclePool();
+                        });
 
-                            //
-                        }
-                        catch
+                        socket.On(Socket.EVENT_CONNECT_ERROR, data =>
                         {
+                            SafeLog("Socket_EVENT_CONNECT_ERROR.txt", request.Id, request.Data);
+                            ResetSocket();
+                        });
 
-                        }
+                        socket.On(Socket.EVENT_CONNECT_TIMEOUT, data =>
+                        {
+                            SafeLog("Socket_EVENT_CONNECT_TIMEOUT.txt", request.Id, request.Data);
+                            ResetSocket();
+                        });
 
+                        socket.On(Socket.EVENT_DISCONNECT, data =>
+                        {
+                            SafeLog("Socket_EVENT_DISCONNECT.txt", request.Id, request.Data);
+                            ResetSocket();
+                        });
                     }
+
+                    socket.Emit("ServerResponseSend", loginjson);
+                }
+
+                if (LastAcknowledgementReceivedOn == null)
+                    LastAcknowledgementReceivedOn = DateTime.Now;
+
+                if (DateTime.Now.Subtract(LastAcknowledgementReceivedOn.Value).TotalMinutes > 5)
+                {
+                    SafeLog("AutoRecycle.txt", request.Id, $"Last Ack recvd on: {LastAcknowledgementReceivedOn.Value:dd/MM/yyyy HH:mm:ss}, data: {request.Data}");
+                    LastAcknowledgementReceivedOn = DateTime.Now;
+
+                    General.RecyclePool();
                 }
             }
             catch (Exception ex)
             {
+                SafeLog("SendSocketMsgException.txt", request.Id, $"Exception: {ex.Message}, Data: {request.Data}");
+                General.RecyclePool();
+            }
+        }
+        private void SafeLog(string fileName, object id, object content)
+        {
+            try
+            {
+                string path = Path.Combine(AppContext.BaseDirectory, fileName);
+                string logEntry = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}, ID: {id}, Data: {content}{Environment.NewLine}";
+                File.AppendAllText(path, logEntry);
+            }
+            catch
+            {
+                // Silently fail
+            }
+        }
+        private void ResetSocket()
+        {
+            lock (socketLock)
+            {
                 try
                 {
-                    //
-                    File.AppendAllText(AppContext.BaseDirectory + "\\SendSocketMsgException.txt", DateTime.Now.ToStr() + " json" + request.Data + Environment.NewLine);
-                    General.RecyclePool();
+                    socket?.Off();
+                    socket = null;
                 }
                 catch
                 {
-
+                    socket = null;
                 }
-
             }
         }
+
+        //public static DateTime? LastAcknowledgementReceivedOn;
+
+        //public static Socket socket = null;
+        //public void SendSocketMsg(SocketRequest request)
+        //{
+        //    try
+        //    {
+        //        string URLSocketIO = ConfigurationManager.AppSettings["socketurl"].ToStr();
+        //        if (URLSocketIO.ToStr().Trim().Length > 0)
+        //        {
+
+
+
+
+
+
+        //            var loginjson = new JObject();
+        //            loginjson.Add("Data", request.Data.ToStr());
+        //            loginjson.Add("MethodName", request.Method);
+        //            loginjson.Add("DriverId", request.DriverId);
+        //            loginjson.Add("fromname", request.fromname);
+        //            loginjson.Add("Id", request.Id);
+
+
+
+        //            if (socket == null)
+        //            {
+
+        //                //  string URLSocketIO = ConfigurationManager.AppSettings["socketurl"].ToStr();
+
+
+        //                var options = new IO.Options() { IgnoreServerCertificateValidation = true, AutoConnect = true, ForceNew = true };
+
+        //                socket = IO.Socket(URLSocketIO, options);
+
+
+        //                socket.On(Socket.EVENT_CONNECT, (data) =>
+        //                {
+
+        //                    try
+        //                    {
+        //                        //
+        //                        File.AppendAllText(AppContext.BaseDirectory + "\\Socket_EVENT_CONNECT.txt", DateTime.Now.ToStr() + ",ID:" + request.Id.ToStr() + ",data:" + request.Data + Environment.NewLine);
+        //                    }
+        //                    catch
+        //                    {
+
+        //                    }
+
+
+
+
+        //                });
+
+        //                if (socket != null)
+        //                {
+        //                    socket.Emit("ServerResponseSend", loginjson);
+
+
+        //                    //
+
+        //                    socket.On("Ack", (data2) =>
+        //                    {
+        //                        try
+        //                        {
+        //                            //
+        //                            File.AppendAllText(AppContext.BaseDirectory + "\\AckReceived.txt", DateTime.Now.ToStr() + ",data:" + data2.ToStr() + Environment.NewLine);
+        //                            LastAcknowledgementReceivedOn = DateTime.Now;
+        //                        }
+        //                        catch
+        //                        {
+
+        //                        }
+        //                    });
+        //                }
+
+
+        //                socket.On(Socket.EVENT_CONNECT_ERROR, (data) =>
+        //                {
+        //                    try
+        //                    {
+        //                        //
+        //                        File.AppendAllText(AppContext.BaseDirectory + "\\Socket_EVENT_CONNECT_ERROR.txt", DateTime.Now.ToStr() + ",ID:" + request.Id.ToStr() + ",data:" + request.Data + Environment.NewLine);
+        //                    }
+        //                    catch
+        //                    {
+
+        //                    }
+
+        //                    socket.Off();
+        //                    socket = null;
+
+        //                });
+
+        //                socket.On(Socket.EVENT_CONNECT_TIMEOUT, (data) =>
+        //                {
+
+        //                    try
+        //                    {
+        //                        //
+        //                        File.AppendAllText(AppContext.BaseDirectory + "\\Socket_EVENT_CONNECT_TIMEOUT.txt", DateTime.Now.ToStr() + ",ID:" + request.Id.ToStr() + ",data:" + request.Data + Environment.NewLine);
+        //                    }
+        //                    catch
+        //                    {
+
+        //                    }
+        //                    socket.Off();
+        //                    socket = null;
+        //                });
+
+        //                socket.On(Socket.EVENT_DISCONNECT, (data) =>
+        //                {
+        //                    //
+
+        //                    try
+        //                    {
+        //                        //
+        //                        File.AppendAllText(AppContext.BaseDirectory + "\\Socket_EVENT_DISCONNECT.txt", DateTime.Now.ToStr() + ",ID:" + request.Id.ToStr() + ",data:" + request.Data + Environment.NewLine);
+        //                    }
+        //                    catch
+        //                    {
+
+        //                    }
+
+        //                    socket.Off();
+        //                    socket = null;
+        //                });
+        //            }
+        //            else
+        //            {
+        //                socket.Emit("ServerResponseSend", loginjson);
+        //            }
+
+
+
+
+
+        //            if (LastAcknowledgementReceivedOn == null)
+        //                LastAcknowledgementReceivedOn = DateTime.Now;
+
+
+        //            if (DateTime.Now.Subtract(LastAcknowledgementReceivedOn.Value).TotalMinutes > 4)
+        //            {
+        //                try
+        //                {
+        //                    //
+        //                    File.AppendAllText(AppContext.BaseDirectory + "\\AutoRecycle.txt", DateTime.Now.ToStr() + ",Last Ack recvd on:" + string.Format("dd/MM/yyyy HH:mm:ss", LastAcknowledgementReceivedOn) + ",data:" + request.Data + Environment.NewLine);
+        //                    LastAcknowledgementReceivedOn = DateTime.Now;
+        //                    General.RecyclePool();
+
+        //                    //
+        //                }
+        //                catch
+        //                {
+
+        //                }
+
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        try
+        //        {
+        //            //
+        //            File.AppendAllText(AppContext.BaseDirectory + "\\SendSocketMsgException.txt", DateTime.Now.ToStr() + " json" + request.Data + Environment.NewLine);
+        //            General.RecyclePool();
+        //        }
+        //        catch
+        //        {
+
+        //        }
+
+        //    }
+        //}
 
         public static void SendToSocket(string driverId, string message, string Method, string type = "", string Id = "")
         {
