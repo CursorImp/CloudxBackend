@@ -9697,5 +9697,126 @@ namespace SignalRHub.Controllers
             return new CustomJsonResult { Data = response };
         }
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("DispatchAllocatedPreBooking")]
+        public JsonResult DispatchAllocatedPreBooking(WebApiClasses.RequestWebApi obj)
+        {
+            //
+
+
+
+
+            ResponseWebApi response = new ResponseWebApi();
+            try
+            {
+
+                //
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchAllocatedPreBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                }
+                catch
+                {
+
+                }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    string msg = "<jobcount> allocated pre jobs dispatched successfully.";
+                    bool HasError = false;
+                    int dispatchCounter = 0;
+                    try
+                    {
+                        var preBookingList = db.ExecuteQuery<BookingInfo>($"Select * from Booking where PickupDateTime > '{DateTime.Now.ToString("yyyy-MM-dd HH:mm")}' and ISNULL(DriverId,0) > 0 and BookingStatusId IN (1,4,14)").ToList();
+                        if (preBookingList != null && preBookingList.Count > 0)
+                        {
+                            foreach (var preBooking in preBookingList)
+                            {
+                                obj.bookingInfo.DriverId = preBooking.DriverId;
+                                obj.bookingInfo.Id = preBooking.Id;
+                                if (db.ExecuteQuery<int>("select count(*) from fleet_driverqueuelist (nolock) where driverid=" + obj.bookingInfo.DriverId.ToInt() + " and status=1 and currentjobid=" + obj.bookingInfo.Id.ToLong()).FirstOrDefault() > 0)
+                                {
+                                    msg = "Job is already accepted by this driver";
+                                    try
+                                    {
+
+
+                                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                    }
+                                    catch
+                                    {
+
+                                    }
+
+
+                                }
+                                else if (db.ExecuteQuery<int>("select count(*) from fleet_driverqueuelist (nolock) where driverid!=" + obj.bookingInfo.DriverId.ToInt() + " and status=1 and currentjobid=" + obj.bookingInfo.Id.ToLong()).FirstOrDefault() > 0)
+                                {
+
+                                    msg = "Job is already accepted by other driver";
+                                    try
+                                    {
+
+
+                                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedotherdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                    }
+                                    catch
+                                    {
+
+                                    }
+
+                                }
+                                else
+                                {
+                                    try
+                                    {
+                                        General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt());
+                                        dispatchCounter += 1;
+                                    }
+                                    catch
+                                    {
+                                    }
+
+
+                                }
+                            }
+                        }
+                        else
+                        {
+                            msg = "No allocated pre job found.";
+                            HasError = true;
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+
+
+                    response.HasError = HasError;
+                    response.Message = msg.Replace("<jobcount>", dispatchCounter.ToStr());
+                }
+
+                response.Data = "DispatchAllocatedPreBooking Executed";
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    response.HasError = true;
+                    response.Message = ex.Message;
+
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchAllocatedPreBooking_exception.txt", DateTime.Now.GetUtcTimeZone().ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+                }
+            }
+
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+
+        }
     }
 }
