@@ -585,6 +585,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableJourneyTimePerMinCalculation", SetVal = "false", description = "EnableJourneyTimePerMinCalculation"  },
                             new AppSetting { SetKey = "EnableJobTimeFilter", SetVal = "false", description = "EnableJobTimeFilter"  },
                             new AppSetting { SetKey = "EnableThirdPartyEmailSetting", SetVal = "false", description = "Enable Third Party Email Setting"  },
+                            new AppSetting { SetKey = "BulkPreDispatch", SetVal = "false", description = "BulkPreDispatch"  },
                         };
 
                 using (var db = new TaxiDataContext())

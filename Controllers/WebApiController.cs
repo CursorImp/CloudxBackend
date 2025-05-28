@@ -9806,7 +9806,7 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchAllocatedPreBooking_exception.txt", DateTime.Now.GetUtcTimeZone().ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchAllocatedPreBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
