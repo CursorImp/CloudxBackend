@@ -124,7 +124,13 @@ namespace SignalRHub.Controllers
                                 IsAdmin = true;
                             }
                             var EnablePartialCloudX = "false";
-                            EnablePartialCloudX = AppSettings.FirstOrDefault(a => a.SetKey == "EnablePartialCloudX").SetVal.ToStr();
+                            try
+                            {
+                                EnablePartialCloudX = AppSettings.FirstOrDefault(a => a.SetKey == "EnablePartialCloudX").SetVal.ToStr();
+                            }
+                            catch {
+                            }
+                            
                             if (EnablePartialCloudX == "true")
                             {
                                 IsAdmin = false;
