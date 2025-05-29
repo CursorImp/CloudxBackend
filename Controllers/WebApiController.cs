@@ -114,6 +114,7 @@ namespace SignalRHub.Controllers
                             //bool showCommandLine = false;
                             // showCommandLine= db.UM_SecurityGroup_Permissions.Where(c => c.SecurityGroupId == objUser.SecurityGroupId && c.UM_FormFunction.UM_Function.FunctionName == "SHOW COMMAND LINE").Count() > 0;
                             //showCommandLine = true;
+                            
                             if (objUser.SecurityGroupId == 2)
                             {
                                 IsAdmin = false;
@@ -122,7 +123,12 @@ namespace SignalRHub.Controllers
                             {
                                 IsAdmin = true;
                             }
-
+                            var EnablePartialCloudX = "false";
+                            EnablePartialCloudX = AppSettings.FirstOrDefault(a => a.SetKey == "EnablePartialCloudX").SetVal.ToStr();
+                            if (EnablePartialCloudX == "true")
+                            {
+                                IsAdmin = false;
+                            }
                             int sessionId = db.stp_ControlerLogins(objUser.Id, null, null, Environment.MachineName).FirstOrDefault().Id.ToInt();
                             string baseAddress = string.Empty;
                             string companyName = string.Empty;
@@ -435,8 +441,6 @@ namespace SignalRHub.Controllers
                 DateTime? dt = DateTime.Now.ToDateorNull();
                 DateTime recentDays = dt.Value.AddDays(-1);
                 DateTime dtNow = DateTime.Now;
-                General.RecyclePool();
-                Global.LoadDataList();
                 DateTime prebookingdays = dt.Value.AddDays(HubProcessor.Instance.objPolicy.HourControllerReport.ToInt()).ToDate();
 
 
