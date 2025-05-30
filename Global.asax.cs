@@ -3317,20 +3317,6 @@ namespace SignalRHub
                                     if (EnableSubCompanyWiseAutoDespatch == "true" && job.SubcompanyId.ToInt() > 0)
                                     {
                                         listofJobAvailableDrvs = listofDrvs.Where(c => c.SubcompanyId == job.SubcompanyId.ToInt()).ToList();
-
-                                        // Exclude Drivers
-                                        if (listofJobAvailableDrvs.Count > 0)
-                                        {
-
-                                            if (job.ExcludedDriverIds.ToStr().Trim().Length > 0)
-                                            {
-                                                foreach (var objExcDriverId in job.ExcludedDriverIds.ToStr().Trim().Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries))
-                                                {
-
-                                                    listofJobAvailableDrvs.RemoveAll(c => c.DriverId == objExcDriverId.ToInt());
-                                                }
-                                            }
-                                        }
                                     }
                                 }
                                 catch
