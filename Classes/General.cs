@@ -2365,7 +2365,7 @@ namespace SignalRHub
                                     List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
                                     string EmailSubject = $"New Future Job ({objBooking.BookingNo.ToStr()}) Notification From {objSubCompany.CompanyName.ToStr()}";
                                     string body = $@"Dear {ObjDriver.DriverName} ({ObjDriver.DriverNo}),<br/><br/>
-                                    You have been assigned a future job scheduled for the following date and time:<br/>
+                                    You have been assigned a future job scheduled for the following date and time:
                                     <b>{objBooking.PickupDateTime.ToDateTime().ToString()}</b><br/><br/>
                                     Please make sure to be prepared and available at the scheduled time.<br/><br/>
                                     Thank you,<br/>
