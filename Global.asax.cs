@@ -647,115 +647,112 @@ namespace SignalRHub
 
 
         public static bool IsSendingSMS = false;
-        private static readonly object smsLock = new object(); // Lock object
-
+        
         private void sendSMS(Object source, System.Timers.ElapsedEventArgs e)
         {
             try
             {
-                lock (smsLock)
+                if (IsSendingSMS)
                 {
-                    if (IsSendingSMS)
+                    try
+                    {
+                        File.AppendAllText(physicalPath + "\\log_sendingsmsinprogress.txt", DateTime.Now.ToStr() + Environment.NewLine);
+                    }
+                    catch { }
+                    return;
+                }
+
+                if (Instance.listofSMS != null && Instance.listofSMS.Count > 0)
+                {
+                    IsSendingSMS = true;
+                    string itemSMS = Instance.listofSMS.FirstOrDefault();
+
+                    string[] values = itemSMS.Split(new char[] { '=' });
+                    string val = itemSMS.Replace(values[0] + "=" + values[1] + "=", "");
+                    string mmsg = val;
+
+                    if (mmsg.ToStr().Contains("^"))
+                        mmsg = mmsg.Replace("^", "=");
+
+                    bool removeFromList = true;
+
+                    try
+                    {
+                        Global.SendSMS(values[1].Trim(), mmsg);
+                        File.AppendAllText(physicalPath + "\\smslogs.txt", DateTime.Now.ToStr() + " ::: " + mmsg + ", number : " + values[1] + Environment.NewLine);
+                    }
+                    catch (ThreadAbortException tex)
+                    {
+                        removeFromList = false;
+                        File.AppendAllText(physicalPath + "\\log_threadabort.txt", DateTime.Now.ToStr() + " ::: " + mmsg + ", number : " + values[1] + tex.Message + Environment.NewLine);
+                        Thread.ResetAbort();
+                    }
+                    catch (Exception ex)
                     {
                         try
                         {
-                            File.AppendAllText(physicalPath + "\\log_sendingsmsinprogress.txt", DateTime.Now.ToStr() + Environment.NewLine);
+                            File.AppendAllText(physicalPath + "\\log_catchremovesms.txt", DateTime.Now.ToStr() + " ::: " + ex.Message + Environment.NewLine);
                         }
                         catch { }
-                        return;
-                    }
-
-                    if (Instance.listofSMS != null && Instance.listofSMS.Count > 0)
-                    {
-                        IsSendingSMS = true;
-                        string itemSMS = Instance.listofSMS.FirstOrDefault();
-
-                        string[] values = itemSMS.Split(new char[] { '=' });
-                        string val = itemSMS.Replace(values[0] + "=" + values[1] + "=", "");
-                        string mmsg = val;
-
-                        if (mmsg.ToStr().Contains("^"))
-                            mmsg = mmsg.Replace("^", "=");
-
-                        bool removeFromList = true;
-
-                        try
-                        {
-                            Global.SendSMS(values[1].Trim(), mmsg);
-                            File.AppendAllText(physicalPath + "\\smslogs.txt", DateTime.Now.ToStr() + " ::: " + mmsg + ", number : " + values[1] + Environment.NewLine);
-                        }
-                        catch (ThreadAbortException tex)
-                        {
-                            removeFromList = false;
-                            File.AppendAllText(physicalPath + "\\log_threadabort.txt", DateTime.Now.ToStr() + " ::: " + mmsg + ", number : " + values[1] + tex.Message + Environment.NewLine);
-                            Thread.ResetAbort();
-                        }
-                        catch (Exception ex)
-                        {
-                            try
-                            {
-                                File.AppendAllText(physicalPath + "\\log_catchremovesms.txt", DateTime.Now.ToStr() + " ::: " + ex.Message + Environment.NewLine);
-                            }
-                            catch { }
-                        }
-
-                        try
-                        {
-                            if (removeFromList)
-                            {
-                                Instance.listofSMS.Remove(itemSMS);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            try
-                            {
-                                File.AppendAllText(physicalPath + "\\log_catchremovesms2.txt", DateTime.Now.ToStr() + " ::: " + ex.Message + Environment.NewLine);
-                                if (ex.Message.ToStr().Contains("Count must be positive and count"))
-                                {
-                                    try
-                                    {
-                                        Instance.listofSMS.RemoveAll(c => c == null);
-                                        Instance.listofSMS = new List<string>();
-                                    }
-                                    catch (Exception ex2)
-                                    {
-                                        try
-                                        {
-                                            Instance.listofSMS = new List<string>();
-                                            File.AppendAllText(physicalPath + "\\log_catchremovesmsexception.txt", DateTime.Now.ToStr() + " ::: " + ex2.Message + Environment.NewLine);
-                                        }
-                                        catch { }
-                                    }
-                                }
-                            }
-                            catch { }
-                        }
-
-                        IsSendingSMS = false;
                     }
 
                     try
                     {
-                        Instance.listofJobs.RemoveAll(c => DateTime.Now.Subtract(c.MessageDateTime).TotalSeconds > 300);
+                        if (removeFromList)
+                        {
+                            Instance.listofSMS.Remove(itemSMS);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        try
+                        {
+                            File.AppendAllText(physicalPath + "\\log_catchremovesms2.txt", DateTime.Now.ToStr() + " ::: " + ex.Message + Environment.NewLine);
+                            if (ex.Message.ToStr().Contains("Count must be positive and count"))
+                            {
+                                try
+                                {
+                                    Instance.listofSMS.RemoveAll(c => c == null);
+                                    Instance.listofSMS = new List<string>();
+                                }
+                                catch (Exception ex2)
+                                {
+                                    try
+                                    {
+                                        Instance.listofSMS = new List<string>();
+                                        File.AppendAllText(physicalPath + "\\log_catchremovesmsexception.txt", DateTime.Now.ToStr() + " ::: " + ex2.Message + Environment.NewLine);
+                                    }
+                                    catch { }
+                                }
+                            }
+                        }
+                        catch { }
+                    }
+
+                    IsSendingSMS = false;
+                }
+
+                try
+                {
+                    Instance.listofJobs.RemoveAll(c => DateTime.Now.Subtract(c.MessageDateTime).TotalSeconds > 300);
+                }
+                catch
+                {
+                    try
+                    {
+                        Instance.listofJobs.RemoveAll(c => c == null);
                     }
                     catch
                     {
                         try
                         {
-                            Instance.listofJobs.RemoveAll(c => c == null);
+                            Instance.listofJobs = new List<clsPDA>();
                         }
-                        catch
-                        {
-                            try
-                            {
-                                Instance.listofJobs = new List<clsPDA>();
-                            }
-                            catch { }
-                        }
+                        catch { }
                     }
-                } // end lock
+                }
             }
+
             catch (Exception ex)
             {
                 IsSendingSMS = false;
