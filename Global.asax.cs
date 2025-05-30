@@ -647,7 +647,7 @@ namespace SignalRHub
 
 
         public static bool IsSendingSMS = false;
-        
+
         private void sendSMS(Object source, System.Timers.ElapsedEventArgs e)
         {
             try
@@ -3035,6 +3035,8 @@ namespace SignalRHub
                                               JobClearingZoneId = default(int?)
                                               ,
                                               a.IsIdle
+                                              ,
+                                              SubcompanyId = a.Fleet_Driver.SubcompanyId.ToInt()
                                           }).ToList();
 
                         if (listofDrvs.Count > 0)
@@ -3213,8 +3215,6 @@ namespace SignalRHub
                                 var listofJobAvailableDrvs = listofDrvs.Where(c => c.DriverId == 0).ToList();
 
 
-
-
                                 string vehAttributes = job.VehicleAttributes.ToStr().Trim();
 
                                 if (vehAttributes.Length > 0)
@@ -3302,6 +3302,40 @@ namespace SignalRHub
                                     }
                                 }
 
+
+
+                                try
+                                {
+                                    string EnableSubCompanyWiseAutoDespatch = "false";
+                                    try
+                                    {
+                                        EnableSubCompanyWiseAutoDespatch = (new TaxiDataContext().ExecuteQuery<string>("select SetVal from AppSettings where SetKey='EnableSubCompanyWiseAutoDespatch'").FirstOrDefault());
+                                    }
+                                    catch
+                                    {
+                                    }
+                                    if (EnableSubCompanyWiseAutoDespatch == "true" && job.SubcompanyId.ToInt() > 0)
+                                    {
+                                        listofJobAvailableDrvs = listofDrvs.Where(c => c.SubcompanyId == job.SubcompanyId.ToInt()).ToList();
+
+                                        // Exclude Drivers
+                                        if (listofJobAvailableDrvs.Count > 0)
+                                        {
+
+                                            if (job.ExcludedDriverIds.ToStr().Trim().Length > 0)
+                                            {
+                                                foreach (var objExcDriverId in job.ExcludedDriverIds.ToStr().Trim().Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries))
+                                                {
+
+                                                    listofJobAvailableDrvs.RemoveAll(c => c.DriverId == objExcDriverId.ToInt());
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                }
 
 
                                 if (((job.bookingstatusId == Enums.BOOKINGSTATUS.WAITING || job.bookingstatusId == Enums.BOOKINGSTATUS.BID) && job.DriverId != null) || job.bookingstatusId == Enums.BOOKINGSTATUS.NOSHOW || job.bookingstatusId == Enums.BOOKINGSTATUS.NOTACCEPTED || job.bookingstatusId == Enums.BOOKINGSTATUS.REJECTED)
