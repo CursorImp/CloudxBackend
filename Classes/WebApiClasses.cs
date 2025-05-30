@@ -642,6 +642,8 @@ namespace SignalRHub.WebApiClasses
         public int? DriverCommissionTypeId { get; set; }
         public decimal? DriverCommissionValue { get; set; }
         public decimal? DriverHours { get; set; }
+        public DateTime? FromDate { get; set; }
+        public DateTime? ToDate { get; set; }
     }
 
     public class Booking_DriverCommsiion

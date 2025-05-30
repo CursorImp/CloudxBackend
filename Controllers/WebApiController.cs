@@ -1438,6 +1438,13 @@ namespace SignalRHub.Controllers
                     {
 
                     }
+                    int callRefNo = 0;
+                    try
+                    {
+                        callRefNo = int.TryParse(obj.bookingInfo.CallRefNo?.Trim(), out var temp) ? temp : 0;
+                    }
+                    catch {
+                    }
                     var userName = db.CallerIdVOIP_Configurations.FirstOrDefault().UserName.ToStr();
                     string VoipUrl = System.Configuration.ConfigurationManager.AppSettings["VoipUrl"];
                     var callerData = (from a in db.CallHistories
@@ -1445,7 +1452,7 @@ namespace SignalRHub.Controllers
                                       from b in table2.DefaultIfEmpty()
                                       where
                                        (a.PhoneNumber.Trim() == obj.bookingInfo.CustomerMobileNo || a.PhoneNumber.Trim() == obj.bookingInfo.CustomerPhoneNo)
-                                       && (a.Id == obj.bookingInfo.CallRefNo.ToInt())
+                                       && a.Id == callRefNo
                                       orderby a.CallDateTime descending
                                       select new
                                       {
@@ -9737,7 +9744,7 @@ namespace SignalRHub.Controllers
                     int dispatchCounter = 0;
                     try
                     {
-                        var preBookingList = db.ExecuteQuery<BookingInfo>($"Select * from Booking where PickupDateTime > '{DateTime.Now.ToString("yyyy-MM-dd HH:mm")}' and ISNULL(DriverId,0) > 0 and BookingStatusId IN (1,4,14)").ToList();
+                        var preBookingList = db.ExecuteQuery<BookingInfo>($"Select * from Booking where PickupDateTime >= '{obj.bookingInfo.FromDate.ToDateTime().ToString("yyyy-MM-dd HH:mm")}' and PickupDateTime <= '{obj.bookingInfo.ToDate.ToDateTime().ToString("yyyy-MM-dd HH:mm")}' and ISNULL(DriverId,0) > 0 and BookingStatusId IN (1,4,14)").ToList();
                         if (preBookingList != null && preBookingList.Count > 0)
                         {
                             foreach (var preBooking in preBookingList)
