@@ -114,7 +114,7 @@ namespace SignalRHub.Controllers
                             //bool showCommandLine = false;
                             // showCommandLine= db.UM_SecurityGroup_Permissions.Where(c => c.SecurityGroupId == objUser.SecurityGroupId && c.UM_FormFunction.UM_Function.FunctionName == "SHOW COMMAND LINE").Count() > 0;
                             //showCommandLine = true;
-                            
+
                             if (objUser.SecurityGroupId == 2)
                             {
                                 IsAdmin = false;
@@ -128,9 +128,10 @@ namespace SignalRHub.Controllers
                             {
                                 EnablePartialCloudX = AppSettings.FirstOrDefault(a => a.SetKey == "EnablePartialCloudX").SetVal.ToStr();
                             }
-                            catch {
+                            catch
+                            {
                             }
-                            
+
                             if (EnablePartialCloudX == "true")
                             {
                                 IsAdmin = false;
@@ -1443,7 +1444,8 @@ namespace SignalRHub.Controllers
                     {
                         callRefNo = int.TryParse(obj.bookingInfo.CallRefNo?.Trim(), out var temp) ? temp : 0;
                     }
-                    catch {
+                    catch
+                    {
                     }
                     var userName = db.CallerIdVOIP_Configurations.FirstOrDefault().UserName.ToStr();
                     string VoipUrl = System.Configuration.ConfigurationManager.AppSettings["VoipUrl"];
@@ -5095,7 +5097,7 @@ namespace SignalRHub.Controllers
                         //}
                         //else
                         //{
-                      
+
                         db.stp_UpdateJob(obj.bookingInfo.Id, driverId, Enums.BOOKINGSTATUS.NOPICKUP, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
                         //   }
 
@@ -5125,7 +5127,7 @@ namespace SignalRHub.Controllers
                         //}
                         //else
                         //{
-                       
+
                         db.stp_UpdateJob(obj.bookingInfo.Id, driverId, Enums.BOOKINGSTATUS.WAITING, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
                         //   }
 
@@ -7712,10 +7714,24 @@ namespace SignalRHub.Controllers
 
                         }
 
-
-
-
+                        
                         var data = new EmailInfo { SubCompanyId = obj2.SubcompanyId.ToInt(), From = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(c => c.SmtpUserName).FirstOrDefault(), Subject = subject, BookingId = obj2.Id, To = obj2.CustomerEmail, IsAccountJob = obj2.CompanyId != null ? true : false, PaymentTypeId = obj2.PaymentTypeId.ToInt() };
+                        try
+                        {
+                            var EnableThirdPartyEmailSetting = false;
+                            if (db.ExecuteQuery<string>("select SetVal from AppSettings where setkey= 'EnableThirdPartyEmailSetting'").FirstOrDefault().ToStr() == "true")
+                            {
+                                EnableThirdPartyEmailSetting = true;
+                            }
+                            var subCompany = db.ExecuteQuery<Gen_SubcompanyFields>($"select Id,EmailAddress,SmtpEmailAddress,SmtpInvoiceEmailAddress,SmtpDriverEmailAddress,CAST(ISNULL(UseDifferentEmailForInvoices,0) AS BIT) UseDifferentEmailForInvoices,SmtpInvoiceUserName from Gen_SubCompany WHERE Id={obj2.SubcompanyId}").FirstOrDefault();
+                            if (subCompany != null && EnableThirdPartyEmailSetting)
+                            {
+                                data.From = (EnableThirdPartyEmailSetting ? subCompany.SmtpEmailAddress : subCompany.EmailAddress);
+                            }
+                        }
+                        catch
+                        {
+                        }
 
 
                         response.Data = data;
@@ -7774,7 +7790,7 @@ namespace SignalRHub.Controllers
 
                     if (obj2 != null)
                     {
-                        
+
 
 
 
@@ -8961,7 +8977,8 @@ namespace SignalRHub.Controllers
                         {
                         }
                         response.Data = flightDataobj;
-                    };
+                    }
+                    ;
                 }
             }
             catch (Exception ex)

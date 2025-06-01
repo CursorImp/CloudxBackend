@@ -1712,7 +1712,16 @@ namespace SignalRHub.WebApiClasses
     }
 
 
-
+    public class Gen_SubcompanyFields
+    {
+        public int? Id { get; set; }
+        public string EmailAddress { get; set; }
+        public bool? UseDifferentEmailForInvoices { get; set; }
+        public string SmtpInvoiceUserName { get; set; }
+        public string SmtpEmailAddress { get; set; }
+        public string SmtpInvoiceEmailAddress { get; set; }
+        public string SmtpDriverEmailAddress { get; set; }
+    }
 
     public class ClsBookingListData
     {
