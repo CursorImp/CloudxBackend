@@ -88,16 +88,16 @@ namespace SignalRHub.Classes
                     //FromEmail = userName;
 
 
-                    if (objSubCompany.IsTpCompany.ToBool() && objSubCompany.UseDifferentEmailForInvoices.ToBool())
-                    {
+                    //if (subject.ToLower().Contains("invoice") && objSubCompany.IsTpCompany.ToBool() && objSubCompany.UseDifferentEmailForInvoices.ToBool())
+                    //{
 
-                        smptHost = objSubCompany.SmtpInvoiceHost.ToStr().Trim();
-                        port = objSubCompany.SmtpInvoicePort.ToInt();
-                        userName = objSubCompany.SmtpInvoiceUserName.ToStr().Trim();
-                        pwd = objSubCompany.SmtpInvoicePassword.ToStr().Trim();
-                        enableSSL = objSubCompany.SmtpInvoiceSSL.ToBool();
-                        //FromEmail = userName;
-                    }
+                    //    smptHost = objSubCompany.SmtpInvoiceHost.ToStr().Trim();
+                    //    port = objSubCompany.SmtpInvoicePort.ToInt();
+                    //    userName = objSubCompany.SmtpInvoiceUserName.ToStr().Trim();
+                    //    pwd = objSubCompany.SmtpInvoicePassword.ToStr().Trim();
+                    //    enableSSL = objSubCompany.SmtpInvoiceSSL.ToBool();
+                    //    //FromEmail = userName;
+                    //}
 
 
                 }
