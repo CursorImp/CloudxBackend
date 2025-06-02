@@ -1,26 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Linq.Expressions;
-using DAL;
-using Taxi_Model;
-using System.Net.Sockets;
-using System.Net;
-using System.Text.RegularExpressions;
-using Utils;
-using Taxi_BLL;
-using System.Xml;
-using System.Data;
-using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Web.Script.Serialization;
-using SignalRHub.WebApiClasses;
+﻿using DAL;
 using DotNetCoords;
 using SignalRHub.Classes;
-using System.Threading;
+using SignalRHub.WebApiClasses;
+using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Sockets;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Web.Script.Serialization;
+using System.Web.Security;
+using System.Xml;
+using Taxi_BLL;
+using Taxi_Model;
+using Utils;
 
 namespace SignalRHub
 {
@@ -2364,13 +2365,72 @@ namespace SignalRHub
                                 {
                                     List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
                                     string EmailSubject = $"New Future Job ({objBooking.BookingNo.ToStr()}) Notification From {objSubCompany.CompanyName.ToStr()}";
-                                    string body = $@"Dear {ObjDriver.DriverName} ({ObjDriver.DriverNo}),<br/><br/>
-                                    You have been assigned a future job scheduled for the following date and time:
-                                    <b>{objBooking.PickupDateTime.ToDateTime().ToString()}</b><br/><br/>
+                                    var notes = "";
+                                    var specialReq = "";
+                                    var paymentTypeName = "";
+                                    var vehicleType = "";
+                                    try
+                                    {
+                                        notes = objBooking.NotesString;
+                                        specialReq = objBooking.SpecialRequirements;
+                                        paymentTypeName = objBooking?.Gen_PaymentType?.PaymentType.ToStr();
+                                        vehicleType = objBooking?.Fleet_VehicleType?.VehicleType.ToStr();
+                                    }
+                                    catch {}
+                                    string body = $@"
+                                    Dear {ObjDriver.DriverName} ({ObjDriver.DriverNo}),<br/><br/>
+
+                                    You have been assigned a future job scheduled for the following date and time:<br/>
+                                    <b>{objBooking.PickupDateTime.ToDateTime().ToString("f")}</b><br/><br/>
+
+                                    Please find the job details below:<br/><br/>
+
+                                    <table cellpadding='5' cellspacing='0' border='0'>
+                                        <tr><td><b>Job Ref:</b></td><td>{objBooking.BookingNo}</td></tr>
+                                        <tr><td><b>Pickup Date/Time:</b></td><td>{objBooking.PickupDateTime.ToDateTime().ToString("f")}</td></tr>
+                                        <tr><td><b>Pickup:</b></td><td>{objBooking.FromAddress}</td></tr>";
+
+                                        if (!string.IsNullOrWhiteSpace(notes))
+                                        {
+                                            body += $@"
+                                            <tr><td><b>Pickup Notes:</b></td><td>{notes}</td></tr>";
+                                        }
+
+                                        if (objBooking.Booking_ViaLocations != null && objBooking.Booking_ViaLocations.Count > 0)
+                                        {
+                                            var viaList = string.Join("<br/>", objBooking.Booking_ViaLocations.Select(v => v.ViaLocValue.ToStr()));
+                                            body += $@"
+                                            <tr><td><b>Vias:</b></td><td>{viaList}</td></tr>";
+                                        }
+
+                                        body += $@"
+                                        <tr><td><b>Destination:</b></td><td>{objBooking.ToAddress}</td></tr>
+                                        <tr><td><b>Vehicle Type:</b></td><td>{vehicleType}</td></tr>";
+
+                                        if (!string.IsNullOrWhiteSpace(specialReq))
+                                        {
+                                            body += $@"
+                                            <tr><td><b>Special Req:</b></td><td>{specialReq}</td></tr>";
+                                        }
+
+                                        body += $@"
+                                        <tr><td><b>Payment Type:</b></td><td>{paymentType}</td></tr>";
+
+                                        if (objBooking.PaymentTypeId == 1) // cash
+                                        {
+                                            body += $@"
+                                            <tr><td><b>Total Fare:</b></td><td>{objBooking.TotalCharges:C}</td></tr>";
+                                        }
+
+                                    body += $@"
+                                    </table><br/>
+
                                     Please make sure to be prepared and available at the scheduled time.<br/><br/>
+
                                     Thank you,<br/>
                                     <b>{objSubCompany.CompanyName.ToStr()}</b>
                                     ";
+
                                     ClsEmail Email = new ClsEmail();
                                     ClsEmail.Send(EmailSubject, body, "", ObjDriver.Email, attachments, objSubCompany, "");
                                     try
