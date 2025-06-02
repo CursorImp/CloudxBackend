@@ -3819,13 +3819,28 @@ namespace SignalRHub.Controllers
                         //catch
                         //{
                         //}
+
                         try
                         {
-                            var CongestionCharges = GetCongestionCharges(obj.routeInfo.legs, info.PickupDateTime, obj.routeInfo.SubCompanyId);
-                            Newtonsoft.Json.Linq.JObject jsonObj = Newtonsoft.Json.Linq.JObject.Parse(CongestionCharges);
-                            decimal congestion = jsonObj["Data"]["FareRate"].ToObject<decimal>();
-                            res.Congestion = congestion;
-                            res.Parking = 0;
+                            var EnableCongestionCharges = "false";
+                            try
+                            {
+                                EnableCongestionCharges = db.ExecuteQuery<string>("Select SetVal from AppSettings where SetKey ='EnableCongestionCharges'").FirstOrDefault().ToStr();
+                            }
+                            catch
+                            {
+                            }
+                            if (EnableCongestionCharges == "true")
+                            {
+                                var CongestionCharges = GetCongestionCharges(obj.routeInfo.legs, info.PickupDateTime, obj.routeInfo.SubCompanyId);
+                                Newtonsoft.Json.Linq.JObject jsonObj = Newtonsoft.Json.Linq.JObject.Parse(CongestionCharges);
+                                decimal congestion = jsonObj["Data"]["FareRate"].ToObject<decimal>();
+                                res.Congestion = congestion;
+                                if (res.Congestion > 0)
+                                {
+                                    res.Parking = 0;
+                                }
+                            }
                         }
                         catch
                         {
