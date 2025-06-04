@@ -1316,7 +1316,121 @@ namespace SignalRHub.Controllers
 
         }
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("UpdateFareInBooking")]
+        public JsonResult UpdateFareInBooking(bookingFare obj)
+        {
+            ResponseWebApi response = new ResponseWebApi();
 
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+
+                    var documentexpiry = db.Fleet_Driver_Documents
+               .Where(x => x.DriverId == obj.DriverId.ToInt())
+               .ToList();
+
+                    bool isExpired = documentexpiry.Any(x => x.ExpiryDate < DateTime.Now);
+                    if (!isExpired)
+                    {
+                        var result = db.ExecuteQuery<string>(
+                   "EXEC stp_UpdateBookingFare @Id = {0}, @FareRate = {1}, @ReturnFareRate = {2}, @TotalCharges = {3}",
+                   obj.Id,
+                   obj.FareRate,
+                   obj.ReturnFareRate,
+                   obj.TotalCharges
+
+               ).ToList();
+                        response.Message = result.ToString();
+                    }
+                    response.HasError = false;
+
+
+
+
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "Exception occurred: " + ex.Message;
+            }
+
+            return Json(response);
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetDriverDetailsForDeduction")]
+        public JsonResult GetDriverDetailsForDeduction(WebApiClasses.RequestWebApi obj)
+        {
+            try
+            {
+
+
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverDetailsForDeduction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
+            ResponseWebApi response = new ResponseWebApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    if (obj?.bookingInfo?.DriverId > 0)
+                    {
+
+                        var tempDriver = db.Fleet_Drivers
+                            .Where(x => x.Id == obj.bookingInfo.DriverId)
+                            .Select(x => new
+                            {
+                                x.Id,
+                                x.DriverTypeId,
+                                x.DriverCommissionPerBooking,
+                                x.DriverMonthlyRent
+                            })
+                            .FirstOrDefault();
+
+                        if (tempDriver != null)
+                        {
+                            // Manually create detached Fleet_Driver
+                            var driver = new Fleet_Driver
+                            {
+                                Id = tempDriver.Id,
+                                DriverTypeId = tempDriver.DriverTypeId,
+                                DriverCommissionPerBooking = tempDriver.DriverCommissionPerBooking,
+                                DriverMonthlyRent = tempDriver.DriverMonthlyRent
+                            };
+
+                            obj.bookingInfo.Driver = driver;
+                        }
+                    }
+                    response.Data = obj.bookingInfo;
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    response.HasError = true;
+                    response.Message = ex.Message;
+
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverDetailsForDeduction_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+                }
+            }
+            return new CustomJsonResult { Data = response };
+
+        }
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("GetBookingDetails")]
@@ -1344,38 +1458,71 @@ namespace SignalRHub.Controllers
 
                     var obj2 = db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id);
 
-
-                    foreach (var item in obj2.GetType().GetProperties())
+                    if (obj?.bookingInfo?.DriverId > 0)
                     {
-                        try
-                        {
-                            if (obj.bookingInfo.GetType().GetProperty(item.Name) != null)
-                                obj.bookingInfo.GetType().GetProperty(item.Name).SetValue(obj.bookingInfo, item.GetValue(obj2));
 
-
-                            obj.bookingInfo.Userlog = "Job booked by : " + obj.bookingInfo.AddLog.ToStr() + " on " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.bookingInfo.AddOn.ToDateTime());
-
-
-                            //}
-
-                            if (!string.IsNullOrEmpty(obj.bookingInfo.EditLog))
+                        var tempDriver = db.Fleet_Drivers
+                            .Where(x => x.Id == obj.bookingInfo.DriverId)
+                            .Select(x => new
                             {
-                                obj.bookingInfo.Userlog += " , Edit by : " + obj.bookingInfo.EditLog.ToStr() + " on " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.bookingInfo.EditOn.ToDateTime());
+                                x.Id,
+                                x.DriverTypeId,
+                                x.DriverCommissionPerBooking,
+                                x.DriverMonthlyRent
+                            })
+                            .FirstOrDefault();
+
+                        if (tempDriver != null)
+                        {
+                            // Manually create detached Fleet_Driver
+                            var driver = new Fleet_Driver
+                            {
+                                Id = tempDriver.Id,
+                                DriverTypeId = tempDriver.DriverTypeId,
+                                DriverCommissionPerBooking = tempDriver.DriverCommissionPerBooking,
+                                DriverMonthlyRent = tempDriver.DriverMonthlyRent
+                            };
+
+                            obj.bookingInfo.Driver = driver;
+                        }
+                    }
+                    try
+                    {
+                        foreach (var item in obj2.GetType().GetProperties())
+                        {
+                            try
+                            {
+                                if (obj.bookingInfo.GetType().GetProperty(item.Name) != null)
+                                    obj.bookingInfo.GetType().GetProperty(item.Name).SetValue(obj.bookingInfo, item.GetValue(obj2));
+
+
+                                obj.bookingInfo.Userlog = "Job booked by : " + obj.bookingInfo.AddLog.ToStr() + " on " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.bookingInfo.AddOn.ToDateTime());
+
+
+                                //}
+
+                                if (!string.IsNullOrEmpty(obj.bookingInfo.EditLog))
+                                {
+                                    obj.bookingInfo.Userlog += " , Edit by : " + obj.bookingInfo.EditLog.ToStr() + " on " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.bookingInfo.EditOn.ToDateTime());
+                                }
+
+
+                                if (!string.IsNullOrEmpty(obj.bookingInfo.Despatchby))
+                                {
+                                    obj.bookingInfo.Userlog += " , Despatched by : " + obj.bookingInfo.Despatchby.ToStr() + " on " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.bookingInfo.DespatchDateTime.ToDateTime());
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+
                             }
 
-
-                            if (!string.IsNullOrEmpty(obj.bookingInfo.Despatchby))
-                            {
-                                obj.bookingInfo.Userlog += " , Despatched by : " + obj.bookingInfo.Despatchby.ToStr() + " on " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.bookingInfo.DespatchDateTime.ToDateTime());
-                            }
                         }
-                        catch (Exception ex)
-                        {
-
-                        }
+                    }
+                    catch
+                    {
 
                     }
-
 
                     obj.bookingInfo.Booking_ViaLocations = new List<ClsBooking_ViaLocation>();
 
@@ -3530,7 +3677,33 @@ namespace SignalRHub.Controllers
                         obj.routeInfo.legs = route.legs;
                         if (obj.routeInfo.AutoCalculateFares.ToBool() && pickup.ToStr().Trim().Length > 0 && destination.ToStr().Trim().Length > 0)
                             route.fareModel = CalculateFares(obj);
+                        if (obj.routeInfo.DriverId > 0)
+                        {
+                            var tempDriver = db.Fleet_Drivers
+                                .Where(x => x.Id == obj.routeInfo.DriverId)
+                                .Select(x => new
+                                {
+                                    x.Id,
+                                    x.DriverTypeId,
+                                    x.DriverCommissionPerBooking,
+                                    x.DriverMonthlyRent
+                                })
+                                .FirstOrDefault();
 
+                            if (tempDriver != null)
+                            {
+                                // Manually create detached Fleet_Driver
+                                var driver = new Fleet_Driver
+                                {
+                                    Id = tempDriver.Id,
+                                    DriverTypeId = tempDriver.DriverTypeId,
+                                    DriverCommissionPerBooking = tempDriver.DriverCommissionPerBooking,
+                                    DriverMonthlyRent = tempDriver.DriverMonthlyRent
+                                };
+
+                                route.Driver = driver;
+                            }
+                        }
                         response.Data = route;
                     }
                     catch (Exception ex)

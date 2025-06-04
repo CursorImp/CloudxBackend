@@ -642,6 +642,7 @@ namespace SignalRHub.WebApiClasses
         public int? DriverCommissionTypeId { get; set; }
         public decimal? DriverCommissionValue { get; set; }
         public decimal? DriverHours { get; set; }
+        public Fleet_Driver Driver { get;  set; }
     }
 
     public class Booking_DriverCommsiion
@@ -1399,6 +1400,15 @@ namespace SignalRHub.WebApiClasses
         public int MoveToDriverId { get; set; }
         public SMSInfo smsInfo { get; set; }
     }
+    public class bookingFare
+    {
+        public long Id { get; set; }
+        public decimal FareRate { get; set; }
+        public decimal ReturnFareRate { get; set; }
+        public decimal TotalCharges { get; set; }
+        public decimal DriverId { get; set; }
+
+    }
 
     public class SMSInfo
     {
@@ -1669,6 +1679,7 @@ namespace SignalRHub.WebApiClasses
 
         public int? JourneyTypeId { get; set; }
         public int? SubCompanyId { get; set; }
+        public int DriverId { get;  set; }
     }
     public class FareSettings
     {
@@ -1699,6 +1710,8 @@ namespace SignalRHub.WebApiClasses
         public decimal Distance;
         public int duration;
         public object fareModel;
+
+        public Fleet_Driver Driver;
     }
 
 
