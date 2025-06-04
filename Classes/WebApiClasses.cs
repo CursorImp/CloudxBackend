@@ -642,6 +642,8 @@ namespace SignalRHub.WebApiClasses
         public int? DriverCommissionTypeId { get; set; }
         public decimal? DriverCommissionValue { get; set; }
         public decimal? DriverHours { get; set; }
+        public DateTime? FromDate { get; set; }
+        public DateTime? ToDate { get; set; }
         public Fleet_Driver Driver { get;  set; }
     }
 
@@ -1723,7 +1725,16 @@ namespace SignalRHub.WebApiClasses
     }
 
 
-
+    public class Gen_SubcompanyFields
+    {
+        public int? Id { get; set; }
+        public string EmailAddress { get; set; }
+        public bool? UseDifferentEmailForInvoices { get; set; }
+        public string SmtpInvoiceUserName { get; set; }
+        public string SmtpEmailAddress { get; set; }
+        public string SmtpInvoiceEmailAddress { get; set; }
+        public string SmtpDriverEmailAddress { get; set; }
+    }
 
     public class ClsBookingListData
     {

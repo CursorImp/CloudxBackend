@@ -1,26 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Linq.Expressions;
-using DAL;
-using Taxi_Model;
-using System.Net.Sockets;
-using System.Net;
-using System.Text.RegularExpressions;
-using Utils;
-using Taxi_BLL;
-using System.Xml;
-using System.Data;
-using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Web.Script.Serialization;
-using SignalRHub.WebApiClasses;
+﻿using DAL;
 using DotNetCoords;
 using SignalRHub.Classes;
-using System.Threading;
+using SignalRHub.WebApiClasses;
+using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Sockets;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Web.Script.Serialization;
+using System.Web.Security;
+using System.Xml;
+using Taxi_BLL;
+using Taxi_Model;
+using Utils;
 
 namespace SignalRHub
 {
@@ -1471,7 +1472,7 @@ namespace SignalRHub
                 try
                 {
                     int defaultAllocationLimit = HubProcessor.Instance.objPolicy.AllocateDrvPreExistJobLimit.ToInt();
-                     driverId = ObjDriver!=null ? ObjDriver.Id.ToIntorNull():null;
+                    driverId = ObjDriver != null ? ObjDriver.Id.ToIntorNull() : null;
                     int? oldDriverId = null;
                     string oldDriverNo = string.Empty;
 
@@ -1493,7 +1494,7 @@ namespace SignalRHub
 
                     try
                     {
-                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AllocateDriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",jobid:"+objBooking.Id+ Environment.NewLine);
+                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AllocateDriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",jobid:" + objBooking.Id + Environment.NewLine);
                     }
                     catch
                     {
@@ -1669,7 +1670,7 @@ namespace SignalRHub
 
                             if (driverId == null && objBooking.DriverId != null)
                             {
-                                oldDriverNo =db.Fleet_Drivers.Where(c=>c.Id==objBooking.DriverId).Select(c=>c.DriverNo).FirstOrDefault();
+                                oldDriverNo = db.Fleet_Drivers.Where(c => c.Id == objBooking.DriverId).Select(c => c.DriverNo).FirstOrDefault();
 
 
                             }
@@ -1813,7 +1814,7 @@ namespace SignalRHub
 
                     try
                     {
-                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AllocateDriver_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",objbooking.driverid:" + objBooking.DriverId + ",exception:"+ex.Message+ Environment.NewLine);
+                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AllocateDriver_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",objbooking.driverid:" + objBooking.DriverId + ",exception:" + ex.Message + Environment.NewLine);
                     }
                     catch
                     {
@@ -2304,7 +2305,14 @@ namespace SignalRHub
                     {
                         bool offlinejob = false;
                         status = Enums.BOOKINGSTATUS.PENDING;
-                        var res = (db.ExecuteQuery<string>("select SetVal from AppSettings where SetKey='DisableAcceptJob'").FirstOrDefault());
+                        var res = "false";
+                        try
+                        {
+                            res = (db.ExecuteQuery<string>("select SetVal from AppSettings where SetKey='DisableAcceptJob'").FirstOrDefault());
+                        }
+                        catch
+                        {
+                        }
                         if (dispatchType == 3 && res == "true")
                         {
                             status = Enums.BOOKINGSTATUS.PENDING_START;
@@ -2338,7 +2346,115 @@ namespace SignalRHub
 
                     //  General.SendMessageToPDA("request pda=" + objBooking.Id + "=" + ObjDriver.Id + "=" + msg + "=1=" + ObjDriver.DriverNo).Result.ToBool();
                     if (dispatchType == 3)
+                    {
                         General.CallGetDashboardData();
+                        try
+                        {
+                            var SendPreJobDespatchEmail = "false";
+                            try
+                            {
+                                SendPreJobDespatchEmail = (new TaxiDataContext().ExecuteQuery<string>("select SetVal from AppSettings where SetKey='SendPreJobDespatchEmail'").FirstOrDefault());
+                            }
+                            catch
+                            {
+                            }
+                            if (SendPreJobDespatchEmail == "true")
+                            {
+                                var objSubCompany = new TaxiDataContext().Gen_SubCompanies.FirstOrDefault();
+                                if (objSubCompany != null && ObjDriver != null && !string.IsNullOrEmpty(ObjDriver.Email))
+                                {
+                                    List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
+                                    string EmailSubject = $"New Future Job ({objBooking.BookingNo.ToStr()}) Notification From {objSubCompany.CompanyName.ToStr()}";
+                                    var notes = "";
+                                    var specialReq = "";
+                                    var paymentTypeName = "";
+                                    var vehicleType = "";
+                                    try
+                                    {
+                                        notes = objBooking.NotesString;
+                                        specialReq = objBooking.SpecialRequirements;
+                                        paymentTypeName = objBooking?.Gen_PaymentType?.PaymentType.ToStr();
+                                        vehicleType = objBooking?.Fleet_VehicleType?.VehicleType.ToStr();
+                                    }
+                                    catch {}
+                                    string body = $@"
+                                    Dear {ObjDriver.DriverName} ({ObjDriver.DriverNo}),<br/><br/>
+
+                                    You have been assigned a future job scheduled for the following date and time:<br/>
+                                    <b>{objBooking.PickupDateTime.ToDateTime().ToString("f")}</b><br/><br/>
+
+                                    Please find the job details below:<br/><br/>
+
+                                    <table cellpadding='5' cellspacing='0' border='0'>
+                                        <tr><td><b>Job Ref:</b></td><td>{objBooking.BookingNo}</td></tr>
+                                        <tr><td><b>Pickup Date/Time:</b></td><td>{objBooking.PickupDateTime.ToDateTime().ToString("f")}</td></tr>
+                                        <tr><td><b>Pickup:</b></td><td>{objBooking.FromAddress}</td></tr>";
+
+                                        if (!string.IsNullOrWhiteSpace(notes))
+                                        {
+                                            body += $@"
+                                            <tr><td><b>Pickup Notes:</b></td><td>{notes}</td></tr>";
+                                        }
+
+                                        if (objBooking.Booking_ViaLocations != null && objBooking.Booking_ViaLocations.Count > 0)
+                                        {
+                                            var viaList = string.Join("<br/>", objBooking.Booking_ViaLocations.Select(v => v.ViaLocValue.ToStr()));
+                                            body += $@"
+                                            <tr><td><b>Vias:</b></td><td>{viaList}</td></tr>";
+                                        }
+
+                                        body += $@"
+                                        <tr><td><b>Destination:</b></td><td>{objBooking.ToAddress}</td></tr>
+                                        <tr><td><b>Vehicle Type:</b></td><td>{vehicleType}</td></tr>";
+
+                                        if (!string.IsNullOrWhiteSpace(specialReq))
+                                        {
+                                            body += $@"
+                                            <tr><td><b>Special Req:</b></td><td>{specialReq}</td></tr>";
+                                        }
+
+                                        body += $@"
+                                        <tr><td><b>Payment Type:</b></td><td>{paymentType}</td></tr>";
+
+                                        if (objBooking.PaymentTypeId == 1) // cash
+                                        {
+                                            body += $@"
+                                            <tr><td><b>Total Fare:</b></td><td>{objBooking.TotalCharges:C}</td></tr>";
+                                        }
+
+                                    body += $@"
+                                    </table><br/>
+
+                                    Please make sure to be prepared and available at the scheduled time.<br/><br/>
+
+                                    Thank you,<br/>
+                                    <b>{objSubCompany.CompanyName.ToStr()}</b>
+                                    ";
+
+                                    ClsEmail Email = new ClsEmail();
+                                    ClsEmail.Send(EmailSubject, body, "", ObjDriver.Email, attachments, objSubCompany, "");
+                                    try
+                                    {
+                                        using (TaxiDataContext db = new TaxiDataContext())
+                                        {
+                                            db.ExecuteCommand("exec insertInSendEmail {0}, {1}, {2}, {3}",
+                                                EmailSubject,
+                                                body,
+                                                "system",
+                                                ObjDriver.Email);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                    }
+                                }
+                            }
+                        }
+                        catch
+                        {
+                        }
+
+                    }
 
                 }
             }
@@ -2488,7 +2604,7 @@ namespace SignalRHub
                 }
                 else
                 {
-                   
+
                     (new TaxiDataContext()).stp_UpdateJob(jobId, driverId, bookingStatusId, driverStatusId, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
                 }
 
@@ -2628,7 +2744,7 @@ namespace SignalRHub
 
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                   
+
                     db.stp_UpdateJob(jobId, driverId, Enums.BOOKINGSTATUS.CANCELLED, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
 
                 }
@@ -6078,13 +6194,13 @@ namespace SignalRHub
                     //"https://maps.googleapis.com/maps/api/place/autocomplete/json?input=VILLENUEVE&components=country:CA&radius=200&key=AIzaSyAbWqKOltEdweCG34MprD4dfzZZMyvZjSY";
                     //if (Global.centerPoint.ToStr().Trim().Length == 0)
                     //{
-                        using (TaxiDataContext db = new TaxiDataContext())
-                        {
-                            var Query = "SELECT SubCompanyId, Latitude, Longitude, Radius, Region from Gen_Subcompany_Details";
-                            var SubcompanyDetails = db.ExecuteQuery<Classes.Gen_SubCompany_Details>(Query).FirstOrDefault();
-                            Global.centerPoint = SubcompanyDetails.Longitude + "," + SubcompanyDetails.Latitude;
-                            Global.Region = SubcompanyDetails.Region;
-                            Global.googleKey = GetKey();
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        var Query = "SELECT SubCompanyId, Latitude, Longitude, Radius, Region from Gen_Subcompany_Details";
+                        var SubcompanyDetails = db.ExecuteQuery<Classes.Gen_SubCompany_Details>(Query).FirstOrDefault();
+                        Global.centerPoint = SubcompanyDetails.Longitude + "," + SubcompanyDetails.Latitude;
+                        Global.Region = SubcompanyDetails.Region;
+                        Global.googleKey = GetKey();
                         //}
                         //
                     }

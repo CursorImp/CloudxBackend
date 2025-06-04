@@ -114,7 +114,7 @@ namespace SignalRHub.Controllers
                             //bool showCommandLine = false;
                             // showCommandLine= db.UM_SecurityGroup_Permissions.Where(c => c.SecurityGroupId == objUser.SecurityGroupId && c.UM_FormFunction.UM_Function.FunctionName == "SHOW COMMAND LINE").Count() > 0;
                             //showCommandLine = true;
-                            
+
                             if (objUser.SecurityGroupId == 2)
                             {
                                 IsAdmin = false;
@@ -128,9 +128,10 @@ namespace SignalRHub.Controllers
                             {
                                 EnablePartialCloudX = AppSettings.FirstOrDefault(a => a.SetKey == "EnablePartialCloudX").SetVal.ToStr();
                             }
-                            catch {
+                            catch
+                            {
                             }
-                            
+
                             if (EnablePartialCloudX == "true")
                             {
                                 IsAdmin = false;
@@ -1585,6 +1586,14 @@ namespace SignalRHub.Controllers
                     {
 
                     }
+                    int callRefNo = 0;
+                    try
+                    {
+                        callRefNo = int.TryParse(obj.bookingInfo.CallRefNo?.Trim(), out var temp) ? temp : 0;
+                    }
+                    catch
+                    {
+                    }
                     var userName = db.CallerIdVOIP_Configurations.FirstOrDefault().UserName.ToStr();
                     string VoipUrl = System.Configuration.ConfigurationManager.AppSettings["VoipUrl"];
                     var callerData = (from a in db.CallHistories
@@ -1592,7 +1601,7 @@ namespace SignalRHub.Controllers
                                       from b in table2.DefaultIfEmpty()
                                       where
                                        (a.PhoneNumber.Trim() == obj.bookingInfo.CustomerMobileNo || a.PhoneNumber.Trim() == obj.bookingInfo.CustomerPhoneNo)
-                                       && (a.Id == obj.bookingInfo.CallRefNo.ToInt())
+                                       && a.Id == callRefNo
                                       orderby a.CallDateTime descending
                                       select new
                                       {
@@ -3983,13 +3992,28 @@ namespace SignalRHub.Controllers
                         //catch
                         //{
                         //}
+
                         try
                         {
-                            var CongestionCharges = GetCongestionCharges(obj.routeInfo.legs, info.PickupDateTime, obj.routeInfo.SubCompanyId);
-                            Newtonsoft.Json.Linq.JObject jsonObj = Newtonsoft.Json.Linq.JObject.Parse(CongestionCharges);
-                            decimal congestion = jsonObj["Data"]["FareRate"].ToObject<decimal>();
-                            res.Congestion = congestion;
-                            res.Parking = 0;
+                            var EnableCongestionCharges = "false";
+                            try
+                            {
+                                EnableCongestionCharges = db.ExecuteQuery<string>("Select SetVal from AppSettings where SetKey ='EnableCongestionCharges'").FirstOrDefault().ToStr();
+                            }
+                            catch
+                            {
+                            }
+                            if (EnableCongestionCharges == "true")
+                            {
+                                var CongestionCharges = GetCongestionCharges(obj.routeInfo.legs, info.PickupDateTime, obj.routeInfo.SubCompanyId);
+                                Newtonsoft.Json.Linq.JObject jsonObj = Newtonsoft.Json.Linq.JObject.Parse(CongestionCharges);
+                                decimal congestion = jsonObj["Data"]["FareRate"].ToObject<decimal>();
+                                res.Congestion = congestion;
+                                if (res.Congestion > 0)
+                                {
+                                    res.Parking = 0;
+                                }
+                            }
                         }
                         catch
                         {
@@ -5261,7 +5285,7 @@ namespace SignalRHub.Controllers
                         //}
                         //else
                         //{
-                      
+
                         db.stp_UpdateJob(obj.bookingInfo.Id, driverId, Enums.BOOKINGSTATUS.NOPICKUP, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
                         //   }
 
@@ -5291,7 +5315,7 @@ namespace SignalRHub.Controllers
                         //}
                         //else
                         //{
-                       
+
                         db.stp_UpdateJob(obj.bookingInfo.Id, driverId, Enums.BOOKINGSTATUS.WAITING, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
                         //   }
 
@@ -7878,10 +7902,24 @@ namespace SignalRHub.Controllers
 
                         }
 
-
-
-
+                        
                         var data = new EmailInfo { SubCompanyId = obj2.SubcompanyId.ToInt(), From = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(c => c.SmtpUserName).FirstOrDefault(), Subject = subject, BookingId = obj2.Id, To = obj2.CustomerEmail, IsAccountJob = obj2.CompanyId != null ? true : false, PaymentTypeId = obj2.PaymentTypeId.ToInt() };
+                        try
+                        {
+                            var EnableThirdPartyEmailSetting = false;
+                            if (db.ExecuteQuery<string>("select SetVal from AppSettings where setkey= 'EnableThirdPartyEmailSetting'").FirstOrDefault().ToStr() == "true")
+                            {
+                                EnableThirdPartyEmailSetting = true;
+                            }
+                            var subCompany = db.ExecuteQuery<Gen_SubcompanyFields>($"select Id,EmailAddress,SmtpEmailAddress,SmtpInvoiceEmailAddress,SmtpDriverEmailAddress,CAST(ISNULL(UseDifferentEmailForInvoices,0) AS BIT) UseDifferentEmailForInvoices,SmtpInvoiceUserName from Gen_SubCompany WHERE Id={obj2.SubcompanyId}").FirstOrDefault();
+                            if (subCompany != null && EnableThirdPartyEmailSetting)
+                            {
+                                data.From = (EnableThirdPartyEmailSetting ? subCompany.SmtpEmailAddress : subCompany.EmailAddress);
+                            }
+                        }
+                        catch
+                        {
+                        }
 
 
                         response.Data = data;
@@ -7940,7 +7978,7 @@ namespace SignalRHub.Controllers
 
                     if (obj2 != null)
                     {
-                        
+
 
 
 
@@ -9127,7 +9165,8 @@ namespace SignalRHub.Controllers
                         {
                         }
                         response.Data = flightDataobj;
-                    };
+                    }
+                    ;
                 }
             }
             catch (Exception ex)
@@ -9910,7 +9949,7 @@ namespace SignalRHub.Controllers
                     int dispatchCounter = 0;
                     try
                     {
-                        var preBookingList = db.ExecuteQuery<BookingInfo>($"Select * from Booking where PickupDateTime > '{DateTime.Now.ToString("yyyy-MM-dd HH:mm")}' and ISNULL(DriverId,0) > 0 and BookingStatusId IN (1,4,14)").ToList();
+                        var preBookingList = db.ExecuteQuery<BookingInfo>($"Select * from Booking where PickupDateTime >= '{obj.bookingInfo.FromDate.ToDateTime().ToString("yyyy-MM-dd HH:mm")}' and PickupDateTime <= '{obj.bookingInfo.ToDate.ToDateTime().ToString("yyyy-MM-dd HH:mm")}' and ISNULL(DriverId,0) > 0 and BookingStatusId IN (1,4,14)").ToList();
                         if (preBookingList != null && preBookingList.Count > 0)
                         {
                             foreach (var preBooking in preBookingList)
