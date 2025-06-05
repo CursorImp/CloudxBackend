@@ -3317,7 +3317,22 @@ namespace SignalRHub
                                     }
                                     if (EnableSubCompanyWiseAutoDespatch == "true" && job.SubcompanyId.ToInt() > 0)
                                     {
-                                        listofJobAvailableDrvs = listofDrvs.Where(c => c.SubcompanyId == job.SubcompanyId.ToInt()).ToList();
+                                        bool sendAnyDriver = false;
+                                        try
+                                        {
+                                            sendAnyDriver = db.ExecuteQuery<bool>($"SELECT CAST(ISNULL(SendAnyDriver,0) AS BIT) FROM Booking WHERE Id={job.JobId}").FirstOrDefault().ToBool();
+                                        }
+                                        catch {
+                                        }
+                                        var tempListofJobAvailableDrvs = listofDrvs.Where(c => c.SubcompanyId == job.SubcompanyId.ToInt()).ToList();
+                                        if (tempListofJobAvailableDrvs.Count > 0)
+                                        {
+                                            sendAnyDriver = false;
+                                        }
+                                        if (!sendAnyDriver)
+                                        {
+                                            listofJobAvailableDrvs = listofDrvs.Where(c => c.SubcompanyId == job.SubcompanyId.ToInt()).ToList();
+                                        }
                                     }
                                 }
                                 catch
