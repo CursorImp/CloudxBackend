@@ -234,7 +234,7 @@ namespace SignalRHub.Controllers
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
-        [System.Web.Http.Route("CAST(ISNULL(a.InActive,0), AS BIT) InActive,")]
+        [System.Web.Http.Route("GetCompanyVehcileListData")]
         public JsonResult GetCompanyVehcileListData(AdminApi obj)
         {
             ResponseAdminApi response = new ResponseAdminApi();
