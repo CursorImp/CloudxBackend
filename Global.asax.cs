@@ -3204,6 +3204,21 @@ namespace SignalRHub
                                         if (rtn != -1)
                                             continue;
                                     }
+                                    else
+                                    {
+                                        var AutoDispatchAllocatedJobsOnly = "0";
+                                        try
+                                        {
+                                            AutoDispatchAllocatedJobsOnly = db.ExecuteQuery<string>($"Select SetVal from AppSettings where SetKey = 'AutoDispatchAllocatedJobsOnly'").FirstOrDefault().ToStr();
+                                            if (AutoDispatchAllocatedJobsOnly == "1")
+                                            {
+                                                continue;
+                                            }
+                                        }
+                                        catch
+                                        {
+                                        }
+                                    }
                                 }
 
 
@@ -3323,7 +3338,8 @@ namespace SignalRHub
                                         {
                                             sendAnyDriver = db.ExecuteQuery<bool>($"SELECT CAST(ISNULL(SendAnyDriver,0) AS BIT) FROM Booking WHERE Id={job.JobId}").FirstOrDefault().ToBool();
                                         }
-                                        catch {
+                                        catch
+                                        {
                                         }
                                         var tempListofJobAvailableDrvs = listofDrvs.Where(c => c.SubcompanyId == job.SubcompanyId.ToInt()).ToList();
                                         if (tempListofJobAvailableDrvs.Count > 0)
