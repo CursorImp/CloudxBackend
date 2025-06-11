@@ -587,6 +587,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableThirdPartyEmailSetting", SetVal = "false", description = "Enable Third Party Email Setting"  },
                             new AppSetting { SetKey = "BulkPreDispatch", SetVal = "false", description = "BulkPreDispatch"  },
                             new AppSetting { SetKey = "EnableDriverFareReductionByCommission", SetVal = "false", description = "Enable Driver FareReduction By Commission"  },
+                            new AppSetting { SetKey = "AutoDispatchAllocatedJobsOnly", SetVal = "0", description = "Auto Dispatch Allocated Jobs Only"  },
                         };
 
                 using (var db = new TaxiDataContext())
