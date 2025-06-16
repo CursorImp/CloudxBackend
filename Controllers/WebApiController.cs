@@ -2276,11 +2276,13 @@ namespace SignalRHub.Controllers
                             {
                                 if (objMaster.Current.Id > 0)
                                 {
+                                    var subCompany = db.ExecuteQuery<Gen_SubcompanyFields>($"select Id,EmailAddress,SmtpEmailAddress,SmtpInvoiceEmailAddress,SmtpDriverEmailAddress,CAST(ISNULL(UseDifferentEmailForInvoices,0) AS BIT) UseDifferentEmailForInvoices,SmtpInvoiceUserName from Gen_SubCompany WHERE Id={objMaster.Current.SubcompanyId}").FirstOrDefault();
+
                                     var emailPayload = new RequestWebApi
                                     {
                                         emailInfo = new EmailInfo
                                         {
-                                            From = "info@comforttransport.co.uk",
+                                            From = subCompany.EmailAddress,
                                             To = obj.bookingInfo.CustomerEmail,
                                             Subject = "BOOKING CONFIRMATION - " + objMaster.Current.BookingDate + " BOOKING ID " + objMaster.Current.BookingNo,
                                             BookingId = objMaster.Current.Id
@@ -2300,7 +2302,7 @@ namespace SignalRHub.Controllers
 
                             }
                         }
-                       
+
                         try
                         {
                             if (objMaster.Current.Id > 0 && obj.editbookingInfo != null && objMaster.Current.DriverId != null)
