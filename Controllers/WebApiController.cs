@@ -2932,7 +2932,7 @@ namespace SignalRHub.Controllers
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
                     var pickupDateTime = db.Bookings.Where(c => c.Id == obj.bookingInfo.Id).Select(x => x.PickupDateTime).FirstOrDefault().ToDateTime();
-                    if (pickupDateTime.Date != DateTime.Now.Date && obj.bookingInfo.BookingTypeId.ToInt() != 4)
+                    if (pickupDateTime.Date != DateTime.Now.Date && obj.bookingInfo.BookingTypeId.ToInt() != 4 && obj.bookingInfo.BookingTypeId.ToInt() != 3)
                     {
                         response.HasError = true;
                         response.Message = "Only today bookings can be dispatch.";
