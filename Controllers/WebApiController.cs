@@ -1894,8 +1894,9 @@ namespace SignalRHub.Controllers
                         endDateTime = startDate;
                     }
 
-                    while (startDate <= endDateTime)
+                    while (startDate.HasValue && endDateTime.HasValue && startDate.Value.Date <= endDateTime.Value.Date)
                     {
+
 
                         string dayName = System.Threading.Thread.CurrentThread.CurrentUICulture.DateTimeFormat.GetDayName(startDate.Value.DayOfWeek);
 
@@ -2261,7 +2262,45 @@ namespace SignalRHub.Controllers
                         objMaster.ReturnCustomerPrice = objMaster.Current.ServiceCharges.ToDecimal();
                         objMaster.Save();
 
+                        var EnableSendConfirmationEmail = "false";
+                        try
+                        {
+                            EnableSendConfirmationEmail = db.ExecuteQuery<string>("Select SetVal from AppSettings where SetKey ='EnableSendConfirmationEmail'").FirstOrDefault().ToStr();
+                        }
+                        catch
+                        {
+                        }
+                        if (EnableSendConfirmationEmail == "true")
+                        {
+                            try
+                            {
+                                if (objMaster.Current.Id > 0)
+                                {
+                                    var emailPayload = new RequestWebApi
+                                    {
+                                        emailInfo = new EmailInfo
+                                        {
+                                            From = "info@comforttransport.co.uk",
+                                            To = obj.bookingInfo.CustomerEmail,
+                                            Subject = "BOOKING CONFIRMATION - " + objMaster.Current.BookingDate + " BOOKING ID " + objMaster.Current.BookingNo,
+                                            BookingId = objMaster.Current.Id
+                                        }
+                                    };
+                                    var controller = new WebApiController();
+                                    controller.SendConfirmationEmail(emailPayload);
 
+
+                                }
+
+
+                            }
+
+                            catch (Exception ex)
+                            {
+
+                            }
+                        }
+                       
                         try
                         {
                             if (objMaster.Current.Id > 0 && obj.editbookingInfo != null && objMaster.Current.DriverId != null)
@@ -8354,20 +8393,20 @@ namespace SignalRHub.Controllers
 
                         }
                         string footer = string.Empty;
-                        try
-                        {
+                        //try
+                        //{
 
-                            footer = db.ExecuteQuery<string>("select Footer from EmailSettings").FirstOrDefault();
+                        //    footer = db.ExecuteQuery<string>("select Footer from EmailSettings").FirstOrDefault();
 
-                        }
-                        catch
-                        {
+                        //}
+                        //catch
+                        //{
 
-                        }
+                        //}
 
-                        if (footer.ToStr().Trim().Length > 0)
-                            if (footer.ToStr().Trim().Length > 0)
-                                StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;color: #6b97c2;'><p style=\"color:#6b97c2\"><strong>" + footer + "</strong></p></td></tr>");
+                        //if (footer.ToStr().Trim().Length > 0)
+                        //    if (footer.ToStr().Trim().Length > 0)
+                        //        StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;color: #6b97c2;'><p style=\"color:#6b97c2\"><strong>" + footer + "</strong></p></td></tr>");
 
                         // }
 
@@ -8392,15 +8431,15 @@ namespace SignalRHub.Controllers
 
                         StrBld.Append("</table>");
 
-                        try
-                        {
-                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendConfirmationEmailTable.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + Environment.NewLine + StrBld + Environment.NewLine);
+                        //try
+                        //{
+                        //    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendConfirmationEmailTable.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + Environment.NewLine + StrBld + Environment.NewLine);
 
-                        }
-                        catch (Exception)
-                        {
+                        //}
+                        //catch (Exception)
+                        //{
 
-                        }
+                        //}
 
                         var obja = new
                         {
