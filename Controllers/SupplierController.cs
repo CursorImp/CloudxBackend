@@ -8586,6 +8586,116 @@ namespace SignalRHub
             }
             return rtn;
         }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("UpdateDataFromPayByTerminalDriverAppKOnnectPay")]
+        public string UpdateDataFromPayByTerminalDriverAppKOnnectPay(PaymentUpdateDto obj)
+        {
+
+            string DefaultCurrencySign = Global.DefaultCurrencySign;// System.Configuration.ConfigurationManager.AppSettings["DefaultCurrencySign"];
+            string rtn = "true";
+            string json = string.Empty;
+            try
+            {
+                json = new JavaScriptSerializer().Serialize(obj);
+
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\UpdateDataFromPayByTerminalDriverAppKOnnectPay.txt", DateTime.Now.ToStr() + " json" + json + Environment.NewLine);
+                }
+                catch
+                {
+                }
+                if (obj == null) { return rtn = "false"; }
+
+                obj.message = obj.message.ToStr();
+                if (obj.message.ToStr().Trim().Contains("'"))
+                    obj.message = obj.message.Replace("'", "").Trim();
+                if (obj.message.ToStr().Trim().Contains("\u0027"))
+                    obj.message = obj.message.Replace("\u0027", "").Trim();
+                if (obj.isAuthorized)
+                {
+                    //this method is for handle Pre Auth Call back konnect pay
+                    rtn = UpdateAuthStripePaymentKP(obj);
+                }
+                else
+                {
+                    bool IsPayByDriverApp = false;
+                    int DriverId = 0;
+                    ResponseData DriverMsgObj = new ResponseData();
+                    //this is for pay by link Call back konnect pay
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        var objBooking = db.Bookings.Where(c => c.Id == obj.bookingId).FirstOrDefault();
+                        if (objBooking != null && objBooking.DriverId != null && objBooking.DriverId > 0)
+                        {
+                            IsPayByDriverApp = true;
+                            DriverId = objBooking.DriverId.ToInt();
+                        }
+                        if (obj.status.ToStr().ToLower() == "succeeded" || obj.isSuccess)
+                        {
+                            string msg = "Payment from web terminal PAID " + DefaultCurrencySign + string.Format("{0:f2}", obj.amount) + " | TRANSACTION - " + obj.paymentIntentId.ToStr() + " | " + string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
+
+                            db.ExecuteQuery<int>("update booking set Paymenttypeid=6,IsQuotedPrice=1,PaymentComments='" + msg + "' where id=" + obj.bookingId.ToLong());
+
+                            db.stp_BookingLog(obj.bookingId.ToLong(), "Customer", msg);
+
+                            if ((db.ExecuteQuery<int>("select count(*) from booking_payment where bookingId=" + obj.bookingId.ToLong()).FirstOrDefault()) == 0)
+                            {
+                                // db.ExecuteQuery<int>("insert into Booking_Payment(bookingid,PaymentGatewayId,AuthCode)VALUES(" + obj.bookingId.ToLong() + ",15,'" + obj.paymentIntentId.ToStr() + "')");
+                                db.ExecuteQuery<int>("insert into Booking_Payment(bookingid,PaymentGatewayId,AuthCode,Status,TotalAmount)VALUES(" + obj.bookingId.ToLong() + ",15,'" + obj.paymentIntentId.ToStr() + "','Paid'," + obj.amount + ")");
+                            }
+                            try
+                            {    // set Obj for driver app
+                                DriverMsgObj.IsSuccess = true;
+                                DriverMsgObj.Message = "Transaction successful";
+                                DriverMsgObj.Data = obj.paymentIntentId.ToStr();
+
+                                long jobId = obj.bookingId.ToLong();
+                                using (TaxiDataContext db2 = new TaxiDataContext())
+                                {
+                                    General.UpdateJobToDriverPDA(db2.Bookings.FirstOrDefault(c => c.Id == jobId), "Credit Card(PAID)");
+                                }
+                            }
+                            catch
+                            {
+                            }
+                        }
+                        else
+                        {
+                            db.ExecuteQuery<int>("update booking set PaymentComments='PAYMENT FAILED : " + obj.status.ToStr() + "'  where id=" + obj.bookingId.ToLong());
+                            db.stp_BookingLog(obj.bookingId.ToLong(), "Customer", "PAYMENT FAILED - " + obj.status.ToStr());
+
+                            // set Obj for driver app
+                            DriverMsgObj.IsSuccess = false;
+                            DriverMsgObj.Message = "PAYMENT FAILED";
+                            DriverMsgObj.Data = obj.status.ToStr();
+                        }
+                    }
+                    RefreshRequiredDashboard(obj.bookingId.ToStr());
+                    if (IsPayByDriverApp && DriverId > 0)
+                    {
+                        string jsonMsg = new JavaScriptSerializer().Serialize(DriverMsgObj);
+                        SocketIO.SendToSocket(DriverId.ToStr(), jsonMsg.ToStr(), "paymentresponse");
+
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\UpdateDataFromPayByLinkDriverAppKOnnectPay_exception.txt", DateTime.Now.ToStr() + " json" + json + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+                }
+                rtn = "false";
+            }
+            return rtn;
+        }
         #endregion
 
 

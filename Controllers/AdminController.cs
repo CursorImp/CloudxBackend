@@ -23873,6 +23873,30 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("UpdateDataFromPayByTerminalDriverAppKOnnectPay")]
+        public JsonResult UpdateDataFromPayByTerminalDriverAppKOnnectPay([FromBody] PaymentUpdateDto model)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+
+            try
+            {
+                SupplierController controller = new SupplierController();
+                var stripeAPIResponse = controller.UpdateDataFromPayByTerminalDriverAppKOnnectPay(model);
+                response.Data = bool.Parse(stripeAPIResponse);
+                response.Message = "Payment update!";
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
         [System.Web.Http.Route("CreateS700TerminalPaymentIntentKP")]
         public JsonResult CreateS700TerminalPaymentIntentKP([FromBody] StripeKonnectPaymentRequestModel model)
         {
@@ -24009,6 +24033,259 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 return null;
             }
             return TerminalsList;
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetDeviceData")]
+        public JsonResult GetDeviceData()
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    // Get all active devices
+                    var devices = db.ExecuteQuery<DeviceModel>("SELECT * FROM Device").ToList();
+
+                    response.Data = new
+                    {
+                        Devices = devices.Select(d => new
+                        {
+                            d.Id,
+                            d.ConnectedAccountId,
+                            d.RegistrationCode,
+                            d.Label,
+                            d.LocationId,
+                            d.SerialNumber,
+                            d.Status,
+                            d.CreatedAt
+                        }),
+                        TotalCount = devices.Count
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+                // Log the error if needed
+                // Logger.Error(ex, "Error fetching device data");
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetConnectedDeviceData")]
+        public JsonResult GetConnectedDeviceData()
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                    // Get all active devices
+                    var devices = db.ExecuteQuery<DeviceModel>("select * from Device where ConnectedAccountId = '" + objMerchantInfo.PaypalID + "' and Status = 'Active'").ToList();
+
+                    response.Data = new
+                    {
+                        Devices = devices.Select(d => new
+                        {
+                            d.Id,
+                            d.ConnectedAccountId,
+                            d.RegistrationCode,
+                            d.Label,
+                            d.LocationId,
+                            d.SerialNumber,
+                            d.Status,
+                            d.CreatedAt
+                        }),
+                        TotalCount = devices.Count
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+                // Log the error if needed
+                // Logger.Error(ex, "Error fetching device data");
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SaveDevice")]
+        public JsonResult SaveDevice([FromBody] DeviceModel model)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                Gen_SysPolicy_PaymentDetail paymentGateway = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                StripeLocation LocationObj = new StripeLocation();
+                string ClientLocationId = string.Empty;
+                string StripeError = string.Empty;
+                string StripeAccountId = paymentGateway.PaypalID;
+                string StripeCountryId = paymentGateway.ApplicationId;
+                string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
+
+
+                if (!string.IsNullOrEmpty(StripeAccountId) && !string.IsNullOrEmpty(StripeCountryId))
+                {
+                    // get client Terminal list
+                    StripeTerminalDTO StripeTerminals = GetTerminalList(StripeAccountId, StripeCountryId, StripeAPIBaseURL);
+
+                    if (StripeTerminals != null && StripeTerminals.isSuccess)
+                    {
+                        if (StripeTerminals?.terminals?.Count > 0)
+                        {
+                            ClientLocationId = StripeTerminals?.terminals[0].terminalLocationId;
+                        }
+                    }
+                }
+                //"tml_Fi297gE9cML1Gs"
+                var terminal = RegisterDevice(model.RegistrationCode, StripeAPIBaseURL, paymentGateway.PaypalID, model.Label, ClientLocationId, model.SerialNumber);
+                if (terminal == null)
+                {
+                    response.Message = "something went wrong";
+                    return Json(response, JsonRequestBehavior.AllowGet);
+                }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    model.ConnectedAccountId = paymentGateway.PaypalID;
+                    if (terminal.Response != null)
+                        model.LocationId = terminal.Response.LocationId;
+                    else
+                        model.LocationId = ClientLocationId;
+
+                    if (model.Id > 0)
+                    {
+                        var count = db.ExecuteCommand(
+                                                        "EXEC updatedevice {0}, {1}, {2}, {3}, {4}, {5}, {6}",
+                                                        model.Id,
+                                                        model.ConnectedAccountId ?? (object)DBNull.Value,
+                                                        model.RegistrationCode ?? (object)DBNull.Value,
+                                                        model.Label ?? (object)DBNull.Value,
+                                                        model.LocationId ?? (object)DBNull.Value,
+                                                        model.SerialNumber ?? (object)DBNull.Value,
+                                                        model.Status ?? (object)DBNull.Value
+                                                    );
+
+                        if (count > 0)
+                        {
+                            response.Message = "Device updated";
+                        }
+                    }
+                    else
+                    {
+                        var count = db.ExecuteCommand(
+                           "EXEC insertdevice {0}, {1}, {2}, {3}, {4}, {5}",
+                           model.ConnectedAccountId ?? (object)DBNull.Value,
+                           model.RegistrationCode ?? (object)DBNull.Value,
+                           model.Label ?? (object)DBNull.Value,
+                           model.LocationId ?? (object)DBNull.Value,
+                           model.SerialNumber ?? (object)DBNull.Value,
+                           model.Status ?? (object)DBNull.Value
+                       );
+
+                        if (count > 0)
+                        {
+                            response.Message = "Device updated";
+                        }
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.Route("DeleteDevice")]
+        public JsonResult DeleteDevice(int id)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var count = db.ExecuteCommand("EXEC deletedevice {0}", id);
+                    response.Message = "Device deleted successfully.";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        private TerminalReaderResponse RegisterDevice(string registrationCode, string StripeAPIBaseURL, string connectedAccountId, string label, string locationId, string serialNumber)
+        {
+            TerminalReaderResponse terminal = null;
+
+            try
+            {
+                if (!string.IsNullOrEmpty(StripeAPIBaseURL))
+                {
+                    using (var client = new System.Net.Http.HttpClient())
+                    {
+                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+                        // Prepare the request URL
+                        string requestUrl = StripeAPIBaseURL.TrimEnd('/') + "/v1/terminalreaders";
+
+                        // Prepare the JSON payload
+                        var requestData = new
+                        {
+                            connectedAccountId = connectedAccountId,
+                            registrationCode = registrationCode,
+                            label = label,
+                            locationId = locationId,
+                            serialNumber = serialNumber
+                        };
+
+                        string json = new JavaScriptSerializer().Serialize(requestData);
+                        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                        // Set headers
+                        client.DefaultRequestHeaders.Accept.Clear();
+                        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+                        // POST
+                        var response = client.PostAsync(requestUrl, content).Result;
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            string jsonResponse = response.Content.ReadAsStringAsync().Result;
+                            terminal = JsonConvert.DeserializeObject<TerminalReaderResponse>(jsonResponse);
+                        }
+                        else
+                        {
+                            // You may want to log or handle failed response here
+                            string error = response.Content.ReadAsStringAsync().Result;
+                            throw new Exception("API call failed: " + error);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var error = ex.Message;
+                return terminal;
+            }
+
+            return terminal;
         }
 
 
