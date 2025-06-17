@@ -61,6 +61,7 @@ namespace SignalRHub
         public static string HEREKEY = "";
         public static string smsInbox = "0";
         public static string enableRingBack = "0";
+        public static int DocumentExpiryDays = 0;
         public static string applicationurl = "0";
         public static string enableClearJobText = "0";
         public static string enableAccountCharges = "0";
@@ -589,6 +590,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableDriverFareReductionByCommission", SetVal = "false", description = "Enable Driver FareReduction By Commission"  },
                             new AppSetting { SetKey = "AutoDispatchAllocatedJobsOnly", SetVal = "0", description = "Auto Dispatch Allocated Jobs Only"  },
                             new AppSetting { SetKey = "EnableSendConfirmationEmail", SetVal = "false", description = "Enable Send Confirmation Email"  },
+                            new AppSetting { SetKey = "DocumentExpiryDays", SetVal = "0", description = "Document Expiry Days"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1170,6 +1172,9 @@ namespace SignalRHub
                         DSSMS_Settings.ReceivingMsgPort = GetAppSetting<string>("DS_ReceivingMsgPort").Split(',').Select(m => Convert.ToInt32(m)).ToArray();
                     }
 
+                   
+
+
                     Gen_SysPolicy_SMSConfiguration objSMSConfig = null;
 
                     try
@@ -1262,6 +1267,12 @@ namespace SignalRHub
                     enableRingBack = GetAppSetting<string>("enableRingBack").ToStr();
 
                 }
+
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("DocumentExpiryDays")))
+                {
+                    DocumentExpiryDays = GetAppSetting<string>("DocumentExpiryDays").ToInt();
+                }
+
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("applicationurl")))
                 {
                     applicationurl = GetAppSetting<string>("applicationurl").ToStr();

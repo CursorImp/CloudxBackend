@@ -11011,7 +11011,7 @@ namespace SignalRHub
                                         }
                                     }
 
-                                    if (objDriver.DrivingLicenseExpiryDate >= now.Date && objDriver.DrivingLicenseExpiryDate <= now.AddDays(this.LicenseDays))
+                                    if (objDriver.DrivingLicenseExpiryDate >= now.Date && objDriver.DrivingLicenseExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
                                     {
                                         if (string.IsNullOrEmpty(alertMsg))
                                             alertMsg = "alert";
@@ -11034,7 +11034,7 @@ namespace SignalRHub
                                         }
                                     }
 
-                                    if (objDriver.InsuranceExpiryDate >= now.Date && objDriver.InsuranceExpiryDate <= now.AddDays(this.InsuranceDays))
+                                    if (objDriver.InsuranceExpiryDate >= now.Date && objDriver.InsuranceExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
                                     {
                                         if (string.IsNullOrEmpty(alertMsg))
                                             alertMsg = "alert";
@@ -11060,7 +11060,7 @@ namespace SignalRHub
                                         }
                                     }
 
-                                    if (objDriver.RoadTaxiExpiryDate >= now.Date && objDriver.RoadTaxiExpiryDate <= now.AddDays(this.InsuranceDays))
+                                    if (objDriver.RoadTaxiExpiryDate >= now.Date && objDriver.RoadTaxiExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
                                     {
                                         if (string.IsNullOrEmpty(alertMsg))
                                             alertMsg = "alert";
@@ -11085,7 +11085,7 @@ namespace SignalRHub
                                         }
                                     }
 
-                                    if (objDriver.MOTExpiryDate >= now.Date && objDriver.MOTExpiryDate <= now.AddDays(this.MOTDays))
+                                    if (objDriver.MOTExpiryDate >= now.Date && objDriver.MOTExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
                                     {
                                         if (string.IsNullOrEmpty(alertMsg))
                                             alertMsg = "alert";
@@ -11101,7 +11101,7 @@ namespace SignalRHub
                                         msg += "Driver MOT 2 is Expired" + ",";
                                     }
 
-                                    if (objDriver.MOT2ExpiryDate >= now.Date && objDriver.MOT2ExpiryDate <= now.AddDays(this.MOT2Days))
+                                    if (objDriver.MOT2ExpiryDate >= now.Date && objDriver.MOT2ExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
                                     {
                                         if (string.IsNullOrEmpty(alertMsg))
                                             alertMsg = "alert";
@@ -11124,7 +11124,7 @@ namespace SignalRHub
                                         }
                                     }
 
-                                    if (objDriver.PCODriverExpiryDate >= now.Date && objDriver.PCODriverExpiryDate <= now.AddDays(this.PHCDriverDays))
+                                    if (objDriver.PCODriverExpiryDate >= now.Date && objDriver.PCODriverExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
                                     {
                                         if (string.IsNullOrEmpty(alertMsg))
                                             alertMsg = "alert";
@@ -11155,7 +11155,7 @@ namespace SignalRHub
                                         }
                                     }
 
-                                    if (objDriver.PCOVehicleExpiryDate >= now.Date && objDriver.PCOVehicleExpiryDate <= now.AddDays(this.PHCVehicleDays))
+                                    if (objDriver.PCOVehicleExpiryDate >= now.Date && objDriver.PCOVehicleExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
                                     {
                                         if (string.IsNullOrEmpty(alertMsg))
                                             alertMsg = "alert";
