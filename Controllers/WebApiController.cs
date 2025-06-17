@@ -7513,11 +7513,17 @@ namespace SignalRHub.Controllers
 
                 if (driverId > 0)
                 {
+
                     DateTime? loginDateTime = DateTime.Now;
                     string plot = string.Empty;
 
                     using (TaxiDataContext db = new TaxiDataContext())
                     {
+                        loginDateTime = db.Fleet_DriverQueueLists
+                        .Where(x => x.DriverId == driverId)
+                        .OrderByDescending(x => x.LoginDateTime)
+                        .Select(x => x.LoginDateTime)
+                        .FirstOrDefault();
                         var obj = db.stp_GetDriverToolTipData(driverId, 0, loginDateTime).FirstOrDefault();
 
 
