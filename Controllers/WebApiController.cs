@@ -1822,7 +1822,22 @@ namespace SignalRHub.Controllers
                 bool IsAddMode = false;
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(obj.bookingInfo.CustomerMobileNo) || !string.IsNullOrEmpty(obj.bookingInfo.CustomerPhoneNo))
+                        {
+                            var blacklistedCustomer = db.Customers.Where(x => x.BlackList == true && (x.MobileNo == obj.bookingInfo.CustomerMobileNo || x.TelephoneNo == obj.bookingInfo.CustomerMobileNo || x.MobileNo == obj.bookingInfo.CustomerPhoneNo || x.TelephoneNo == obj.bookingInfo.CustomerPhoneNo)).Select(x => x.Id).FirstOrDefault().ToInt();
+                            if (blacklistedCustomer > 0)
+                            {
+                                response.HasError = true;
+                                response.Message = "Customer is black listed. Cannot save booking.";
+                                return Json(response, JsonRequestBehavior.AllowGet);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                    }
                     long? AdvanceBookingId = null;
                     DateTime? startDate = obj.bookingInfo.PickupDateTime;
                     DateTime? endDateTime = obj.bookingInfo.PickupDateTime;
@@ -7957,7 +7972,7 @@ namespace SignalRHub.Controllers
 
                         }
 
-                        
+
                         var data = new EmailInfo { SubCompanyId = obj2.SubcompanyId.ToInt(), From = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(c => c.SmtpUserName).FirstOrDefault(), Subject = subject, BookingId = obj2.Id, To = obj2.CustomerEmail, IsAccountJob = obj2.CompanyId != null ? true : false, PaymentTypeId = obj2.PaymentTypeId.ToInt() };
                         try
                         {
