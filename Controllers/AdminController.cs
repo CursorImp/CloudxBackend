@@ -24150,6 +24150,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 if (terminal == null)
                 {
                     response.Message = "something went wrong";
+                    response.HasError = true;
                     return Json(response, JsonRequestBehavior.AllowGet);
                 }
                 using (TaxiDataContext db = new TaxiDataContext())
@@ -24160,42 +24161,21 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     else
                         model.LocationId = ClientLocationId;
 
-                    if (model.Id > 0)
+
+                    var count = db.ExecuteCommand(
+                       "EXEC insertdevice {0}, {1}, {2}, {3}, {4}, {5}",
+                       model.ConnectedAccountId ?? (object)DBNull.Value,
+                       model.RegistrationCode ?? (object)DBNull.Value,
+                       model.Label ?? (object)DBNull.Value,
+                       model.LocationId ?? (object)DBNull.Value,
+                       model.SerialNumber ?? (object)DBNull.Value,
+                       model.Status ?? (object)DBNull.Value
+                   );
+
+                    if (count > 0)
                     {
-                        var count = db.ExecuteCommand(
-                                                        "EXEC updatedevice {0}, {1}, {2}, {3}, {4}, {5}, {6}",
-                                                        model.Id,
-                                                        model.ConnectedAccountId ?? (object)DBNull.Value,
-                                                        model.RegistrationCode ?? (object)DBNull.Value,
-                                                        model.Label ?? (object)DBNull.Value,
-                                                        model.LocationId ?? (object)DBNull.Value,
-                                                        model.SerialNumber ?? (object)DBNull.Value,
-                                                        model.Status ?? (object)DBNull.Value
-                                                    );
-
-                        if (count > 0)
-                        {
-                            response.Message = "Device updated";
-                        }
+                        response.Message = "Device updated";
                     }
-                    else
-                    {
-                        var count = db.ExecuteCommand(
-                           "EXEC insertdevice {0}, {1}, {2}, {3}, {4}, {5}",
-                           model.ConnectedAccountId ?? (object)DBNull.Value,
-                           model.RegistrationCode ?? (object)DBNull.Value,
-                           model.Label ?? (object)DBNull.Value,
-                           model.LocationId ?? (object)DBNull.Value,
-                           model.SerialNumber ?? (object)DBNull.Value,
-                           model.Status ?? (object)DBNull.Value
-                       );
-
-                        if (count > 0)
-                        {
-                            response.Message = "Device updated";
-                        }
-                    }
-
                 }
             }
             catch (Exception ex)
@@ -24219,6 +24199,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 {
                     var count = db.ExecuteCommand("EXEC deletedevice {0}", id);
                     response.Message = "Device deleted successfully.";
+                    response.HasError = false;
                 }
             }
             catch (Exception ex)
@@ -24288,6 +24269,49 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             return terminal;
         }
 
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("TerminalRequestLogs")]
+        public JsonResult TerminalRequestLogs([FromBody] TerminalLogModel model)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    string sql = @"
+        INSERT INTO TerminalRequestLogs 
+        (TerminalId, RequestPayload, ResponsePayload, CreatedAt) 
+        VALUES 
+        ({0}, {1}, {2}, GETDATE())
+    ";
+
+                    int count = db.ExecuteCommand(
+                        sql,
+                        model.TerminalId,
+                        string.IsNullOrEmpty(model.RequestPayload) ? " " : model.RequestPayload,
+                        string.IsNullOrEmpty(model.ResponsePayload) ? " " : model.ResponsePayload
+                    );
+
+                    if (count > 0)
+                    {
+                        response.Message = "Logs updated";
+                    }
+                    else
+                    {
+                        response.HasError = true;
+                        response.Message = "Insert failed.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
 
         #endregion
 
