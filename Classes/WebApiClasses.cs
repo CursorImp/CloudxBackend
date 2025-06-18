@@ -870,6 +870,7 @@ namespace SignalRHub.WebApiClasses
         public int totalNoPickup;
         public int totalCancelled;
         public int totalCompleted;
+        public int totalInCompleted;
 
     }
 
