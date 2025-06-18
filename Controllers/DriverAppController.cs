@@ -254,7 +254,7 @@ namespace SignalRHub
 
                         foreach (var item in db.Bookings.Where(c => c.GroupJobId == tripId).Select(c => c.Id).ToList())
                         {
-                          
+
                             db.stp_UpdateJob(item, objAction.DrvId.ToInt(), Enums.BOOKINGSTATUS.REJECTED, Enums.Driver_WORKINGSTATUS.AVAILABLE, 0);
                         }
                     }
@@ -264,7 +264,7 @@ namespace SignalRHub
 
                         foreach (var item in db.Bookings.Where(c => c.GroupJobId == tripId).Select(c => c.Id).ToList())
                         {
-                           
+
                             db.stp_UpdateJob(item, objAction.DrvId.ToInt(), Enums.BOOKINGSTATUS.NOTACCEPTED, Enums.Driver_WORKINGSTATUS.AVAILABLE, 0);
                         }
                     }
@@ -4619,7 +4619,7 @@ namespace SignalRHub
 
                             if (resp.Message.ToStr().Trim().Length == 0)
                             {
-                              
+
                                 db.stp_UpdateJob(jobId, obj.DrvId.ToInt(), Enums.BOOKINGSTATUS.STC, 5, 0);
 
                                 General.BroadCastMessage("**action>>" + jobId.ToStr() + ">>" + obj.DrvId.ToStr() + ">>" + Enums.BOOKINGSTATUS.STC);
@@ -5813,7 +5813,7 @@ namespace SignalRHub
 
                             if (objAction.IsMeter.ToStr() == "1")
                             {
-                                var enableFareMeterOnDriverPDA = db.Fleet_Driver_PDASettings.Where(c => c.DriverId == driverId).Select(x=> x.EnableFareMeter).FirstOrDefault().ToBool();
+                                var enableFareMeterOnDriverPDA = db.Fleet_Driver_PDASettings.Where(c => c.DriverId == driverId).Select(x => x.EnableFareMeter).FirstOrDefault().ToBool();
                                 if (enableFareMeterOnDriverPDA)
                                 {
                                     price = objAction.Fares.ToDecimal();
@@ -14902,7 +14902,9 @@ namespace SignalRHub
                     {
                         long jobId = objAction.JobId.ToLong();
 
-                        var data = db.Bookings.Where(c => c.Id == jobId).Select(args => new { args.FromAddress, args.ToAddress, args.CompanyId, args.FareRate, args.ExtraDropCharges }).FirstOrDefault();
+                        var data = db.Bookings.Where(c => c.Id == jobId).Select(args => new { args.FromAddress, args.ToAddress, args.CompanyId, args.FareRate, args.ExtraDropCharges, args.MeetAndGreetCharges, args.CongtionCharges, args.AgentCommission, args.CashRate, args.CashFares, args.ServiceCharges }).FirstOrDefault();
+
+
                         objAction.Pickup = data.FromAddress.ToStr().ToUpper().Trim();
                         objAction.Dropoff = data.ToAddress.ToStr().ToUpper().Trim();
 
@@ -14971,7 +14973,9 @@ namespace SignalRHub
                         //}
                         //
 
-                        decimal totalFares = data.FareRate.ToDecimal() + data.ExtraDropCharges.ToDecimal();
+                        decimal totalFares = data.FareRate.ToDecimal() + data.ExtraDropCharges.ToDecimal() + data.MeetAndGreetCharges.ToDecimal() + data.CongtionCharges.ToDecimal() + data.AgentCommission.ToDecimal() + data.CashRate.ToDecimal() + data.CashFares.ToDecimal() + data.ServiceCharges.ToDecimal();
+
+
                         int driverId = objAction.DrvId.ToInt();
                         //var driverDetails = db.Fleet_Drivers.Where(c => c.Id == driverId).Select(c => new { c.DriverTypeId, c.DriverCommissionPerBooking }).FirstOrDefault();
 
@@ -15909,7 +15913,7 @@ namespace SignalRHub
                         if (respo == "true")
                         {
                             //  using (TaxiDataContext db = new TaxiDataContext())
-                            
+
                             db.stp_UpdateJob(jobId, objAction.DrvId.ToInt(), 6, 6, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
 
                             if (HubProcessor.Instance.objPolicy.EnableArrivalBookingText.ToBool())
@@ -18150,7 +18154,7 @@ namespace SignalRHub
 
             return res;
         }
-        
+
     }
 
 
