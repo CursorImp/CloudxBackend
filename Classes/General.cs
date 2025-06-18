@@ -4167,6 +4167,16 @@ namespace SignalRHub
                         //    summary = ",\"Summary\":" + Newtonsoft.Json.JsonConvert.SerializeObject(listofSummary);
                         //}
 
+                        List<ChargesSummary> listofSummary = new List<ChargesSummary>();
+
+                        listofSummary.Add(new ChargesSummary { label = "Fares", value = string.Format("{0:0.00}", objBooking.FareRate.ToDecimal()) });
+
+                        listofSummary.Add(new ChargesSummary { label = "Parking", value = string.Format("{0:0.00}", objBooking.CongtionCharges.ToDecimal()) });
+                        listofSummary.Add(new ChargesSummary { label = "Waiting", value = string.Format("{0:0.00}", objBooking.MeetAndGreetCharges.ToDecimal()) });
+                        listofSummary.Add(new ChargesSummary { label = "Extras", value = string.Format("{0:0.00}", objBooking.ExtraDropCharges.ToDecimal()) });
+                        listofSummary.Add(new ChargesSummary { label = "Fee", value = string.Format("{0:0.00}", objBooking.AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal() + objBooking.ServiceCharges.ToDecimal()) });
+
+                        summary = ",\"Summary\":" + Newtonsoft.Json.JsonConvert.SerializeObject(listofSummary);
 
                         string toDoorNo = objBooking.ToDoorNo.ToStr().Trim();
 
@@ -4185,7 +4195,7 @@ namespace SignalRHub
 
                                                  parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", driverfares) + "\"" +
                                               agentDetails +
-                                                 ",\"Did\":\"" + objBooking.DriverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + appendString + revertStatus + " }";
+                                                 ",\"Did\":\"" + objBooking.DriverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + appendString + summary + revertStatus + " }";
 
 
                         var driverId = objBooking.DriverId;
@@ -4434,6 +4444,18 @@ namespace SignalRHub
 
                     string appendString = string.Empty;
 
+                    string summary = string.Empty;
+
+                    List<ChargesSummary> listofSummary = new List<ChargesSummary>();
+
+                    listofSummary.Add(new ChargesSummary { label = "Fares", value = string.Format("{0:0.00}", objMaster.FareRate.ToDecimal()) });
+
+                    listofSummary.Add(new ChargesSummary { label = "Parking", value = string.Format("{0:0.00}", objMaster.CongtionCharges.ToDecimal()) });
+                    listofSummary.Add(new ChargesSummary { label = "Waiting", value = string.Format("{0:0.00}", objMaster.MeetAndGreetCharges.ToDecimal()) });
+                    listofSummary.Add(new ChargesSummary { label = "Extras", value = string.Format("{0:0.00}", objMaster.ExtraDropCharges.ToDecimal()) });
+                    listofSummary.Add(new ChargesSummary { label = "Fee", value = string.Format("{0:0.00}", objMaster.AgentCommission.ToDecimal() + objMaster.CashRate.ToDecimal() + objMaster.ServiceCharges.ToDecimal()) });
+
+                    summary = ",\"Summary\":" + Newtonsoft.Json.JsonConvert.SerializeObject(listofSummary);
 
 
                     string msg = "Update Job>>" + "{ \"JobId\" :\"" + objMaster.Id.ToStr() +
@@ -4446,7 +4468,7 @@ namespace SignalRHub
 
                                              parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", objMaster.FareRate) + "\"" +
                                           agentDetails +
-                                             ",\"Did\":\"" + objMaster.DriverId + "\",\"BabySeats\":\"" + objMaster.BabySeats.ToStr() + "\"" + showFares + showSummary + appendString + " }";
+                                             ",\"Did\":\"" + objMaster.DriverId + "\",\"BabySeats\":\"" + objMaster.BabySeats.ToStr() + "\"" + showFares + showSummary + summary + appendString + " }";
 
                     string recordId = Guid.NewGuid().ToString();
 
