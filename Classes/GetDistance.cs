@@ -89,14 +89,14 @@ public static class GetDistance
         try
         {
 
-          //  FLAT 8 OLEASTOR COURT  STONELEIGH ROAD ILFORD IG5 0JX
-          if(postcode.ToStr().StartsWith("FLAT "))
+            //  FLAT 8 OLEASTOR COURT  STONELEIGH ROAD ILFORD IG5 0JX
+            if (postcode.ToStr().StartsWith("FLAT "))
             {
                 postcode = postcode.Replace("FLAT ", "").Trim();
 
 
-                if(postcode.ToStr().Trim().Length>0 &&  (postcode.Split(' ')[0].IsNumeric() || (postcode.Split(' ')[0].IsAlpha() && postcode.Split(' ')[0].Length==1) ) )
-                    {
+                if (postcode.ToStr().Trim().Length > 0 && (postcode.Split(' ')[0].IsNumeric() || (postcode.Split(' ')[0].IsAlpha() && postcode.Split(' ')[0].Length == 1)))
+                {
 
                     postcode = postcode.Substring(postcode.IndexOf(' ')).ToStr().Trim();
                 }
@@ -108,17 +108,17 @@ public static class GetDistance
                 {
 
                     var loc = db.Gen_Locations.FirstOrDefault(c => c.FullLocationName == postcode && c.Latitude != null && c.Latitude != 0);
-                    if(loc!=null && loc.Latitude!=null && loc.Latitude>0)
+                    if (loc != null && loc.Latitude != null && loc.Latitude > 0)
                     {
 
                         coord = new Coords
                         {
-                            Longitude =Convert.ToDouble(loc.Longitude),
+                            Longitude = Convert.ToDouble(loc.Longitude),
                             Latitude = Convert.ToDouble(loc.Latitude)
                         };
 
                     }
-                   
+
                 }
                 catch
                 {
@@ -138,7 +138,7 @@ public static class GetDistance
             {
                 client.Proxy = null;
                 //Taxi_AppMain.General.GetKey();
-               string googleKey = SignalRHub.General.GetKey();
+                string googleKey = SignalRHub.General.GetKey();
                 var encodedPostCode = HttpUtility.UrlEncode(postcode);
                 //   var url = string.Format("http://maps.google.com/maps/geo?q={0}&output=xml", encodedPostCode);
                 var url = "https://maps.googleapis.com/maps/api/geocode/xml?address=" + encodedPostCode + googleKey + "&sensor=true&region=GB";
@@ -201,8 +201,8 @@ public static class GetDistance
         // Download the XML response from Google
 
 
-        if (postcode.StartsWith("FLAT") || (postcode.Contains(" ") && postcode.Split(' ')[0].IsNumeric() ))
-    {
+        if (postcode.StartsWith("FLAT") || (postcode.Contains(" ") && postcode.Split(' ')[0].IsNumeric()))
+        {
 
         }
         else
@@ -223,11 +223,11 @@ public static class GetDistance
                 var url = "https://geocoder.ls.hereapi.com/6.2/geocode.json?apiKey=avsHjHri-tP5Su5wV7xyPBWwmdqOtEKK2Atn0xgDnrM&searchtext=" + encodedPostCode;
 
                 var xml = client.DownloadString(url);
-               SignalRHub.HereMapApi.Root here = Newtonsoft.Json.JsonConvert.DeserializeObject< SignalRHub.HereMapApi.Root>(xml);
+                SignalRHub.HereMapApi.Root here = Newtonsoft.Json.JsonConvert.DeserializeObject<SignalRHub.HereMapApi.Root>(xml);
 
                 //   [0].FirstChild.InnerText
 
-              
+
                 //var nodes = doc.ChildNodes[1].ChildNodes[1].ChildNodes[7].ChildNodes[3].ChildNodes;
 
                 double latitude = here.Response.View[0].Result[0].Location.DisplayPosition.Latitude;
@@ -244,7 +244,7 @@ public static class GetDistance
 
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
 
 
@@ -365,7 +365,7 @@ public static class GetDistance
     {
         if (keyword == null || keyword == string.Empty)
             return null;
-
+        SignalRHub.PlaceSearchResponse response = new SignalRHub.PlaceSearchResponse();
         var RadiusInMeter = radiusInMiles * 1609.344;
 
         string location = string.Empty;
@@ -378,14 +378,15 @@ public static class GetDistance
 
         }
 
+        string placeKey = "";
 
-
-        if (string.IsNullOrEmpty(PlaceKey))
+        if (string.IsNullOrEmpty(placeKey))
         {
             using (TaxiDataContext db = new TaxiDataContext())
             {
 
                 PlaceKey = db.ExecuteQuery<string>("select APIKey from mapkeys where maptype='places'").FirstOrDefault().ToStr().Trim();
+                placeKey = db.ExecuteQuery<string>("select APIKey from mapkeys where maptype='places'").FirstOrDefault().ToStr().Trim();
 
 
                 if (PlaceKey.Length == 0)
@@ -395,49 +396,79 @@ public static class GetDistance
             }
         }
 
-
-
-        var url = "https://maps.googleapis.com/maps/api/place/textsearch/xml?query=" + HttpUtility.UrlEncode(keyword) + location + "&radius=" + Convert.ToString(RadiusInMeter) + PlaceKey + "&sensor=true&region=GB";
-        SignalRHub.PlaceSearchResponse response = new SignalRHub.PlaceSearchResponse();
-
-        using (WebClient client = new WebClient())
-        {
-            client.Proxy = null;
-            var xml = client.DownloadString(url);
-
-            response = DeserializeXMLToObject<SignalRHub.PlaceSearchResponse>(xml);
-
-            if (response != null && response.Status == "OK" && coords != null)
-            {
-                if (response.Result.Count > 3)
-                {
-
-                    response.Result = response.Result
-                        //.Where(c=>c.Name.ToUpper().Contains(keyword))
-                        .Select(m =>
-                        new SignalRHub.Result()
-                        {
-                            Name = m.Name,
-                            Type = m.Type,
-                            Vicinity = m.Vicinity,
-                            Formatted_address = m.Formatted_address,
-                            Geometry = m.Geometry,
-                            Rating = m.Rating,
-                            Icon = m.Icon,
-                            Reference = m.Reference,
-                            Id = m.Id,
-                            Opening_hours = m.Opening_hours,
-                            Photo = m.Photo,
-                            Place_id = m.Place_id,
-                            Scope = m.Scope,
-                            Distance = new LatLng(coords.Value.Latitude, coords.Value.Longitude).DistanceMiles(new LatLng(Convert.ToDouble(m.Geometry.Location.Lat), Convert.ToDouble(m.Geometry.Location.Lng))) //new LatLng(Convert.ToDouble(m.Geometry.Location.Lat), Convert.ToDouble(m.Geometry.Location.Lng)).DistanceMiles(new LatLng(coords.Value.Latitude, coords.Value.Longitude))
-                        }).OrderBy(m => m.Distance).ThenByDescending(m => m.Rating).Where(c => c.Distance <= radiusInMiles).Distinct().ToList();
-                }
-
-            }
-        }
-
+        response = SearchPlaceGoogleAdv(keyword, "", radiusInMiles, coords, placeKey);
         return response;
+
+        //string location = string.Empty;
+        //if (coords != null)
+        //{
+        //    location = "&location=" + Convert.ToString(coords.Value.Latitude) + "," + Convert.ToString(coords.Value.Longitude);
+        //}
+        //else
+        //{
+
+        //}
+
+
+
+        //if (string.IsNullOrEmpty(PlaceKey))
+        //{
+        //    using (TaxiDataContext db = new TaxiDataContext())
+        //    {
+
+        //        PlaceKey = db.ExecuteQuery<string>("select APIKey from mapkeys where maptype='places'").FirstOrDefault().ToStr().Trim();
+
+
+        //        if (PlaceKey.Length == 0)
+        //            PlaceKey = "&key=AIzaSyDQRv7o4pxOeXApK6oKGp7U2FEHIttW5KA";
+        //        else
+        //            PlaceKey = "&key=" + PlaceKey;
+        //    }
+        //}
+
+
+
+        //var url = "https://maps.googleapis.com/maps/api/place/textsearch/xml?query=" + HttpUtility.UrlEncode(keyword) + location + "&radius=" + Convert.ToString(RadiusInMeter) + PlaceKey + "&sensor=true&region=GB";
+        //SignalRHub.PlaceSearchResponse response = new SignalRHub.PlaceSearchResponse();
+
+        //using (WebClient client = new WebClient())
+        //{
+        //    client.Proxy = null;
+        //    var xml = client.DownloadString(url);
+
+        //    response = DeserializeXMLToObject<SignalRHub.PlaceSearchResponse>(xml);
+
+        //    if (response != null && response.Status == "OK" && coords != null)
+        //    {
+        //        if (response.Result.Count > 3)
+        //        {
+
+        //            response.Result = response.Result
+        //                //.Where(c=>c.Name.ToUpper().Contains(keyword))
+        //                .Select(m =>
+        //                new SignalRHub.Result()
+        //                {
+        //                    Name = m.Name,
+        //                    Type = m.Type,
+        //                    Vicinity = m.Vicinity,
+        //                    Formatted_address = m.Formatted_address,
+        //                    Geometry = m.Geometry,
+        //                    Rating = m.Rating,
+        //                    Icon = m.Icon,
+        //                    Reference = m.Reference,
+        //                    Id = m.Id,
+        //                    Opening_hours = m.Opening_hours,
+        //                    Photo = m.Photo,
+        //                    Place_id = m.Place_id,
+        //                    Scope = m.Scope,
+        //                    Distance = new LatLng(coords.Value.Latitude, coords.Value.Longitude).DistanceMiles(new LatLng(Convert.ToDouble(m.Geometry.Location.Lat), Convert.ToDouble(m.Geometry.Location.Lng))) //new LatLng(Convert.ToDouble(m.Geometry.Location.Lat), Convert.ToDouble(m.Geometry.Location.Lng)).DistanceMiles(new LatLng(coords.Value.Latitude, coords.Value.Longitude))
+        //                }).OrderBy(m => m.Distance).ThenByDescending(m => m.Rating).Where(c => c.Distance <= radiusInMiles).Distinct().ToList();
+        //        }
+
+        //    }
+        //}
+
+        //return response;
     }
 
     private static T DeserializeXMLToObject<T>(string Xml)
@@ -755,7 +786,125 @@ public static class GetDistance
     //    }
     //    return null;
     //}
+    #region advance google search api
+    public class GooglePlacesV1Response
+    {
+        public List<GooglePlace> places { get; set; }
+    }
 
+    public class GooglePlace
+    {
+        public string id { get; set; }
+        public GoogleText displayName { get; set; }
+        public GoogleLocation location { get; set; }
+        public string formattedAddress { get; set; }
+        public double? rating { get; set; }
+    }
+
+    public class GoogleText
+    {
+        public string text { get; set; }
+    }
+
+    public class GoogleLocation
+    {
+        public double latitude { get; set; }
+        public double longitude { get; set; }
+    }
+
+
+    public static SignalRHub.PlaceSearchResponse SearchPlaceGoogleAdv(string keyword, string location, double radiusInMiles, Coords? coords, string apiKey)
+    {
+        var url = "https://places.googleapis.com/v1/places:searchText";
+
+        string jsonBody = $@"
+    {{
+        ""textQuery"": ""{keyword} {location}"",
+        ""locationBias"": {{
+            ""circle"": {{
+                ""center"": {{
+                    ""latitude"": {coords.Value.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture)},
+                    ""longitude"": {coords.Value.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}
+                }},
+                ""radius"": {radiusInMiles * 1609.34}
+            }}
+        }}
+    }}";
+
+        var responseModel = new SignalRHub.PlaceSearchResponse
+        {
+            Status = "FAILED",
+            Result = new List<SignalRHub.Result>()
+        };
+
+        try
+        {
+            var request = (HttpWebRequest)WebRequest.Create(url);
+            request.Method = "POST";
+            request.ContentType = "application/json";
+            request.Headers["X-Goog-Api-Key"] = apiKey;
+            request.Headers["X-Goog-FieldMask"] = "places.displayName,places.location,places.id,places.formattedAddress,places.rating";
+
+            using (var streamWriter = new StreamWriter(request.GetRequestStream()))
+            {
+                streamWriter.Write(jsonBody);
+                streamWriter.Flush();
+            }
+
+            string result;
+            using (var response = (HttpWebResponse)request.GetResponse())
+            using (var reader = new StreamReader(response.GetResponseStream()))
+            {
+                result = reader.ReadToEnd();
+            }
+
+            var jsonResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<GooglePlacesV1Response>(result);
+
+            if (jsonResponse != null && jsonResponse.places != null && coords != null)
+            {
+                responseModel.Status = "OK";
+                responseModel.Result = jsonResponse.places
+                    .Select(p => new SignalRHub.Result
+                    {
+                        Name = p.displayName?.text,
+                        Formatted_address = p.formattedAddress,
+                        Rating = p.rating.ToStr(),
+                        Place_id = p.id,
+                        Distance = new LatLng(coords.Value.Latitude, coords.Value.Longitude)
+                            .DistanceMiles(new LatLng(p.location.latitude, p.location.longitude))
+                    })
+                    .OrderBy(p => p.Distance)
+                    .ThenByDescending(p => p.Rating)
+                    .Where(p => p.Distance <= radiusInMiles)
+                    .Distinct()
+                    .ToList();
+            }
+        }
+        catch (WebException webEx)
+        {
+            if (webEx.Response != null)
+            {
+                using (var reader = new StreamReader(webEx.Response.GetResponseStream()))
+                {
+                    string errorResponse = reader.ReadToEnd();
+                    responseModel.Status = "ERROR";
+                }
+            }
+            else
+            {
+                responseModel.Status = "ERROR";
+            }
+        }
+        catch (Exception ex)
+        {
+            responseModel.Status = "ERROR";
+        }
+
+        return responseModel;
+    }
+
+
+    #endregion
 }
 
 
