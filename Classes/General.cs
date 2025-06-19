@@ -2376,7 +2376,7 @@ namespace SignalRHub
                                         paymentTypeName = objBooking?.Gen_PaymentType?.PaymentType.ToStr();
                                         vehicleType = objBooking?.Fleet_VehicleType?.VehicleType.ToStr();
                                     }
-                                    catch {}
+                                    catch { }
                                     string body = $@"
                                     Dear {ObjDriver.DriverName} ({ObjDriver.DriverNo}),<br/><br/>
 
@@ -2390,37 +2390,43 @@ namespace SignalRHub
                                         <tr><td><b>Pickup Date/Time:</b></td><td>{objBooking.PickupDateTime.ToDateTime().ToString("f")}</td></tr>
                                         <tr><td><b>Pickup:</b></td><td>{objBooking.FromAddress}</td></tr>";
 
-                                        if (!string.IsNullOrWhiteSpace(notes))
-                                        {
-                                            body += $@"
-                                            <tr><td><b>Pickup Notes:</b></td><td>{notes}</td></tr>";
-                                        }
-
-                                        if (objBooking.Booking_ViaLocations != null && objBooking.Booking_ViaLocations.Count > 0)
-                                        {
-                                            var viaList = string.Join("<br/>", objBooking.Booking_ViaLocations.Select(v => v.ViaLocValue.ToStr()));
-                                            body += $@"
-                                            <tr><td><b>Vias:</b></td><td>{viaList}</td></tr>";
-                                        }
-
+                                    if (!string.IsNullOrWhiteSpace(notes))
+                                    {
                                         body += $@"
+                                            <tr><td><b>Pickup Notes:</b></td><td>{notes}</td></tr>";
+                                    }
+
+                                    if (objBooking.Booking_ViaLocations != null && objBooking.Booking_ViaLocations.Count > 0)
+                                    {
+                                        var viaList = string.Join("<br/>", objBooking.Booking_ViaLocations.Select(v => v.ViaLocValue.ToStr()));
+                                        body += $@"
+                                            <tr><td><b>Vias:</b></td><td>{viaList}</td></tr>";
+                                    }
+
+                                    body += $@"
                                         <tr><td><b>Destination:</b></td><td>{objBooking.ToAddress}</td></tr>
                                         <tr><td><b>Vehicle Type:</b></td><td>{vehicleType}</td></tr>";
 
-                                        if (!string.IsNullOrWhiteSpace(specialReq))
-                                        {
-                                            body += $@"
-                                            <tr><td><b>Special Req:</b></td><td>{specialReq}</td></tr>";
-                                        }
-
+                                    if (!string.IsNullOrWhiteSpace(specialReq))
+                                    {
                                         body += $@"
+                                            <tr><td><b>Special Req:</b></td><td>{specialReq}</td></tr>";
+                                    }
+
+                                    body += $@"
                                         <tr><td><b>Payment Type:</b></td><td>{paymentType}</td></tr>";
 
-                                        if (objBooking.PaymentTypeId == 1) // cash
-                                        {
-                                            body += $@"
+                                    if (objBooking.PaymentTypeId == 1) // cash
+                                    {
+                                        body += $@"
                                             <tr><td><b>Total Fare:</b></td><td>{objBooking.TotalCharges:C}</td></tr>";
-                                        }
+                                    }
+
+                                    if (!string.IsNullOrWhiteSpace(objBooking.CustomerMobileNo))
+                                    {
+                                        body += $@"
+                                            <tr><td><b>Customer MobileNo:</b></td><td>{objBooking.CustomerMobileNo}</td></tr>";
+                                    }
 
                                     body += $@"
                                     </table><br/>
