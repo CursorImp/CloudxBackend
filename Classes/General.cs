@@ -2421,11 +2421,15 @@ namespace SignalRHub
                                         body += $@"
                                             <tr><td><b>Total Fare:</b></td><td>{objBooking.TotalCharges:C}</td></tr>";
                                     }
-
+                                    if (!string.IsNullOrWhiteSpace(objBooking.CustomerName))
+                                    {
+                                        body += $@"
+                                            <tr><td><b>Passenger Name:</b></td><td>{objBooking.CustomerName}</td></tr>";
+                                    }
                                     if (!string.IsNullOrWhiteSpace(objBooking.CustomerMobileNo))
                                     {
                                         body += $@"
-                                            <tr><td><b>Customer MobileNo:</b></td><td>{objBooking.CustomerMobileNo}</td></tr>";
+                                            <tr><td><b>Passenger MobileNo:</b></td><td>{objBooking.CustomerMobileNo}</td></tr>";
                                     }
 
                                     body += $@"
