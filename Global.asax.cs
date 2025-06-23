@@ -3050,7 +3050,7 @@ namespace SignalRHub
                                               ,
                                               a.IsIdle
                                               ,
-                                              SubcompanyId = a.Fleet_Driver.SubcompanyId.ToInt()
+                                              SubcompanyId = ((a.Fleet_Driver == null || a.Fleet_Driver.SubcompanyId == null) ? 0 : a.Fleet_Driver.SubcompanyId)
                                           }).ToList();
 
                         if (listofDrvs.Count > 0)
