@@ -3312,36 +3312,36 @@ namespace SignalRHub.Controllers
                         model.Cancelled = model.HistoryList.Sum(c => c.CancelledJobCount ?? 0);
                         model.Used = model.HistoryList.Sum(c => c.Completed ?? 0);
                         model.NoFares = model.HistoryList.Sum(c => c.NoPickupJobCount ?? 0);
-
-                        try
+                    }
+                    try
+                    {
+                        db.CommandTimeout = 4;
+                        var objCustomer = db.stp_GetCallerInfo(phoneNumber, "").FirstOrDefault();
+                        if (objCustomer != null)
                         {
-                            db.CommandTimeout = 4;
-                            var objCustomer = db.stp_GetCallerInfo(phoneNumber, "").FirstOrDefault();
-                            if (objCustomer != null)
-                            {
-                                model.CustomerName = objCustomer.Name.ToStr();
-                                model.Address = objCustomer.Address1.ToStr().Trim();
-                                model.DoorNo = objCustomer.DoorNo.ToStr().Trim();
-                                model.Email = objCustomer.DoorNo.ToStr().Trim();
-                                model.Notes = objCustomer.DoorNo.ToStr().Trim();
-                                model.IsBlackListed = objCustomer.BlackList.ToBool();
-                                model.BlackListReason = objCustomer.DoorNo.ToStr().Trim();
-                                model.IsAccount = objCustomer.IsAccount.ToBool();
-                                model.AccountId = objCustomer.AccountId;
-                                model.ExcludedDriverIds = objCustomer.ExcludedDriverIds.ToStr().Trim();
-                                model.SubCompanyId = objCustomer.SubCompanyId.ToInt();
-                                model.SubCompanyName = objCustomer.SubCompanyName.ToStr();
+                            model.CustomerName = objCustomer.Name.ToStr();
+                            model.Address = objCustomer.Address1.ToStr().Trim();
+                            model.DoorNo = objCustomer.DoorNo.ToStr().Trim();
+                            model.Email = objCustomer.Email.ToStr().Trim();
+                            model.Notes = objCustomer.Notes.ToStr().Trim();
+                            model.IsBlackListed = objCustomer.BlackList.ToBool();
+                            model.BlackListReason = objCustomer.BlackListResion.ToStr().Trim();
+                            model.IsAccount = objCustomer.IsAccount.ToBool();
+                            model.AccountId = objCustomer.AccountId;
+                            model.ExcludedDriverIds = objCustomer.ExcludedDriverIds.ToStr().Trim();
+                            model.SubCompanyId = objCustomer.SubCompanyId.ToInt();
+                            model.SubCompanyName = objCustomer.SubCompanyName.ToStr();
 
-                                if (model.ExcludedDriverIds.ToStr().Trim().Length > 0 && model.ExcludedDriverIds.ToStr().Trim().Contains(",") == false)
-                                    model.ExcludedDriverIds = "," + model.ExcludedDriverIds + ",";
-
-                            }
-                        }
-                        catch
-                        {
+                            if (model.ExcludedDriverIds.ToStr().Trim().Length > 0 && model.ExcludedDriverIds.ToStr().Trim().Contains(",") == false)
+                                model.ExcludedDriverIds = "," + model.ExcludedDriverIds + ",";
 
                         }
                     }
+                    catch
+                    {
+
+                    }
+
                     response.Data = model;
                 }
 
