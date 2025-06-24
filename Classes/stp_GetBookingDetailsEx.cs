@@ -10,43 +10,43 @@ namespace SignalRHub
 
         public long Id { get; set; }
         public int? JourneyTypeId { get; set; }
-       
+
         public string SpecialRequirements { get; set; }
-      
+
         public string ViaString { get; set; }
-      
+
         public string CustomerEmail { get; set; }
-     
+
         public int? CompanyId { get; set; }
-    
+
         public decimal? CustomerPrice { get; set; }
-       
+
         public decimal? CompanyPrice { get; set; }
-      
+
         public decimal? FareRate { get; set; }
-     
+
         public bool? DisableDriverSMS { get; set; }
-    
+
         public string CustomerPhoneNo { get; set; }
-       
+
         public int? DriverId { get; set; }
-      
+
         public int? VehicleTypeId { get; set; }
-    
+
         public string CustomerName { get; set; }
-     
+
         public int? BookingStatusId { get; set; }
-      
+
         public string ToAddress { get; set; }
-     
+
         public string FromAddress { get; set; }
-    
+
         public DateTime? PickupDateTime { get; set; }
-     
+
         public string BookingNo { get; set; }
-      
+
         public string CustomerMobileNo { get; set; }
-     
+
         public bool? DisablePassengerSMS { get; set; }
 
         public int? BookingTypeId { get; set; }
@@ -78,5 +78,9 @@ namespace SignalRHub
 
         public bool? enableSurge;
         public string surgeText;
+
+
+        public int? ZoneId { get; set; }
+
     }
 }

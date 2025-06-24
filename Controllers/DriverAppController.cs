@@ -3680,7 +3680,107 @@ namespace SignalRHub
 
 
 
+        public string GetLocationName(double? latitude, double? longitude)
+        {
+            string locationName = string.Empty;
+            try
+            {
 
+                //if (Global.googleKey.ToStr().Length == 0)
+                //{
+
+                //    using (TaxiDataContext db = new TaxiDataContext())
+                //    {
+                //        db.CommandTimeout = 5;
+                //        Global.googleKey = "&key=" + db.ExecuteQuery<string>("select apikey from mapkeys where maptype='google'").FirstOrDefault();
+
+
+                //    }
+                //}
+                // Starts Google Geocoding Webservice
+
+                string url2 = string.Empty;
+                DataTable dt = null;
+                XmlTextReader reader = null;
+                System.Data.DataSet ds = null;
+
+
+
+                if (Global.googleKey.ToStr().Trim().Length > 0)
+                {
+                    try
+                    {
+
+                        url2 = "https://maps.googleapis.com/maps/api/geocode/xml?latlng=" + latitude + "," + longitude + Global.googleKey + "&sensor=false";
+
+                        reader = new XmlTextReader(url2);
+                        reader.WhitespaceHandling = WhitespaceHandling.Significant;
+                        ds = new System.Data.DataSet();
+                        ds.ReadXml(reader);
+
+                        dt = ds.Tables["result"];
+
+                        if (dt != null && dt.Rows.Count > 0)
+                        {
+
+                            DataRow row = dt.Rows.OfType<DataRow>().FirstOrDefault();
+                            if (row != null)
+                            {
+                                locationName = row[1].ToStr().Trim();
+                            }
+                        }
+
+                        ds.Dispose();
+
+                        try
+                        {
+
+                            File.AppendAllText(physicalPath + "\\" + "googleLocation.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ": Lat" + latitude + ",lng:" + longitude + ",location:" + locationName + Environment.NewLine);
+                        }
+                        catch
+                        {
+
+
+                        }
+
+
+                    }
+                    catch (Exception ex)
+                    {
+                        try
+                        {
+
+                            File.AppendAllText(physicalPath + "\\" + "exception_google.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ":" + ex.Message + Environment.NewLine);
+                        }
+                        catch
+                        {
+
+
+                        }
+                    }
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+            }
+            catch (Exception ex)
+            {
+
+
+            }
+
+
+            return locationName;
+        }
         private void DispatchJobSMS(long jobId, int jobStatusId)
         {
             try
@@ -16260,7 +16360,6 @@ namespace SignalRHub
             {
                 string[] values = dataValue.Split(new char[] { '=' });
                 int valCnt = mesg.Count();
-
                 if (valCnt >= 7)
                 {
                     //try
@@ -16293,8 +16392,10 @@ namespace SignalRHub
 
                         using (TaxiDataContext db = new TaxiDataContext())
                         {
-                            var objDetails = db.stp_GetBookingDetails(values[1].ToLong()).FirstOrDefault();
-
+                            stp_GetBookingDetailsExResult objDetails = null;
+                            long jobId = values[1].ToLong();
+                            //objDetails = db.stp_GetBookingDetails(values[1].ToLong()).FirstOrDefault();
+                            objDetails = db.ExecuteQuery<stp_GetBookingDetailsExResult>("exec stp_GetBookingDetailsEx {0}", jobId).FirstOrDefault();
                             if (objDetails != null)
                             {
 
@@ -16329,8 +16430,7 @@ namespace SignalRHub
                                         else
                                             fareJsonArr = new FareMeterSettings(true);
 
-                                        int? fareId = db.ExecuteQuery<int?>("exec stp_GetFareId {0},{1},{2},{3},{4}", vehicleTypeId, 0, 0.00m, objDetails.PickupDateTime, 1).FirstOrDefault();
-
+                                        int? fareId = db.ExecuteQuery<int?>("exec stp_GetFareId {0},{1},{2},{3},{4},{5}", vehicleTypeId, 0, 0.00m, objDetails.PickupDateTime, 1, objDetails.ZoneId.ToInt().ToStr()).FirstOrDefault();
 
                                         var jobTariff = (from f in db.Fares
                                                          join c in db.Fare_OtherCharges on f.Id equals c.FareId
