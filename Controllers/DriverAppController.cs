@@ -15359,7 +15359,50 @@ namespace SignalRHub
                     }
                     else
                     {
-                        if (jobStatusId != Enums.BOOKINGSTATUS.ONROUTE && jobStatusId != Enums.BOOKINGSTATUS.ARRIVED && jobStatusId != Enums.BOOKINGSTATUS.STC)
+                        bool isRestricted = false;
+                        try
+                        {
+                        if (jobStatusId == Enums.BOOKINGSTATUS.NOPICKUP)
+                        {
+                            //send message back to PDA
+                            // Clients.Caller.noPickup(respo);
+
+                            DateTime? arrivalDateTime = null;
+                            using (TaxiDataContext db = new TaxiDataContext())
+                            {
+                                arrivalDateTime = db.Bookings.Where(c => c.Id == values[1].ToLong()).Select(c => c.ArrivalDateTime).FirstOrDefault();
+                            }
+
+                            if (arrivalDateTime != null)
+                            {
+                                double timeString = DateTime.Now.Subtract(arrivalDateTime.Value).TotalMinutes;
+
+
+                                int restrictionMins = Global.NoPickupRestrictionMins.ToInt();
+                                //   int restrictionMins = 5;
+
+                                if (timeString < restrictionMins)
+                                {
+                                    timeString = restrictionMins - timeString;
+                                    ///Clients.Caller.noPickupAuth("false:You can press No Pickup after " + timeString.ToInt() + "min");-------------------------------------------
+                                    ///
+                                    respo = "false:You can press No Pickup after " + timeString.ToInt() + "min";
+                                    isRestricted = true;
+                                }
+                                else
+                                {
+                                    isRestricted = false;
+                                    respo = "true";
+                                }
+                            }
+
+
+                        }
+                        }
+                        catch
+                        {
+                        }
+                        if (!isRestricted && jobStatusId != Enums.BOOKINGSTATUS.ONROUTE && jobStatusId != Enums.BOOKINGSTATUS.ARRIVED && jobStatusId != Enums.BOOKINGSTATUS.STC)
                         {
                             using (TaxiDataContext db = new TaxiDataContext())
                             {
@@ -15726,12 +15769,6 @@ namespace SignalRHub
                             }
 
                             //   }
-                        }
-                        else if (jobStatusId == Enums.BOOKINGSTATUS.NOPICKUP)
-                        {
-                            //send message back to PDA
-                            // Clients.Caller.noPickup(respo);
-                            respo = "true";
                         }
                     }
                 }
