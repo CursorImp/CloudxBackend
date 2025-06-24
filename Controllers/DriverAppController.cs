@@ -5914,7 +5914,7 @@ namespace SignalRHub
                             if (objAction.IsMeter.ToStr() == "1")
                             {
                                 var enableFareMeterOnDriverPDA = db.Fleet_Driver_PDASettings.Where(c => c.DriverId == driverId).Select(x => x.EnableFareMeter).FirstOrDefault().ToBool();
-                                if (enableFareMeterOnDriverPDA)
+                                if (enableFareMeterOnDriverPDA && objAction.QuotedPrice != "1")
                                 {
                                     price = objAction.Fares.ToDecimal();
                                 }
