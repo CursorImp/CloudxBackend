@@ -14347,12 +14347,59 @@ namespace SignalRHub
                 {
 
                 }
-                General.BroadCastMessage("**auth>>" + values[1].ToStr() + ">>" + values[2].ToStr() + ">>" + values[3].ToInt() + ">>" + values[4].ToInt() + ">>" + driverNo);
 
-                if (HubProcessor.Instance.listofJobs.Count(c => c.DriverId == values[2].ToInt() && c.JobId == values[1].ToLong()) > 0)
+                bool isRestricted = false;
+                try
                 {
-                    HubProcessor.Instance.listofJobs.RemoveAll(c => c.DriverId == values[2].ToInt() && c.JobId == values[1].ToLong());
-                    //Instance.listofJobs.LastOrDefault(c => c.DriverId == values[2].ToInt() && c.JobId == values[1].ToLong() && c.MessageTypeId==eMessageTypes.JOB).IsAccepted=true;
+                    if (values[3].ToInt() == 10) //10 is RECOVER
+                    {
+                        DateTime? acceptedDateTime = null;
+                        using (TaxiDataContext db = new TaxiDataContext())
+                        {
+                            acceptedDateTime = db.Bookings.Where(c => c.Id == values[1].ToLong()).Select(c => c.AcceptedDateTime).FirstOrDefault();
+                        }
+
+                        if (acceptedDateTime != null)
+                        {
+                            double timeString = DateTime.Now.Subtract(acceptedDateTime.Value).TotalSeconds;
+
+
+                            int restrictionSecs = Global.NoRecoverRestrictionInSec.ToInt();
+                            //   int restrictionMins = 5;
+
+                            if (restrictionSecs > 0 && timeString < restrictionSecs)
+                            {
+                                timeString = restrictionSecs - timeString;
+                                res.Data = "false";
+                                res.IsSuccess = false;
+                                res.Message = "You can press Recover after " + timeString.ToInt() + " seconds."; 
+                                isRestricted = true;
+                            }
+                            else
+                            {
+                                isRestricted = false;
+                                res.Data = "true";
+                                res.IsSuccess = true;
+                                res.Message = "true";
+                            }
+                        }
+
+
+                    }
+                }
+                catch
+                {
+                }
+
+                if (!isRestricted)
+                {
+                    General.BroadCastMessage("**auth>>" + values[1].ToStr() + ">>" + values[2].ToStr() + ">>" + values[3].ToInt() + ">>" + values[4].ToInt() + ">>" + driverNo);
+
+                    if (HubProcessor.Instance.listofJobs.Count(c => c.DriverId == values[2].ToInt() && c.JobId == values[1].ToLong()) > 0)
+                    {
+                        HubProcessor.Instance.listofJobs.RemoveAll(c => c.DriverId == values[2].ToInt() && c.JobId == values[1].ToLong());
+                        //Instance.listofJobs.LastOrDefault(c => c.DriverId == values[2].ToInt() && c.JobId == values[1].ToLong() && c.MessageTypeId==eMessageTypes.JOB).IsAccepted=true;
+                    }
                 }
             }
             catch (Exception ex)

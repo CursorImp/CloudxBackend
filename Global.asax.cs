@@ -72,6 +72,7 @@ namespace SignalRHub
         public static string EnableBidOnPlots = "0";
         public static string DriverPay = "0";
         public static string NoPickupRestrictionMins = "0";
+        public static string NoRecoverRestrictionInSec = "0";
         public static string CallerId_EnableHotDesk = "0";
         public int CallerID_FromExt = 200;
         public int CallerID_TillExt = 250;
@@ -529,6 +530,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "CallerID_FromExt", SetVal = "200", description = "Caller ID From Extension"  },
                             new AppSetting { SetKey = "CallerID_TillExt", SetVal = "250", description = "Caller ID Till Extension"  },
                             new AppSetting { SetKey = "NoPickupRestrictionMins", SetVal = "3", description = "No Pickup Restriction (mins)"  },
+                            new AppSetting { SetKey = "NoRecoverRestrictionInSec", SetVal = "0", description = "No Recover Restriction (secs)"  },
                             new AppSetting { SetKey = "enableChangePlotUpdateDestination", SetVal = "0", description = "Enable Change Plot Update Destination"  },
                             new AppSetting { SetKey = "AutoSTC", SetVal = "0", description = "Auto STC"  },
                             new AppSetting { SetKey = "enableEmaiLReceipt", SetVal = "0", description = "Enable Email Receipt"  },
@@ -1329,6 +1331,11 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("NoPickupRestrictionMins")))
                 {
                     NoPickupRestrictionMins = GetAppSetting<string>("NoPickupRestrictionMins").ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("NoRecoverRestrictionInSec")))
+                {
+                    NoRecoverRestrictionInSec = GetAppSetting<string>("NoRecoverRestrictionInSec").ToStr();
 
                 }
 
