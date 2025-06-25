@@ -18351,6 +18351,222 @@ namespace SignalRHub
             return res;
         }
 
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("requestViaAction")]
+        public ResponseData requestViaAction(string mesg)
+        {
+            ResponseData res = new ResponseData();
+
+            string respo = "true";
+            JobActionEx objAction = null;
+            try
+            {
+                try
+                {
+                    //
+                    File.AppendAllText(AppContext.BaseDirectory + "\\requestViaAction.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                }
+                catch
+                {
+
+                }
+
+
+                string dataValue = mesg;
+                dataValue = dataValue.Trim();
+                objAction = new JavaScriptSerializer().Deserialize<JobActionEx>(mesg);
+                RemoveUK(ref objAction.Dropoff);
+
+
+
+                long jobId = objAction.JobId.ToLong();
+
+                string via = objAction.Dropoff.ToStr();
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+                    try
+                    {
+
+                        //
+                        if (via.Contains(")"))
+                            via = via.Substring(via.IndexOf(')') + 1);
+
+
+                        if (respo == "true")
+                        {
+                            if (objAction.JStatus.ToStr() == "5")
+                            {
+
+                                db.ExecuteQuery<int>("update booking_viaLocations set iscurrentstop=1, onroutedatetime=getdate() where bookingid=" + jobId + " and vialocvalue='" + via + "'");
+
+
+                                db.stp_BookingLog(jobId, "DRIVER", "Via (ONROUTE) : " + via);
+
+
+                            }
+                            else if (objAction.JStatus.ToStr() == "6")
+                            {
+
+                                db.ExecuteQuery<int>("update booking_viaLocations set iscurrentstop=1, arrivaldatetime=getdate() where bookingid=" + jobId + " and vialocvalue='" + via + "'");
+
+                                db.stp_BookingLog(jobId, "DRIVER", "Via (ARRIVED) : " + via);
+
+                            }
+                            else if (objAction.JStatus.ToStr() == "7")
+                            {
+
+                                db.ExecuteQuery<int>("update booking_viaLocations set iscurrentstop=0, pobdatetime=getdate() where bookingid=" + jobId + " and vialocvalue='" + via + "'");
+                                db.stp_BookingLog(jobId, "DRIVER", "Via (POB) : " + via);
+
+                            }
+                            if (objAction.JStatus.ToStr() == "13")
+                            {
+                                db.stp_BookingLog(jobId, "DRIVER", "Via (NOPICKUP) : " + via);
+                            }
+
+                            db.ExecuteQuery<int>("update booking_viaLocations set iscurrentstop=0 where bookingid=" + jobId + " and vialocvalue!='" + via + "'");
+
+
+
+
+                        }
+                        else
+                        {
+                            respo = objAction.Message;
+
+                        }
+                        res.IsSuccess = true;
+
+                    }
+                    catch (Exception ex)
+                    {
+                        try
+                        {
+                            res.IsSuccess = false;
+                            res.Message = ex.Message;
+                            objAction.Message = ex.Message;
+                            File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_exception1.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                        }
+                        catch
+                        {
+
+                        }
+                    }
+
+                }
+
+
+
+
+
+            }
+
+            catch (Exception ex)
+            {
+                res.IsSuccess = false;
+                res.Message = ex.Message;
+                try
+                {
+                    objAction.Message = ex.Message;
+                    File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_exception2.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+                }
+            }
+
+
+
+
+            res.Data = respo;
+
+            return res;
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("requestViadetails")]
+        public ResponseData requestViadetails(string mesg)
+        {
+            try
+            {
+                File.AppendAllText(physicalPath + "\\" + "requestViadetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+            }
+            catch
+            {
+            }
+            ResponseData res = new ResponseData();
+            try
+            {
+                string dataValue = mesg.ToStr().Trim();
+                JobDetails objAction = new JavaScriptSerializer().Deserialize<JobDetails>(dataValue.ToStr());
+                string name = string.Empty;
+                string mobileno = string.Empty;
+                long jobId = objAction.JobId.ToLong();
+                int driverId = objAction.driverId.ToInt();
+                string via = objAction.Address.ToStr().Trim();
+                string viaLocation = objAction.Address.ToStr().Trim();
+                try
+                {
+                    if (via.Length > 0)
+                    {
+                        try
+                        {
+                            File.AppendAllText(physicalPath + "\\" + "requestViadetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", jobId:" + jobId + ", via: " + via + Environment.NewLine);
+                        }
+                        catch
+                        {
+                        }
+                        using (TaxiDataContext db = new TaxiDataContext())
+                        {
+                            if (via.StartsWith("(") && via.IndexOf(")") > 0)
+                            {
+                                int closeBracketIndex = via.IndexOf(")");
+                                viaLocation = via.Substring(closeBracketIndex + 1).Trim();
+                            }
+                            var obj = db.Booking_ViaLocations.FirstOrDefault(c => c.BookingId == jobId && c.ViaLocValue.Trim() == viaLocation);
+                            try
+                            {
+                                File.AppendAllText(physicalPath + "\\" + "requestViadetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + " ,viaLocation:" + viaLocation + ", obj: " + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                            }
+                            catch
+                            {
+                            }
+                            if (obj != null)
+                            {
+                                name = obj.ViaLocTypeLabel.ToStr().Trim();
+                                mobileno = obj.ViaLocTypeValue.ToStr().Trim();
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                }
+                objAction.Name = name;
+                objAction.MobileNo = mobileno;
+                res.Data = new JavaScriptSerializer().Serialize(objAction);
+                res.IsSuccess = true;
+                res.Message = "";
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    File.AppendAllText(physicalPath + "\\" + "requestViadetails_Exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+                }
+                res.IsSuccess = false;
+                res.Message = "";
+            }
+            return res;
+        }
     }
 
 
