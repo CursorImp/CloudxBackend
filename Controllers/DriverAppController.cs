@@ -14372,7 +14372,7 @@ namespace SignalRHub
                                 timeString = restrictionSecs - timeString;
                                 res.Data = "false";
                                 res.IsSuccess = false;
-                                res.Message = "You can press Recover after " + timeString.ToInt() + " seconds."; 
+                                res.Message = "You can press Recover after " + timeString.ToInt() + " seconds.";
                                 isRestricted = true;
                             }
                             else
@@ -16600,15 +16600,16 @@ namespace SignalRHub
                                             });
                                         }
 
-                                        if (Global.EnableViaAction == "1")
-                                        {
-                                            fareJsonArr.EnableViaAction = "2";
-                                        }
+                                        //if (Global.EnableViaAction == "1")
+                                        //{
+                                        fareJsonArr.EnableViaAction = Global.EnableViaAction;
+                                        //}
                                         try
                                         {
                                             fareJsonArr.EnablePauseMeter = Global.EnablePauseMeter;
                                         }
-                                        catch {
+                                        catch
+                                        {
                                         }
                                         fareJson = ",jsonstring|" + new JavaScriptSerializer().Serialize(fareJsonArr).Replace(",", "|");
                                         //
