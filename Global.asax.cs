@@ -89,6 +89,7 @@ namespace SignalRHub
         public static List<AppSetting> AppSettings = new List<AppSetting>();
 
         public static string EnableViaAction = "0";
+        public static string EnablePauseMeter = "0";
         public static string EnablaDriverDocuments = "";
 
         public static void RemoveJobFromBidList(long jobId)
@@ -536,6 +537,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "enableEmaiLReceipt", SetVal = "0", description = "Enable Email Receipt"  },
                             new AppSetting { SetKey = "EnablaDriverDocuments", SetVal = "0", description = "Enable Driver Documents"  },
                             new AppSetting { SetKey = "EnableViaAction", SetVal = "0", description = "Enable Via Action"  },
+                            new AppSetting { SetKey = "EnablePauseMeter", SetVal = "0", description = "Enable Pause Meter"  },
                             new AppSetting { SetKey = "StripeAPIBaseURL", SetVal = "https://k0nnectpay.com", description = "Stripe API Base URL"  },
                             new AppSetting { SetKey = "DefaultCurrency", SetVal = "GBP", description = "Default Currency"  },
                             new AppSetting { SetKey = "DefaultClientLocation", SetVal = "UK", description = "Default Client Location"  },
@@ -1395,6 +1397,11 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableViaAction")))
                 {
                     EnableViaAction = GetAppSetting<string>("EnableViaAction").ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnablePauseMeter")))
+                {
+                    EnablePauseMeter = GetAppSetting<string>("EnablePauseMeter").ToStr();
 
                 }
 

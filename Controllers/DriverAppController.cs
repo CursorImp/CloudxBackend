@@ -16604,7 +16604,12 @@ namespace SignalRHub
                                         {
                                             fareJsonArr.EnableViaAction = "2";
                                         }
-
+                                        try
+                                        {
+                                            fareJsonArr.EnablePauseMeter = Global.EnablePauseMeter;
+                                        }
+                                        catch {
+                                        }
                                         fareJson = ",jsonstring|" + new JavaScriptSerializer().Serialize(fareJsonArr).Replace(",", "|");
                                         //
                                     }
@@ -16640,9 +16645,6 @@ namespace SignalRHub
                                 {
                                     try
                                     {
-
-
-
                                         if (Global.EnableViaAction.ToStr() == "1")
                                         {
 

@@ -17,6 +17,7 @@ namespace SignalRHub
         public List<MeterTarrif> meterTarrif;
         public string EnableViaAction;
         public string EnableDropOffAction;
+        public string EnablePauseMeter;
 
         public FareMeterSettings()
         {
