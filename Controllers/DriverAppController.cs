@@ -10785,8 +10785,17 @@ namespace SignalRHub
                         pda.DrvWaitingMins = (obj.Fleet_Driver.DefaultIfEmpty().Fleet_VehicleType.DefaultIfEmpty().DriverWaitingChargesPerHour.ToStr());
                         pda.AccWaitingMins = (obj.Fleet_Driver.DefaultIfEmpty().Fleet_VehicleType.AccountWaitingChargesPerHour.ToStr());
 
+                        var EnableRecoverAuth = "0";
+                        try
+                        {
+                            EnableRecoverAuth = db.ExecuteQuery<string>("Select SetVal From AppSettings where setkey='EnableRecoverAuth'").FirstOrDefault().ToStr();
+                        }
+                        catch
+                        {
+                            EnableRecoverAuth = "0";
+                        }
                         //need to comment
-                        pda.DisableJobAuth = ((obj.DisableRejectJobAuth.ToBool() ? "2" : "0"));
+                        pda.DisableJobAuth = ((obj.DisableRejectJobAuth.ToBool() ? ((EnableRecoverAuth == "1") ? "1" : "2") : "0"));
 
 
                         pda.showDestAfterPob = (obj.ShowDestinationAfterPOB.ToBool() ? "1" : "0");
@@ -15362,42 +15371,42 @@ namespace SignalRHub
                         bool isRestricted = false;
                         try
                         {
-                        if (jobStatusId == Enums.BOOKINGSTATUS.NOPICKUP)
-                        {
-                            //send message back to PDA
-                            // Clients.Caller.noPickup(respo);
-
-                            DateTime? arrivalDateTime = null;
-                            using (TaxiDataContext db = new TaxiDataContext())
+                            if (jobStatusId == Enums.BOOKINGSTATUS.NOPICKUP)
                             {
-                                arrivalDateTime = db.Bookings.Where(c => c.Id == values[1].ToLong()).Select(c => c.ArrivalDateTime).FirstOrDefault();
-                            }
+                                //send message back to PDA
+                                // Clients.Caller.noPickup(respo);
 
-                            if (arrivalDateTime != null)
-                            {
-                                double timeString = DateTime.Now.Subtract(arrivalDateTime.Value).TotalMinutes;
-
-
-                                int restrictionMins = Global.NoPickupRestrictionMins.ToInt();
-                                //   int restrictionMins = 5;
-
-                                if (timeString < restrictionMins)
+                                DateTime? arrivalDateTime = null;
+                                using (TaxiDataContext db = new TaxiDataContext())
                                 {
-                                    timeString = restrictionMins - timeString;
-                                    ///Clients.Caller.noPickupAuth("false:You can press No Pickup after " + timeString.ToInt() + "min");-------------------------------------------
-                                    ///
-                                    respo = "false:You can press No Pickup after " + timeString.ToInt() + "min";
-                                    isRestricted = true;
+                                    arrivalDateTime = db.Bookings.Where(c => c.Id == values[1].ToLong()).Select(c => c.ArrivalDateTime).FirstOrDefault();
                                 }
-                                else
+
+                                if (arrivalDateTime != null)
                                 {
-                                    isRestricted = false;
-                                    respo = "true";
+                                    double timeString = DateTime.Now.Subtract(arrivalDateTime.Value).TotalMinutes;
+
+
+                                    int restrictionMins = Global.NoPickupRestrictionMins.ToInt();
+                                    //   int restrictionMins = 5;
+
+                                    if (timeString < restrictionMins)
+                                    {
+                                        timeString = restrictionMins - timeString;
+                                        ///Clients.Caller.noPickupAuth("false:You can press No Pickup after " + timeString.ToInt() + "min");-------------------------------------------
+                                        ///
+                                        respo = "false:You can press No Pickup after " + timeString.ToInt() + "min";
+                                        isRestricted = true;
+                                    }
+                                    else
+                                    {
+                                        isRestricted = false;
+                                        respo = "true";
+                                    }
                                 }
+
+
                             }
-
-
-                        }
                         }
                         catch
                         {
