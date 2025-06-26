@@ -20569,7 +20569,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     contents.Append(json);
 
 
-                    int driverId = obj.fleetDriver.Id;
+                    int driverId = objMaster.Current.Id;
                     new System.Threading.Thread(delegate ()
                     {
                         try
