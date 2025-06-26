@@ -1555,18 +1555,33 @@ namespace SignalRHub.Controllers
                     // if(obj2.ViaString.ToStr().Trim().Length>0)
                     //{
 
+                    //try
+                    //{
+                    //    //
+                    //    foreach (var item in db.Booking_ViaLocations.Where(c => c.BookingId == obj.bookingInfo.Id))
+                    //    {
+                    //        obj.bookingInfo.Booking_ViaLocations.Add(new ClsBooking_ViaLocation { Id = item.Id, BookingId = obj.bookingInfo.Id, ViaLocTypeId = Enums.LOCATION_TYPES.ADDRESS, ViaLocValue = item.ViaLocValue });
+                    //    }
+                    //}
+                    //catch
+                    //{
+
+                    //}
+
+
                     try
                     {
                         //
                         foreach (var item in db.Booking_ViaLocations.Where(c => c.BookingId == obj.bookingInfo.Id))
                         {
-                            obj.bookingInfo.Booking_ViaLocations.Add(new ClsBooking_ViaLocation { Id = item.Id, BookingId = obj.bookingInfo.Id, ViaLocTypeId = Enums.LOCATION_TYPES.ADDRESS, ViaLocValue = item.ViaLocValue });
+                            obj.bookingInfo.Booking_ViaLocations.Add(new ClsBooking_ViaLocation {ViaLocId=item.ViaLocId, ViaLocTypeValue = item.ViaLocTypeValue, ViaLocTypeLabel = item.ViaLocTypeLabel, Id = item.Id, BookingId = obj.bookingInfo.Id, ViaLocTypeId = Enums.LOCATION_TYPES.ADDRESS, ViaLocValue = item.ViaLocValue });
                         }
                     }
                     catch
                     {
 
                     }
+
                     if (obj.bookingInfo.ZoneId != null)
                     {
                         obj.bookingInfo.PickupZoneName = db.Gen_Zones.Where(c => c.Id == obj.bookingInfo.ZoneId).Select(c => c.ZoneName).FirstOrDefault();
@@ -2157,7 +2172,11 @@ namespace SignalRHub.Controllers
 
                                 objMaster.Current.Booking_ViaLocations.Add(new Booking_ViaLocation { BookingId = obj.bookingInfo.Id, ViaLocTypeId = Enums.LOCATION_TYPES.ADDRESS, ViaLocValue = item.ViaLocValue });
                             }
+                            //foreach (var item in obj.bookingInfo.Booking_ViaLocations)
+                            //{
 
+                            //    objMaster.Current.Booking_ViaLocations.Add(new Booking_ViaLocation { ViaLocTypeLabel = item.ViaLocTypeLabel, ViaLocTypeValue = item.ViaLocTypeValue, BookingId = obj.bookingInfo.Id, ViaLocTypeId = Enums.LOCATION_TYPES.ADDRESS, ViaLocValue = item.ViaLocValue });
+                            //}
 
                         }
                         catch (Exception ex)
@@ -2301,6 +2320,45 @@ namespace SignalRHub.Controllers
                         objMaster.ReturnCustomerPrice = objMaster.Current.ServiceCharges.ToDecimal();
                         objMaster.Save();
 
+                        try
+                        {
+                            string query1 = "delete from Booking_ViaLocations where BookingId={0}";
+                            db.ExecuteCommand(query1, objMaster.Current.Id);
+                            foreach (var item in obj.bookingInfo.Booking_ViaLocations)
+                            {
+                                string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue,ViaLocId) VALUES ({0}, {1}, {2}, {3}, {4},{5})";
+                                db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", objMaster.Current.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue, item.ViaLocId > 0 ? item.ViaLocId : 0);
+
+                               
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+
+                        }
+
+                        try
+                        {
+                            var master = db.Bookings.FirstOrDefault(x => x.MasterJobId == objMaster.Current.Id);
+                            if (master != null)
+                            {
+                                string query1 = "delete from Booking_ViaLocations where BookingId={0}";
+                                db.ExecuteCommand(query1, master.Id);
+                                foreach (var item in obj.bookingInfo.Booking_ViaLocations)
+                                {
+
+                                    string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue,ViaLocId) VALUES ({0}, {1}, {2}, {3}, {4},{5})";
+                                    db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", master.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue, item.ViaLocId > 0 ? item.ViaLocId : 0);
+
+
+                                }
+                            }
+                        }
+
+                        catch (Exception ex)
+                        {
+
+                        }
                         var EnableSendConfirmationEmail = "false";
                         try
                         {
