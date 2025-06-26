@@ -4697,7 +4697,8 @@ namespace SignalRHub.Controllers
                         db.ExecuteQuery<int>("Update Fare set ZoneId = " + zoneId + " where Id = " + objFare.Current.Id + " ");
                     }
                 }
-                catch {
+                catch
+                {
                 }
 
                 //if (obj.ddlZone.Visible)
@@ -20397,7 +20398,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
 
                 DriverBO objMaster = new DriverBO();
-
+                StringBuilder contents = new StringBuilder();
                 for (int i = 0; i < list2.Count; i++)
                 {
                     cnter++;
@@ -20430,8 +20431,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                     decimal version = list2[i].PDAVersion.ToDecimal();//0.00m;
 
-                    StringBuilder contents = new StringBuilder();
 
+                    contents = new StringBuilder();
                     contents.Append("update settings<<<");
 
 
@@ -20568,51 +20569,6 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                     contents.Append(json);
 
-
-                    int driverId = objMaster.Current.Id;
-                    new System.Threading.Thread(delegate ()
-                    {
-                        try
-                        {
-                            try
-                            {
-                                HubProcessor.Instance.listofJobs.Add(new clsPDA
-                                {
-
-                                    DriverId = driverId,
-                                    JobId = 0,
-                                    MessageDateTime = DateTime.Now.AddSeconds(-50),
-                                    JobMessage = contents.ToStr(),
-                                    MessageTypeId = 12
-                                });
-
-                            }
-                            catch
-                            {
-
-                            }
-                            //
-                            //
-                            SocketIO.SendToSocket(driverId.ToStr(), contents.ToStr(), "updateSetting");
-
-                            try
-                            {
-                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverbtnUpdateSetting1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",contents:" + contents + Environment.NewLine);
-                            }
-                            catch
-                            {
-                            }
-                        }
-                        catch
-                        {
-
-                        }
-
-                    }).Start();
-                    //fahad
-
-                    System.Threading.Thread.Sleep(2000);
-
                     ////new Thread(delegate ()
                     ////{
                     ////    General.SendMessageToPDA("request pda=" + 0 + "=" + objMaster.Current.Id + "=" + contents + "=12=" + objMaster.Current.DriverNo);
@@ -20733,7 +20689,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     objMaster.Save();
                     objMaster.Clear();
                 }
-
+                updateBulkSettingNotifyOnPDA(contents.ToStr());
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
                     var objSavedSettings = db.Gen_SysPolicy_PDASettings.FirstOrDefault();
@@ -20854,6 +20810,66 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 //btnUpdateSettings.Enabled = true;
             }
             return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+        public void updateBulkSettingNotifyOnPDA(string contents)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(contents))
+                {
+                    var objDriverList = new TaxiDataContext().ExecuteQuery<int>("Select DriverId from Fleet_DriverQueueList where Status=1").ToList();
+                    foreach (var item in objDriverList)
+                    {
+                        int driverId = item;
+                        new System.Threading.Thread(delegate ()
+                        {
+                            try
+                            {
+                                try
+                                {
+                                    HubProcessor.Instance.listofJobs.Add(new clsPDA
+                                    {
+
+                                        DriverId = driverId,
+                                        JobId = 0,
+                                        MessageDateTime = DateTime.Now.AddSeconds(-50),
+                                        JobMessage = contents.ToStr(),
+                                        MessageTypeId = 12
+                                    });
+
+                                }
+                                catch
+                                {
+
+                                }
+                                //
+                                //
+                                SocketIO.SendToSocket(driverId.ToStr(), contents.ToStr(), "updateSetting");
+
+                                try
+                                {
+                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverbtnUpdateSetting1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",contents:" + contents + Environment.NewLine);
+                                }
+                                catch
+                                {
+                                }
+                            }
+                            catch
+                            {
+
+                            }
+
+                        }).Start();
+
+                        System.Threading.Thread.Sleep(2000);
+                    }
+                }
+            }
+            catch
+            {
+            }
         }
 
         [System.Web.Http.HttpGet]
@@ -23983,7 +23999,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 using (var client = new HttpClient())
                 {
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                    var request = new HttpRequestMessage(HttpMethod.Get, $"{StripeAPIBaseURL}/v1/terminal/token/"+paymentGateway.PaypalID);
+                    var request = new HttpRequestMessage(HttpMethod.Get, $"{StripeAPIBaseURL}/v1/terminal/token/" + paymentGateway.PaypalID);
                     request.Headers.Add("Cookie", "ARRAffinity=feca2f43c86248ebbd849b8c2c1f826fbebf35d1e9b2cfef6a0425cce9266812; ARRAffinitySameSite=feca2f43c86248ebbd849b8c2c1f826fbebf35d1e9b2cfef6a0425cce9266812");
 
                     var response = client.SendAsync(request).Result;
