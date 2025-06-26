@@ -20568,6 +20568,51 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                     contents.Append(json);
 
+
+                    int driverId = obj.fleetDriver.Id;
+                    new System.Threading.Thread(delegate ()
+                    {
+                        try
+                        {
+                            try
+                            {
+                                HubProcessor.Instance.listofJobs.Add(new clsPDA
+                                {
+
+                                    DriverId = driverId,
+                                    JobId = 0,
+                                    MessageDateTime = DateTime.Now.AddSeconds(-50),
+                                    JobMessage = contents.ToStr(),
+                                    MessageTypeId = 12
+                                });
+
+                            }
+                            catch
+                            {
+
+                            }
+                            //
+                            //
+                            SocketIO.SendToSocket(driverId.ToStr(), contents.ToStr(), "updateSetting");
+
+                            try
+                            {
+                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverbtnUpdateSetting1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",contents:" + contents + Environment.NewLine);
+                            }
+                            catch
+                            {
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+
+                    }).Start();
+                    //fahad
+
+                    System.Threading.Thread.Sleep(2000);
+
                     ////new Thread(delegate ()
                     ////{
                     ////    General.SendMessageToPDA("request pda=" + 0 + "=" + objMaster.Current.Id + "=" + contents + "=12=" + objMaster.Current.DriverNo);
