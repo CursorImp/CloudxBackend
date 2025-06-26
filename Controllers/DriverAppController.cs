@@ -1663,6 +1663,60 @@ namespace SignalRHub
 
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
+                    if (Global.AutoRecoverOnNoMoveInSec != "" && Global.AutoRecoverOnNoMoveInSec.ToInt() > 0)
+                    {
+                        try
+                        {
+                            if (speed < 10)
+                            {
+                                var acceptedDateTime = db.Bookings.Where(x => x.Id == jobId && x.DriverId == driverId && x.BookingStatusId == 5).Select(x => x.AcceptedDateTime).FirstOrDefault().ToDateorNull();
+                                if (acceptedDateTime != null)
+                                {
+                                    double spendSeconds = DateTime.Now.Subtract(acceptedDateTime.Value).TotalSeconds;
+                                    if (spendSeconds <= Global.AutoRecoverOnNoMoveInSec.ToInt())
+                                    {
+                                        var NoMoveFromSeconds = 0;
+                                        try
+                                        {
+                                            NoMoveFromSeconds = db.ExecuteQuery<int>($"Select ISNULL(NoMoveFromSeconds,0) FrOm Fleet_Driver where Id={driverId}").FirstOrDefault().ToInt();
+                                        }
+                                        catch
+                                        {
+                                        }
+                                        if (NoMoveFromSeconds >= Global.AutoRecoverOnNoMoveInSec.ToInt())
+                                        {
+                                            db.stp_UpdateJob(jobId, driverId, Enums.BOOKINGSTATUS.WAITING, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
+                                            try
+                                            {
+                                                db.stp_BookingLog(jobId, "system", $"Job is Auto Recovered by system due to no movement from driver in {Global.AutoRecoverOnNoMoveInSec.ToInt() * 60} mins.");
+                                                db.ExecuteQuery<int>($"update Fleet_Driver set NoMoveFromSeconds = 0 where Id={driverId}");
+                                            }
+                                            catch
+                                            {
+                                            }
+                                            General.CancelledJobFromController(driverId, jobId);
+                                        }
+                                        else
+                                        {
+                                            db.ExecuteQuery<int>($"update Fleet_Driver set NoMoveFromSeconds = ISNULL(NoMoveFromSeconds,0) + 4 where Id={driverId}");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        db.ExecuteQuery<int>($"update Fleet_Driver set NoMoveFromSeconds = 0 where Id={driverId}");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                db.ExecuteQuery<int>($"update Fleet_Driver set NoMoveFromSeconds = 0 where Id={driverId}");
+
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
                     try
                     {
 
