@@ -1669,42 +1669,42 @@ namespace SignalRHub
                         {
                             if (speed < 10)
                             {
-                                var acceptedDateTime = db.Bookings.Where(x => x.Id == jobId && x.DriverId == driverId && x.BookingStatusId == 5).Select(x => x.AcceptedDateTime).FirstOrDefault().ToDateorNull();
+                                var acceptedDateTime = db.Bookings.Where(x => x.Id == jobId && x.DriverId == driverId && x.BookingStatusId == 5 && x.AcceptedDateTime != null).Select(x => x.AcceptedDateTime).FirstOrDefault();
                                 if (acceptedDateTime != null)
                                 {
-                                    double spendSeconds = DateTime.Now.Subtract(acceptedDateTime.Value).TotalSeconds;
-                                    if (spendSeconds <= Global.AutoRecoverOnNoMoveInSec.ToInt())
+                                    double spendSeconds = DateTime.Now.Subtract(acceptedDateTime.ToDateTime()).TotalSeconds;
+                                    var NoMoveFromSeconds = 0;
+                                    try
                                     {
-                                        var NoMoveFromSeconds = 0;
+                                        NoMoveFromSeconds = db.ExecuteQuery<int>($"Select ISNULL(NoMoveFromSeconds,0) FrOm Fleet_Driver where Id={driverId}").FirstOrDefault().ToInt();
+                                    }
+                                    catch
+                                    {
+                                    }
+                                    if (NoMoveFromSeconds >= Global.AutoRecoverOnNoMoveInSec.ToInt())
+                                    {
+                                        db.stp_UpdateJob(jobId, driverId, Enums.BOOKINGSTATUS.WAITING, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
                                         try
                                         {
-                                            NoMoveFromSeconds = db.ExecuteQuery<int>($"Select ISNULL(NoMoveFromSeconds,0) FrOm Fleet_Driver where Id={driverId}").FirstOrDefault().ToInt();
+                                            string driverNo = db.Fleet_Drivers.Where(x => x.Id == driverId).Select(x => x.DriverNo).FirstOrDefault().ToStr();
+                                            db.stp_BookingLog(jobId, "system", $"Job is Auto Recovered by system due to no movement from driver ({driverNo}) in {Global.AutoRecoverOnNoMoveInSec.ToInt() / 60} mins.");
+                                            db.ExecuteQuery<int>($"update Fleet_Driver set NoMoveFromSeconds = 0 where Id={driverId}");
                                         }
                                         catch
                                         {
                                         }
-                                        if (NoMoveFromSeconds >= Global.AutoRecoverOnNoMoveInSec.ToInt())
-                                        {
-                                            db.stp_UpdateJob(jobId, driverId, Enums.BOOKINGSTATUS.WAITING, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
-                                            try
-                                            {
-                                                db.stp_BookingLog(jobId, "system", $"Job is Auto Recovered by system due to no movement from driver in {Global.AutoRecoverOnNoMoveInSec.ToInt() * 60} mins.");
-                                                db.ExecuteQuery<int>($"update Fleet_Driver set NoMoveFromSeconds = 0 where Id={driverId}");
-                                            }
-                                            catch
-                                            {
-                                            }
-                                            General.CancelledJobFromController(driverId, jobId);
-                                        }
-                                        else
-                                        {
-                                            db.ExecuteQuery<int>($"update Fleet_Driver set NoMoveFromSeconds = ISNULL(NoMoveFromSeconds,0) + 4 where Id={driverId}");
-                                        }
+                                        General.CancelledJobFromController(driverId, jobId);
+                                        General.BroadCastMessage("**action>>" + jobId.ToStr() + ">>" + driverId.ToStr() + ">>" + 10);
                                     }
                                     else
                                     {
-                                        db.ExecuteQuery<int>($"update Fleet_Driver set NoMoveFromSeconds = 0 where Id={driverId}");
+                                        db.ExecuteQuery<int>($"update Fleet_Driver set NoMoveFromSeconds = ISNULL(NoMoveFromSeconds,0) + 4 where Id={driverId}");
                                     }
+                                }
+                                else
+                                {
+                                    db.ExecuteQuery<int>($"update Fleet_Driver set NoMoveFromSeconds = 0 where Id={driverId}");
+
                                 }
                             }
                             else
@@ -15362,6 +15362,12 @@ namespace SignalRHub
 
                         using (TaxiDataContext db = new TaxiDataContext())
                         {
+                            try
+                            {
+                                db.ExecuteQuery<int>($"update Fleet_Driver set NoMoveFromSeconds = 0 where Id={driverId}");
+                            }
+                            catch { 
+                            }
                             if (dataValue.ToStr().Contains("verify"))
                             {
                                 if ((db.Bookings.Count(c => c.Id == values[1].ToLong()
