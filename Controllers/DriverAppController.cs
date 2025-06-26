@@ -14367,12 +14367,12 @@ namespace SignalRHub
                             int restrictionSecs = Global.NoRecoverRestrictionInSec.ToInt();
                             //   int restrictionMins = 5;
 
-                            if (restrictionSecs > 0 && timeString < restrictionSecs)
+                            if (restrictionSecs > 0 && timeString >= restrictionSecs)
                             {
-                                timeString = restrictionSecs - timeString;
+                                //timeString = restrictionSecs - timeString;
                                 res.Data = "false";
                                 res.IsSuccess = false;
-                                res.Message = "You can press Recover after " + timeString.ToInt() + " seconds.";
+                                res.Message = "You can not Recover after " + restrictionSecs.ToInt() + " seconds.";
                                 isRestricted = true;
                             }
                             else
