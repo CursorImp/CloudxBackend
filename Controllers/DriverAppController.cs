@@ -14372,7 +14372,7 @@ namespace SignalRHub
                                 //timeString = restrictionSecs - timeString;
                                 res.Data = "false";
                                 res.IsSuccess = false;
-                                res.Message = "You can not Recover after " + restrictionSecs.ToInt() + " seconds.";
+                                res.Message = "You can not press Recover after " + restrictionSecs.ToInt() + " seconds.";
                                 isRestricted = true;
                             }
                             else
