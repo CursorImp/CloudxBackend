@@ -93,7 +93,6 @@ namespace SignalRHub
         public static string ZeroFareOnMeter = "0";
         public static string EnablaDriverDocuments = "";
         public static string AutoRecoverOnNoMoveInSec = "0";
-
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -542,6 +541,8 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnablePauseMeter", SetVal = "0", description = "Enable Pause Meter"  },
                             new AppSetting { SetKey = "ZeroFareOnMeter", SetVal = "0", description = "Zero Fare On Meter (if not quoted)"  },
                             new AppSetting { SetKey = "AutoRecoverOnNoMoveInSec", SetVal = "0", description = "AutoRecoverOnNoMoveInSec"  },
+                            new AppSetting { SetKey = "OnDriverRecoverMoveToBottom", SetVal = "0", description = "OnDriverRecoverMoveToBottom (used in stp_UpdateJob)"  },
+                            new AppSetting { SetKey = "OnCancelNoShowMoveDriverToTop", SetVal = "0", description = "OnCancelNoShowMoveDriverToTop (used in stp_UpdateJob)"  },
                             new AppSetting { SetKey = "StripeAPIBaseURL", SetVal = "https://k0nnectpay.com", description = "Stripe API Base URL"  },
                             new AppSetting { SetKey = "DefaultCurrency", SetVal = "GBP", description = "Default Currency"  },
                             new AppSetting { SetKey = "DefaultClientLocation", SetVal = "UK", description = "Default Client Location"  },
