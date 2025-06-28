@@ -26592,5 +26592,61 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
         }
 
         #endregion
+
+        #region Braithwaites invoice report 
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetInvoiceHtmlTemplate")]
+        public JsonResult GetInvoiceHtmlTemplate(int templateId)
+        {
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    string sql = "SELECT HtmlTemplate FROM InvoiceTemplates WHERE Id = {0}";
+                    var result = db.ExecuteQuery<string>(sql, templateId).FirstOrDefault();
+
+                    if (string.IsNullOrEmpty(result))
+                    {
+                        return Json(new { success = false, message = "Template not found." }, JsonRequestBehavior.AllowGet);
+                    }
+
+                    return Json(new { success = true, template = result }, JsonRequestBehavior.AllowGet);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetInvoiceTemplateTypeByCompany")]
+        public JsonResult GetInvoiceTemplateTypeByCompany(int companyId)
+        {
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    string sql = "SELECT InvoiceTemplateType FROM Gen_Company WHERE id = {0}";
+                    var result = db.ExecuteQuery<int?>(sql, companyId).FirstOrDefault();
+
+                    if (!result.HasValue)
+                    {
+                        return Json(new { success = false, message = "Company not found or no template set." }, JsonRequestBehavior.AllowGet);
+                    }
+
+                    return Json(new { success = true, template = result.Value }, JsonRequestBehavior.AllowGet);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+        #endregion
     }
 }

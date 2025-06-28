@@ -600,6 +600,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "AutoDispatchAllocatedJobsOnly", SetVal = "0", description = "Auto Dispatch Allocated Jobs Only"  },
                             new AppSetting { SetKey = "EnableSendConfirmationEmail", SetVal = "false", description = "Enable Send Confirmation Email"  },
                             new AppSetting { SetKey = "DocumentExpiryDays", SetVal = "0", description = "Document Expiry Days"  },
+                            new AppSetting { SetKey = "EnableAdvanceInvoiceTemplate", SetVal = "false", description = "Enable Advance Invoice Template "  },
                         };
 
                 using (var db = new TaxiDataContext())
