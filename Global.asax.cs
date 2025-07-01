@@ -1184,7 +1184,7 @@ namespace SignalRHub
                         DSSMS_Settings.ReceivingMsgPort = GetAppSetting<string>("DS_ReceivingMsgPort").Split(',').Select(m => Convert.ToInt32(m)).ToArray();
                     }
 
-                   
+
 
 
                     Gen_SysPolicy_SMSConfiguration objSMSConfig = null;
@@ -3451,19 +3451,6 @@ namespace SignalRHub
                                 }
 
 
-                                //if (listofJobAvailableDrvs.Count == 0)
-                                //{
-                                //    //if(job.bookingstatusId.ToInt()!=Enums.BOOKINGSTATUS.BID)
-                                //    //{
-                                //    //    SendJobOnBid(job);
-                                //    //    IsUpdated = true;
-                                //    //    continue;
-                                //    //}
-                                //    //else
-                                //    continue;
-
-
-                                //}
 
 
 
@@ -3869,6 +3856,22 @@ namespace SignalRHub
                                     //  File.AppendAllText(physicalPath + "\\stcqueryend.txt", DateTime.Now + Environment.NewLine);
 
                                 }
+
+
+                                if (listofJobAvailableDrvs.Count == 0)
+                                {
+                                    if (job.bookingstatusId.ToInt() != Enums.BOOKINGSTATUS.BID)
+                                    {
+                                        SendJobOnBid(job);
+                                        IsUpdated = true;
+                                        continue;
+                                    }
+                                    else
+                                        continue;
+
+
+                                }
+
 
                                 if (autoDespatchType == Enums.AUTODESPATCH_TYPES.TOP_STANDING_QUEUE) // AutoDespatch Rule 1 :- Top Standing in Plot Queue
                                 {
@@ -6689,13 +6692,9 @@ namespace SignalRHub
 
                         if (AutoRefreshVar.ToStr().Length > 0)
                         {
-                            //List<string> listOfConnections = new List<string>();
-                            //listOfConnections = Instance.ReturnDesktopConnections();
-
-                            //Instance.Clients.Clients(listOfConnections).cMessageToDesktop(AutoRefreshVar);
-
-                            General.BroadCastMessage(AutoRefreshVar);
-
+                            //commented 1725
+                            // General.BroadCastMessage(AutoRefreshVar);
+                            General.CallGetDashboardData();
 
                             File.AppendAllText(AppContext.BaseDirectory + "\\doneauto_Autorefreshvar.txt", DateTime.Now.ToStr() + " : value:" + AutoRefreshVar.ToStr() + Environment.NewLine);
 
@@ -6705,37 +6704,34 @@ namespace SignalRHub
                         }
                         else
                         {
+                            General.CallGetDashboardData();
+                            //string data = "jsonrefresh active booking dashboard";
+                            //DateTime? dt = DateTime.Now.ToDateorNull();
+                            //DateTime recentDays = dt.Value.AddDays(-1);
 
-                            string data = "jsonrefresh active booking dashboard";
-                            DateTime? dt = DateTime.Now.ToDateorNull();
-                            DateTime recentDays = dt.Value.AddDays(-1);
+                            //int BookingHours = Instance.objPolicy.DaysInTodayBooking.ToInt();
 
-                            int BookingHours = Instance.objPolicy.DaysInTodayBooking.ToInt();
+                            //DateTime tillDate = dt.Value.AddHours(BookingHours).Date;
 
-                            DateTime tillDate = dt.Value.AddHours(BookingHours).Date;
-
-                            if (BookingHours > 0)
-                                tillDate = DateTime.Now.ToDateTime().AddHours(BookingHours);
-
-
-                            using (TaxiDataContext db = new TaxiDataContext())
-                            {
-                                //
-                                List<stp_GetBookingsDataResult> query = db.ExecuteQuery<stp_GetBookingsDataResult>("exec stp_getbookingsdata {0},{1},{2},{3}", recentDays, tillDate, 0, BookingHours).ToList();
+                            //if (BookingHours > 0)
+                            //    tillDate = DateTime.Now.ToDateTime().AddHours(BookingHours);
 
 
-                                data += "|>>>|" + Newtonsoft.Json.JsonConvert.SerializeObject(query);
-                            }
+                            //using (TaxiDataContext db = new TaxiDataContext())
+                            //{
+                            //    //
+                            //    List<stp_GetBookingsDataResult> query = db.ExecuteQuery<stp_GetBookingsDataResult>("exec stp_getbookingsdata {0},{1},{2},{3}", recentDays, tillDate, 0, BookingHours).ToList();
 
 
-                            General.BroadCastMessage(data);
+                            //    data += "|>>>|" + Newtonsoft.Json.JsonConvert.SerializeObject(query);
+                            //}
+
+
+                            //General.BroadCastMessage(data);
 
 
 
-                            //List<string> listOfConnections = new List<string>();
-                            //listOfConnections = Instance.ReturnDesktopConnections();
 
-                            //Instance.Clients.Clients(listOfConnections).cMessageToDesktop(data);
                         }
                     }
                     catch (Exception ex)
