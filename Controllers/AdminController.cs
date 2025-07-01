@@ -20689,7 +20689,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     objMaster.Save();
                     objMaster.Clear();
                 }
-                updateBulkSettingNotifyOnPDA(contents.ToStr());
+                //updateBulkSettingNotifyOnPDA(contents.ToStr());
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
                     var objSavedSettings = db.Gen_SysPolicy_PDASettings.FirstOrDefault();
@@ -20820,40 +20820,42 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 if (!string.IsNullOrEmpty(contents))
                 {
                     var objDriverList = new TaxiDataContext().ExecuteQuery<int>("Select DriverId from Fleet_DriverQueueList where Status=1").ToList();
-                    foreach (var item in objDriverList)
-                    {
-                        int driverId = item;
+                    
                         new System.Threading.Thread(delegate ()
                         {
                             try
                             {
-                                try
+                                foreach (var item in objDriverList)
                                 {
-                                    HubProcessor.Instance.listofJobs.Add(new clsPDA
+                                    int driverId = item;
+                                    try
+                                    {
+                                        HubProcessor.Instance.listofJobs.Add(new clsPDA
+                                        {
+
+                                            DriverId = driverId,
+                                            JobId = 0,
+                                            MessageDateTime = DateTime.Now.AddSeconds(-50),
+                                            JobMessage = contents.ToStr(),
+                                            MessageTypeId = 12
+                                        });
+
+                                    }
+                                    catch
                                     {
 
-                                        DriverId = driverId,
-                                        JobId = 0,
-                                        MessageDateTime = DateTime.Now.AddSeconds(-50),
-                                        JobMessage = contents.ToStr(),
-                                        MessageTypeId = 12
-                                    });
+                                    }
+                                    //
+                                    //
+                                    SocketIO.SendToSocket(driverId.ToStr(), contents.ToStr(), "updateSetting");
 
-                                }
-                                catch
-                                {
-
-                                }
-                                //
-                                //
-                                SocketIO.SendToSocket(driverId.ToStr(), contents.ToStr(), "updateSetting");
-
-                                try
-                                {
-                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverbtnUpdateSetting1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",contents:" + contents + Environment.NewLine);
-                                }
-                                catch
-                                {
+                                    try
+                                    {
+                                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverbtnUpdateSetting1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",contents:" + contents + Environment.NewLine);
+                                    }
+                                    catch
+                                    {
+                                    }
                                 }
                             }
                             catch
@@ -20865,7 +20867,6 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                         System.Threading.Thread.Sleep(2000);
                     }
-                }
             }
             catch
             {
