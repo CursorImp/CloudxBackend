@@ -601,6 +601,8 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableSendConfirmationEmail", SetVal = "false", description = "Enable Send Confirmation Email"  },
                             new AppSetting { SetKey = "DocumentExpiryDays", SetVal = "0", description = "Document Expiry Days"  },
                             new AppSetting { SetKey = "EnableAdvanceInvoiceTemplate", SetVal = "false", description = "Enable Advance Invoice Template "  },
+                            new AppSetting { SetKey = "EnableForceLogoutDriver", SetVal = "true", description = "Enable ForceLogout Driver"  },
+                            new AppSetting { SetKey = "OnRecoverDriverUnAllocateJob", SetVal = "0", description = "OnRecoverDriverUnAllocateJob"  },
                         };
 
                 using (var db = new TaxiDataContext())
