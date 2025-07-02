@@ -7316,6 +7316,51 @@ namespace SignalRHub.Controllers
 
 
         }
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("CancelBulkAdvanceBooking")]
+        public JsonResult CancelBulkAdvanceBooking(WebApiClasses.RequestWebApi obj)
+        {
+            try
+            {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CancelBulkAdvanceBooking.txt",
+                    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch { }
+
+            ResponseWebApi response = new ResponseWebApi();
+
+            using (TaxiDataContext db = new TaxiDataContext())
+            {
+                db.DeferredLoadingEnabled = false;
+
+                try
+                {
+                    if (obj.AdvanceBookingIds != null && obj.AdvanceBookingIds.Any())
+                    {
+                        foreach (var id in obj.AdvanceBookingIds)
+                        {
+                            string FinalQuery = $"UPDATE Booking SET BookingStatusId = 3 WHERE Id = {id} AND BookingStatusId NOT IN (2)";
+                            db.ExecuteQuery<int>(FinalQuery);
+                        }
+                    }
+                    else
+                    {
+                        response.HasError = true;
+                        response.Message = "No booking IDs provided.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    response.Message = ex.Message;
+                    response.HasError = true;
+                }
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
