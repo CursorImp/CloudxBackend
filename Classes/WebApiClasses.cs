@@ -1350,6 +1350,7 @@ namespace SignalRHub.WebApiClasses
 
     public class RequestWebApi
     {
+        public List<int> AdvanceBookingIds { get; set; }
         public bool? AllocateAnyDriver { get; set; }
         public string MACAddress { get; set; }
         public int SendType { get; set; }
