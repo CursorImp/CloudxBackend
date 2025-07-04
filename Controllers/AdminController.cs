@@ -21951,6 +21951,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                     Fare = a.FareRate,
                                     TotalFare = a.TotalCharges,
                                     VehicleType = a.Fleet_VehicleType.VehicleType,
+                                    DepartmentId = a.DepartmentId
                                 }).ToList();
                     response.HasError = false;
                     response.Data = list.ToList();
