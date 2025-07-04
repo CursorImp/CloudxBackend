@@ -3118,7 +3118,28 @@ namespace SignalRHub.Controllers
                                 {
                                     try
                                     {
-                                        if (db.ExecuteQuery<int>("select count(*) from fleet_driverqueuelist (nolock) where driverid=" + obj.bookingInfo.DriverId.ToInt() + " and status=1 and currentjobid=" + obj.bookingInfo.Id.ToLong()).FirstOrDefault() > 0)
+                                        if (db.Bookings.Where(x=> x.Id == obj.bookingInfo.Id.ToLong() && x.DriverId != obj.bookingInfo.DriverId.ToInt()).Select(x=> x.BookingStatusId).FirstOrDefault().ToInt() == 4) //4 = PENDING ACCEPT
+                                        {
+                                            msg = "Job is already dispatched to other driver.";
+                                            try
+                                            {
+                                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                            }
+                                            catch {
+                                            }
+                                        }
+                                        else if (db.Bookings.Where(x => x.DriverId == obj.bookingInfo.DriverId.ToInt() && x.Id != obj.bookingInfo.Id.ToLong() && x.BookingStatusId == 4).Select(x => x.Id).ToList().Count > 0) //4 = PENDING ACCEPT
+                                        {
+                                            msg = "Other job is already dispatched to this driver.";
+                                            try
+                                            {
+                                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                            }
+                                            catch
+                                            {
+                                            }
+                                        }
+                                        else if (db.ExecuteQuery<int>("select count(*) from fleet_driverqueuelist (nolock) where driverid=" + obj.bookingInfo.DriverId.ToInt() + " and status=1 and currentjobid=" + obj.bookingInfo.Id.ToLong()).FirstOrDefault() > 0)
                                         {
                                             msg = "Job is already accepted by this driver";
                                             try
