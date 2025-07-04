@@ -3128,17 +3128,17 @@ namespace SignalRHub.Controllers
                                             catch {
                                             }
                                         }
-                                        else if (db.Bookings.Where(x => x.DriverId == obj.bookingInfo.DriverId.ToInt() && x.Id != obj.bookingInfo.Id.ToLong() && x.BookingStatusId == 4).Select(x => x.Id).ToList().Count > 0) //4 = PENDING ACCEPT
-                                        {
-                                            msg = "Other job is already dispatched to this driver.";
-                                            try
-                                            {
-                                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
-                                            }
-                                            catch
-                                            {
-                                            }
-                                        }
+                                        //else if (db.Bookings.Where(x => x.DriverId == obj.bookingInfo.DriverId.ToInt() && x.Id != obj.bookingInfo.Id.ToLong() && x.BookingStatusId == 4).Select(x => x.Id).ToList().Count > 0) //4 = PENDING ACCEPT
+                                        //{
+                                        //    msg = "Other job is already dispatched to this driver.";
+                                        //    try
+                                        //    {
+                                        //        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                        //    }
+                                        //    catch
+                                        //    {
+                                        //    }
+                                        //}
                                         else if (db.ExecuteQuery<int>("select count(*) from fleet_driverqueuelist (nolock) where driverid=" + obj.bookingInfo.DriverId.ToInt() + " and status=1 and currentjobid=" + obj.bookingInfo.Id.ToLong()).FirstOrDefault() > 0)
                                         {
                                             msg = "Job is already accepted by this driver";
@@ -3852,7 +3852,31 @@ namespace SignalRHub.Controllers
                         obj.routeInfo.Distance = route.Distance;
                         obj.routeInfo.legs = route.legs;
                         if (obj.routeInfo.AutoCalculateFares.ToBool() && pickup.ToStr().Trim().Length > 0 && destination.ToStr().Trim().Length > 0)
+                        {
+                            //if (obj.routeInfo.Noofhours > 0)
+                            //{
+                            //    if (obj.routeInfo.VehicleTypeId == -1)
+                            //    {
+                            //        route.fareModel = CalculateFaresByFixedHoursAllVehicle(obj);
+                            //    }
+                            //    else
+                            //    {
+                            //        route.fareModel = CalculateFaresByFixedHours(obj);
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    if (obj.routeInfo.VehicleTypeId == -1)
+                            //    {
+                            //        route.fareModel = CalculateFaresAllVehicle(obj);
+                            //    }
+                            //    else
+                            //    {
+                            //        route.fareModel = CalculateFares(obj);
+                            //    }
+                            //}
                             route.fareModel = CalculateFares(obj);
+                        }
                         if (obj.routeInfo.DriverId > 0)
                         {
                             var tempDriver = db.Fleet_Drivers
@@ -4072,6 +4096,8 @@ namespace SignalRHub.Controllers
                         info.Mileage = obj.routeInfo.Distance;
                         info.Miles = info.Mileage.ToStr();
 
+                        info.Duration = obj.routeInfo.Duration;
+                        info.Noofhours = obj.routeInfo.Noofhours;
 
                         if (info.MapType == 1)
                             info.MapKey = db.ExecuteQuery<string>("select APIKey from mapkeys where maptype='google'").FirstOrDefault().ToStr().Trim();
@@ -5105,8 +5131,524 @@ namespace SignalRHub.Controllers
             castedList.AddRange(str);
             return castedList;
         }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("CalculateFaresAllVehicle")]
+        public JsonResult CalculateFaresAllVehicle(WebApiClasses.RequestWebApi obj)
+        {
+            //
+
+            try
+            {
 
 
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFares.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
+
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+
+
+
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    //
+
+                    try
+                    {
+
+
+                        //
+                        //
+                        BookingInformation info = new BookingInformation();
+                        info.FromAddress = obj.routeInfo.pickupAddress.Address.ToStr();
+                        if (obj.routeInfo.pickupAddress.locTypeId == 0)
+                        {
+                            string postcode = General.GetPostCodeMatch(obj.routeInfo.pickupAddress.ToStr().Trim().ToUpper());
+                            if (db.Gen_Locations.Where(c => c.LocationTypeId == 1 && c.PostCode == postcode).Count() > 0)
+                            {
+                                obj.routeInfo.pickupAddress.locTypeId = 1;
+                            }
+
+                        }
+
+                        if (obj.routeInfo.destinationAddress.locTypeId == 0)
+                        {
+                            string postcode = General.GetPostCodeMatch(obj.routeInfo.destinationAddress.ToStr().Trim().ToUpper());
+                            if (db.Gen_Locations.Where(c => c.LocationTypeId == 1 && c.PostCode == postcode).Count() > 0)
+                            {
+                                obj.routeInfo.destinationAddress.locTypeId = 1;
+                            }
+
+                        }
+
+                        info.MapType = HubProcessor.Instance.objPolicy.MapType.ToInt();
+                        info.ToAddress = obj.routeInfo.destinationAddress.Address.ToStr();
+                        info.FromType = obj.routeInfo.pickupAddress.locTypeId == 1 ? "airport" : "address";
+                        info.ToType = obj.routeInfo.destinationAddress.locTypeId == 1 ? "airport" : "address";
+                        info.CompanyId = obj.routeInfo.CompanyId.ToInt();
+                        //info.PickupDateTime = string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
+
+                        //if (info.PickupDateTime != null)
+                        //    info.PickupDateTime = string.Format("{0:dd/MM/yyyy HH:mm}", obj.routeInfo.PickupDateTime);
+                        //  info.RouteCoordinates = "-1";
+                        // info.VehicleTypeId = obj.routeInfo.VehicleTypeId.ToInt();
+
+                        //
+                        try
+                        {
+                            info.VehicleTypeId = -1;
+                            info.Vehicle = "";
+                        }
+                        catch
+                        {
+                            info.VehicleTypeId = obj.routeInfo.VehicleTypeId.ToInt();
+                        }
+                        //  info.Via = booking.Via;
+                        //
+
+
+                        if (obj.routeInfo.PickupDateTime != null)
+                            info.PickupDateTime = string.Format("{0:dd-MMM-yyyy HH:mm}", obj.routeInfo.PickupDateTime);
+                        else
+                            info.PickupDateTime = string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
+
+
+
+                        if (obj.routeInfo.returnPickupDateTime != null)
+                            info.returnPickupDateTime = string.Format("{0:dd-MMM-yyyy HH:mm}", obj.routeInfo.returnPickupDateTime);
+                        else
+                            info.returnPickupDateTime = string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
+
+                        if (obj.routeInfo.viaAddresses != null)
+                        {
+
+                            info.Via = (from a in obj.routeInfo.viaAddresses select new ViaAddresses { Viaaddress = a.Address, Viatype = "address" }).ToArray();
+
+                        }
+                        //  info.Via = booking.Via;
+                        //
+                        info.Mileage = obj.routeInfo.Distance;
+                        info.Miles = info.Mileage.ToStr();
+
+                        info.Duration = obj.routeInfo.Duration;
+                        info.Noofhours = obj.routeInfo.Noofhours;
+
+                        if (info.MapType == 1)
+                            info.MapKey = db.ExecuteQuery<string>("select APIKey from mapkeys where maptype='google'").FirstOrDefault().ToStr().Trim();
+                        else
+                            info.MapKey = db.ExecuteQuery<string>("select APIKey from mapkeys where maptype='here'").FirstOrDefault().ToStr().Trim();
+
+
+                        var url = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GETALLFARESFROMDISPATCHNEW";
+                        var requestData = new
+                        {
+
+                            defaultclientId = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr(),
+                            bookingInformation = info
+                        };
+                        var httpWebRequest = (HttpWebRequest)WebRequest.Create(url);
+                        httpWebRequest.ContentType = "application/json";
+                        httpWebRequest.Method = "POST";
+                        using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
+                        {
+                            string json = new JavaScriptSerializer().Serialize(requestData);
+                            streamWriter.Write(json);
+                            streamWriter.Flush();
+                            streamWriter.Close();
+                        }
+                        try
+                        {
+
+
+                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GETALLFARESFROMDISPATCHNEW_request.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(requestData) + Environment.NewLine);
+                        }
+                        catch
+                        {
+
+                        }
+                        String result = "";
+                        var httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
+                        using (var streamReader = new StreamReader(httpResponse.GetResponseStream()))
+                        {
+                            result = streamReader.ReadToEnd();
+
+
+
+                        }
+                        try
+                        {
+
+
+                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GETALLFARESFROMDISPATCHNEW.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(result) + Environment.NewLine);
+                        }
+                        catch
+                        {
+
+                        }
+
+
+                        result = result.Replace("\\", "");
+                        //int startIndex = result.IndexOf("[{") + 1;
+
+                        ////
+                        //result = result.Substring(startIndex);
+                        //int lastIndex = result.IndexOf("}]") + 1;
+                        //result = result.Substring(0, lastIndex);
+
+                        var res = Newtonsoft.Json.JsonConvert.DeserializeObject<ClsDispatchFaresLst>(result);
+
+                        if (res != null && res.Data != null && res.Data.ClsDispatchFareslist != null)
+                        {
+                            foreach (var fare in res.Data.ClsDispatchFareslist)
+                            {
+                                try
+                                {
+                                    if (info.Noofhours == 0)
+                                    {
+                                        long FareId = 0;
+                                        if (obj.routeInfo.FareCalculationSetting > 1)
+                                        {
+                                            FareId = db.ExecuteQuery<int>("select Id from HourlyFare where VehicleTypeId = " + fare.ID).FirstOrDefault();
+                                            if (obj.routeInfo.CompanyId.ToInt() > 0)
+                                            {
+                                                var newFareId = db.ExecuteQuery<int>("select Id from HourlyFare where VehicleTypeId = " + fare.ID + " AND CompanyId = " + obj.routeInfo.CompanyId).FirstOrDefault();
+                                                if (newFareId > 0)
+                                                {
+                                                    FareId = newFareId;
+                                                }
+                                            }
+
+                                            if (FareId > 0)
+                                            {
+                                                var startRate = 0.00m;
+                                                var perMinRate = db.ExecuteQuery<decimal>("select Rate from HourlyFare_OtherCharges where fareid = " + FareId + " and " + info.Duration + " between FromMins and ToMins").FirstOrDefault();
+                                                var objStartRate = db.ExecuteQuery<SignalRHub.Classes.HourlyFare>("select StartRate,StartRateValidMins from HourlyFare where Id = " + FareId).FirstOrDefault();
+                                                if (objStartRate != null)
+                                                {
+                                                    startRate = objStartRate.StartRate.ToDecimal();
+                                                    if (info.Duration > objStartRate.StartRateValidMins.ToDecimal())
+                                                    {
+                                                        info.Duration -= objStartRate.StartRateValidMins.ToDecimal().ToInt();
+                                                    }
+                                                }
+                                                if (obj.routeInfo.FareCalculationSetting == 3)
+                                                {
+                                                    fare.Fare += startRate + (info.Duration * perMinRate);
+                                                }
+                                                else
+                                                {
+                                                    fare.Fare = startRate + (info.Duration * perMinRate);
+                                                }
+
+                                                fare.ReturnFare = 0.0m;
+                                                fare.CompanyPrice = null;
+                                                if (obj.routeInfo.CompanyId.ToInt() > 0)
+                                                {
+                                                    fare.CompanyPrice = fare.Fare;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+
+
+                                }
+
+                                if (fare.ReturnFare.ToDecimal() > 0 && fare.ReturnFare < fare.Fare)
+                                    fare.ReturnFare = fare.Fare.ToDecimal();
+                            }
+                        }
+                        response.Data = res;
+                        //try
+                        //{
+
+
+                        //    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GETALLFARESFROMDISPATCHNEWdeserial.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + result + Environment.NewLine);
+                        //}
+                        //catch
+                        //{
+
+                        //}
+
+                        //  }
+
+                        try
+                        {
+
+
+                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFares_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                        }
+                        catch
+                        {
+
+                        }
+
+                    }
+
+                    catch (Exception ex)
+                    {
+                        response.Message = ex.Message;
+                        response.HasError = true;
+
+                    }
+
+
+
+
+
+
+
+
+                }
+
+
+                return new CustomJsonResult { Data = response };
+
+                //
+            }
+            catch
+            {
+
+                response.HasError = true;
+                response.Message = "exception occured";
+            }
+
+
+
+            return new CustomJsonResult { Data = response };
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("CalculateFaresByFixedHours")]
+        public JsonResult CalculateFaresByFixedHours(WebApiClasses.RequestWebApi obj)
+        {
+            //
+
+            try
+            {
+
+
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFaresByFixedHours.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
+
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    try
+                    {
+                        var res = new ClsDispatchFares();
+                        res.Fare = 0.00m;
+                        try
+                        {
+                            long FareId = 0;
+                            if (obj.routeInfo.Noofhours > 0)
+                            {
+                                FareId = db.ExecuteQuery<int>("select Id from HourlyTariffFare where VehicleTypeId = " + obj.routeInfo.VehicleTypeId).FirstOrDefault();
+                                if (obj.routeInfo.CompanyId.ToInt() > 0)
+                                {
+                                    var newFareId = db.ExecuteQuery<int>("select Id from HourlyTariffFare where VehicleTypeId = " + obj.routeInfo.VehicleTypeId + " AND CompanyId = " + obj.routeInfo.CompanyId).FirstOrDefault();
+                                    if (newFareId > 0)
+                                    {
+                                        FareId = newFareId;
+                                    }
+                                }
+                                if (FareId > 0)
+                                {
+                                    res.Fare = db.ExecuteQuery<decimal>("select Rate from HourlyTariffFare_OtherCharges where fareid = " + FareId + " and hours =" + obj.routeInfo.Noofhours).FirstOrDefault();
+                                    res.ReturnFare = res.Fare;
+                                    res.CompanyPrice = null;
+                                }
+                            }
+                        }
+                        catch
+                        {
+
+
+                        }
+
+                        response.Data = res;
+                        try
+                        {
+                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFaresByFixedHours_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                        }
+                        catch
+                        {
+
+                        }
+
+                    }
+
+                    catch (Exception ex)
+                    {
+                        response.Message = ex.Message;
+                        response.HasError = true;
+                    }
+                }
+                return new CustomJsonResult { Data = response };
+
+                //
+            }
+            catch
+            {
+
+                response.HasError = true;
+                response.Message = "exception occured";
+            }
+            return new CustomJsonResult { Data = response };
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("CalculateFaresByFixedHoursAllVehicle")]
+        public JsonResult CalculateFaresByFixedHoursAllVehicle(WebApiClasses.RequestWebApi obj)
+        {
+            //
+
+            try
+            {
+
+
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFaresByFixedHours.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
+
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    try
+                    {
+                        var resList = new ClsDispatchFaresLst(); // Initialize the response object
+
+                        // Initialize the ClsDispatchFareslist inside the ClsDispatchFaresData class
+                        resList.Data = new ClsDispatchFaresData();
+                        resList.Data.ClsDispatchFareslist = new List<ClsDispatchFares>(); // Initialize the list
+
+                        var vehicleList = db.Fleet_VehicleTypes.ToList(); // Get the list of vehicles from the database
+
+                        if (vehicleList != null && vehicleList.Count > 0)
+                        {
+                            int counter = 0;
+                            foreach (var item in vehicleList)
+                            {
+                                obj.routeInfo.VehicleTypeId = item.Id;  // Set the VehicleTypeId for the routeInfo
+
+                                // Initialize a new ClsDispatchFares object
+                                var fareItem = new ClsDispatchFares
+                                {
+                                    ID = item.Id,
+                                    Name = item.VehicleType,
+                                    Logo = item.Photo != null ? Convert.ToBase64String(item.Photo.ToArray()) : "",
+                                    NoOfPassengers = item.NoofPassengers,
+                                    NoOfLuggages = item.NoofLuggages,
+                                    HandLuggages = item.NoofHandLuggages,
+                                    StartRate = item.StartRate,
+                                    SortOrder = item.OrderNo,
+                                    Fare = 0.00m  // Initialize Fare with a default value
+                                };
+
+                                try
+                                {
+                                    long FareId = 0;
+
+                                    // Check if routeInfo has a valid value for Noofhours
+                                    if (obj.routeInfo.Noofhours > 0)
+                                    {
+                                        // Get the FareId for the HourlyTariffFare
+                                        FareId = db.ExecuteQuery<int>("select Id from HourlyTariffFare where VehicleTypeId = " + obj.routeInfo.VehicleTypeId)
+                                                   .FirstOrDefault();
+
+                                        // If a CompanyId is provided, check for a specific fare for that company
+                                        if (obj.routeInfo.CompanyId.ToInt() > 0)
+                                        {
+                                            var newFareId = db.ExecuteQuery<int>("select Id from HourlyTariffFare where VehicleTypeId = " + obj.routeInfo.VehicleTypeId + " AND CompanyId = " + obj.routeInfo.CompanyId)
+                                                              .FirstOrDefault();
+
+                                            if (newFareId > 0)
+                                            {
+                                                FareId = newFareId;
+                                            }
+                                        }
+
+                                        // If a valid FareId is found, retrieve the fare for the specified hours
+                                        if (FareId > 0)
+                                        {
+                                            fareItem.Fare = db.ExecuteQuery<decimal>("select Rate from HourlyTariffFare_OtherCharges where fareid = " + FareId + " and hours = " + obj.routeInfo.Noofhours)
+                                                             .FirstOrDefault();
+
+                                            fareItem.ReturnFare = fareItem.Fare; // Assuming return fare is the same as the main fare
+                                            fareItem.CompanyPrice = null;        // Set CompanyPrice to null as per the logic
+                                        }
+                                    }
+
+                                    // Optionally, populate other fields of 'fareItem' here if needed
+                                    // For example: fareItem.Name = item.Name; fareItem.NoOfPassengers = item.PassengerCount;
+
+                                    // Add the populated fareItem to the list of ClsDispatchFares
+                                    resList.Data.ClsDispatchFareslist.Add(fareItem);
+                                }
+                                catch (Exception ex)
+                                {
+                                }
+
+                                counter++;
+                            }
+                        }
+
+                        response.Data = resList;
+
+                        try
+                        {
+                            // Optionally log the response data to a file
+                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFaresByFixedHours_response.txt",
+                                DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                        }
+                        catch
+                        {
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        response.Message = ex.Message;
+                        response.HasError = true;
+                    }
+                }
+                return new CustomJsonResult { Data = response };
+
+                //
+            }
+            catch
+            {
+
+                response.HasError = true;
+                response.Message = "exception occured";
+            }
+            return new CustomJsonResult { Data = response };
+        }
 
 
 

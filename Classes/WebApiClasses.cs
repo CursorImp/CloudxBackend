@@ -1309,7 +1309,19 @@ namespace SignalRHub.WebApiClasses
 
 
     }
-
+    public class ClsDispatchFaresData
+    {
+        public List<ClsDispatchFares> ClsDispatchFareslist { get; set; }
+    }
+    public class ClsDispatchFaresLst
+    {
+        public ClsDispatchFaresData Data { get; set; }
+        public bool HasError { get; set; }
+        public string Message { get; set; }
+        public object Token { get; set; }
+        public object TokenValidate { get; set; }
+        public object exception { get; set; }
+    }
 
     public class EmailInfo
     {

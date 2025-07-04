@@ -105,7 +105,13 @@ namespace SignalRHub
 
         }
 
-        
+        public int Duration
+        {
+            get; set;
+        }
+
+
+        public int Noofhours { get; set; }
 
         public ViaAddresses[] Via
         {
