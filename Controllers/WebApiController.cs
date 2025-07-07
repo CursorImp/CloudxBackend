@@ -7770,14 +7770,32 @@ namespace SignalRHub.Controllers
                             }
 
                         }
+                        var OneWayBookingList = list.Where(c => c.MasterJobId == null).OrderBy(c => c.PickupDateTime).ToList();
+                        var lists = (from a in OneWayBookingList
+                                     join status in db.BookingStatus
+                                         on a.BookingStatusId equals status.Id
+                                     select new
+                                     {
+                                         Id = a.Id,
+                                         ReturnFareRate = a.ReturnFareRate,
+                                         Booking_ViaLocations = a.Booking_ViaLocations,
+                                         PickupDateTime = a.PickupDateTime,
+                                         FromAddress = a.FromAddress,
+                                         ToAddress = a.ToAddress,
+                                         FareRate = a.FareRate,
+                                         MasterJobId = a.MasterJobId,
+                                         BookingStatus = status.StatusName,
 
+                                     }).ToList();
 
                         //      }
 
                         // oneway=> where bookingstatusid=1 and masterjobid is null
                         // return=> where bookingstatusid=1 and masterjobid is not null
-                        var data = new { OneWayBookingInfo = obj.bookingInfo, ReturnBookingInfo = objReturn, OneWayBookingList = list.Where(c => c.MasterJobId == null).OrderBy(c => c.PickupDateTime).ToList(), ReturnBookingList = list.Where(c => c.MasterJobId != null).OrderBy(c => c.PickupDateTime).ToList() };
+                        var data = new { OneWayBookingInfo = obj.bookingInfo, ReturnBookingInfo = objReturn, OneWayBookingList = lists.Where(c => c.MasterJobId == null).OrderBy(c => c.PickupDateTime).ToList(), ReturnBookingList = list.Where(c => c.MasterJobId != null).OrderBy(c => c.PickupDateTime).ToList() };
 
+
+                     
 
                         response.Data = data;
 
