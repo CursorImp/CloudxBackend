@@ -603,6 +603,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableAdvanceInvoiceTemplate", SetVal = "false", description = "Enable Advance Invoice Template "  },
                             new AppSetting { SetKey = "EnableForceLogoutDriver", SetVal = "true", description = "Enable ForceLogout Driver"  },
                             new AppSetting { SetKey = "OnRecoverDriverUnAllocateJob", SetVal = "0", description = "OnRecoverDriverUnAllocateJob"  },
+                            new AppSetting { SetKey = "EnableBulkAccountInvoice", SetVal = "false", description = "EnableBulkAccountInvoice"  },
                         };
 
                 using (var db = new TaxiDataContext())
