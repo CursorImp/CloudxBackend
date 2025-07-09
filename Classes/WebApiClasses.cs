@@ -178,6 +178,9 @@ namespace SignalRHub.WebApiClasses
         public int? BiddingRadius { get; set; }
         public int? ZoneTypeId { get; set; }
         public int? PlotKind { get; set; }
+        public int? WaitingTime { get; set; }
+        public int? FreeWaitingSeconds { get; set; }
+        public decimal? WaitingCharges { get; set; }
         public bool? DisableDriverRank { get; set; }
         public DateTime? JobDueTime { get; set; }
     }

@@ -3621,7 +3621,7 @@ namespace SignalRHub
 
         private void InitializeMeterList()
         {
-            if (Global.listofMeter == null)
+            if (Global.listofMeter == null || Global.listofMeter.Count == 0)
             {
                 ReloadMeterList();
             }
@@ -16552,6 +16552,7 @@ namespace SignalRHub
                             if (objDetails != null)
                             {
 
+                                
 
                                 vehicleTypeId = objDetails.VehicleTypeId.ToIntorNull();
 
@@ -16604,6 +16605,70 @@ namespace SignalRHub
 
                                                          }).ToList();
 
+
+
+                                        try
+                                        {
+                                            var pickupAddress = objDetails.FromAddress;
+
+
+                                            int? pickupZone = General.GetZoneId(pickupAddress);
+
+                                            if (pickupZone > 0)
+                                            {
+                                                var pickupZoneDetail = db.ExecuteQuery<WebApiClasses.ZonesMaster>(@"SELECT [Id],[WaitingCharges],[FreeWaitingSeconds],[WaitingTime] FROM[Gen_Zones] where id=" + pickupZone.ToInt()).FirstOrDefault();
+                                                if (pickupZoneDetail.FreeWaitingSeconds > 0)
+                                                {
+                                                    obj.FreeWaitingSeconds = pickupZoneDetail.FreeWaitingSeconds;
+                                                }
+                                                else
+                                                {
+                                                    var destinationAddress = objDetails.ToAddress;
+
+                                                    int? destinationZone = General.GetZoneId(destinationAddress);
+                                                    if (destinationZone > 0)
+                                                    {
+                                                        var destinationZoneDetail = db.ExecuteQuery<WebApiClasses.ZonesMaster>(@"SELECT [Id],[WaitingCharges],[FreeWaitingSeconds],[WaitingTime] FROM[Gen_Zones] where id=" + destinationZone.ToInt()).FirstOrDefault();
+                                                        if (destinationZoneDetail.FreeWaitingSeconds > 0)
+                                                        {
+                                                            obj.FreeWaitingSeconds = pickupZoneDetail.FreeWaitingSeconds;
+                                                        }
+                                                    }
+
+                                                }
+
+                                                if (pickupZoneDetail.WaitingCharges > 0 && pickupZoneDetail.WaitingTime > 0)
+                                                {
+                                                    obj.DrvWaitingChargesPerMin = pickupZoneDetail.WaitingCharges;
+                                                    obj.AccWaitingChargesPerMin = pickupZoneDetail.WaitingTime;
+                                                }
+                                            }
+
+                                            else
+                                            {
+                                                var destinationAddress = objDetails.ToAddress;
+
+                                                int? destinationZone = General.GetZoneId(destinationAddress);
+                                                if (destinationZone > 0)
+                                                {
+                                                    var destinationZoneDetail = db.ExecuteQuery<WebApiClasses.ZonesMaster>(@"SELECT [Id],[WaitingCharges],[FreeWaitingSeconds],[WaitingTime] FROM[Gen_Zones] where id=" + destinationZone.ToInt()).FirstOrDefault();
+                                                    if (destinationZoneDetail.WaitingCharges > 0 && destinationZoneDetail.WaitingTime > 0)
+                                                    {
+                                                        obj.DrvWaitingChargesPerMin = destinationZoneDetail.WaitingCharges;
+                                                        obj.AccWaitingChargesPerMin = destinationZoneDetail.WaitingTime;
+                                                    }
+                                                    if (destinationZoneDetail.FreeWaitingSeconds > 0)
+                                                    {
+                                                        obj.FreeWaitingSeconds = destinationZoneDetail.FreeWaitingSeconds;
+                                                    }
+                                                }
+
+                                            }
+                                        }
+                                        catch
+                                        {
+
+                                        }
 
                                         fareJsonArr.meterTarrif = new List<MeterTarrif>();
                                         fareJsonArr.EnableDropOffAction = "3";
