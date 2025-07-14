@@ -556,6 +556,8 @@ namespace SignalRHub.Classes
         public string CustomerMobileNo { get; set; }
         public FareIncrement FareIncrement { get; set; }
         public string ZoneId { get; set; }
+        public bool IsBlocked { get;  set; }
+        public int Minutes { get;  set; }
     }
     public class FareDto
     {

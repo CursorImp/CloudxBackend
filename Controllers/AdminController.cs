@@ -21511,6 +21511,74 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             jsonResult.MaxJsonLength = int.MaxValue;
             return jsonResult;
         }
+
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("RecoverJob")]
+        public JsonResult RecoverJob(AdminApi request)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+
+            try
+            {
+                if (request.DriverId <= 0)
+                {
+                    response.HasError = true;
+                    response.Message = "Invalid Driver Id";
+                    return Json(response, JsonRequestBehavior.AllowGet);
+                }
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var objLogin = db.Fleet_DriverQueueLists.FirstOrDefault(c => c.Status == true && c.DriverId == request.DriverId);
+
+                    if (objLogin == null || objLogin.CurrentJobId == null)
+                    {
+                        response.HasError = true;
+                        response.Message = "No Current Job Found";
+                        return Json(response, JsonRequestBehavior.AllowGet);
+                    }
+
+                    int statusId = objLogin.DriverWorkStatusId.ToInt();
+                    long jobId = objLogin.CurrentJobId.ToLong();
+                    string driverNo = objLogin.Fleet_Driver?.DriverNo ?? "";
+
+                    if (statusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE || statusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR)
+                    {
+                        response.HasError = true;
+                        response.Message = "Job cannot be recalled as driver is on POB or STC status.";
+                        return Json(response, JsonRequestBehavior.AllowGet);
+                    }
+
+                    try
+                    {
+                        // Perform the recall
+                        General.ReCallBooking(jobId, request.DriverId.Value);
+
+                        // Log the recall
+                        db.stp_BookingLog(jobId, request.UserName.ToStr(), "Recall Job from Driver (" + driverNo + ")");
+                    }
+                    catch (Exception ex)
+                    {
+                        response.HasError = true;
+                        response.Message = "Recall failed: " + ex.Message;
+                        return Json(response, JsonRequestBehavior.AllowGet);
+                    }
+
+                    response.HasError = false;
+                    response.Message = "Job recalled successfully";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "Error: " + ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("UnPanicDriver")]
@@ -21540,6 +21608,462 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             return Json(response, JsonRequestBehavior.AllowGet);
         }
+
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SinBinDriver")]
+        public JsonResult SinBinDriver(AdminApi request)
+        {
+            var response = new ResponseAdminApi();
+
+            try
+            {
+                if (request.DriverId <= 0)
+                {
+                    response.HasError = true;
+                    response.Message = "Invalid Driver ID.";
+                    return Json(response, JsonRequestBehavior.AllowGet);
+                }
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    if (request.IsBlocked)
+                    {
+                        if (request.Minutes <= 0)
+                        {
+                            response.HasError = true;
+                            response.Message = "Sin Bin minutes must be greater than 0.";
+                            return Json(response, JsonRequestBehavior.AllowGet);
+                        }
+
+                        db.stp_BlockDriver(request.DriverId, request.Minutes);
+                        General.requestPDA($"request pda={request.DriverId}=0=Message>>sinbin>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}=4");
+                    }
+                    else
+                    {
+                        db.stp_UnBlockDriver(request.DriverId, request.UserName.ToStr());
+                        General.requestPDA($"request pda={request.DriverId}=0=Message>>unsinbin>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}=4");
+                    }
+
+                    General.BroadCastMessage(RefreshTypes.REFRESH_DASHBOARD_DRIVER);
+                    response.Message = request.IsBlocked ? "Driver SinBinned successfully." : "Driver Un-SinBinned successfully.";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "Error: " + ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("BreakDriver")]
+        public JsonResult BreakDriver(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+
+            try
+            {
+                int? driverId = obj.DriverId;
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var driverQueue = db.Fleet_DriverQueueLists
+                        .FirstOrDefault(c => c.Status == true && c.DriverId == driverId);
+
+                    if (driverQueue != null &&
+                        (driverQueue.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE ||
+                         driverQueue.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK))
+                    {
+                        int newStatus = (driverQueue.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK)
+                            ? Enums.Driver_WORKINGSTATUS.AVAILABLE
+                            : Enums.Driver_WORKINGSTATUS.ONBREAK;
+
+                        // Update driver status in DB
+                        db.stp_ChangeDriverStatus(driverId, newStatus);
+
+                        // Broadcast change to all dashboards
+                        General.BroadCastMessage(RefreshTypes.REFRESH_DASHBOARD_DRIVER);
+
+                        string msg = (newStatus == Enums.Driver_WORKINGSTATUS.ONBREAK) ? "onbreak--x" : "available--x";
+                        General.requestPDA("request pda=" + driverId.ToInt() + "=" + 0 + "="
+                                               + "Message>>" + msg + ">>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4");
+
+                        response.Message = "success";
+                    }
+                    else
+                    {
+                        response.HasError = true;
+                        response.Message = "Driver not found or not in a valid status.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("LoginDriver")]
+        public JsonResult LoginDriver(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+
+            try
+            {
+                int? driverId = obj.DriverId;
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    // Check if driver is already logged in (in active queue list)
+                    bool isDriverLoggedIn = db.Fleet_DriverQueueLists
+                        .Any(c => c.Status == true && c.DriverId == driverId);
+
+                    if (!isDriverLoggedIn)
+                    {
+                        // Check if driver has company cars assigned
+                        bool hasCompanyCar = db.Fleet_Driver_PDASettings
+                            .Any(c => c.DriverId == driverId && c.HasCompanyCars != null && c.HasCompanyCars == true);
+
+                        if (!hasCompanyCar)
+                        {
+                            // Login driver if they do not have company cars
+                            db.stp_LoginLogoutDriver(driverId, true, null);
+                        }
+
+                        // Broadcast updated dashboard state
+                        new BroadcasterData().BroadCastToAll(RefreshTypes.REFRESH_DASHBOARD_DRIVER);
+                    }
+
+                    response.Message = "success";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("NoShowDriver")]
+        public JsonResult NoShowDriver(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+
+            try
+            {
+                int? driverId = obj.DriverId;
+
+
+                if (driverId <= 0)
+                {
+                    response.HasError = true;
+                    response.Message = "Invalid or missing driver ID.";
+                    return Json(response, JsonRequestBehavior.AllowGet);
+                }
+
+                long jobId = 0;
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    jobId = db.Fleet_DriverQueueLists
+                              .Where(a => a.DriverId == driverId && a.Status == true && a.CurrentJobId != null)
+                              .Select(c => c.CurrentJobId)
+                              .FirstOrDefault()
+                              .ToLong();
+                }
+
+                if (jobId > 0)
+                {
+
+                    // Recall booking with NoPickup status and set driver to Available
+                    General.ReCallBookingWithStatus(
+                        jobId,
+                        driverId.Value,
+                        Enums.BOOKINGSTATUS.NOPICKUP,
+                        Enums.Driver_WORKINGSTATUS.AVAILABLE
+                    );
+
+                    // Allow time for backend to process
+                    System.Threading.Thread.Sleep(500);
+
+                    // Broadcast changes to dashboards
+                    //General.requestPDA(
+                    //   $"request broadcast={RefreshTypes.REFRESH_ACTIVEBOOKINGS_DASHBOARD}={jobId}=syncdrivers"
+                    //);
+                    General.BroadCastMessage(RefreshTypes.REFRESH_ACTIVEBOOKINGS_DASHBOARD);
+
+                    // Log the no-show event
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        string driverName = db.Fleet_Drivers
+                            .Where(d => d.Id == driverId)
+                            .Select(d => d.DriverNo)
+                            .FirstOrDefault();
+
+                        db.stp_BookingLog(
+                            jobId,
+                            obj.UserName.ToStr(),
+                            $"Controller Pressed NO Pickup from Driver ({driverName})"
+                        );
+                    }
+
+                    response.Message = "success";
+                }
+                else
+                {
+                    response.HasError = true;
+                    response.Message = "No current job found for this driver.";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "An error occurred: " + ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("ForceArrivedDriver")]
+        public JsonResult ForceArrivedDriver(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+
+            try
+            {
+                int? driverId = obj.DriverId;
+
+                if (driverId <= 0)
+                {
+                    response.HasError = true;
+                    response.Message = "Invalid or missing driver ID.";
+                    return Json(response, JsonRequestBehavior.AllowGet);
+                }
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var driverQueue = db.Fleet_DriverQueueLists.FirstOrDefault(c =>
+                        c.Status == true &&
+                        c.DriverId == driverId &&
+                        c.CurrentJobId != null &&
+                        c.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONROUTE);
+
+                    if (driverQueue != null)
+                    {
+                        long jobId = driverQueue.CurrentJobId.ToLong();
+                        string msg = $"request pda={driverId}={jobId}=<<Arrive Job>>{jobId}=11";
+
+                        // Fire and forget thread to send PDA message
+                        new System.Threading.Thread(() =>
+                        {
+                            General.requestPDA(msg);
+                        }).Start();
+
+                        // Give the system time to process (optional)
+                        System.Threading.Thread.Sleep(1000);
+
+                        response.Message = "Driver forcefully marked as arrived.";
+                    }
+                    else
+                    {
+                        response.HasError = true;
+                        response.Message = "No active job found for this driver with status 'On Route'.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "An error occurred: " + ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("ClearDriverJob")]
+        public JsonResult ClearDriverJob(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+
+            try
+            {
+                int? driverId = obj.DriverId;
+
+                if (driverId <= 0)
+                {
+                    response.HasError = true;
+                    response.Message = "Invalid or missing driver ID.";
+                    return Json(response, JsonRequestBehavior.AllowGet);
+                }
+
+                long queueListId = 0;
+
+                try
+                {
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        // Get queue list entry ID for the driver's active job
+                        queueListId = db.Fleet_DriverQueueLists
+                                        .Where(a => a.DriverId == driverId && a.Status == true && a.CurrentJobId != null)
+                                        .Select(c => c.Id)
+                                        .FirstOrDefault()
+                                        .ToLong();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    response.HasError = true;
+                    response.Message = "Error fetching job info: " + ex.Message;
+                    return Json(response, JsonRequestBehavior.AllowGet);
+                }
+
+                if (queueListId > 0)
+                {
+                    // Clear the job using your custom method
+                    var c = new
+                    {
+                        QueueId = queueListId,
+                        ClearBy = obj.UserName.ToStr(),
+                        PaymentTypeId = 0,
+                        Transactionid = "",
+                        IsValidate = ""
+                    };
+
+                    string json = Newtonsoft.Json.JsonConvert.SerializeObject(c);
+
+                    // Clear the job using your custom method
+                    SupplierController abc = new SupplierController();
+                    abc.manualclearjob(json);
+
+                    // Optionally broadcast dashboard refresh, or add if needed
+                    // new BroadcasterData().BroadCastToAll(RefreshTypes.REFRESH_DASHBOARD);
+
+                    response.Message = "Job cleared successfully.";
+                }
+                else
+                {
+                    response.HasError = true;
+                    response.Message = "No current job found for this driver.";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "An error occurred: " + ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetCompletedJobs")]
+        public JsonResult GetCompletedJobs(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+
+            try
+            {
+                int? driverId = obj.DriverId;
+
+                if (driverId <= 0)
+                {
+                    response.HasError = true;
+                    response.Message = "Invalid or missing driver ID.";
+                    return Json(response, JsonRequestBehavior.AllowGet);
+                }
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    // Fetch completed jobs for this driver
+                    var completedJobs = db.Bookings
+                        .Where(b => b.DriverId == driverId && b.BookingStatusId == Enums.BOOKINGSTATUS.DISPATCHED ||
+                                                               b.BookingStatusId == Enums.BOOKINGSTATUS.COMPLETED)
+                        .OrderByDescending(b => b.PickupDateTime)
+                        .Select(b => new 
+                        {
+                            JobId = b.Id,
+                            PickupDateTime = b.PickupDateTime,
+                            DropOffLocation = b.ToAddress,
+                            PickupLocation = b.FromAddress,
+                            Fare = b.FareRate.ToDecimal(),
+                            Status = b.BookingStatus.StatusName
+                        }).ToList();
+
+                    response.Data = completedJobs;
+                    response.Message = "success";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "An error occurred: " + ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetCurrentBooking")]
+        public JsonResult GetCurrentBooking(AdminApi obj)
+        {
+            var response = new ResponseAdminApi();
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var queue = db.Fleet_DriverQueueLists
+                         .FirstOrDefault(a => a.Status == true && a.DriverId == obj.DriverId);
+
+                    if (queue != null && queue.CurrentJobId != null)
+                    {
+                        response.Data = new WebApiClasses.BookingInfo
+                        {
+                            Id = queue.CurrentJobId.ToLong()
+                        };
+
+                        response.HasError = false;
+                        response.Message = "Booking found";
+                    }
+                    else
+                    {
+                        response.HasError = true;
+                        response.Message = "No Current Job Found";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "Error: " + ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("CheckDriverOnline")]
@@ -21630,9 +22154,11 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         {
                             if (statusId == 6 || statusId == 4) //status 6 is Arrived & status 4 is On Route
                             {
-                                string msg = "<<POB Job>>" + jobId;
-                                //General.requestPDA(msg);
-                                SocketIO.SendToSocket(obj1.DriverId.ToStr(), msg, "forcePobJob");
+                                //string msg = "<<POB Job>>" + jobId;
+                                ////General.requestPDA(msg);
+                                //SocketIO.SendToSocket(obj1.DriverId.ToStr(), msg, "forcePobJob");
+                                string msg = $"request pda={obj1.DriverId.ToStr()}={jobId}=<<POB Job>>{jobId}=11";
+                                General.requestPDA(msg);
 
                                 objBooking.Booking_Logs.Add(new Booking_Log { AfterUpdate = "Force POB by Controller (" + obj1.UserName + ")", User = obj1.UserName, UpdateDate = DateTime.Now, BookingId = jobId });
                                 db.SubmitChanges();
