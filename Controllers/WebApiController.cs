@@ -169,8 +169,7 @@ namespace SignalRHub.Controllers
                                 var key = setting.SetKey.Replace(" ", "").Replace("-", "").Replace(".", "");
                                 sysSettings[key] = setting.SetVal;
                             }
-                            sysSettings["BookingAlertExpiryNoticeInMins"] = db.Gen_SysPolicy_Configurations
-                                                  .FirstOrDefault()?.BookingAlertExpiryNoticeInMins;
+                            
 
                             // Add extra values
                             sysSettings["DefaultVehicleTypeId"] = HubProcessor.Instance.objPolicy.DefaultVehicleTypeId;
