@@ -21555,6 +21555,14 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         // Perform the recall
                         General.ReCallBooking(jobId, request.DriverId.Value);
 
+
+                        string recallMessage = $"request pda={request.DriverId}={jobId}=<<Recall Job>>={((int)eMessageTypes.RECALLJOB)}";
+
+                        new System.Threading.Thread(() =>
+                        {
+                            General.requestPDA(recallMessage);
+                        }).Start();
+
                         // Log the recall
                         db.stp_BookingLog(jobId, request.UserName.ToStr(), "Recall Job from Driver (" + driverNo + ")");
                     }
@@ -21788,6 +21796,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 if (jobId > 0)
                 {
 
+
                     // Recall booking with NoPickup status and set driver to Available
                     General.ReCallBookingWithStatus(
                         jobId,
@@ -21796,7 +21805,15 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         Enums.Driver_WORKINGSTATUS.AVAILABLE
                     );
 
-                    // Allow time for backend to process
+
+                    string message = $"request pda={driverId}={jobId}=<<Recall Job>>={((int)eMessageTypes.RECALLJOB)}";
+
+                    new System.Threading.Thread(() =>
+                    {
+                        General.requestPDA(message);
+                    }).Start();
+
+                    // Wait a moment for backend actions to complete
                     System.Threading.Thread.Sleep(500);
 
                     // Broadcast changes to dashboards
