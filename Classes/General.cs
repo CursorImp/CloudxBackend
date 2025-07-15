@@ -588,7 +588,7 @@ namespace SignalRHub
                         }
 
                     }
-                    string suggestRequestUri = $"{placeSerachApiUrl}&limit={Limit}&proximity={Global.centerPoint}&country=ca";
+                    string suggestRequestUri = $"{placeSerachApiUrl}&limit={Limit}&proximity={Global.centerPoint}&country=uk";
                     // var suggestResponse = new System.Net.WebClient().DownloadString(suggestRequestUri);
 
 
