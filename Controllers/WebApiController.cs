@@ -3780,6 +3780,39 @@ namespace SignalRHub.Controllers
                         }
                     }
 
+                    if (HubProcessor.Instance.objPolicy.BookingInterval.ToInt() == 1)
+                    {
+                        string newPickup = pickup;
+                        string newDest = destination;
+                        if (!string.IsNullOrEmpty(obj.routeInfo.pickupAddress.Latitude.ToStr()))
+                        {
+                            newPickup = "";
+                        }
+                        if (!string.IsNullOrEmpty(obj.routeInfo.destinationAddress.Latitude.ToStr()))
+                        {
+                            newDest = "";
+                        }
+                        var hereMapResponse = General.getHeremapJourneyLocationCordinates(newPickup, newDest);
+                        if (hereMapResponse != null)
+                        {
+                            if (newPickup != "")
+                            {
+
+
+                                //pickup
+                                obj.routeInfo.pickupAddress.Latitude = hereMapResponse.pickup?.DisplayPosition?.Latitude;
+                                obj.routeInfo.pickupAddress.Longitude = hereMapResponse.pickup?.DisplayPosition?.Longitude;
+                            }
+                            //destination
+                            if (newDest != "")
+                            {
+
+                                obj.routeInfo.destinationAddress.Latitude = hereMapResponse.dropOff?.DisplayPosition?.Latitude;
+                                obj.routeInfo.destinationAddress.Longitude = hereMapResponse.dropOff?.DisplayPosition?.Longitude;
+                            }
+                        }
+                    }
+
                     try
                     {
                         string vias = "";
