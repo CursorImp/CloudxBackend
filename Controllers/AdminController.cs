@@ -21889,7 +21889,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                         //   }
                         db.stp_UpdateJob(jobId, driverId.Value, Enums.BOOKINGSTATUS.NOPICKUP, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
-                        General.CancelledJobFromController(driverId.Value, obj.bookingInfo.Id);
+                        General.CancelledJobFromController(driverId.Value, jobId);
 
                         response.Message = "success";
                     }
