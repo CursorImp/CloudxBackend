@@ -21552,17 +21552,42 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                     try
                     {
-                        // Perform the recall
-                        General.ReCallBooking(jobId, request.DriverId.Value);
-                        string message = $"auth>>{jobId}>>{request.DriverId}>>13>>1>>{driverNo}";
+
+                        db.stp_UpdateJob(jobId, request.DriverId.Value, Enums.BOOKINGSTATUS.WAITING, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
+                        //   }
+
+
+                        try
+                        {
+                            string username = request.UserName.ToStr().Trim();
+
+                            if (username.Length == 0)
+                                username = "system";
+                            //s
+                            //  db.ExecuteQuery<int>("exec stp_BookingLog {0},{1},{2},{3} ", obj.bookingInfo.Id, obj.UserName.ToStr(), "Job is Recovered by Controller", DateTime.Now.GetUtcTimeZone());
+                            db.stp_BookingLog(jobId, username, "Job is Recovered by Controller");
+                        }
+                        catch
+                        {
+
+
+                        }
+
+                        General.CancelledJobFromController(request.DriverId.Value, jobId);
 
 
 
-                        General.BroadCastMessage("**broadcast close auth job>>" + Environment.MachineName + ">>" + message.ToStr().Replace(">>", "<<") + ">>allow");
-                        System.Threading.Thread.Sleep(500);
+                        //// Perform the recall
+                        //General.ReCallBooking(jobId, request.DriverId.Value);
+                        //string message = $"auth>>{jobId}>>{request.DriverId}>>13>>1>>{driverNo}";
 
-                        General.requestPDA("request pda=" + request.DriverId + "=" + 0 + "=" + "Message>>Driver Priority - No Show>>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4");
-                        System.Threading.Thread.Sleep(500);
+
+
+                        //General.BroadCastMessage("**broadcast close auth job>>" + Environment.MachineName + ">>" + message.ToStr().Replace(">>", "<<") + ">>allow");
+                        //System.Threading.Thread.Sleep(500);
+
+                        //General.requestPDA("request pda=" + request.DriverId + "=" + 0 + "=" + "Message>>Driver Priority - No Show>>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4");
+                        //System.Threading.Thread.Sleep(500);
 
                         //string recallMessage = $"request pda={request.DriverId}={jobId}=<<Recall Job>>={((int)eMessageTypes.RECALLJOB)}";
 
@@ -21573,7 +21598,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
 
                         // Log the recall
-                        db.stp_BookingLog(jobId, request.UserName.ToStr(), "Recall Job from Driver (" + driverNo + ")");
+                        //db.stp_BookingLog(jobId, request.UserName.ToStr(), "Recall Job from Driver (" + driverNo + ")");
                     }
                     catch (Exception ex)
                     {
@@ -21802,70 +21827,77 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                               .FirstOrDefault()
                               .ToLong();
                     driverNo = db.Fleet_Drivers.Where(b => b.Id == driverId).Select(d => d.DriverNo).FirstOrDefault().ToString();
-
-                }
-
-                if (jobId > 0)
-                {
-
-
-                    // Recall booking with NoPickup status and set driver to Available
-                    General.ReCallBookingWithStatus(
-                        jobId,
-                        driverId.Value,
-                        Enums.BOOKINGSTATUS.NOPICKUP,
-                        Enums.Driver_WORKINGSTATUS.AVAILABLE
-                    );
-
-
-                    //string message = $"request pda={driverId}={jobId}=<<Recall Job>>={((int)eMessageTypes.RECALLJOB)}";
-
-                    //new System.Threading.Thread(() =>
-                    //{
-                    //    General.requestPDA(message);
-                    //}).Start();
-
-
-                    string message = $"auth>>{jobId}>>{driverId}>>13>>1>>{driverNo}";
+                    
 
 
 
-                    General.BroadCastMessage("**broadcast close auth job>>" + Environment.MachineName + ">>" + message.ToStr().Replace(">>", "<<") + ">>allow");
-                    System.Threading.Thread.Sleep(500);
-
-                    General.requestPDA("request pda=" + driverId + "=" + 0 + "=" + "Message>>Driver Priority - No Show>>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4");
-                    System.Threading.Thread.Sleep(500);
-
-                    // Wait a moment for backend actions to complete
-
-
-                    // Broadcast changes to dashboards
-                    //General.requestPDA(
-                    //   $"request broadcast={RefreshTypes.REFRESH_ACTIVEBOOKINGS_DASHBOARD}={jobId}=syncdrivers"
-                    //);
-                    General.BroadCastMessage(RefreshTypes.REFRESH_ACTIVEBOOKINGS_DASHBOARD);
-
-                    // Log the no-show event
-                    using (TaxiDataContext db = new TaxiDataContext())
+                    if (jobId > 0)
                     {
-                        string driverName = db.Fleet_Drivers
-                            .Where(d => d.Id == driverId)
-                            .Select(d => d.DriverNo)
-                            .FirstOrDefault();
 
-                        db.stp_BookingLog(
-                            jobId,
-                            obj.UserName.ToStr(),
-                            $"Controller Pressed NO Pickup from Driver ({driverName})"
-                        );
+
+                        //// Recall booking with NoPickup status and set driver to Available
+                        //General.ReCallBookingWithStatus(
+                        //    jobId,
+                        //    driverId.Value,
+                        //    Enums.BOOKINGSTATUS.NOPICKUP,
+                        //    Enums.Driver_WORKINGSTATUS.AVAILABLE
+                        //);
+
+
+                        ////string message = $"request pda={driverId}={jobId}=<<Recall Job>>={((int)eMessageTypes.RECALLJOB)}";
+
+                        ////new System.Threading.Thread(() =>
+                        ////{
+                        ////    General.requestPDA(message);
+                        ////}).Start();
+
+
+                        //string message = $"auth>>{jobId}>>{driverId}>>13>>1>>{driverNo}";
+
+
+
+                        //General.BroadCastMessage("**broadcast close auth job>>" + Environment.MachineName + ">>" + message.ToStr().Replace(">>", "<<") + ">>allow");
+                        //System.Threading.Thread.Sleep(500);
+
+                        //General.requestPDA("request pda=" + driverId + "=" + 0 + "=" + "Message>>Driver Priority - No Show>>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4");
+                        //System.Threading.Thread.Sleep(500);
+
+                        //// Wait a moment for backend actions to complete
+
+
+                        //// Broadcast changes to dashboards
+                        ////General.requestPDA(
+                        ////   $"request broadcast={RefreshTypes.REFRESH_ACTIVEBOOKINGS_DASHBOARD}={jobId}=syncdrivers"
+                        ////);
+                        //General.BroadCastMessage(RefreshTypes.REFRESH_ACTIVEBOOKINGS_DASHBOARD);
+
+                        //// Log the no-show event
+                        //using (TaxiDataContext db = new TaxiDataContext())
+                        //{
+                        //    string driverName = db.Fleet_Drivers
+                        //        .Where(d => d.Id == driverId)
+                        //        .Select(d => d.DriverNo)
+                        //        .FirstOrDefault();
+
+                        //    db.stp_BookingLog(
+                        //        jobId,
+                        //        obj.UserName.ToStr(),
+                        //        $"Controller Pressed NO Pickup from Driver ({driverName})"
+                        //    );
+                        //}
+
+
+                        //   }
+                        db.stp_UpdateJob(jobId, driverId.Value, Enums.BOOKINGSTATUS.NOPICKUP, Enums.Driver_WORKINGSTATUS.AVAILABLE, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
+                        General.CancelledJobFromController(driverId.Value, obj.bookingInfo.Id);
+
+                        response.Message = "success";
                     }
-
-                    response.Message = "success";
-                }
-                else
-                {
-                    response.HasError = true;
-                    response.Message = "No current job found for this driver.";
+                    else
+                    {
+                        response.HasError = true;
+                        response.Message = "No current job found for this driver.";
+                    }
                 }
             }
             catch (Exception ex)
