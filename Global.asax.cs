@@ -605,6 +605,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "OnRecoverDriverUnAllocateJob", SetVal = "0", description = "OnRecoverDriverUnAllocateJob"  },
                             new AppSetting { SetKey = "EnableBulkAccountInvoice", SetVal = "false", description = "EnableBulkAccountInvoice"  },
                             new AppSetting { SetKey = "DisablePastDateBookings", SetVal = "false", description = "Disable Past Date Bookings"  },
+                            new AppSetting { SetKey = "EnableOtherDriverShortcuts", SetVal = "false", description = "Enable Other Driver Shortcuts"  },
                         };
 
                 using (var db = new TaxiDataContext())
