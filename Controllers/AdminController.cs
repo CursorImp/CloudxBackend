@@ -21554,14 +21554,23 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     {
                         // Perform the recall
                         General.ReCallBooking(jobId, request.DriverId.Value);
+                        string message = $"auth>>{jobId}>>{request.DriverId}>>13>>1>>{driverNo}";
 
 
-                        string recallMessage = $"request pda={request.DriverId}={jobId}=<<Recall Job>>={((int)eMessageTypes.RECALLJOB)}";
 
-                        new System.Threading.Thread(() =>
-                        {
-                            General.requestPDA(recallMessage);
-                        }).Start();
+                        General.BroadCastMessage("**broadcast close auth job>>" + Environment.MachineName + ">>" + message.ToStr().Replace(">>", "<<") + ">>allow");
+                        System.Threading.Thread.Sleep(500);
+
+                        General.requestPDA("request pda=" + request.DriverId + "=" + 0 + "=" + "Message>>Driver Priority - No Show>>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4");
+                        System.Threading.Thread.Sleep(500);
+
+                        //string recallMessage = $"request pda={request.DriverId}={jobId}=<<Recall Job>>={((int)eMessageTypes.RECALLJOB)}";
+
+                        //new System.Threading.Thread(() =>
+                        //{
+                        //    General.requestPDA(recallMessage);
+                        //}).Start();
+
 
                         // Log the recall
                         db.stp_BookingLog(jobId, request.UserName.ToStr(), "Recall Job from Driver (" + driverNo + ")");
@@ -21783,6 +21792,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
 
                 long jobId = 0;
+                var driverNo = "";
 
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
@@ -21791,6 +21801,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                               .Select(c => c.CurrentJobId)
                               .FirstOrDefault()
                               .ToLong();
+                    driverNo = db.Fleet_Drivers.Where(b => b.Id == driverId).Select(d => d.DriverNo).FirstOrDefault().ToString();
+
                 }
 
                 if (jobId > 0)
@@ -21806,15 +21818,26 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     );
 
 
-                    string message = $"request pda={driverId}={jobId}=<<Recall Job>>={((int)eMessageTypes.RECALLJOB)}";
+                    //string message = $"request pda={driverId}={jobId}=<<Recall Job>>={((int)eMessageTypes.RECALLJOB)}";
 
-                    new System.Threading.Thread(() =>
-                    {
-                        General.requestPDA(message);
-                    }).Start();
+                    //new System.Threading.Thread(() =>
+                    //{
+                    //    General.requestPDA(message);
+                    //}).Start();
+
+
+                    string message = $"auth>>{jobId}>>{driverId}>>13>>1>>{driverNo}";
+
+
+
+                    General.BroadCastMessage("**broadcast close auth job>>" + Environment.MachineName + ">>" + message.ToStr().Replace(">>", "<<") + ">>allow");
+                    System.Threading.Thread.Sleep(500);
+
+                    General.requestPDA("request pda=" + driverId + "=" + 0 + "=" + "Message>>Driver Priority - No Show>>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4");
+                    System.Threading.Thread.Sleep(500);
 
                     // Wait a moment for backend actions to complete
-                    System.Threading.Thread.Sleep(500);
+
 
                     // Broadcast changes to dashboards
                     //General.requestPDA(
