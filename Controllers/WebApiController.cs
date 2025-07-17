@@ -517,6 +517,17 @@ namespace SignalRHub.Controllers
                         a.PickupDate.Value.Date < dt.Value.Date &&
                         (a.StatusId == Enums.BOOKINGSTATUS.WAITING)
                     ).Count();
+
+                    data.objBookingCount.totalQuotation = (from a in db.Bookings
+                                 join bt in db.BookingTypes on a.BookingTypeId equals bt.Id
+                                 join b in db.Gen_PaymentTypes on a.PaymentTypeId equals b.Id
+                                 join c in db.Gen_Companies on a.CompanyId equals c.Id into table2
+                                 from c in table2.DefaultIfEmpty()
+                                 join v in db.Fleet_VehicleTypes on a.VehicleTypeId equals v.Id
+                                 where a.PickupDateTime >= recentDays
+                                       && a.IsQuotation == true
+                                       && a.BookingStatusId == Enums.BOOKINGSTATUS.WAITING
+                                 select a).Count();
                     //data.objBookingCount.totalInCompleted = db.ExecuteQuery<ClsBookingListData>("exec stp_GetIncompleteBookingListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, lastSevenDays, dt, 0, "", 100).Count();
                 }
 
