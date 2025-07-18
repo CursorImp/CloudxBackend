@@ -2057,6 +2057,7 @@ namespace SignalRHub
                                         if (hasChanges)
                                         {
                                             db.SubmitChanges();
+                                            db.ExecuteQuery<int>(@"UPDATE fleet_driverqueuelist SET WaitSinceOn = GETDATE(),UpdateDateTime = GETDATE() WHERE  status = 1 AND driverid ="+driverId);
 
                                             ////
 
