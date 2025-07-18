@@ -9324,6 +9324,104 @@ namespace SignalRHub.Controllers
         }
 
 
+        //[System.Web.Http.HttpGet]
+        //[System.Web.Http.HttpPost]
+        //[System.Web.Http.Route("GetBookingHistory")]
+        //public JsonResult GetBookingHistory(WebApiClasses.RequestWebApi obj)
+        //{
+        //    //
+
+        //    try
+        //    {
+
+
+        //        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingHistory.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+        //    }
+        //    catch
+        //    {
+
+        //    }
+        //    ResponseWebApi response = new ResponseWebApi();
+
+        //    try
+        //    {
+
+        //        string mobNo = obj.bookingInfo.CustomerMobileNo.ToStr().Trim();
+        //        string telNo = obj.bookingInfo.CustomerPhoneNo.ToStr().Trim();
+        //        string customerName = obj.bookingInfo.CustomerName.ToStr().Trim();
+
+        //        using (TaxiDataContext db = new TaxiDataContext())
+        //        {
+
+
+
+        //            var list = (from a in db.Bookings
+        //                        where
+
+        //                         (a.CustomerMobileNo != null && a.CustomerPhoneNo != null)
+        //                        && (customerName == string.Empty || a.CustomerName.Trim().ToLower().StartsWith(customerName))
+        //                        &&
+
+        //                        (
+        //                        ((a.CustomerPhoneNo.Trim() == telNo || telNo == string.Empty) && (a.CustomerMobileNo.Trim() == mobNo || mobNo == string.Empty))
+        //                   || ((a.CustomerPhoneNo.Trim() == mobNo || mobNo == string.Empty) && (a.CustomerMobileNo.Trim() == telNo || telNo == string.Empty))
+
+        //                   )
+        //                        //
+        //                        select new
+        //                        {
+        //                            Id = a.Id,
+
+        //                            PickupDate = a.PickupDateTime,
+        //                            FromTypeId = a.FromLocTypeId,
+        //                            FromId = a.FromLocId,
+        //                            From = a.FromDoorNo != string.Empty ? a.FromDoorNo + " - " + a.FromAddress : a.FromAddress,
+        //                            ToId = a.ToLocId,
+        //                            ToTypeId = a.ToLocTypeId,
+        //                            Via = a.ViaString,
+        //                            To = a.ToDoorNo != string.Empty ? a.ToDoorNo + " - " + a.ToAddress : a.ToAddress,
+        //                            Fare = a.FareRate,
+        //                            Fees = a.ServiceCharges,
+        //                            CustFare = a.CustomerPrice,
+        //                            Customer = a.CustomerName,
+        //                            MobileNo = a.CustomerMobileNo,
+        //                            TelNo = a.CustomerPhoneNo,
+        //                            Account = a.Gen_Company.CompanyName,
+        //                            CompanyFares = a.CompanyPrice,
+        //                            BookingTypeId = a.BookingTypeId,
+        //                            RefNo = a.BookingNo,
+        //                            Vechile = a.Fleet_VehicleType.VehicleType,
+        //                            Email = a.CustomerEmail,
+        //                            Drv = a.DriverId != null ? a.Fleet_Driver.DriverNo : "",
+        //                            AccountId = a.CompanyId,
+        //                            BookingBackgroundColor = a.BookingType.BackgroundColor,
+        //                            PermanentNotes = a.NoOfChilds,
+        //                            SpecialReq = a.SpecialRequirements,
+        //                        }).OrderByDescending(c => c.PickupDate).Take(100).ToList();
+        //            response.Data = list;
+
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        try
+        //        {
+        //            response.HasError = true;
+        //            response.Message = ex.Message;
+
+        //            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingHistory_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+        //        }
+        //        catch
+        //        {
+
+        //        }
+        //    }
+
+
+        //    //   return Json(response, JsonRequestBehavior.AllowGet);
+        //    return new CustomJsonResult { Data = response };
+        //}
+
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("GetBookingHistory")]
@@ -9354,51 +9452,74 @@ namespace SignalRHub.Controllers
                 {
 
 
+                    var query = db.Bookings
+     .Where(a => a.CustomerMobileNo != null && a.CustomerPhoneNo != null)
+     .AsQueryable();
 
-                    var list = (from a in db.Bookings
-                                where
+                    // Filter by customer name if provided
+                    if (!string.IsNullOrEmpty(customerName))
+                    {
+                        var lowerName = customerName.ToLower();
+                        query = query.Where(a => a.CustomerName.Trim().ToLower().Contains(lowerName));
+                    }
 
-                                 (a.CustomerMobileNo != null && a.CustomerPhoneNo != null)
-                                && (customerName == string.Empty || a.CustomerName.Trim().ToLower().StartsWith(customerName))
-                                &&
+                    // Filter by phone/mobile number
+                    if (!string.IsNullOrEmpty(telNo) || !string.IsNullOrEmpty(mobNo))
+                    {
+                        query = query.Where(a =>
+                            (
+                                (string.IsNullOrEmpty(telNo) || a.CustomerPhoneNo.Trim() == telNo) &&
+                                (string.IsNullOrEmpty(mobNo) || a.CustomerMobileNo.Trim() == mobNo)
+                            )
+                            ||
+                            (
+                                (string.IsNullOrEmpty(mobNo) || a.CustomerPhoneNo.Trim() == mobNo) &&
+                                (string.IsNullOrEmpty(telNo) || a.CustomerMobileNo.Trim() == telNo)
+                            )
+                        );
+                    }
 
-                                (
-                                ((a.CustomerPhoneNo.Trim() == telNo || telNo == string.Empty) && (a.CustomerMobileNo.Trim() == mobNo || mobNo == string.Empty))
-                           || ((a.CustomerPhoneNo.Trim() == mobNo || mobNo == string.Empty) && (a.CustomerMobileNo.Trim() == telNo || telNo == string.Empty))
-
-                           )
-                                //
-                                select new
-                                {
-                                    Id = a.Id,
-
-                                    PickupDate = a.PickupDateTime,
-                                    FromTypeId = a.FromLocTypeId,
-                                    FromId = a.FromLocId,
-                                    From = a.FromDoorNo != string.Empty ? a.FromDoorNo + " - " + a.FromAddress : a.FromAddress,
-                                    ToId = a.ToLocId,
-                                    ToTypeId = a.ToLocTypeId,
-                                    Via = a.ViaString,
-                                    To = a.ToDoorNo != string.Empty ? a.ToDoorNo + " - " + a.ToAddress : a.ToAddress,
-                                    Fare = a.FareRate,
-                                    Fees = a.ServiceCharges,
-                                    CustFare = a.CustomerPrice,
-                                    Customer = a.CustomerName,
-                                    MobileNo = a.CustomerMobileNo,
-                                    TelNo = a.CustomerPhoneNo,
-                                    Account = a.Gen_Company.CompanyName,
-                                    CompanyFares = a.CompanyPrice,
-                                    BookingTypeId = a.BookingTypeId,
-                                    RefNo = a.BookingNo,
-                                    Vechile = a.Fleet_VehicleType.VehicleType,
-                                    Email = a.CustomerEmail,
-                                    Drv = a.DriverId != null ? a.Fleet_Driver.DriverNo : "",
-                                    AccountId = a.CompanyId,
-                                    BookingBackgroundColor = a.BookingType.BackgroundColor,
-                                    PermanentNotes = a.NoOfChilds,
-                                    SpecialReq = a.SpecialRequirements,
-                                }).OrderByDescending(c => c.PickupDate).Take(100).ToList();
-                    response.Data = list;
+                    if (string.IsNullOrEmpty(telNo) && string.IsNullOrEmpty(customerName))
+                    {
+                        response.Data = new List<object>();
+                    }
+                    else
+                    {
+                        var list = query
+                        .Select(a => new
+                        {
+                            Id = a.Id,
+                            PickupDate = a.PickupDateTime,
+                            FromTypeId = a.FromLocTypeId,
+                            FromId = a.FromLocId,
+                            From = a.FromDoorNo != string.Empty ? a.FromDoorNo + " - " + a.FromAddress : a.FromAddress,
+                            ToId = a.ToLocId,
+                            ToTypeId = a.ToLocTypeId,
+                            Via = a.ViaString,
+                            To = a.ToDoorNo != string.Empty ? a.ToDoorNo + " - " + a.ToAddress : a.ToAddress,
+                            Fare = a.FareRate,
+                            Fees = a.ServiceCharges,
+                            CustFare = a.CustomerPrice,
+                            Customer = a.CustomerName,
+                            MobileNo = a.CustomerMobileNo,
+                            TelNo = a.CustomerPhoneNo,
+                            Account = a.Gen_Company.CompanyName,
+                            CompanyFares = a.CompanyPrice,
+                            BookingTypeId = a.BookingTypeId,
+                            RefNo = a.BookingNo,
+                            Vechile = a.Fleet_VehicleType.VehicleType,
+                            Email = a.CustomerEmail,
+                            Drv = a.DriverId != null ? a.Fleet_Driver.DriverNo : "",
+                            AccountId = a.CompanyId,
+                            BookingBackgroundColor = a.BookingType.BackgroundColor,
+                            PermanentNotes = a.NoOfChilds,
+                            SpecialReq = a.SpecialRequirements,
+                        })
+                        .OrderByDescending(c => c.PickupDate)
+                        .Take(100)
+                        .ToList();
+                        response.Data = list;
+                    }
 
                 }
             }
@@ -9421,6 +9542,7 @@ namespace SignalRHub.Controllers
             //   return Json(response, JsonRequestBehavior.AllowGet);
             return new CustomJsonResult { Data = response };
         }
+
 
 
 
