@@ -10928,7 +10928,9 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     sysPolicyBO.Edit();
 
 
-                    string[] skipProperties = new string[] { "Gen_SysPolicy", "Fleet_VehicleType", "EnableForBookOnline" };
+                    //string[] skipProperties = new string[] { "Gen_SysPolicy", "Fleet_VehicleType", "EnableForBookOnline" };
+
+                    string[] skipProperties = new string[] { "Gen_SysPolicy", "Fleet_VehicleType", "EnableForBookOnline", "Gen_SubCompany", "Gen_SysPolicyDocumentsList" };
                     List<Gen_SysPolicy_FaresSetting> listofFares = new List<Gen_SysPolicy_FaresSetting>();
 
                     if (obj.Gen_SysPolicy_FaresSettings != null)
@@ -10950,6 +10952,30 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     IList<Gen_SysPolicy_FaresSetting> savedListFares = sysPolicyBO.Current.Gen_SysPolicy_FaresSettings;
 
                     Utils.General.SyncChildCollection(ref savedListFares, ref listofFares, "Id", skipProperties);
+
+
+                    try
+                    {
+                        List<Gen_SysPolicy_DocumentNumberSetup> listofsavedListDocNumber = (from a in obj.DocumentNumberSettings
+                                                                                            select new Gen_SysPolicy_DocumentNumberSetup
+                                                                                            {
+                                                                                                Id = a.Id.ToInt(),//a.Cells[COL_FARES.ID].Value.ToInt(),
+                                                                                                Prefix = a.Prefix, //objMaster.Current.Id,
+                                                                                                StartNumber = a.StartNumber,
+                                                                                                LastNumber = a.LastNumber,
+                                                                                                AutoIncrement = a.AutoIncrement,
+                                                                                                SysPolicyId = a.SysPolicyId,
+                                                                                                DocumentId = a.DocumentId,
+                                                                                                SubcompanyId = a.SubcompanyId
+                                                                                            }).ToList();
+
+                        IList<Gen_SysPolicy_DocumentNumberSetup> savedListDocNumber = sysPolicyBO.Current.Gen_SysPolicy_DocumentNumberSetups;
+
+                        Utils.General.SyncChildCollection(ref savedListDocNumber, ref listofsavedListDocNumber, "Id", skipProperties);
+                    }
+                    catch (Exception)
+                    {
+                    }
                     sysPolicyBO.Save();
 
                     string clientCode = obj.CompanyName;
@@ -11030,6 +11056,9 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                     " Order By VT.OrderNo";
                     var item = db.ExecuteQuery<FareSettingNew>(query).ToList();
 
+                    string query1 = @"select g.Id,g.DocumentId,(select d.DocumentTitle from Gen_SysPolicyDocumentsList d where d.DocumentId = g.DocumentId) DocumentTitle,g.prefix,g.startnumber,g.lastnumber,g.SubCompanyId,(select s.companyname from gen_subcompany s where s.Id = g.SubCompanyId) CompanyName,g.SyspolicyId,g.AutoIncrement from Gen_SysPolicy_DocumentNumberSetups g ";
+                    var DocumentNumber = db.ExecuteQuery<DocumentNumberSettings>(query1).ToList();
+
                     db.DeferredLoadingEnabled = false;
                     response.Data = new
                     {
@@ -11043,7 +11072,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         VehicleTypeList = item,
                         txtIVRNumbers = txtIVRNumbers,
                         chkCalculateFares = chkCalculateFares,
-                        chkReleaseMode = chkReleaseMode
+                        chkReleaseMode = chkReleaseMode,
+                        DocumentNumberSettings = DocumentNumber
                     };
                 }
             }

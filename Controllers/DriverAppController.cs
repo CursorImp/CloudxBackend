@@ -2057,7 +2057,7 @@ namespace SignalRHub
                                         if (hasChanges)
                                         {
                                             db.SubmitChanges();
-
+                                          
                                             ////
 
                                             General.BroadCastMessage("**refresh plots");

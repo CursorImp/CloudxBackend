@@ -606,6 +606,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableBulkAccountInvoice", SetVal = "false", description = "EnableBulkAccountInvoice"  },
                             new AppSetting { SetKey = "DisablePastDateBookings", SetVal = "false", description = "Disable Past Date Bookings"  },
                             new AppSetting { SetKey = "EnableOtherDriverShortcuts", SetVal = "false", description = "Enable Other Driver Shortcuts"  },
+                            new AppSetting { SetKey = "EnableDocumentNumberSettings", SetVal = "false", description = "Enable Document Number Settings"  },
                         };
 
                 using (var db = new TaxiDataContext())

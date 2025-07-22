@@ -315,6 +315,21 @@ namespace SignalRHub.Classes
         public string TimeZoneId { get; set; }
         public string DistanceUnit { get; set; }
     }
+    public class DocumentNumberSettings
+    {
+        public int Id { get; set; }
+        public string DocumentId { get; set; }
+        public string Prefix { get; set; }
+        public string CompanyName { get; set; }
+        public decimal? startnumber { get; set; }
+        public decimal? lastnumber { get; set; }
+        public int SyspolicyId { get; set; }
+        public int subcompanyid { get; set; }
+        public bool autoincrement { get; set; }
+        public string DocumentTitle { get; set; }
+
+    }
+
     public class AdminApi
     {
         public decimal? SubCompanyBookingFees { get; set; }
@@ -338,6 +353,7 @@ namespace SignalRHub.Classes
         public Fleet_VehicleType fleetVehicleType { get; set; }
         public Fleet_Driver fleetDriver { get; set; }
         public WebApiClasses.BookingInfo bookingInfo { get; set; }
+        public List<Gen_SysPolicy_DocumentNumberSetup> DocumentNumberSettings { get; set; }
         public Gen_Company Company { get; set; }
         public UM_User user { get; set; }
         public Fare fare { get; set; }
