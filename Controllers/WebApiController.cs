@@ -10659,7 +10659,7 @@ namespace SignalRHub.Controllers
             try
             {
                 string postCode = obj.addressInfo.searchText.ToStr().ToUpper().Trim();
-                double radius = 100;
+                double radius = 250;
                 PlaceSearchResponse SearchPlaces = new PlaceSearchResponse();
                 using (TaxiDataContext db = new TaxiDataContext())
                 {

@@ -826,7 +826,7 @@ public static class GetDistance
                     ""latitude"": {coords.Value.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture)},
                     ""longitude"": {coords.Value.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}
                 }},
-                ""radius"": {radiusInMiles * 1609.34}
+                ""radius"": {radiusInMiles}
             }}
         }}
     }}";
