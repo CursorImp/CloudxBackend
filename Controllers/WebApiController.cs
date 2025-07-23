@@ -93,7 +93,7 @@ namespace SignalRHub.Controllers
                     {
 
                         var objUser = db.UM_Users.Where(c => c.IsActive == true && c.UserName.ToLower() == obj.UserName.ToLower().Trim() && c.Passwrd.ToLower() == obj.Password.ToLower().Trim())
-                             .Select(args => new { args.Id, args.SubcompanyId, args.ShowAllBookings, args.ShowAllDrivers, args.SecurityGroupId, args.Email }).FirstOrDefault();
+                             .Select(args => new { args.Id, args.SubcompanyId, args.ShowAllBookings, args.ShowAllDrivers, args.SecurityGroupId, args.Email, args.ShowBookingFilter }).FirstOrDefault();
 
 
 
@@ -186,6 +186,41 @@ namespace SignalRHub.Controllers
                             sysSettings["AutoModeType"] = HubProcessor.Instance.objPolicy.AutoDespatchDriverCategoryPriority;
                             sysSettings["TransferBooking"] = IsAdmin;
 
+                            var EnableFilterSubCompanyId = "false";
+                            try
+                            {
+                                EnableFilterSubCompanyId = AppSettings.FirstOrDefault(a => a.SetKey == "EnableFilterSubCompanyId").SetVal.ToStr();
+                            }
+                            catch
+                            {
+                            }
+                            if (EnableFilterSubCompanyId == "true")
+                            {
+
+
+                                var FilterSubCompanyId = 0;
+                                var TransferBooking = false;
+                                var ShowAllBookings = false;
+                                var ShowBookingFilter = false;
+                                if (objUser.SecurityGroupId == 1)
+                                {
+                                    FilterSubCompanyId = objUser.SubcompanyId.ToInt();
+                                    ShowAllBookings = false;
+                                    ShowBookingFilter = false;
+                                    TransferBooking = false;
+                                }
+                                else
+                                {
+                                    ShowAllBookings = objUser.ShowAllBookings.ToBool();
+                                    ShowBookingFilter = objUser.ShowBookingFilter.ToBool();
+                                    TransferBooking = ShowAllBookings;
+                                }
+
+                                sysSettings["FilterSubCompanyId"] = FilterSubCompanyId;
+                                sysSettings["ShowAllBookings"] = ShowAllBookings;
+                                sysSettings["ShowBookingFilter"] = ShowBookingFilter;
+                                sysSettings["TransferBooking"] = TransferBooking;
+                            }
                             var rights = db.UM_SecurityGroup_Permissions.Where(c => c.SecurityGroupId == objUser.SecurityGroupId);
 
                             var ListofUserRights = (from a in rights
