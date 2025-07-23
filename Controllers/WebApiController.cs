@@ -9479,7 +9479,7 @@ namespace SignalRHub.Controllers
                         );
                     }
 
-                    if (string.IsNullOrEmpty(telNo) && string.IsNullOrEmpty(customerName))
+                    if (string.IsNullOrEmpty(mobNo) && string.IsNullOrEmpty(telNo) && string.IsNullOrEmpty(customerName))
                     {
                         response.Data = new List<object>();
                     }
