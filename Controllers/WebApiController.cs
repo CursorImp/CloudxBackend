@@ -10816,15 +10816,16 @@ namespace SignalRHub.Controllers
             try
             {
                 string postCode = obj.addressInfo.searchText.ToStr().ToUpper().Trim();
-                double radius = 250;
+                double radius = 2500;
                 PlaceSearchResponse SearchPlaces = new PlaceSearchResponse();
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
 
                     try
                     {
+                        string baseaddress = db.Gen_SysPolicy_Configurations.Select(x => x.BaseAddress).FirstOrDefault().ToStr();
                         stp_getCoordinatesByAddressResult baseCoordinates = null;
-                        baseCoordinates = db.stp_getCoordinatesByAddress(HubProcessor.Instance.objPolicy.BaseAddress.ToStr(), General.GetPostCodeMatch(HubProcessor.Instance.objPolicy.BaseAddress.ToStr())).FirstOrDefault();
+                        baseCoordinates = db.stp_getCoordinatesByAddress(baseaddress, General.GetPostCodeMatch(baseaddress)).FirstOrDefault();
 
                         if (baseCoordinates != null && baseCoordinates.Latitude.HasValue && baseCoordinates.Longtiude.HasValue)
                         {
