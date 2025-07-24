@@ -81,6 +81,7 @@ namespace SignalRHub
         public static string EnableWaitingAfterArrive = "0";
         public static string AcceptJobAdditional = "0";
         public static string EnableWaitingOnAddStop = "0";
+        public static string EnableParkExtraStop = "";
 
         public static string AutoSTC = "0";
 
@@ -608,6 +609,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableOtherDriverShortcuts", SetVal = "false", description = "Enable Other Driver Shortcuts"  },
                             new AppSetting { SetKey = "EnableDocumentNumberSettings", SetVal = "false", description = "Enable Document Number Settings"  },
                             new AppSetting { SetKey = "EnableFilterSubCompanyId", SetVal = "false", description = "EnableFilterSubCompanyId"  },
+                            new AppSetting { SetKey = "EnableParkExtraStop", SetVal = "", description = "EnableParkExtraStop"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1374,6 +1376,11 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableWaitingOnAddStop")))
                 {
                     EnableWaitingOnAddStop = GetAppSetting<string>("EnableWaitingOnAddStop").ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableParkExtraStop")))
+                {
+                    EnableParkExtraStop = GetAppSetting<string>("EnableParkExtraStop").ToStr();
 
                 }
 

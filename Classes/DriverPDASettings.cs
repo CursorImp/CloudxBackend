@@ -109,6 +109,7 @@ namespace SignalRHub
         public string DisableEarning = "";
         public string AcceptJobAdditional = "";
         public string EnableWaitingOnAddStop = "";
+        public string EnableParkExtraStop = "";
 
     }
 }
