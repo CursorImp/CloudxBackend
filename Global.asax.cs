@@ -82,6 +82,7 @@ namespace SignalRHub
         public static string AcceptJobAdditional = "0";
         public static string EnableWaitingOnAddStop = "0";
         public static string EnableParkExtraStop = "";
+        public static string EnablePassengerChat = "0";
 
         public static string AutoSTC = "0";
 
@@ -610,6 +611,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableDocumentNumberSettings", SetVal = "false", description = "Enable Document Number Settings"  },
                             new AppSetting { SetKey = "EnableFilterSubCompanyId", SetVal = "false", description = "EnableFilterSubCompanyId"  },
                             new AppSetting { SetKey = "EnableParkExtraStop", SetVal = "", description = "EnableParkExtraStop"  },
+                            new AppSetting { SetKey = "EnablePassengerChat", SetVal = "0", description = "EnablePassengerChat"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1381,6 +1383,11 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableParkExtraStop")))
                 {
                     EnableParkExtraStop = GetAppSetting<string>("EnableParkExtraStop").ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnablePassengerChat")))
+                {
+                    EnablePassengerChat = GetAppSetting<string>("EnablePassengerChat").ToStr();
 
                 }
 

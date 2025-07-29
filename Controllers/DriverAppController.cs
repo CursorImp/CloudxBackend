@@ -10889,6 +10889,7 @@ namespace SignalRHub
                         pda.AcceptJobAdditional = Global.AcceptJobAdditional;
                         pda.EnableWaitingOnAddStop = Global.EnableWaitingOnAddStop;
                         pda.EnableParkExtraStop = Global.EnableParkExtraStop;
+                        pda.EnablePassengerChat = Global.EnablePassengerChat;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
