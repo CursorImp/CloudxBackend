@@ -612,6 +612,8 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableFilterSubCompanyId", SetVal = "false", description = "EnableFilterSubCompanyId"  },
                             new AppSetting { SetKey = "EnableParkExtraStop", SetVal = "", description = "EnableParkExtraStop"  },
                             new AppSetting { SetKey = "EnablePassengerChat", SetVal = "0", description = "EnablePassengerChat"  },
+                            new AppSetting { SetKey = "EnableRingForCompletingJob", SetVal = "false", description = "EnableRingForCompletingJob"  },
+                            new AppSetting { SetKey = "EnableFareCheckBox", SetVal = "false", description = "Enable Fare Check Box"  },
                         };
 
                 using (var db = new TaxiDataContext())
