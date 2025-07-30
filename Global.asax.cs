@@ -257,9 +257,26 @@ namespace SignalRHub
 
                 }
 
+
+                var subCompanyDetail = "";
+                try
+                {
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        var _SubCompany = db.Gen_SubCompanies.Where(x => x.TelephoneNo.Replace(" ", "") == calledNumber.Replace(" ", "") || x.ConnectionString.Contains(calledNumber)).FirstOrDefault();
+                        if (_SubCompany != null)
+                        {
+                            subCompanyDetail = _SubCompany.Id.ToStr() + "=" + _SubCompany.CompanyName.ToStr() + " (" + calledNumber + ")";
+                        }
+                    }
+                }
+                catch
+                {
+                }
+
                 // //BroadCaster
                 long id = UpdateLog(name, phone, callDate, uniqueId, line, line, "", calledNumber);
-                var msg = "**cti_incomingcall>>" + phone.ToStr() + ">>" + line.ToStr().Trim() + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + calledNumber + ">>" + uniqueId + ">>" + id.ToStr();
+                var msg = "**cti_incomingcall>>" + phone.ToStr() + ">>" + line.ToStr().Trim() + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + calledNumber + ">>" + uniqueId + ">>" + id.ToStr() + ">>" + subCompanyDetail;
 
                 //send message to all desktop users
                 //List<string> listOfConnections = new List<string>();
@@ -1971,10 +1988,26 @@ namespace SignalRHub
                             {
                             }
 
+                            var subCompanyDetail = "";
+                            try
+                            {
+                                using (TaxiDataContext db = new TaxiDataContext())
+                                {
+                                    var _SubCompany = db.Gen_SubCompanies.Where(x => x.TelephoneNo.Replace(" ", "") == connectedLineNum.Replace(" ", "") || x.ConnectionString.Contains(connectedLineNum)).FirstOrDefault();
+                                    if (_SubCompany != null)
+                                    {
+                                        subCompanyDetail = _SubCompany.Id.ToStr() + "=" + _SubCompany.CompanyName.ToStr() + " (" + connectedLineNum + ")";
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                            }
+
                             ////
                             ///
                             long id = CreateLog(callerName, number.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
-                            General.BroadCastMessage("**cti_remoteincomingcall>>" + number.ToStr() + ">>" + "XXX" + ">>ring>>" + item + ">>" + id.ToStr());
+                            General.BroadCastMessage("**cti_remoteincomingcall>>" + number.ToStr() + ">>" + "XXX" + ">>ring>>" + item + ">>" + id.ToStr() + ">>" + subCompanyDetail);
 
                             try
                             {
@@ -2173,9 +2206,25 @@ namespace SignalRHub
                         {
                         }
 
+                        var subCompanyDetail = "";
+                        try
+                        {
+                            using (TaxiDataContext db = new TaxiDataContext())
+                            {
+                                var _SubCompany = db.Gen_SubCompanies.Where(x => x.TelephoneNo.Replace(" ", "") == connectedLineNum.Replace(" ", "") || x.ConnectionString.Contains(connectedLineNum)).FirstOrDefault();
+                                if (_SubCompany != null)
+                                {
+                                    subCompanyDetail = _SubCompany.Id.ToStr() + "=" + _SubCompany.CompanyName.ToStr() + " (" + connectedLineNum + ")";
+                                }
+                            }
+                        }
+                        catch
+                        {
+                        }
+
                         //
                         long id = CreateLog(callerName, callerNumber.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
-                        General.BroadCastMessage("**cti_remoteincomingcall>>" + callerNumber.ToStr() + ">>" + "XXX" + ">>ring>>" + item + ">>" + id.ToStr());
+                        General.BroadCastMessage("**cti_remoteincomingcall>>" + callerNumber.ToStr() + ">>" + "XXX" + ">>ring>>" + item + ">>" + id.ToStr() + ">>" + subCompanyDetail);
 
                         //CreateLog(callerName, callerNumber.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
 
@@ -2256,9 +2305,25 @@ namespace SignalRHub
 
                             //
 
+                            var subCompanyDetail = "";
+                            try
+                            {
+                                using (TaxiDataContext db = new TaxiDataContext())
+                                {
+                                    var _SubCompany = db.Gen_SubCompanies.Where(x => x.TelephoneNo.Replace(" ", "") == connectedLineNum.Replace(" ", "") || x.ConnectionString.Contains(connectedLineNum)).FirstOrDefault();
+                                    if (_SubCompany != null)
+                                    {
+                                        subCompanyDetail = _SubCompany.Id.ToStr() + "=" + _SubCompany.CompanyName.ToStr() + " (" + connectedLineNum + ")";
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                            }
+
                             long id = CreateLog(callerName, callerNumber.ToStr(), DateTime.Now, "00:00:00", "", connectedLineNum);
 
-                            General.BroadCastMessage("**cti_remoteincomingcall>>" + callerNumber.ToStr() + ">>" + "XXX" + ">>ring>>" + item + ">>" + id.ToStr());
+                            General.BroadCastMessage("**cti_remoteincomingcall>>" + callerNumber.ToStr() + ">>" + "XXX" + ">>ring>>" + item + ">>" + id.ToStr() + ">>" + subCompanyDetail);
                             //string message = $"**cti_remoteincomingcall>>{callerNumber.ToStr()}>>{id}>>ring>>{item}";
 
                             //General.BroadCastMessage(message);
@@ -2398,9 +2463,25 @@ namespace SignalRHub
 
                 }
 
+                var subCompanyDetail = "";
+                try
+                {
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        var _SubCompany = db.Gen_SubCompanies.Where(x => x.TelephoneNo.Replace(" ", "") == calledNumber.Replace(" ", "") || x.ConnectionString.Contains(calledNumber)).FirstOrDefault();
+                        if (_SubCompany != null)
+                        {
+                            subCompanyDetail = _SubCompany.Id.ToStr() + "=" + _SubCompany.CompanyName.ToStr() + " (" + calledNumber + ")";
+                        }
+                    }
+                }
+                catch
+                {
+                }
+
                 // //BroadCaster
                 long id = UpdateLog(name, phone, callDate, uniqueId, line, line, "", calledNumber);
-                var msg = "**cti_incomingcall>>" + phone.ToStr() + ">>" + line.ToStr().Trim() + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + calledNumber + ">>" + uniqueId + ">>" + id.ToStr();
+                var msg = "**cti_incomingcall>>" + phone.ToStr() + ">>" + line.ToStr().Trim() + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + calledNumber + ">>" + uniqueId + ">>" + id.ToStr() + ">>" + subCompanyDetail;
 
                 //send message to all desktop users
                 //List<string> listOfConnections = new List<string>();
