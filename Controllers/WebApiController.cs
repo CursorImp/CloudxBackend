@@ -23,6 +23,8 @@ using System.Xml.Linq;
 using System.Data.SqlClient;
 using static SignalRHub.DriverAppController;
 using System.Threading.Tasks;
+using CabTreasureWebApi.Models.HereForwardGeocode;
+using System.Collections;
 
 namespace SignalRHub.Controllers
 {
@@ -1524,7 +1526,18 @@ namespace SignalRHub.Controllers
             {
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
+                    try
+                    {
+                        string query = "SELECT IsFare FROM Booking WHERE ID =" + obj.bookingInfo.Id;
+                        var data = db.ExecuteQuery<BookingInfo>(query).FirstOrDefault();
+                        obj.bookingInfo.IsFare = data.IsFare;
+                    }
+                    catch
+                    {
 
+                    }
+                  
+                 
 
                     var obj2 = db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id);
 
@@ -2382,6 +2395,20 @@ namespace SignalRHub.Controllers
 
                         }
 
+                        try
+                        {
+                            string query1 = "Update booking set IsFare= {0} where Id={1}";
+                            db.ExecuteCommand(query1, obj.bookingInfo.IsFare, objMaster.Current.Id);
+                            var master = db.Bookings.FirstOrDefault(x => x.MasterJobId == objMaster.Current.Id);
+                            if (master != null)
+                            {
+                                string query2 = "Update booking set IsFare= {0} where Id={1}";
+                                db.ExecuteCommand(query2, obj.bookingInfo.IsFare, master.Id);
+                            }
+                        }
+                        catch
+                        {
+                        }
                         try
                         {
                             var master = db.Bookings.FirstOrDefault(x => x.MasterJobId == objMaster.Current.Id);
