@@ -171,7 +171,7 @@ namespace SignalRHub.Controllers
                                 var key = setting.SetKey.Replace(" ", "").Replace("-", "").Replace(".", "");
                                 sysSettings[key] = setting.SetVal;
                             }
-                            
+
 
                             // Add extra values
                             sysSettings["DefaultVehicleTypeId"] = HubProcessor.Instance.objPolicy.DefaultVehicleTypeId;
@@ -556,15 +556,15 @@ namespace SignalRHub.Controllers
                     ).Count();
 
                     data.objBookingCount.totalQuotation = (from a in db.Bookings
-                                 join bt in db.BookingTypes on a.BookingTypeId equals bt.Id
-                                 join b in db.Gen_PaymentTypes on a.PaymentTypeId equals b.Id
-                                 join c in db.Gen_Companies on a.CompanyId equals c.Id into table2
-                                 from c in table2.DefaultIfEmpty()
-                                 join v in db.Fleet_VehicleTypes on a.VehicleTypeId equals v.Id
-                                 where a.PickupDateTime >= recentDays
-                                       && a.IsQuotation == true
-                                       && a.BookingStatusId == Enums.BOOKINGSTATUS.WAITING
-                                 select a).Count();
+                                                           join bt in db.BookingTypes on a.BookingTypeId equals bt.Id
+                                                           join b in db.Gen_PaymentTypes on a.PaymentTypeId equals b.Id
+                                                           join c in db.Gen_Companies on a.CompanyId equals c.Id into table2
+                                                           from c in table2.DefaultIfEmpty()
+                                                           join v in db.Fleet_VehicleTypes on a.VehicleTypeId equals v.Id
+                                                           where a.PickupDateTime >= recentDays
+                                                                 && a.IsQuotation == true
+                                                                 && a.BookingStatusId == Enums.BOOKINGSTATUS.WAITING
+                                                           select a).Count();
                     //data.objBookingCount.totalInCompleted = db.ExecuteQuery<ClsBookingListData>("exec stp_GetIncompleteBookingListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, lastSevenDays, dt, 0, "", 100).Count();
                 }
 
@@ -1536,8 +1536,8 @@ namespace SignalRHub.Controllers
                     {
 
                     }
-                  
-                 
+
+
 
                     var obj2 = db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id);
 
@@ -1632,7 +1632,7 @@ namespace SignalRHub.Controllers
                         //
                         foreach (var item in db.Booking_ViaLocations.Where(c => c.BookingId == obj.bookingInfo.Id))
                         {
-                            obj.bookingInfo.Booking_ViaLocations.Add(new ClsBooking_ViaLocation {ViaLocId=item.ViaLocId, ViaLocTypeValue = item.ViaLocTypeValue, ViaLocTypeLabel = item.ViaLocTypeLabel, Id = item.Id, BookingId = obj.bookingInfo.Id, ViaLocTypeId = Enums.LOCATION_TYPES.ADDRESS, ViaLocValue = item.ViaLocValue });
+                            obj.bookingInfo.Booking_ViaLocations.Add(new ClsBooking_ViaLocation { ViaLocId = item.ViaLocId, ViaLocTypeValue = item.ViaLocTypeValue, ViaLocTypeLabel = item.ViaLocTypeLabel, Id = item.Id, BookingId = obj.bookingInfo.Id, ViaLocTypeId = Enums.LOCATION_TYPES.ADDRESS, ViaLocValue = item.ViaLocValue });
                         }
                     }
                     catch
@@ -2300,6 +2300,22 @@ namespace SignalRHub.Controllers
 
                             try
                             {
+                                try
+                                {
+                                    string Query = "SELECT * FROM  BOOKING WHERE ID = {0}";
+
+                                    var data = db.ExecuteQuery<BookingInfo>(Query, objMaster.Current.Id).FirstOrDefault();
+                                    if (obj.bookingInfo.IsFare != data.IsFare)
+                                    {
+                                        objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Manual Fare " + (data.IsFare == true ? "Enabled" : "Disabled"), AfterUpdate =  "Manual Fare " + (obj.bookingInfo.IsFare == true ? "Enabled" : "Disabled"), UpdateDate = DateTime.Now });
+
+                                    }
+                                }
+                                catch
+                                {
+
+                                }
+
 
                                 if (obj.editbookingInfo.PickupDateTime != objMaster.Current.PickupDateTime)
                                 {
@@ -2308,6 +2324,8 @@ namespace SignalRHub.Controllers
                                     objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime), AfterUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", objMaster.Current.PickupDateTime), UpdateDate = DateTime.Now });
 
                                 }
+                              
+
                                 if (obj.editbookingInfo.FromAddress.ToStr().ToUpper() != objMaster.Current.FromAddress.ToStr().ToUpper())
                                 {
 
@@ -2315,6 +2333,8 @@ namespace SignalRHub.Controllers
                                     objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Pickup:" + obj.editbookingInfo.FromAddress.ToStr(), AfterUpdate = "Pickup:" + objMaster.Current.FromAddress, UpdateDate = DateTime.Now });
 
                                 }
+
+
                                 if (obj.editbookingInfo.ToAddress.ToStr().ToUpper() != objMaster.Current.ToAddress.ToStr().ToUpper())
                                 {
 
@@ -2355,6 +2375,13 @@ namespace SignalRHub.Controllers
                                         objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Driver:" + db.Fleet_Drivers.Where(c => c.Id == obj.editbookingInfo.DriverId).Select(c => c.DriverNo).FirstOrDefault(), AfterUpdate = "Driver:" + db.Fleet_Drivers.Where(c => c.Id == objMaster.Current.DriverId).Select(c => c.DriverNo).FirstOrDefault(), UpdateDate = DateTime.Now });
                                     }
                                 }
+                                if (obj.editbookingInfo.PaymentTypeId.ToInt() != objMaster.Current.PaymentTypeId.ToInt())
+                                {
+                                    objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Payment Type:" + db.Gen_PaymentTypes.Where(c => c.Id == obj.editbookingInfo.PaymentTypeId).Select(c => c.PaymentType).FirstOrDefault(), AfterUpdate = "Payment Type:" + db.Gen_PaymentTypes.Where(c => c.Id == objMaster.Current.PaymentTypeId).Select(c => c.PaymentType).FirstOrDefault(), UpdateDate = DateTime.Now });
+                                   
+                                }
+
+
                             }
                             catch (Exception ex)
                             {
@@ -2385,9 +2412,9 @@ namespace SignalRHub.Controllers
                             foreach (var item in obj.bookingInfo.Booking_ViaLocations)
                             {
                                 string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue,ViaLocId) VALUES ({0}, {1}, {2}, {3}, {4},NULLIF({5},0))";
-                                db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", objMaster.Current.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue, item.ViaLocId>0?item.ViaLocId:0);
+                                db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", objMaster.Current.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue, item.ViaLocId > 0 ? item.ViaLocId : 0);
 
-                               
+
                             }
                         }
                         catch (Exception ex)
@@ -3190,14 +3217,15 @@ namespace SignalRHub.Controllers
                                 {
                                     try
                                     {
-                                        if (db.Bookings.Where(x=> x.Id == obj.bookingInfo.Id.ToLong() && x.DriverId != obj.bookingInfo.DriverId.ToInt()).Select(x=> x.BookingStatusId).FirstOrDefault().ToInt() == 4) //4 = PENDING ACCEPT
+                                        if (db.Bookings.Where(x => x.Id == obj.bookingInfo.Id.ToLong() && x.DriverId != obj.bookingInfo.DriverId.ToInt()).Select(x => x.BookingStatusId).FirstOrDefault().ToInt() == 4) //4 = PENDING ACCEPT
                                         {
                                             msg = "Job is already dispatched to other driver.";
                                             try
                                             {
                                                 System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
                                             }
-                                            catch {
+                                            catch
+                                            {
                                             }
                                         }
                                         //else if (db.Bookings.Where(x => x.DriverId == obj.bookingInfo.DriverId.ToInt() && x.Id != obj.bookingInfo.Id.ToLong() && x.BookingStatusId == 4).Select(x => x.Id).ToList().Count > 0) //4 = PENDING ACCEPT
@@ -7899,7 +7927,7 @@ namespace SignalRHub.Controllers
                         var data = new { OneWayBookingInfo = obj.bookingInfo, ReturnBookingInfo = objReturn, OneWayBookingList = lists.Where(c => c.MasterJobId == null).OrderBy(c => c.PickupDateTime).ToList(), ReturnBookingList = list.Where(c => c.MasterJobId != null).OrderBy(c => c.PickupDateTime).ToList() };
 
 
-                     
+
 
                         response.Data = data;
 
