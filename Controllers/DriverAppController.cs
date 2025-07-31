@@ -10890,6 +10890,7 @@ namespace SignalRHub
                         pda.EnableWaitingOnAddStop = Global.EnableWaitingOnAddStop;
                         pda.EnableParkExtraStop = Global.EnableParkExtraStop;
                         pda.EnablePassengerChat = Global.EnablePassengerChat;
+                        pda.EnablePickLocation = Global.EnablePickLocation;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
