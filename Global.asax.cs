@@ -632,7 +632,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnablePassengerChat", SetVal = "0", description = "EnablePassengerChat"  },
                             new AppSetting { SetKey = "EnableRingForCompletingJob", SetVal = "false", description = "EnableRingForCompletingJob"  },
                             new AppSetting { SetKey = "EnableFareCheckBox", SetVal = "false", description = "Enable Fare Check Box"  },
-                            new AppSetting { SetKey = "EnablePickLocation", SetVal = "false", description = "Enable Pick Location"  },
+                            new AppSetting { SetKey = "EnablePickLocation", SetVal = "0", description = "Enable Pick Location"  },
                         };
 
                 using (var db = new TaxiDataContext())
