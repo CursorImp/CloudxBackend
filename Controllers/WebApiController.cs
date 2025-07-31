@@ -1639,7 +1639,25 @@ namespace SignalRHub.Controllers
                     {
 
                     }
+                    if (obj?.bookingInfo?.CompanyId > 0)
+                    {
+                        var tempCompany = db.Gen_Companies.Where(x => x.Id == obj.bookingInfo.CompanyId).Select(x => new { x.HasBookedBy, x.HasOrderNo, x.HasDepartment, x.HasEscort, x.PasswordEnable }).FirstOrDefault();
 
+                        if (tempCompany != null)
+                        {
+                            // Manually create detached Fleet_Driver
+                            var company = new Gen_Company
+                            {
+                                HasBookedBy = tempCompany.HasBookedBy == null ? false : tempCompany.HasBookedBy,
+                                HasOrderNo = tempCompany.HasOrderNo == null ? false : tempCompany.HasOrderNo,
+                                HasDepartment = tempCompany.HasDepartment == null ? false : tempCompany.HasDepartment,
+                                HasEscort = tempCompany.HasEscort == null ? false : tempCompany.HasEscort,
+                                PasswordEnable = tempCompany.PasswordEnable == null ? false : tempCompany.PasswordEnable,
+                            };
+
+                            obj.bookingInfo.Company = company;
+                        }
+                    }
                     if (obj.bookingInfo.ZoneId != null)
                     {
                         obj.bookingInfo.PickupZoneName = db.Gen_Zones.Where(c => c.Id == obj.bookingInfo.ZoneId).Select(c => c.ZoneName).FirstOrDefault();
