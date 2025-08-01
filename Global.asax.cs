@@ -476,7 +476,7 @@ namespace SignalRHub
                 RouteConfig.RegisterRoutes(RouteTable.Routes);
 
                 IsSendingSMS = false;
-                setTimer();
+              //  setTimer();
             }
             catch (Exception ex)
             {
@@ -612,6 +612,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableFilterSubCompanyId", SetVal = "false", description = "EnableFilterSubCompanyId"  },
                             new AppSetting { SetKey = "EnableParkExtraStop", SetVal = "", description = "EnableParkExtraStop"  },
                             new AppSetting { SetKey = "EnablePassengerChat", SetVal = "0", description = "EnablePassengerChat"  },
+                            new AppSetting { SetKey = "ShowSubCompanyWiseKonnect", SetVal = "false", description = "ShowSubCompanyWiseKonnect"  },
                         };
 
                 using (var db = new TaxiDataContext())

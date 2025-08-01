@@ -23396,7 +23396,16 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             try
             {
 
-                Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                
+                PaymentConfig objMerchantInfo = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
+                    
+                }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -23404,7 +23413,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                    //Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
                     if (objBooking.BookingPayment != null && objBooking.BookingPayment.AuthCode.ToStr().Length > 0)
                     {
                         response.Message = "Payment Already Captured against this booking";
@@ -23429,10 +23438,13 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                     string CustomerStripeID = "";
                     DriverAppController.CustomerCardDetails CardDetails = null;
-                    Customer Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim());
+                    Customer Customerobj = null;
+                    if (!string.IsNullOrEmpty(objBooking.CustomerMobileNo))
+                    {
+                        Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim());
+                    }
 
-
-                    if (Customerobj.CreditCardDetails.ToStr().ToLower().StartsWith("cus"))
+                        if (Customerobj.CreditCardDetails.ToStr().ToLower().StartsWith("cus"))
                     {
                         CustomerStripeID = Customerobj?.CreditCardDetails?.ToStr();
                         CardDetails = GetCardDetailsKP(Customerobj.Id);
@@ -23556,7 +23568,15 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             try
             {
-                Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                PaymentConfig objMerchantInfo = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
+                   
+                }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -23564,7 +23584,6 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
 
                     if (objBooking.BookingPayment != null && objBooking.BookingPayment.AuthCode.ToStr().Length > 0)
                     {
@@ -23577,8 +23596,12 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                     string CustomerStripeID = "";
                     DriverAppController.CustomerCardDetails CardDetails = new DriverAppController.CustomerCardDetails();
-                    Customer Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim());
-
+                  
+                    Customer Customerobj = null;
+                    if (!string.IsNullOrEmpty(objBooking.CustomerMobileNo))
+                    {
+                        Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim());
+                    }
 
                     if (Customerobj.CreditCardDetails.ToStr().ToLower().StartsWith("cus"))
                     {
@@ -23694,7 +23717,16 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             try
             {
-                Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+               
+                PaymentConfig objMerchantInfo = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
+                    
+                }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -23702,7 +23734,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                    //Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
 
                     if (objBooking.BookingPayment != null && objBooking.BookingPayment.AuthCode.ToStr().Length > 0)
                     {
@@ -23714,7 +23746,9 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     }
                     string CustomerStripeID = "";
 
-                    Customer Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim());
+                    Customer Customerobj = null;
+
+                    if (!string.IsNullOrEmpty(objBooking.CustomerMobileNo)) { Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim()); }
                     if (Customerobj != null && Customerobj.CreditCardDetails.ToStr().ToLower().StartsWith("cus"))
                     {
                         CustomerStripeID = Customerobj?.CreditCardDetails.ToStr();
@@ -23942,7 +23976,16 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             try
             {
-                Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+               
+                PaymentConfig objMerchantInfo = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
+                   
+                }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -23950,7 +23993,6 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
 
                     if (objBooking.BookingPayment != null && objBooking.BookingPayment.AuthCode.ToStr().Length > 0)
                     {
@@ -24141,7 +24183,16 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             try
             {
 
-                Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+              
+                PaymentConfig objMerchantInfo = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
+                   
+                }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -24150,7 +24201,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                    
                     Booking_Log RefundLog = null;
                     if (objBooking.Booking_Logs != null)
                     {
@@ -24254,7 +24305,16 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             try
             {
-                Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                PaymentConfig objMerchantInfo = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
+                   
+                }
+            
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -24262,7 +24322,6 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
 
                     if (objBooking.BookingPayment != null && objBooking.BookingPayment.AuthCode.ToStr().Length > 0)
                     {

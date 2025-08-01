@@ -263,6 +263,7 @@ namespace SignalRHub.Controllers
                                 EnableBookingCharges = EnableBookingChargesSetting.SetVal,
                                 BookingPayment = BookingPaymentSetting.SetVal,
                                 ShowMapBydefaultOndashboard = ShowMapBydefaultOndashboard.SetVal
+                               
                             };
 
 

@@ -2,9 +2,49 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using static SignalRHub.DriverAppController;
+using Taxi_Model;
+using Utils;
+using Taxi_BLL;
 
 namespace SignalRHub.Classes.KonnectPay
 {
+
+    public class PaymentConfig
+    {
+        public bool? EnableMobileIntegration { get; set; }
+
+        public string PaypalID { get; set; }
+
+        public string IPNListenerUrl { get; set; }
+
+        public string PrivateKeyPassword { get; set; }
+
+        public string ApiCertificate { get; set; }
+
+        public string ApplicationId { get; set; }
+
+        public string ApiSignature { get; set; }
+
+        public string ApiUsername { get; set; }
+
+        public int? PaymentGatewayId { get; set; }
+
+        public string MerchantPassword { get; set; }
+
+        public string MerchantID { get; set; }
+
+        public int SysPolicyId { get; set; }
+
+        public int Id { get; set; }
+        public string ApiPassword { get; set; }
+
+        public int SubCompanyId { get; set; }
+
+     
+
+
+    }
     public class KonnectPayOptions
     {
         public int OptionID { get; set; }
@@ -56,5 +96,5 @@ namespace SignalRHub.Classes.KonnectPay
         public string CardToken { get; set; }
         public string CardType { get; set; }
     }
-
+   
 }
