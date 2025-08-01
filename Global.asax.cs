@@ -635,6 +635,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnablePickLocation", SetVal = "0", description = "Enable Pick Location"  },
                             new AppSetting { SetKey = "EnableRecoverAuth", SetVal = "0", description = "EnableRecoverAuth"  },
                             new AppSetting { SetKey = "EnableNoPickupAuth", SetVal = "0", description = "EnableNoPickupAuth"  },
+                            new AppSetting { SetKey = "EnableCreatePastDateBookings", SetVal = "false", description = "EnableCreatePastDateBookings"  },
                         };
 
                 using (var db = new TaxiDataContext())
