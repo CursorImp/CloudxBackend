@@ -830,11 +830,39 @@ namespace SignalRHub.WebApiClasses
 
 
 
-
+    public class DashboardDriver
+    {
+        public int id { get; set; }
+        public string ZoneName { get; set; }
+        public string ShortName { get; set; }
+        public int driverid { get; set; }
+        public string driverno { get; set; }
+        public DateTime? plotdate { get; set; }
+        public int? orderno { get; set; }
+        public string DriverName { get; set; }
+        public bool? HasPDA { get; set; }
+        public int? VehicleTypeId { get; set; }
+        public int? driverworkstatusid { get; set; }
+        public string workstatus { get; set; }
+        public string backgroundcolor { get; set; }
+        public long DriverLoginId { get; set; }
+        public string LoginFrom { get; set; }
+        public long? CurrentJobId { get; set; }
+        public double? longitude { get; set; }
+        public double? latitude { get; set; }
+        public int? VehicleTypeId1 { get; set; }
+        public bool? HasPDA1 { get; set; }
+        public string VehicleType { get; set; }
+        public bool IsPanic { get; set; }
+        public string OnJob { get; set; }
+        public DateTime? QueueDateTime { get; set; }
+        public DateTime? WaitSinceOn { get; set; }
+        public DateTime? LoginDateTime { get; set; }
+    }
 
     public class ClsDashboardModel
     {
-        public List<stp_GetDashboardDriversResult> listofdrivers;
+        public List<DashboardDriver> listofdrivers;
 
         public List<stp_GetDashboardDriversResult> listofwaitingdrivers;
         public List<stp_GetDashboardDriversResult> listofonboarddrivers;

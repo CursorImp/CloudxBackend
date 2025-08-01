@@ -447,7 +447,8 @@ namespace SignalRHub.Controllers
             try
             {
 
-                data.listofdrivers = db.stp_GetDashboardDrivers(0).ToList();
+                //data.listofdrivers = db.stp_GetDashboardDrivers(0).ToList();
+                data.listofdrivers = db.ExecuteQuery<DashboardDriver>("exec stp_GetDashboardDrivers {0}", 0).ToList();
 
                 data.objDriverCount = new DriverCounts();
 
