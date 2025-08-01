@@ -636,6 +636,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableRecoverAuth", SetVal = "0", description = "EnableRecoverAuth"  },
                             new AppSetting { SetKey = "EnableNoPickupAuth", SetVal = "0", description = "EnableNoPickupAuth"  },
                             new AppSetting { SetKey = "DeadMileageType", SetVal = "false", description = "Dead Mileage Type"  },
+                            new AppSetting { SetKey = "EnableCreatePastDateBookings", SetVal = "false", description = "EnableCreatePastDateBookings"  },
                             new AppSetting { SetKey = "EnableNoSignalColorChange", SetVal = "false", description = "Enable No Signal Color Change"  },
 
                         };
