@@ -494,7 +494,7 @@ namespace SignalRHub
                 RouteConfig.RegisterRoutes(RouteTable.Routes);
 
                 IsSendingSMS = false;
-              //  setTimer();
+                setTimer();
             }
             catch (Exception ex)
             {
