@@ -439,7 +439,7 @@ namespace SignalRHub.WebApiClasses
         public string AuthCode { get; set; }
         public int PaymentGatewayID { get; set; }
         public bool IsRefund { get; set; }
-        public bool IsFare { get; set; }
+        public bool? IsFare { get; set; }
         public List<ClsBooking_ViaLocation> Booking_ViaLocations { get; set; }
 
 
