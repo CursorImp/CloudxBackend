@@ -238,4 +238,84 @@ namespace SignalRHub
 
     }
 
+    public class SearchAddressInfo
+    {
+
+        public string JobId;
+        public string DrvId;
+
+
+        public string DrvNo;
+
+        public string version;
+        public string keyword;
+        public double? Latitude;
+        public double? Longitude;
+    }
+
+    public partial class stp_GetByRoadLevelDataForAppsResult
+    {
+
+        private string _Address;
+
+        private System.Nullable<double> _Latitude;
+
+        private System.Nullable<double> _Longitude;
+
+
+        public string LocationType;
+
+        public stp_GetByRoadLevelDataForAppsResult()
+        {
+        }
+
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_Address", DbType = "VarChar(200)")]
+        public string Address
+        {
+            get
+            {
+                return this._Address;
+            }
+            set
+            {
+                if ((this._Address != value))
+                {
+                    this._Address = value;
+                }
+            }
+        }
+
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_Latitude", DbType = "Float")]
+        public System.Nullable<double> Latitude
+        {
+            get
+            {
+                return this._Latitude;
+            }
+            set
+            {
+                if ((this._Latitude != value))
+                {
+                    this._Latitude = value;
+                }
+            }
+        }
+
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_Longitude", DbType = "Float")]
+        public System.Nullable<double> Longitude
+        {
+            get
+            {
+                return this._Longitude;
+            }
+            set
+            {
+                if ((this._Longitude != value))
+                {
+                    this._Longitude = value;
+                }
+            }
+        }
+    }
+
 }
