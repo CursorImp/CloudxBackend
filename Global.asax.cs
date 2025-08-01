@@ -83,6 +83,7 @@ namespace SignalRHub
         public static string EnableWaitingOnAddStop = "0";
         public static string EnableParkExtraStop = "";
         public static string EnablePassengerChat = "0";
+        public static string EnablePickLocation = "0";
 
         public static string AutoSTC = "0";
 
@@ -631,6 +632,9 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnablePassengerChat", SetVal = "0", description = "EnablePassengerChat"  },
                             new AppSetting { SetKey = "EnableRingForCompletingJob", SetVal = "false", description = "EnableRingForCompletingJob"  },
                             new AppSetting { SetKey = "EnableFareCheckBox", SetVal = "false", description = "Enable Fare Check Box"  },
+                            new AppSetting { SetKey = "EnablePickLocation", SetVal = "0", description = "Enable Pick Location"  },
+                            new AppSetting { SetKey = "EnableRecoverAuth", SetVal = "0", description = "EnableRecoverAuth"  },
+                            new AppSetting { SetKey = "EnableNoPickupAuth", SetVal = "0", description = "EnableNoPickupAuth"  },
                             new AppSetting { SetKey = "DeadMileageType", SetVal = "false", description = "Dead Mileage Type"  },
 
                         };
@@ -1409,6 +1413,11 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnablePassengerChat")))
                 {
                     EnablePassengerChat = GetAppSetting<string>("EnablePassengerChat").ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnablePickLocation")))
+                {
+                    EnablePickLocation = GetAppSetting<string>("EnablePickLocation").ToStr();
 
                 }
 
