@@ -8736,7 +8736,29 @@ namespace SignalRHub
             return rtn;
         }
         #endregion
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendNotification")]
+        public string SendNotification(classchat obj)
+        {
 
+            try
+            {
+
+                System.IO.File.AppendAllText(AppDomain.CurrentDomain.BaseDirectory + "\\SendNotification.txt", DateTime.UtcNow.ToStr() + ",Request:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+
+
+            }
+
+            string recordId = Guid.NewGuid().ToString();
+            //
+            SocketIO.SendToSocket(obj.driverId.ToStr(), obj.body, "chatMessage", "", recordId);
+
+            return "success";
+        }
 
         private static string RemoveUK(ref string address)
         {
