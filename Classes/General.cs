@@ -6456,9 +6456,18 @@ namespace SignalRHub
             PaymentConfig resp = null;
             try
             {
+
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    resp = db.ExecuteQuery<Classes.KonnectPay.PaymentConfig>("select * from Gen_SysPolicy_PaymentDetails where PaymentGatewayId=15 and SubCompanyId=" + SubCompany).FirstOrDefault();
+                    if (Global.EnableSubCompanyWiseKonnect.ToStr().ToLower() == "true")
+                    {
+                        resp = db.ExecuteQuery<Classes.KonnectPay.PaymentConfig>("select * from Gen_SysPolicy_PaymentDetails where PaymentGatewayId=15 and SubCompanyId=" + SubCompany).FirstOrDefault();
+                    }
+                    else
+                    {
+                        resp = db.ExecuteQuery<Classes.KonnectPay.PaymentConfig>("select * from Gen_SysPolicy_PaymentDetails where PaymentGatewayId=15").FirstOrDefault();
+                    }
+
                 }
             }
             catch(Exception ex)
