@@ -39,7 +39,7 @@ namespace SignalRHub.Classes.KonnectPay
         public int Id { get; set; }
         public string ApiPassword { get; set; }
 
-        public int SubCompanyId { get; set; }
+        public int? SubCompanyId { get; set; }
 
      
 
