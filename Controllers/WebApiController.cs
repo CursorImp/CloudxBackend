@@ -436,7 +436,7 @@ namespace SignalRHub.Controllers
         //}
 
 
-        public ClsDashboardModel SelectDashboardDrivers(TaxiDataContext db, ref ClsDashboardModel datab)
+        public ClsDashboardModel SelectDashboardDrivers(TaxiDataContext db, ref ClsDashboardModel datab, int subCompanyId = 0)
         {
 
             ClsDashboardModel data = datab;
@@ -449,7 +449,7 @@ namespace SignalRHub.Controllers
             {
 
                 //data.listofdrivers = db.stp_GetDashboardDrivers(0).ToList();
-                data.listofdrivers = db.ExecuteQuery<DashboardDriver>("exec stp_GetDashboardDrivers {0}", 0).ToList();
+                data.listofdrivers = db.ExecuteQuery<DashboardDriver>("exec stp_GetDashboardDrivers {0}", subCompanyId).ToList();
 
                 data.objDriverCount = new DriverCounts();
 
@@ -685,7 +685,7 @@ namespace SignalRHub.Controllers
 
 
 
-                    SelectDashboardDrivers(db, ref data);
+                    SelectDashboardDrivers(db, ref data, obj.objUserInfo != null ? obj.objUserInfo.SubcompanyId.ToInt() : 0);
 
 
                     //data.listofdrivers = db.stp_GetDashboardDrivers(0).ToList();
@@ -1036,7 +1036,7 @@ namespace SignalRHub.Controllers
                     //data.objDriverCount.totalWaiting = data.listofdrivers.Count(c => c.driverworkstatusid == Enums.Driver_WORKINGSTATUS.AVAILABLE || c.driverworkstatusid == Enums.Driver_WORKINGSTATUS.ONBREAK || c.driverworkstatusid == Enums.Driver_WORKINGSTATUS.FOJ || c.driverworkstatusid == Enums.Driver_WORKINGSTATUS.SINBIN);
 
 
-                    response.Data = SelectDashboardDrivers(db, ref data);
+                    response.Data = SelectDashboardDrivers(db, ref data, obj.objUserInfo != null ? obj.objUserInfo.SubcompanyId.ToInt() : 0);
 
 
 
@@ -1082,7 +1082,7 @@ namespace SignalRHub.Controllers
 
 
                     //response.Data = data;
-                    response.Data = SelectDashboardDrivers(db, ref data);
+                    response.Data = SelectDashboardDrivers(db, ref data, obj.objUserInfo != null ? obj.objUserInfo.SubcompanyId.ToInt() : 0);
 
 
 
