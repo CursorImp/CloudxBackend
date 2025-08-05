@@ -534,7 +534,7 @@ namespace SignalRHub.Controllers
                 DateTime till = DateTime.Now.AddDays(1).ToDate();
 
                 objCnt = db.ExecuteQuery<clsBookingscount>
-                    ("exec stp_getbookingsdatacountbystatus {0},{1},{2},{3}", from, till, 0, 0).ToList();
+                    ("exec stp_getbookingsdatacountbystatus {0},{1},{2},{3}", from, till, subCompanyId, 0).ToList();
 
                 data.objBookingCount = new BookingCounts();
 
@@ -1241,7 +1241,7 @@ namespace SignalRHub.Controllers
                         //    (a.StatusId != Enums.BOOKINGSTATUS.DISPATCHED ||
                         //     a.StatusId == Enums.BOOKINGSTATUS.CANCELLED)
                         //).ToList();
-                        var data = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, 0, "", obj.bookingInfo.BookingStatusId.ToInt()).ToList();
+                        var data = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, obj.bookingInfo.SubcompanyId.ToInt(), "", obj.bookingInfo.BookingStatusId.ToInt()).ToList();
                         response.Data = data.Where(a =>
                             a.PickupDate.HasValue &&
                             a.PickupDate.Value.Date < dt.Value.Date &&
@@ -1252,7 +1252,7 @@ namespace SignalRHub.Controllers
                     }
                     else
                     {
-                        response.Data = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, from, till, 0, "", obj.bookingInfo.BookingStatusId.ToInt()).ToList();
+                        response.Data = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, from, till, obj.bookingInfo.SubcompanyId.ToInt(), "", obj.bookingInfo.BookingStatusId.ToInt()).ToList();
 
                     }
 

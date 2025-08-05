@@ -89,12 +89,15 @@ namespace SignalRHub.Classes
         public string FilePath { get; set; }
         public string BadgeNumber { get; set; }
         public string Status { get; set; }
+        public string DriverNo { get; set; }
 
     }
     public class PendingDocumentRequestModel
     {
         public int Id { get; set; }
         public string Status { get; set; }
+        public string URL { get; set; }
+        public string DriverNo { get; set; }
 
     }
     public class UpdatePendingDocumentModel
