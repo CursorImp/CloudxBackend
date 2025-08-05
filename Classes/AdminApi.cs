@@ -923,7 +923,7 @@ namespace SignalRHub.Classes
         public string PrivateKeyPassword { get; set; }
         public string IPNListenerUrl { get; set; }
         public string Name { get; set; }
-        public int SubCompanyId { get; set; }
+        public int? SubCompanyId { get; set; }
     }
     public class ActionBookingRequest
     {
