@@ -1,5 +1,6 @@
 using DotNetCoords;
 using SignalRHub.Classes;
+using SignalRHub.Classes.KonnectPay;
 using SignalRHub.Classes.KonnectSupplier;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,7 @@ using System.Web.Script.Serialization;
 using Taxi_BLL;
 using Taxi_Model;
 using Utils;
+using static Taxi_BLL.Enums;
 
 
 namespace SignalRHub
@@ -6797,7 +6799,7 @@ namespace SignalRHub
             string rtn = "true";
             string json = value;
             bool IsSent = false;
-            string DefaultCurrencySign = Global.DefaultCurrencySign;//System.Configuration.ConfigurationManager.AppSettings["DefaultCurrencySign"];
+            string DefaultCurrencySign = Global.DefaultCurrencySign;
             try
             {
                 try
@@ -7715,10 +7717,6 @@ namespace SignalRHub
                             var dt = obj.customerName.Split('/');
                             if (dt != null && dt.Length > 0) { Customerid = Convert.ToInt32(dt[1]); }
                         }
-
-
-
-                        Customer objcustomer = db.Customers.Where(c => c.MobileNo == CustomerPhoneNumber).FirstOrDefault();
                         //if (Customerid > 0)
                         //{
                         //    objcustomer = db.Customers.Where(c => c.Id == Customerid).FirstOrDefault();
@@ -7727,7 +7725,10 @@ namespace SignalRHub
                         //{
                         //    objcustomer = db.Customers.Where(c => c.MobileNo == CustomerPhoneNumber).FirstOrDefault();
                         //}
-
+                        Customer objcustomer = null;
+                        if (!string.IsNullOrEmpty(CustomerPhoneNumber)) 
+                        { 
+                         objcustomer = db.Customers.Where(c => c.MobileNo == CustomerPhoneNumber).FirstOrDefault();
                         if (objcustomer != null && !string.IsNullOrEmpty(obj.customerid) && !string.IsNullOrEmpty(obj.paymentMethodId))
                         {
                             db.ExecuteQuery<int>("update Customer set CreditCardDetails='" + obj.customerid.ToStr() + "' where Id=" + objcustomer.Id);
@@ -7752,8 +7753,23 @@ namespace SignalRHub
                             catch
                             {
                             }
+                                rtn = "false";
+
+                            }
+                    }
+                        else
+                        {
+                            try
+                            {
+                                File.AppendAllText(AppContext.BaseDirectory + "\\UpdateDataFromCardRegisterKOnnectPay.txt", DateTime.Now.ToStr() + "Error in saving Card Details invalid mobile number :" + CustomerPhoneNumber + Environment.NewLine);
+                            }
+                            catch
+                            {
+                            }
+                            rtn = "false";
 
                         }
+
 
                     }
 
@@ -7925,13 +7941,17 @@ namespace SignalRHub
                 {
 
                 }
-                Gen_SysPolicy_PaymentDetail KPDetails = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                PaymentConfig KPDetails = null;// General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == ReqDTO.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking?.SubcompanyId); }
+                KPDetails = General.GetKoNectConfigDetails(SubcompanyId);
                 if (KPDetails == null)
                 {
                     return rtn = "false";
                 }
                 string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
-                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == ReqDTO.bookingId);
+                
                 if (objBooking == null) { return rtn = "false"; }
 
                 ReqDTO.bookingRef = objBooking.BookingNo;
@@ -8011,13 +8031,20 @@ namespace SignalRHub
                 catch
                 {
                 }
-                Gen_SysPolicy_PaymentDetail KPDetails = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                Classes.KonnectPay.PaymentConfig KPDetails = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == ReqDTO.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    KPDetails = General.GetKoNectConfigDetails(SubcompanyId);
+                }
                 if (KPDetails == null)
                 {
                     return rtn = "false";
                 }
                 string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
-                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == ReqDTO.bookingId);
+               
                 if (objBooking == null) { return rtn = "false"; }
                 string paymentIntentId = string.Empty;
                 if (objBooking?.BookingPayment != null && !string.IsNullOrEmpty(objBooking?.BookingPayment?.AuthCode))
@@ -8194,7 +8221,14 @@ namespace SignalRHub
                 {
                 }
                 ReqObj = new JavaScriptSerializer().Deserialize<Classes.KonnectSupplier.StripePaymentRequestDto>(json);
-                Gen_SysPolicy_PaymentDetail KPDetails = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                PaymentConfig KPDetails = null;// General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == ReqObj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking?.SubcompanyId); }
+                KPDetails = General.GetKoNectConfigDetails(SubcompanyId);
+
+
+
                 if (KPDetails == null || string.IsNullOrEmpty(KPDetails.PaypalID) || string.IsNullOrEmpty(KPDetails.ApplicationId))
                 {
                     obj.isSuccess = false;
@@ -8250,14 +8284,19 @@ namespace SignalRHub
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("GetClientKonnectPayConfig")]
-        public ResponseSupplierApi GetClientKonnectPayConfig()
+        public ResponseSupplierApi GetClientKonnectPayConfig(int subcompanyid)
         {
             ResponseSupplierApi response = new ResponseSupplierApi();
             try
             {
-
+                if(subcompanyid  == 0)
+                {
+                    response.Message ="Required Sub CompanyID";
+                    response.HasError = true;
+                }
                 string StripeAPIURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
-                Gen_SysPolicy_PaymentDetail KPinfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                Classes.KonnectPay.PaymentConfig KPinfo = null;// General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                KPinfo = General.GetKoNectConfigDetails(subcompanyid);
                 response.Data = new { KonnectAPIURL = StripeAPIURL, AccountID = KPinfo?.PaypalID, CountryID = KPinfo?.ApplicationId };
             }
             catch (Exception ex)
@@ -8697,7 +8736,29 @@ namespace SignalRHub
             return rtn;
         }
         #endregion
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendNotification")]
+        public string SendNotification(classchat obj)
+        {
 
+            try
+            {
+
+                System.IO.File.AppendAllText(AppDomain.CurrentDomain.BaseDirectory + "\\SendNotification.txt", DateTime.UtcNow.ToStr() + ",Request:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+
+
+            }
+
+            string recordId = Guid.NewGuid().ToString();
+            //
+            SocketIO.SendToSocket(obj.driverId.ToStr(), obj.body, "chatMessage", "", recordId);
+
+            return "success";
+        }
 
         private static string RemoveUK(ref string address)
         {

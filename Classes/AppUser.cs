@@ -233,5 +233,22 @@ namespace SignalRHub
 
 
     }
+    public class classchat
+    {
+        public string body { get; set; }
+        public string publishKey { get; set; }
+        public string subscribeKey { get; set; }
+        public string driverName { get; set; }
+        public string customerName { get; set; }
+        public string channelName { get; set; }
+        public string usertype { get; set; }
+        public string deviceId { get; set; }
+        public string bookingId { get; set; }
+        public string clientId { get; set; }
+        public string driverId { get; set; }
+        public string customerId { get; set; }
+
+        public string driverNotificationUrl { get; set; }
+    }
 
 }

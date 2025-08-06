@@ -1,7 +1,9 @@
 ﻿using DAL;
 using DotNetCoords;
 using SignalRHub.Classes;
+using SignalRHub.Classes.KonnectPay;
 using SignalRHub.WebApiClasses;
+using SMSGateway;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -6447,6 +6449,34 @@ namespace SignalRHub
             }
 
             return miles;
+        }
+        public static PaymentConfig GetKoNectConfigDetails(int? SubCompany)
+        {
+            try { File.AppendAllText(AppContext.BaseDirectory + "\\GetKoNectConfigDetails.txt", DateTime.Now.ToStr() + " SubCompany" + SubCompany + Environment.NewLine);} catch{ }
+            PaymentConfig resp = null;
+            try
+            {
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    if (Global.EnableSubCompanyWiseKonnect.ToStr().ToLower() == "true")
+                    {
+                        resp = db.ExecuteQuery<Classes.KonnectPay.PaymentConfig>("select * from Gen_SysPolicy_PaymentDetails where PaymentGatewayId=15 and SubCompanyId=" + SubCompany).FirstOrDefault();
+                    }
+                    else
+                    {
+                        resp = db.ExecuteQuery<Classes.KonnectPay.PaymentConfig>("select * from Gen_SysPolicy_PaymentDetails where PaymentGatewayId=15").FirstOrDefault();
+                    }
+
+                }
+            }
+            catch(Exception ex)
+            {
+                try { File.AppendAllText(AppContext.BaseDirectory + "\\GetKoNectConfigDetails_escep.txt", DateTime.Now.ToStr() + " exception" + ex.Message + Environment.NewLine); } catch{}
+            }
+
+
+            return resp;
         }
     }
 }

@@ -96,6 +96,7 @@ namespace SignalRHub
         public static string ZeroFareOnMeter = "0";
         public static string EnablaDriverDocuments = "";
         public static string AutoRecoverOnNoMoveInSec = "0";
+        public static string EnableSubCompanyWiseKonnect = "false";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -639,6 +640,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableCreatePastDateBookings", SetVal = "false", description = "EnableCreatePastDateBookings"  },
                             new AppSetting { SetKey = "EnableNoSignalColorChange", SetVal = "false", description = "Enable No Signal Color Change"  },
 
+                            new AppSetting { SetKey = "ShowSubCompanyWiseKonnect", SetVal = "false", description = "ShowSubCompanyWiseKonnect"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1471,6 +1473,12 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("AutoRecoverOnNoMoveInSec")))
                 {
                     AutoRecoverOnNoMoveInSec = GetAppSetting<string>("AutoRecoverOnNoMoveInSec").ToStr();
+
+                }
+
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("ShowSubCompanyWiseKonnect")))
+                {
+                    EnableSubCompanyWiseKonnect = GetAppSetting<string>("ShowSubCompanyWiseKonnect").ToStr();
 
                 }
 

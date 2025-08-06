@@ -14899,6 +14899,49 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     {
                     }
 
+                    var doclog = db.Fleet_Driver_Documents.Where(x => x.DriverId == Id).ToList();
+                    if (doclog != null || Documents != null)
+                    {
+                        try
+                        {
+                            var previousDocs = doclog.Select(x =>
+                                $"DocumentName = \"{x.DocumentName}\", FileName = \"{x.FileName ?? "N/A"}\"").ToList();
+
+                            var currentDocs = Documents?.Select(x => x.FileName).ToList() ?? new List<string>();
+
+                            var currentStr = string.Join(", ", currentDocs.Select(fn => $"FileName = \"{fn}\""));
+
+                            var prevFileNames = doclog.Select(x => x.FileName?.Trim()).Where(fn => !string.IsNullOrEmpty(fn)).ToList();
+
+                            var added = currentDocs
+                                .Except(prevFileNames, StringComparer.OrdinalIgnoreCase)
+                                .Select(x => $"FileName = \"{x}\"");
+
+                            var removed = prevFileNames
+                                .Except(currentDocs, StringComparer.OrdinalIgnoreCase)
+                                .Select(x =>
+                                {
+                                    var doc = doclog.FirstOrDefault(d => d.FileName != null && d.FileName.Equals(x, StringComparison.OrdinalIgnoreCase));
+                                    return $"DocumentName = \"{doc?.DocumentName ?? "Unknown"}\", FileName = \"{x}\"";
+                                });
+
+                            string logMessage = $"[{DateTime.Now:dd/MM/yyyy HH:mm:ss}] " +
+                                                $"DriverID: {obj.DriverId}, " +
+                                                $"PreviousDocs: [{string.Join(" | ", previousDocs)}], " +
+                                                $"CurrentDocs: [{currentStr}], " +
+                                                $"Added: [{string.Join(", ", added)}], " +
+                                                $"Removed: [{string.Join(", ", removed)}]";
+
+                            string logFileName = $"SaveFleetDriverDocuments_{DateTime.Now:yyyy-MM-dd}.txt";
+                            string logFilePath = Path.Combine(AppContext.BaseDirectory, logFileName);
+                            System.IO.File.AppendAllText(logFilePath, logMessage + Environment.NewLine);
+
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                    }
+
                     if (objdriver.Current.Fleet_Driver_Images != null && objdriver.Current.Fleet_Driver_Images.Count > 0)
                         UploadImage(objdriver.Current.Id, objdriver.Current.DriverNo, objdriver.Current.Fleet_Driver_Images[0].Photo, HubProcessor.Instance.objPolicy.DefaultClientId.ToStr().Replace("/", "").Trim().Replace("*", "").Replace("_", "").Trim() + "_" + objdriver.Current.DriverNo, objdriver.Current.Fleet_Driver_Images[0].PhotoLinkId.ToStr());
 
@@ -23396,7 +23439,16 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             try
             {
 
-                Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                
+                PaymentConfig objMerchantInfo = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
+                    
+                }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -23404,7 +23456,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                    //Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
                     if (objBooking.BookingPayment != null && objBooking.BookingPayment.AuthCode.ToStr().Length > 0)
                     {
                         response.Message = "Payment Already Captured against this booking";
@@ -23429,10 +23481,13 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                     string CustomerStripeID = "";
                     DriverAppController.CustomerCardDetails CardDetails = null;
-                    Customer Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim());
+                    Customer Customerobj = null;
+                    if (!string.IsNullOrEmpty(objBooking.CustomerMobileNo))
+                    {
+                        Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim());
+                    }
 
-
-                    if (Customerobj.CreditCardDetails.ToStr().ToLower().StartsWith("cus"))
+                        if (Customerobj.CreditCardDetails.ToStr().ToLower().StartsWith("cus"))
                     {
                         CustomerStripeID = Customerobj?.CreditCardDetails?.ToStr();
                         CardDetails = GetCardDetailsKP(Customerobj.Id);
@@ -23556,7 +23611,15 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             try
             {
-                Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                PaymentConfig objMerchantInfo = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
+                   
+                }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -23564,7 +23627,6 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
 
                     if (objBooking.BookingPayment != null && objBooking.BookingPayment.AuthCode.ToStr().Length > 0)
                     {
@@ -23577,8 +23639,12 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                     string CustomerStripeID = "";
                     DriverAppController.CustomerCardDetails CardDetails = new DriverAppController.CustomerCardDetails();
-                    Customer Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim());
-
+                  
+                    Customer Customerobj = null;
+                    if (!string.IsNullOrEmpty(objBooking.CustomerMobileNo))
+                    {
+                        Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim());
+                    }
 
                     if (Customerobj.CreditCardDetails.ToStr().ToLower().StartsWith("cus"))
                     {
@@ -23694,7 +23760,16 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             try
             {
-                Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+               
+                PaymentConfig objMerchantInfo = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
+                    
+                }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -23702,7 +23777,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                    //Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
 
                     if (objBooking.BookingPayment != null && objBooking.BookingPayment.AuthCode.ToStr().Length > 0)
                     {
@@ -23714,7 +23789,9 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     }
                     string CustomerStripeID = "";
 
-                    Customer Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim());
+                    Customer Customerobj = null;
+
+                    if (!string.IsNullOrEmpty(objBooking.CustomerMobileNo)) { Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim()); }
                     if (Customerobj != null && Customerobj.CreditCardDetails.ToStr().ToLower().StartsWith("cus"))
                     {
                         CustomerStripeID = Customerobj?.CreditCardDetails.ToStr();
@@ -23942,7 +24019,16 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             try
             {
-                Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+               
+                PaymentConfig objMerchantInfo = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
+                   
+                }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -23950,7 +24036,6 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
 
                     if (objBooking.BookingPayment != null && objBooking.BookingPayment.AuthCode.ToStr().Length > 0)
                     {
@@ -24141,7 +24226,16 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             try
             {
 
-                Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+              
+                PaymentConfig objMerchantInfo = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
+                   
+                }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -24150,7 +24244,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                    
                     Booking_Log RefundLog = null;
                     if (objBooking.Booking_Logs != null)
                     {
@@ -24254,7 +24348,16 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             try
             {
-                Gen_SysPolicy_PaymentDetail objMerchantInfo = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                PaymentConfig objMerchantInfo = null;
+                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
+                int SubcompanyId = 1;
+                if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
+                   
+                }
+            
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -24262,7 +24365,6 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
 
                     if (objBooking.BookingPayment != null && objBooking.BookingPayment.AuthCode.ToStr().Length > 0)
                     {
@@ -26701,7 +26803,30 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 {
                     foreach (var row in req.Documents)
                     {
-                        var query = $"exec SP_UpdatePendingDocument_Query {row.Id.ToInt().ToStr()},'{row.Status.ToStr()}'";
+                        string URL = "";
+                        if (row.Status == "Approved")
+                        {
+                            string fileUrl = row.URL;
+                            string fileName = Path.GetFileName(new Uri(fileUrl).LocalPath); // Get the filename from the URL
+
+                            string dir = Path.Combine(Server.MapPath("~/Images/Document/" + "Driver" + row.DriverNo));
+
+                            if (!Directory.Exists(dir))
+                            {
+                                Directory.CreateDirectory(dir);
+                            }
+
+                            string filePath = Path.Combine(dir, fileName);
+
+                            // Download and save the file
+                            using (var client = new System.Net.WebClient())
+                            {
+                                client.DownloadFile(fileUrl, filePath);
+                            }
+                            URL = "/Images/Document/" + "Driver" + row.DriverNo + "/" + fileName;
+                        }
+                        var query = $"exec SP_UpdatePendingDocument_Query {row.Id.ToInt().ToStr()},'{row.Status.ToStr()}','{URL}'";
+                        //var query = $"exec SP_UpdatePendingDocument_Query {row.Id.ToInt().ToStr()},'{row.Status.ToStr()}'";
                         db.ExecuteQuery<int>(query);
                     }
                 }
