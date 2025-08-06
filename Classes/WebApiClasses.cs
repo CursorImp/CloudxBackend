@@ -1717,6 +1717,7 @@ namespace SignalRHub.WebApiClasses
 
         public bool? AutoCalculateFares { get; set; }
         public decimal Distance;
+        public bool HasDeadMileage;
         public int Duration;
         public string unit;
         public string currency;
@@ -1758,6 +1759,7 @@ namespace SignalRHub.WebApiClasses
 
         public List<RouteLeg> legs;
         public decimal Distance;
+        public bool HasDeadMileage;
         public int duration;
         public object fareModel;
 

@@ -3976,6 +3976,7 @@ namespace SignalRHub.Controllers
 
 
                         string json = new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(objX);
+                        //string API = "http://localhost/GENERAL_WEBAPI/Home/GetRouteDetails" + "?json=" + json;
                         string API = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GetRouteDetails" + "?json=" + json;
 
 
@@ -4002,6 +4003,7 @@ namespace SignalRHub.Controllers
                         RouteCoordinates route = Newtonsoft.Json.JsonConvert.DeserializeObject<RouteCoordinates>(response.Data.ToStr());
 
                         obj.routeInfo.Distance = route.Distance;
+                        obj.routeInfo.HasDeadMileage = route.HasDeadMileage;
                         obj.routeInfo.legs = route.legs;
                         if (obj.routeInfo.AutoCalculateFares.ToBool() && pickup.ToStr().Trim().Length > 0 && destination.ToStr().Trim().Length > 0)
                         {
