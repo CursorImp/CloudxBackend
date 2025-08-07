@@ -1701,7 +1701,11 @@ namespace SignalRHub.WebApiClasses
 
     }
 
-
+    public class ExcludedFleetDriver
+    {
+        public int? Id { get; set; }
+        public string DriverName { get; set; }
+    }
     public class RouteInfo
     {
 

@@ -3206,106 +3206,118 @@ namespace SignalRHub.Controllers
                         }
                         else
                         {
-                            if (obj.bookingInfo.DriverId.ToInt() == 0 && obj.bookingInfo.BookingTypeId.ToInt() != 4)
+
+                            bool isExcluded = IsDriverExcludedForBooking(obj.bookingInfo.Id);
+
+                            if (isExcluded)
                             {
                                 response.HasError = true;
-                                response.Message = "Please select a driver";
-
+                                response.Message = "This driver is Excluded for this customer";
                             }
                             else
                             {
-                                if (obj.bookingInfo.BookingTypeId.ToInt() == 4)
+
+                                if (obj.bookingInfo.DriverId.ToInt() == 0 && obj.bookingInfo.BookingTypeId.ToInt() != 4)
                                 {
-
-                                    int? driverId = db.Bookings.Where(c => c.Id == obj.bookingInfo.Id).Select(c => c.DriverId).FirstOrDefault().ToIntorNull();
-
-                                    if (driverId == null && obj.bookingInfo.DriverId.ToInt() == 0)
-                                    {
-                                        response.HasError = true;
-                                        response.Message = "Please select a driver";
-                                        //
-                                    }
-                                    else
-                                        msg = General.AllocateDriver(db, HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt());
-
-
-
-
+                                    response.HasError = true;
+                                    response.Message = "Please select a driver";
 
                                 }
                                 else
                                 {
-                                    try
-                                    {
-                                        if (db.Bookings.Where(x => x.Id == obj.bookingInfo.Id.ToLong() && x.DriverId != obj.bookingInfo.DriverId.ToInt()).Select(x => x.BookingStatusId).FirstOrDefault().ToInt() == 4) //4 = PENDING ACCEPT
-                                        {
-                                            msg = "Job is already dispatched to other driver.";
-                                            try
-                                            {
-                                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
-                                            }
-                                            catch
-                                            {
-                                            }
-                                        }
-                                        //else if (db.Bookings.Where(x => x.DriverId == obj.bookingInfo.DriverId.ToInt() && x.Id != obj.bookingInfo.Id.ToLong() && x.BookingStatusId == 4).Select(x => x.Id).ToList().Count > 0) //4 = PENDING ACCEPT
-                                        //{
-                                        //    msg = "Other job is already dispatched to this driver.";
-                                        //    try
-                                        //    {
-                                        //        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
-                                        //    }
-                                        //    catch
-                                        //    {
-                                        //    }
-                                        //}
-                                        else if (db.ExecuteQuery<int>("select count(*) from fleet_driverqueuelist (nolock) where driverid=" + obj.bookingInfo.DriverId.ToInt() + " and status=1 and currentjobid=" + obj.bookingInfo.Id.ToLong()).FirstOrDefault() > 0)
-                                        {
-                                            msg = "Job is already accepted by this driver";
-                                            try
-                                            {
-
-
-                                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
-                                            }
-                                            catch
-                                            {
-
-                                            }
-
-
-                                        }
-                                        else if (db.ExecuteQuery<int>("select count(*) from fleet_driverqueuelist (nolock) where driverid!=" + obj.bookingInfo.DriverId.ToInt() + " and status=1 and currentjobid=" + obj.bookingInfo.Id.ToLong()).FirstOrDefault() > 0)
-                                        {
-
-                                            msg = "Job is already accepted by other driver";
-                                            try
-                                            {
-
-
-                                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedotherdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
-                                            }
-                                            catch
-                                            {
-
-                                            }
-
-                                        }
-                                    }
-                                    catch
+                                    if (obj.bookingInfo.BookingTypeId.ToInt() == 4)
                                     {
 
+                                        int? driverId = db.Bookings.Where(c => c.Id == obj.bookingInfo.Id).Select(c => c.DriverId).FirstOrDefault().ToIntorNull();
+
+                                        if (driverId == null && obj.bookingInfo.DriverId.ToInt() == 0)
+                                        {
+                                            response.HasError = true;
+                                            response.Message = "Please select a driver";
+                                            //
+                                        }
+                                        else
+                                            msg = General.AllocateDriver(db, HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt());
+
+
+
+
+
+                                    }
+                                    else
+                                    {
+                                        try
+                                        {
+                                            if (db.Bookings.Where(x => x.Id == obj.bookingInfo.Id.ToLong() && x.DriverId != obj.bookingInfo.DriverId.ToInt()).Select(x => x.BookingStatusId).FirstOrDefault().ToInt() == 4) //4 = PENDING ACCEPT
+                                            {
+                                                msg = "Job is already dispatched to other driver.";
+                                                try
+                                                {
+                                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                                }
+                                                catch
+                                                {
+                                                }
+                                            }
+                                            //else if (db.Bookings.Where(x => x.DriverId == obj.bookingInfo.DriverId.ToInt() && x.Id != obj.bookingInfo.Id.ToLong() && x.BookingStatusId == 4).Select(x => x.Id).ToList().Count > 0) //4 = PENDING ACCEPT
+                                            //{
+                                            //    msg = "Other job is already dispatched to this driver.";
+                                            //    try
+                                            //    {
+                                            //        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                            //    }
+                                            //    catch
+                                            //    {
+                                            //    }
+                                            //}
+                                            else if (db.ExecuteQuery<int>("select count(*) from fleet_driverqueuelist (nolock) where driverid=" + obj.bookingInfo.DriverId.ToInt() + " and status=1 and currentjobid=" + obj.bookingInfo.Id.ToLong()).FirstOrDefault() > 0)
+                                            {
+                                                msg = "Job is already accepted by this driver";
+                                                try
+                                                {
+
+
+                                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                                }
+                                                catch
+                                                {
+
+                                                }
+
+
+                                            }
+                                            else if (db.ExecuteQuery<int>("select count(*) from fleet_driverqueuelist (nolock) where driverid!=" + obj.bookingInfo.DriverId.ToInt() + " and status=1 and currentjobid=" + obj.bookingInfo.Id.ToLong()).FirstOrDefault() > 0)
+                                            {
+
+                                                msg = "Job is already accepted by other driver";
+                                                try
+                                                {
+
+
+                                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedotherdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                                }
+                                                catch
+                                                {
+
+                                                }
+
+                                            }
+                                        }
+                                        catch
+                                        {
+
+                                        }
+
+
+                                        if (msg.ToStr().Trim().Length == 0)
+                                            General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt());
                                     }
 
-
-                                    if (msg.ToStr().Trim().Length == 0)
-                                        General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt());
-                                }
-
-                                if (msg.ToStr().Length > 0)
-                                {
-                                    response.HasError = true;
-                                    response.Message = msg;
+                                    if (msg.ToStr().Length > 0)
+                                    {
+                                        response.HasError = true;
+                                        response.Message = msg;
+                                    }
                                 }
                             }
                         }
@@ -3342,7 +3354,40 @@ namespace SignalRHub.Controllers
 
         }
 
+        private bool IsDriverExcludedForBooking(long bookingId)
+        {
+            using (TaxiDataContext db = new TaxiDataContext())
+            {
+                try
+                {
+                    var booking = db.Bookings.FirstOrDefault(x => x.Id == bookingId);
+                    if (booking.DriverId > 0)
+                    {
+                        var drivers = db.ExecuteQuery<ExcludedFleetDriver>(
+                            "exec stp_GetCustomerAndAccountExcludedDrivers @MobileNo={0}",
+                            booking.CustomerMobileNo
+                        ).ToList();
 
+                        bool isExcluded = false;
+
+                        if (booking != null && booking.DriverId.HasValue)
+                        {
+                            isExcluded = drivers.Any(d => d.Id == booking.DriverId.Value);
+                        }
+                        return isExcluded;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+        }
 
 
         #endregion
