@@ -3207,7 +3207,7 @@ namespace SignalRHub.Controllers
                         else
                         {
 
-                            bool isExcluded = IsDriverExcludedForBooking(obj.bookingInfo.Id);
+                            bool isExcluded = IsDriverExcludedForBooking(obj.bookingInfo.Id, obj.bookingInfo.DriverId.ToInt());
 
                             if (isExcluded)
                             {
@@ -3354,14 +3354,14 @@ namespace SignalRHub.Controllers
 
         }
 
-        private bool IsDriverExcludedForBooking(long bookingId)
+        private bool IsDriverExcludedForBooking(long bookingId, int? driverId)
         {
             using (TaxiDataContext db = new TaxiDataContext())
             {
                 try
                 {
                     var booking = db.Bookings.FirstOrDefault(x => x.Id == bookingId);
-                    if (booking.DriverId > 0)
+                    if (driverId > 0)
                     {
                         var drivers = db.ExecuteQuery<ExcludedFleetDriver>(
                             "exec stp_GetCustomerAndAccountExcludedDrivers @MobileNo={0}",
@@ -3370,9 +3370,9 @@ namespace SignalRHub.Controllers
 
                         bool isExcluded = false;
 
-                        if (booking != null && booking.DriverId.HasValue)
+                        if (booking != null)
                         {
-                            isExcluded = drivers.Any(d => d.Id == booking.DriverId.Value);
+                            isExcluded = drivers.Any(d => d.Id == driverId);
                         }
                         return isExcluded;
                     }
