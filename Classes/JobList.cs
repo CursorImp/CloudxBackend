@@ -36,6 +36,7 @@ namespace SignalRHub
         public string OldToAddress;
 
         public bool UpdateCharges;
+        public string showFares;
 
         public string revertstatus = "";
         public List<ChargesSummary> Summary;
