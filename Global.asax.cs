@@ -639,8 +639,8 @@ namespace SignalRHub
                             new AppSetting { SetKey = "DeadMileageType", SetVal = "false", description = "Dead Mileage Type"  },
                             new AppSetting { SetKey = "EnableCreatePastDateBookings", SetVal = "false", description = "EnableCreatePastDateBookings"  },
                             new AppSetting { SetKey = "EnableNoSignalColorChange", SetVal = "false", description = "Enable No Signal Color Change"  },
-
                             new AppSetting { SetKey = "ShowSubCompanyWiseKonnect", SetVal = "false", description = "ShowSubCompanyWiseKonnect"  },
+                            new AppSetting { SetKey = "EnableIncludeCMACCancelBooking", SetVal = "0", description = "Include CMAC CANCEL Booking as NO PICKUP"  },
                         };
 
                 using (var db = new TaxiDataContext())
