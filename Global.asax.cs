@@ -641,6 +641,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableNoSignalColorChange", SetVal = "false", description = "Enable No Signal Color Change"  },
                             new AppSetting { SetKey = "ShowSubCompanyWiseKonnect", SetVal = "false", description = "ShowSubCompanyWiseKonnect"  },
                             new AppSetting { SetKey = "EnableIncludeCMACCancelBooking", SetVal = "0", description = "Include CMAC CANCEL Booking as NO PICKUP"  },
+                            new AppSetting { SetKey = "EnableCommissionOnDrvCommReport", SetVal = "false", description = "EnableCommissionOnDrvCommReport"  },
                         };
 
                 using (var db = new TaxiDataContext())
