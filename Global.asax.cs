@@ -97,6 +97,7 @@ namespace SignalRHub
         public static string EnablaDriverDocuments = "";
         public static string AutoRecoverOnNoMoveInSec = "0";
         public static string EnableSubCompanyWiseKonnect = "false";
+        public static string AllowBidRadiusInMiles = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -642,6 +643,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "ShowSubCompanyWiseKonnect", SetVal = "false", description = "ShowSubCompanyWiseKonnect"  },
                             new AppSetting { SetKey = "EnableIncludeCMACCancelBooking", SetVal = "0", description = "Include CMAC CANCEL Booking as NO PICKUP"  },
                             new AppSetting { SetKey = "EnableCommissionOnDrvCommReport", SetVal = "false", description = "EnableCommissionOnDrvCommReport"  },
+                            new AppSetting { SetKey = "AllowBidRadiusInMiles", SetVal = "0", description = "AllowBidRadiusInMiles"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1480,6 +1482,11 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("ShowSubCompanyWiseKonnect")))
                 {
                     EnableSubCompanyWiseKonnect = GetAppSetting<string>("ShowSubCompanyWiseKonnect").ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("AllowBidRadiusInMiles")))
+                {
+                    AllowBidRadiusInMiles = GetAppSetting<string>("AllowBidRadiusInMiles").ToStr();
 
                 }
 

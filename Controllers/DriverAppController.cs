@@ -2057,7 +2057,7 @@ namespace SignalRHub
                                         if (hasChanges)
                                         {
                                             db.SubmitChanges();
-                                          
+
                                             ////
 
                                             General.BroadCastMessage("**refresh plots");
@@ -5388,7 +5388,7 @@ namespace SignalRHub
                             Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == jobId);
                             int SubcompanyId = 1;
                             if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
-                            Classes.KonnectPay.PaymentConfig CheckKonnectConfig = General.GetKoNectConfigDetails(SubcompanyId); 
+                            Classes.KonnectPay.PaymentConfig CheckKonnectConfig = General.GetKoNectConfigDetails(SubcompanyId);
                             if (CheckKonnectConfig.Id == item.Id)
                             {
                                 try
@@ -5413,7 +5413,7 @@ namespace SignalRHub
 
                                 if (objBookingPayment == null || objBookingPayment?.AuthCode.ToStr().Trim().Length == 0)
                                 {
-                                   // Gen_SysPolicy_PaymentDetail obj = null;
+                                    // Gen_SysPolicy_PaymentDetail obj = null;
                                     Classes.KonnectPay.PaymentConfig obj = null;
 
                                     makePaymentResponse.isKonnectPayEnable = "1";
@@ -5423,11 +5423,11 @@ namespace SignalRHub
                                         Customer objcustomer = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo && c.Id == objBooking.CustomerId);
                                         CustomerCardDetails CardDetails = null;
                                         CardDetails = GetCardDetailsKP(objcustomer?.Id, objBooking?.CustomerCreditCardDetails);
-                                      
-                                        obj = General.GetKoNectConfigDetails(SubcompanyId); 
-                                        
+
+                                        obj = General.GetKoNectConfigDetails(SubcompanyId);
+
                                         IsAuthorize = true;
-                                       
+
                                         makePaymentResponse.ResponseType = (int)ResponseType.Direct;
                                         try
                                         {
@@ -5509,7 +5509,7 @@ namespace SignalRHub
 
                                         IsAuthorize = false;
                                         //setting up payment options for Konnect pay
-                                       // Gen_SysPolicy_PaymentDetail KPSettings = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.SysPolicyId != 0 && (c.PaymentGatewayId == 15));
+                                        // Gen_SysPolicy_PaymentDetail KPSettings = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.SysPolicyId != 0 && (c.PaymentGatewayId == 15));
                                         dynamic ConnectGatewayDetails = GetKonnectPayGatewayDetails(CheckKonnectConfig, input.driverId);//Getting PAYMENT OPTIONS for KonnectPay 
                                         if (ConnectGatewayDetails != null) { makePaymentResponse.Gateways.AddRange(ConnectGatewayDetails); }
                                         makePaymentResponse.ResponseType = (int)ResponseType.MultipleGateways;
@@ -6677,12 +6677,13 @@ namespace SignalRHub
                 //Get customer card token if exist.
                 CustomerCardDetails CardDetails = null;
                 Customer objcustomer = null;
-              
-                if (!string.IsNullOrEmpty(objBooking.CustomerMobileNo)) {
+
+                if (!string.IsNullOrEmpty(objBooking.CustomerMobileNo))
+                {
                     objcustomer = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo);
                     if (objcustomer != null) { CardDetails = GetCardTokenKP(objcustomer?.Id); }
                 }
-              
+
 
                 string baseUrl = System.Configuration.ConfigurationManager.AppSettings["huburl"].ToStr();
                 Classes.KonnectSupplier.StripePaymentRequestDto SpDTO = new Classes.KonnectSupplier.StripePaymentRequestDto();
@@ -6704,7 +6705,7 @@ namespace SignalRHub
                     SpDTO.description = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr() + " | " + objBooking?.BookingNo.ToStr() + " | " + "Fares : " + Price + " " + DefaultCurrency;
                 }
                 SpDTO.paymentMethodId = CardDetails?.CustomerCardToken ?? "";
-                SpDTO.customerId = objcustomer?.CreditCardDetails; 
+                SpDTO.customerId = objcustomer?.CreditCardDetails;
                 SpDTO.customerName = objBooking?.CustomerName.ToStr().Trim();
                 SpDTO.email = "";
                 SpDTO.phoneNumber = "";
@@ -6821,7 +6822,7 @@ namespace SignalRHub
 
                     int SubcompanyId = 1;
                     if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
-                    paymentGateway = General.GetKoNectConfigDetails(SubcompanyId); 
+                    paymentGateway = General.GetKoNectConfigDetails(SubcompanyId);
                     if (objBooking != null && paymentGateway != null)
                     {
                         if (!string.IsNullOrEmpty(input.serialnumber) && input.serialnumber.ToLower().Contains("terminal"))
@@ -6868,7 +6869,7 @@ namespace SignalRHub
         {
             StripeAPIResponse response = new StripeAPIResponse();
             string DefaultCurrency = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrency"];
-            string DefaultCurrencySign = Global.DefaultCurrencySign; 
+            string DefaultCurrencySign = Global.DefaultCurrencySign;
             string DefaultClientLocation = System.Configuration.ConfigurationManager.AppSettings["DefaultClientLocation"];
             string json = string.Empty;
 
@@ -7016,15 +7017,15 @@ namespace SignalRHub
                 {
                     int SubcompanyId = 1;
                     if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
-                    paymentGateway = General.GetKoNectConfigDetails(SubcompanyId); 
-                   
+                    paymentGateway = General.GetKoNectConfigDetails(SubcompanyId);
+
                     if (objBooking != null && paymentGateway != null)
                     {
 
                         resp = GetPaymentLinkKonnectPay(paymentGateway, objBooking, Price, false);
                         if (resp != null && resp.IsSuccess && !string.IsNullOrEmpty(resp.Data))
                         {
-                           
+
                             string QRcodeURL = $"{StripeAPIBaseURL}/QRcode?Data={resp.Data.Trim()}&Description={resp.Message}";
                             resp.IsSuccess = true;
                             resp.Data = QRcodeURL;
@@ -7094,7 +7095,7 @@ namespace SignalRHub
                     if (objcustomer != null) { CardDetails = GetCardTokenKP(objcustomer?.Id); }
                 }
 
-             
+
 
                 string baseUrl = System.Configuration.ConfigurationManager.AppSettings["huburl"].ToStr();
                 Classes.KonnectSupplier.StripePaymentRequestDto SpDTO = new Classes.KonnectSupplier.StripePaymentRequestDto();
@@ -9016,6 +9017,37 @@ namespace SignalRHub
 
                                 return res;
 
+                            }
+                            try
+                            {
+                                if (!string.IsNullOrEmpty(Global.AllowBidRadiusInMiles) && Global.AllowBidRadiusInMiles != "0" && Global.AllowBidRadiusInMiles.ToDecimal() > 0)
+                                {
+                                    stp_getCoordinatesByAddressResult coord = null;
+                                    var pickup = db.Bookings.Where(c => c.Id == objBid.JobId).Select(x => x.FromAddress).FirstOrDefault().ToStr();
+                                    if (!string.IsNullOrEmpty(pickup))
+                                    {
+                                        pickup = GetPostCodeMatch(pickup);
+                                        coord = db.stp_getCoordinatesByAddress(pickup, pickup).FirstOrDefault();
+                                        decimal distance = 0.00m;
+                                        if (coord != null && coord.Latitude != null && coord.Latitude != 0 && objBid.Latitude != null && objBid.Latitude != 0)
+                                        {
+                                            distance = Math.Round(new DotNetCoords.LatLng(Convert.ToDouble(objBid.Latitude), Convert.ToDouble(objBid.Longitude)).DistanceMiles(new LatLng(Convert.ToDouble(coord.Latitude), Convert.ToDouble(coord.Longtiude))).ToDecimal(), 1);
+
+                                            if (distance > Global.AllowBidRadiusInMiles.ToDecimal())
+                                            {
+                                                objBid.Message = "failed:You are far away to bid on this job.";
+                                                res.Data = new JavaScriptSerializer().Serialize(objBid);
+                                                res.IsSuccess = true;
+                                                res.Message = "";
+
+                                                return res;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            catch
+                            {
                             }
                         }
 
@@ -15401,7 +15433,8 @@ namespace SignalRHub
                             {
                                 db.ExecuteQuery<int>($"update Fleet_Driver set NoMoveFromSeconds = 0 where Id={driverId}");
                             }
-                            catch { 
+                            catch
+                            {
                             }
                             if (dataValue.ToStr().Contains("verify"))
                             {
@@ -16587,7 +16620,7 @@ namespace SignalRHub
                             if (objDetails != null)
                             {
 
-                                
+
 
                                 vehicleTypeId = objDetails.VehicleTypeId.ToIntorNull();
 
