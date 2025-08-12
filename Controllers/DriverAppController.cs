@@ -9032,7 +9032,16 @@ namespace SignalRHub
                                         if (coord != null && coord.Latitude != null && coord.Latitude != 0 && objBid.Latitude != null && objBid.Latitude != 0)
                                         {
                                             distance = Math.Round(new DotNetCoords.LatLng(Convert.ToDouble(objBid.Latitude), Convert.ToDouble(objBid.Longitude)).DistanceMiles(new LatLng(Convert.ToDouble(coord.Latitude), Convert.ToDouble(coord.Longtiude))).ToDecimal(), 1);
+                                            try
+                                            {
 
+                                                File.AppendAllText(physicalPath + "\\" + "requestconDriverBid_AllowBidRadiusInMiles.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", distance: " + distance.ToStr() + "  ||  coord: " + coord.Latitude.ToStr() + "," + coord.Longtiude.ToStr() + Environment.NewLine);
+                                            }
+                                            catch
+                                            {
+
+
+                                            }
                                             if (distance > Global.AllowBidRadiusInMiles.ToDecimal())
                                             {
                                                 objBid.Message = "failed:You are far away to bid on this job.";
