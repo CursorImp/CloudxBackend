@@ -644,6 +644,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "EnableIncludeCMACCancelBooking", SetVal = "0", description = "Include CMAC CANCEL Booking as NO PICKUP"  },
                             new AppSetting { SetKey = "EnableCommissionOnDrvCommReport", SetVal = "false", description = "EnableCommissionOnDrvCommReport"  },
                             new AppSetting { SetKey = "AllowBidRadiusInMiles", SetVal = "0", description = "AllowBidRadiusInMiles"  },
+                            new AppSetting { SetKey = "DisableClearDriverDoc", SetVal = "false", description = "DisableClearDriverDoc"  },
                         };
 
                 using (var db = new TaxiDataContext())
