@@ -1047,7 +1047,7 @@ namespace SignalRHub
                                             // propertyValue = "http://tradrv.co.uk/drv.aspx?ref=" + objBooking.BookingNo.ToStr() + ":" + linkId;
                                             if (tag.TagMemberValue.ToStr().Trim().ToLower() == "<trackdrv>")
                                             {
-                                                string encrypt = Cryptography.Encrypt(objBooking.BookingNo.ToStr() + ":" + linkId + ":" + Cryptography.Decrypt(System.Configuration.ConfigurationManager.AppSettings["ConnectionString"], "softeuroconnskey", true).ToStr() + ":" + objBooking.Id, "softeuroconnskey", true);
+                                                string encrypt = Cryptography.Encrypt(objBooking.BookingNo.ToStr() + ":" + linkId + ":" + Cryptography.Decrypt(System.Configuration.ConfigurationManager.AppSettings["ConnectionString"], "tcloudX@@!", true).ToStr() + ":" + objBooking.Id, "softeuroconnskey", true);
 
 
                                                 propertyValue = "http://tradrv.co.uk/tck.aspx?q=" + encrypt;
@@ -1836,7 +1836,7 @@ namespace SignalRHub
         }
 
 
-        public static void OnDespatching(Gen_SysPolicy_Configuration objPolicy, Booking objBooking, Fleet_Driver ObjDriver, int dispatchType = 0, bool IsMultiDispatch = false)
+        public static void OnDespatching(Gen_SysPolicy_Configuration objPolicy, Booking objBooking, Fleet_Driver ObjDriver, int dispatchType = 0, bool IsMultiDispatch = false, string despatchBy = "Admin")
         {
 
 
@@ -2336,7 +2336,7 @@ namespace SignalRHub
                         db.ExecuteQuery<int>("exec stp_DespatchedJobWithLogReason {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}", objBooking.Id, ObjDriver.Id
                             , ObjDriver.DriverNo.ToStr()
                             , ObjDriver.HasPDA.ToBool(), true, false, false,
-                            "Admin", status, offlinejob, "").FirstOrDefault();
+                            despatchBy, status, offlinejob, "").FirstOrDefault();
 
 
                         //  db.stp_DespatchedJobWithLogReason(objBooking.Id, ObjDriver.Id, ObjDriver.DriverNo.ToStr(), ObjDriver.HasPDA.ToBool(), true, false, false, "Admin", Enums.BOOKINGSTATUS.PENDING, false, "");
