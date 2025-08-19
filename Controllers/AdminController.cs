@@ -21853,6 +21853,16 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         {
                             // Login driver if they do not have company cars
                             db.stp_LoginLogoutDriver(driverId, true, null);
+
+                            try
+                            {
+                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "LoginDriver.txt", DateTime.Now + " "+ driverId + " has manually logged In"  + Environment.NewLine);
+
+                            }
+                            catch
+                            {
+
+                            }
                         }
 
                         // Broadcast updated dashboard state
