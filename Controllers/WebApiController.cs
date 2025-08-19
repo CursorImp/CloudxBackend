@@ -265,7 +265,7 @@ namespace SignalRHub.Controllers
                                 EnableBookingCharges = EnableBookingChargesSetting.SetVal,
                                 BookingPayment = BookingPaymentSetting.SetVal,
                                 ShowMapBydefaultOndashboard = ShowMapBydefaultOndashboard.SetVal
-                               
+
                             };
 
 
@@ -2327,7 +2327,7 @@ namespace SignalRHub.Controllers
                                     var data = db.ExecuteQuery<BookingInfo>(Query, objMaster.Current.Id).FirstOrDefault();
                                     if (obj.bookingInfo.IsFare != data.IsFare)
                                     {
-                                        objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Manual Fare " + (data.IsFare == true ? "Enabled" : "Disabled"), AfterUpdate =  "Manual Fare " + (obj.bookingInfo.IsFare == true ? "Enabled" : "Disabled"), UpdateDate = DateTime.Now });
+                                        objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Manual Fare " + (data.IsFare == true ? "Enabled" : "Disabled"), AfterUpdate = "Manual Fare " + (obj.bookingInfo.IsFare == true ? "Enabled" : "Disabled"), UpdateDate = DateTime.Now });
 
                                     }
                                 }
@@ -2344,7 +2344,7 @@ namespace SignalRHub.Controllers
                                     objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime), AfterUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", objMaster.Current.PickupDateTime), UpdateDate = DateTime.Now });
 
                                 }
-                              
+
 
                                 if (obj.editbookingInfo.FromAddress.ToStr().ToUpper() != objMaster.Current.FromAddress.ToStr().ToUpper())
                                 {
@@ -2398,7 +2398,7 @@ namespace SignalRHub.Controllers
                                 if (obj.editbookingInfo.PaymentTypeId.ToInt() != objMaster.Current.PaymentTypeId.ToInt())
                                 {
                                     objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Payment Type:" + db.Gen_PaymentTypes.Where(c => c.Id == obj.editbookingInfo.PaymentTypeId).Select(c => c.PaymentType).FirstOrDefault(), AfterUpdate = "Payment Type:" + db.Gen_PaymentTypes.Where(c => c.Id == objMaster.Current.PaymentTypeId).Select(c => c.PaymentType).FirstOrDefault(), UpdateDate = DateTime.Now });
-                                   
+
                                 }
 
 
@@ -3187,6 +3187,7 @@ namespace SignalRHub.Controllers
                 string msg = string.Empty;
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
+                    string despatchBy = obj.bookingInfo.Despatchby.ToStr();
                     var pickupDateTime = db.Bookings.Where(c => c.Id == obj.bookingInfo.Id).Select(x => x.PickupDateTime).FirstOrDefault();
                     if (pickupDateTime != null && pickupDateTime?.Date != DateTime.Now.Date && obj.bookingInfo.BookingTypeId.ToInt() != 4 && obj.bookingInfo.BookingTypeId.ToInt() != 3)
                     {
@@ -3201,7 +3202,7 @@ namespace SignalRHub.Controllers
                             string[] DriverIds = obj.DriverIds;
                             foreach (var item in DriverIds)
                             {
-                                General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == int.Parse(item)), obj.bookingInfo.BookingTypeId.ToInt(), true);
+                                General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == int.Parse(item)), obj.bookingInfo.BookingTypeId.ToInt(), true, despatchBy);
                             }
                         }
                         else
@@ -3310,7 +3311,7 @@ namespace SignalRHub.Controllers
 
 
                                         if (msg.ToStr().Trim().Length == 0)
-                                            General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt());
+                                            General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt(), false, despatchBy);
                                     }
 
                                     if (msg.ToStr().Length > 0)
@@ -11045,6 +11046,7 @@ namespace SignalRHub.Controllers
                 }
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
+                    string despatchBy = obj.bookingInfo.Despatchby.ToStr();
                     string msg = "<jobcount> allocated pre jobs dispatched successfully.";
                     bool HasError = false;
                     int dispatchCounter = 0;
@@ -11093,7 +11095,7 @@ namespace SignalRHub.Controllers
                                 {
                                     try
                                     {
-                                        General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt());
+                                        General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt(),false, despatchBy);
                                         dispatchCounter += 1;
                                     }
                                     catch

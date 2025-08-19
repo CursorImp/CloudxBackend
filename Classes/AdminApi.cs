@@ -1199,6 +1199,7 @@ namespace SignalRHub.Classes
         public decimal? ExtraDropCharges { get; set; }
         public decimal ServiceCharges { get; set; }
         public int? DriverWaitingMins { get; set; }
+        public bool? IsProcessed { get; set; }
     }
     public class UserDefinedSetting
     {

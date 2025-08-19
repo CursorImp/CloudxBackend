@@ -6138,9 +6138,16 @@ namespace SignalRHub
                         info.Vehicle = db.Fleet_VehicleTypes.Where(a => a.Id == info.VehicleTypeId).Select(b => b.VehicleType).FirstOrDefault();
 
                         #region TravelLink
+                        if (info.Via != null && info.Via.ToList().Count > 0)
+                        {
+                            info.Mileage = General.CalculateDistanceFromAPI(info.FromAddress, info.ToAddress, info.Via.ToList());
+                        }
+                        else
+                        {
+                            info.Mileage = General.CalculateDistanceFromAPI(info.FromAddress, info.ToAddress);
+                        }
 
-                        info.Mileage = General.CalculateDistanceFromAPI(info.FromAddress, info.ToAddress, info.Via.ToList());
-                        info.Miles = info.Mileage.ToStr();
+                            info.Miles = info.Mileage.ToStr();
 
                         var objFares = new WebApiClasses.ClsDispatchFares();
                         try
