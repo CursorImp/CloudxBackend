@@ -21852,8 +21852,9 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         if (!hasCompanyCar)
                         {
                             // Login driver if they do not have company cars
+                            string driverNo = db.Fleet_Drivers.Where(x => x.Id == driverId).Select(x => x.DriverNo).FirstOrDefault().ToStr();
                             db.stp_LoginLogoutDriver(driverId, true, null);
-
+                            response.Message = $"{driverNo} manually logged In Successfully.";
                             try
                             {
                                 System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "LoginDriver.txt", DateTime.Now + " "+ driverId + " has manually logged In"  + Environment.NewLine);
@@ -21864,12 +21865,20 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                             }
                         }
-
+                        else
+                        {
+                            response.HasError = true;
+                            response.Message = "Driver has company car can not login manually.";
+                        }
                         // Broadcast updated dashboard state
-                        new BroadcasterData().BroadCastToAll(RefreshTypes.REFRESH_DASHBOARD_DRIVER);
+                        //new BroadcasterData().BroadCastToAll(RefreshTypes.REFRESH_DASHBOARD_DRIVER);
+                        General.BroadCastMessage(RefreshTypes.REFRESH_DASHBOARD_DRIVER);
                     }
-
-                    response.Message = "success";
+                    else
+                    {
+                        response.HasError = true;
+                        response.Message = "Driver already logged in.";
+                    }
                 }
             }
             catch (Exception ex)
