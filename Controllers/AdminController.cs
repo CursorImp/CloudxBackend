@@ -10252,7 +10252,7 @@ namespace SignalRHub.Controllers
             {
                 objSubcompany = new TaxiDataContext().Gen_SubCompanies.FirstOrDefault(x => x.Id == obj.SubCompanyId.ToInt());
             }
-            if (objSubcompany == null)
+            if (objSubcompany == null || string.IsNullOrEmpty(objSubcompany?.SmtpUserName.ToStr()) || string.IsNullOrEmpty(objSubcompany?.SmtpPassword.ToStr()) || string.IsNullOrEmpty(objSubcompany?.SmtpHost.ToStr()))
             {
                 objSubcompany = new TaxiDataContext().Gen_SubCompanies.FirstOrDefault();
             }
