@@ -10248,7 +10248,11 @@ namespace SignalRHub.Controllers
             //{
             //    objSubcompany = AppVars.objSubCompany;
             //}
-            if (objSubcompany == null)
+            if (obj.SubCompanyId > 0)
+            {
+                objSubcompany = new TaxiDataContext().Gen_SubCompanies.FirstOrDefault(x => x.Id == obj.SubCompanyId.ToInt());
+            }
+            else if (objSubcompany == null)
             {
                 objSubcompany = new TaxiDataContext().Gen_SubCompanies.FirstOrDefault();
             }
