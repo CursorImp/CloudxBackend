@@ -10227,6 +10227,38 @@ namespace SignalRHub.Controllers
             }
             return Json(response, JsonRequestBehavior.AllowGet);
         }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("ForceLogoutUser")]
+        public JsonResult ForceLogoutUser(AdminApi obj)
+
+        {
+
+            ResponseAdminApi response = new ResponseAdminApi();
+
+            try
+
+            {
+
+                var msg = $"**logutcontroller>>{obj.user.Id.ToInt().ToStr()}";
+
+                General.BroadCastMessage(msg);
+
+            }
+
+            catch (Exception ex)
+
+            {
+
+                response.HasError = true;
+
+                response.Message = ex.Message;
+
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+
+        }
 
         private Gen_SubCompany objSubcompany;
         [System.Web.Http.HttpGet]

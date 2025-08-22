@@ -646,6 +646,7 @@ namespace SignalRHub
                             new AppSetting { SetKey = "AllowBidRadiusInMiles", SetVal = "0", description = "AllowBidRadiusInMiles"  },
                             new AppSetting { SetKey = "DisableClearDriverDoc", SetVal = "false", description = "DisableClearDriverDoc"  },
                              new AppSetting { SetKey = "EnableForcedLoginDriverShortcut", SetVal = "false", description = "Enable Forced Login Driver Shortcut"  },
+                             new AppSetting { SetKey = "EnableForceLogoutBtnOnUser", SetVal = "false", description = "Enable Force Logout User"  },
                         };
 
                 using (var db = new TaxiDataContext())
