@@ -14962,8 +14962,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                 });
 
                             string logMessage = $"[{DateTime.Now:dd/MM/yyyy HH:mm:ss}] " +
-                                                $"User: {obj.UserName}, " +
-                                                $"DriverID: {Id}, " +
+                                                $"User: {obj.UserName.ToStr()}, " +
+                                                $"DriverID: {Id.ToStr()}, " +
                                                 $"PreviousDocs: [{string.Join(" | ", previousDocs)}], " +
                                                 $"CurrentDocs: [{currentStr}], " +
                                                 $"Added: [{string.Join(", ", added)}], " +
