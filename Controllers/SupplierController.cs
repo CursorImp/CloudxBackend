@@ -8896,8 +8896,6 @@ namespace SignalRHub
 
 
 
-
-
             //
             //try
             //{
@@ -8921,14 +8919,16 @@ namespace SignalRHub
             {
 
 
+                if (Extension.ToStr().ToLower() == "ringing")
+                {
+                    General.CreateLog("", RemoteTel.ToStr(), DateTime.Now, "00:00:00", "201", RemoteTel);
 
-                //if (obj.state.ToStr().ToLower() == "connected")
-                //{
-                General.CreateLog("", RemoteTel.ToStr(), DateTime.Now, "00:00:00", "201", RemoteTel);
-                var msg = "**cti_incomingcall>>" + RemoteTel.ToString() + ">>" + "201" + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + RemoteTel + ">>" + " ";
-                General.BroadCastMessage(msg);
-                //}
-
+                }
+                if (Extension.ToStr().ToLower() == "connected")
+                {
+                    var msg = "**cti_incomingcall>>" + RemoteTel.ToString() + ">>" + "201" + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + RemoteTel + ">>" + " ";
+                    General.BroadCastMessage(msg);
+                }
             }
             catch
             {
