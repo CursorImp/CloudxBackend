@@ -8888,5 +8888,54 @@ namespace SignalRHub
             return temp;
         }
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("ReceiveCallerId/{RemoteTel}/{Extension}")]
+        public void ReceiveCallerId(string RemoteTel, string Extension)
+        {
+
+
+
+
+
+            //
+            //try
+            //{
+            //    File.AppendAllLines[[]
+            //}
+            //catch
+            //{
+            //}
+
+            try
+            {
+                //
+                File.AppendAllText(AppContext.BaseDirectory + "\\ReceiveCallerId.txt", DateTime.Now.ToStr() + " request" + RemoteTel + "Extension:" + Extension + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
+
+            try
+            {
+
+
+
+                //if (obj.state.ToStr().ToLower() == "connected")
+                //{
+                General.CreateLog("", RemoteTel.ToStr(), DateTime.Now, "00:00:00", "201", RemoteTel);
+                var msg = "**cti_incomingcall>>" + RemoteTel.ToString() + ">>" + "201" + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + RemoteTel + ">>" + " ";
+                General.BroadCastMessage(msg);
+                //}
+
+            }
+            catch
+            {
+
+            }
+
+        }
+
     }
 }
