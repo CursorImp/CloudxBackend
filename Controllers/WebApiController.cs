@@ -4306,7 +4306,10 @@ namespace SignalRHub.Controllers
                             info.MapKey = db.ExecuteQuery<string>("select APIKey from mapkeys where maptype='here'").FirstOrDefault().ToStr().Trim();
 
                         ////
-
+                        if (obj.routeInfo.SubCompanyId.ToInt() > 0)
+                        {
+                            info.SubCompanyId = obj.routeInfo.SubCompanyId;
+                        }
 
                         //    info.Vehicle = db.Fleet_VehicleTypes.Where(a => a.Id == info.VehicleTypeId).Select(a => a.VehicleType).FirstOrDefault().ToStr();
                         //needtouncomment
@@ -11095,7 +11098,7 @@ namespace SignalRHub.Controllers
                                 {
                                     try
                                     {
-                                        General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt(),false, despatchBy);
+                                        General.OnDespatching(HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt(), false, despatchBy);
                                         dispatchCounter += 1;
                                     }
                                     catch
