@@ -8890,8 +8890,8 @@ namespace SignalRHub
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
-        [System.Web.Http.Route("ReceiveCallerId/{RemoteTel}/{Extension}")]
-        public void ReceiveCallerId(string RemoteTel, string Extension)
+        [System.Web.Http.Route("ReceiveCallerId/{RemoteTel}/{State}/{Extension}")]
+        public void ReceiveCallerId(string RemoteTel, string State, string Extension)
         {
 
 
@@ -8908,7 +8908,7 @@ namespace SignalRHub
             try
             {
                 //
-                File.AppendAllText(AppContext.BaseDirectory + "\\ReceiveCallerId.txt", DateTime.Now.ToStr() + " request" + RemoteTel + "Extension:" + Extension + Environment.NewLine);
+                File.AppendAllText(AppContext.BaseDirectory + "\\ReceiveCallerId.txt", DateTime.Now.ToStr() + " phone:" + RemoteTel + "state:" + State + ",Extension:" + Extension + Environment.NewLine);
             }
             catch
             {
@@ -8917,17 +8917,43 @@ namespace SignalRHub
 
             try
             {
+                string callername = "";
 
-
-                if (Extension.ToStr().ToLower() == "ringing")
+                if (State.ToStr().ToLower() == "ringing")
                 {
-                    General.CreateLog("", RemoteTel.ToStr(), DateTime.Now, "00:00:00", "201", RemoteTel);
+                    try
+                    {
+                        using (TaxiDataContext db = new TaxiDataContext())
+                        {
+                            db.CommandTimeout = 4;
+                            callername = db.stp_GetCallerInfo(RemoteTel.ToStr(), "").FirstOrDefault().DefaultIfEmpty().Name;
+                        }
+                    }
+                    catch
+                    {
+                    }
+                    General.CreateLog(callername, RemoteTel.ToStr(), DateTime.Now, "00:00:00", "", RemoteTel);
 
                 }
-                if (Extension.ToStr().ToLower() == "connected")
+                if (State.ToStr().ToLower() == "connected")
                 {
-                    var msg = "**cti_incomingcall>>" + RemoteTel.ToString() + ">>" + "201" + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + RemoteTel + ">>" + " ";
+                    try
+                    {
+                        using (TaxiDataContext db = new TaxiDataContext())
+                        {
+                            db.CommandTimeout = 4;
+                            callername = db.stp_GetCallerInfo(RemoteTel.ToStr(), "").FirstOrDefault().DefaultIfEmpty().Name;
+                        }
+                    }
+                    catch
+                    {
+                    }
+
+
+                    var msg = "**cti_incomingcall>>" + RemoteTel.ToString() + ">>" + Extension + ">>answer>>" + "ANS" + ">>" + "vpn" + ">>" + RemoteTel + ">>" + " ";
                     General.BroadCastMessage(msg);
+
+                    UpdateLog(callername, RemoteTel.ToStr(), DateTime.Now, "", Extension.ToStr(), Extension.ToStr(), "", "");
                 }
             }
             catch
@@ -8935,6 +8961,72 @@ namespace SignalRHub
 
             }
 
+        }
+
+        public void UpdateLog(string name, string phoneNumber, DateTime date, string duration, string line, string stn, string callType, string calledNumber)
+        {
+
+            using (TaxiDataContext db = new TaxiDataContext())
+            {
+                try
+                {
+                    db.CommandTimeout = 5;
+                    //
+                    var obj = db.GetTable<CallHistory>().Where(c => c.PhoneNumber == phoneNumber).OrderByDescending(c => c.Id).FirstOrDefault();
+
+                    if (obj != null)
+                    {
+                        if (!string.IsNullOrEmpty(line.ToStr()))
+                        {
+                            obj.Line = line.ToStr();
+                        }
+                        //
+                        obj.Line = line;
+                        //
+                        if (!string.IsNullOrEmpty(stn.ToStr()))
+                        {
+                            obj.STN = stn.ToStr();
+                        }
+
+                        obj.CallDuration = duration;
+                        obj.CalledToNumber = calledNumber;
+
+                        obj.IsAccepted = false;
+                        obj.AnsweredDateTime = DateTime.Now;
+
+
+
+
+                        if (name.ToStr().Trim().Length > 0)
+                        {
+                            obj.Name = name;
+                        }
+
+                        db.SubmitChanges();
+                    }
+
+                    try
+                    {
+                        File.AppendAllText(AppContext.BaseDirectory + "\\CallerIDUpdateLog.txt", DateTime.Now.ToStr() + ": " + phoneNumber + "|" + line + Environment.NewLine);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        File.AppendAllText(AppContext.BaseDirectory + "\\exception_CallerIDUpdateLog.txt", DateTime.Now.ToStr() + ": " + ex.Message + "|" + ex.InnerException.StackTrace + "|" + ex.InnerException.Message + Environment.NewLine);
+                    }
+                    catch
+                    {
+
+                    }
+
+                }
+            }
         }
 
     }
