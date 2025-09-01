@@ -1475,9 +1475,9 @@ namespace SignalRHub.WebApiClasses
         }
 
         public long? AdvanceBookingId { get; set; }
+        public List<long> Ids { get; set; }
 
-
-        public Booking BookingReturn { get; set; }
+        public AdvanceBookingInfo BookingReturn { get; set; }
 
 
         public decimal? FareRate { get; set; }
@@ -1526,8 +1526,7 @@ namespace SignalRHub.WebApiClasses
         public long? DepartmentId { get; set; }
 
         public int? DriverId { get; set; }
-
-
+        public DateTime? ReturnPickupDateTime { get;  set; }
     }
 
     public class AuthInfo

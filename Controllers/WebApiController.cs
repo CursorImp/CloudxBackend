@@ -7075,194 +7075,115 @@ namespace SignalRHub.Controllers
 
 
 
-                    foreach (var booking in db.Bookings.Where(c => c.AdvanceBookingId == AdvanceBookingId && c.BookingStatusId == Enums.BOOKINGSTATUS.WAITING && c.MasterJobId == null))
+                    if (obj.advancebookingInfo.Ids != null && obj.advancebookingInfo.Ids.Any())
                     {
-                        //foreach (var item in obj.advancebookingInfo.GetType().GetProperties())
-                        //{
-                        //    try
-                        //    {
+                        var bookingsToUpdate = db.Bookings
+                            .Where(c => obj.advancebookingInfo.Ids.Contains(c.Id)
+                                        && c.BookingStatusId == Enums.BOOKINGSTATUS.WAITING
+                                        && c.MasterJobId == null)
+                            .ToList();
 
-
-
-                        //        if (item.Name == "Id")
-                        //            continue;
-
-                        //        if (item.Name == "MasterJobId")
-                        //            continue;
-
-                        //        if (item.Name == "BookingReturn")
-                        //            continue;
-
-                        //        if (item.Name == "AdvanceBookingId")
-                        //            continue;
-
-                        //        if (item.Name == "JourneyTypeId")
-                        //            continue;
-
-
-                        //        booking.GetType().GetProperty(item.Name).SetValue(booking, item.GetValue(obj.advancebookingInfo));
-
-
-                        //    }
-                        //    catch (Exception ex)
-                        //    {
-
-                        //    }
-
-                        //}
-
-                        booking.FromAddress = obj.advancebookingInfo.FromAddress.ToStr();
-                        booking.ToAddress = obj.advancebookingInfo.ToAddress.ToStr();
-
-                        booking.PickupDateTime = booking.PickupDateTime.ToDate() + obj.advancebookingInfo.PickupDateTime.Value.TimeOfDay;
-
-                        booking.CustomerName = obj.advancebookingInfo.CustomerName.ToStr();
-
-                        booking.CustomerEmail = obj.advancebookingInfo.CustomerEmail.ToStr();
-
-                        booking.CustomerMobileNo = obj.advancebookingInfo.CustomerMobileNo.ToStr();
-
-                        booking.CustomerPhoneNo = obj.advancebookingInfo.CustomerPhoneNo.ToStr();
-
-                        booking.FareRate = obj.advancebookingInfo.FareRate.ToDecimal();
-
-                        booking.CompanyPrice = obj.advancebookingInfo.CompanyPrice.ToDecimal();
-
-                        try
+                        foreach (var booking in bookingsToUpdate)
                         {
+                            booking.FromAddress = obj.advancebookingInfo.FromAddress.ToStr();
+                            booking.ToAddress = obj.advancebookingInfo.ToAddress.ToStr();
+
+                            booking.PickupDateTime = booking.PickupDateTime.ToDate() + obj.advancebookingInfo.PickupDateTime.Value.TimeOfDay;
+
+                            booking.CustomerName = obj.advancebookingInfo.CustomerName.ToStr();
+                            booking.CustomerEmail = obj.advancebookingInfo.CustomerEmail.ToStr();
+                            booking.CustomerMobileNo = obj.advancebookingInfo.CustomerMobileNo.ToStr();
+                            booking.CustomerPhoneNo = obj.advancebookingInfo.CustomerPhoneNo.ToStr();
+
+                            booking.FareRate = obj.advancebookingInfo.FareRate.ToDecimal();
+                            booking.CompanyPrice = obj.advancebookingInfo.CompanyPrice.ToDecimal();
+
+                            //try
+                            //{
+                            //    if (obj.advancebookingInfo.BookingReturn != null)
+                            //        booking.ReturnFareRate = obj.advancebookingInfo.BookingReturn.FareRate.ToDecimal();
+                            //}
+                            //catch
+                            //{
+                            //    // log if needed
+                            //}
+
+                            booking.IsCompanyWise = obj.advancebookingInfo.CompanyId != null;
+                            booking.CompanyId = obj.advancebookingInfo.CompanyId.ToIntorNull();
+
+                            booking.VehicleTypeId = obj.advancebookingInfo.VehicleTypeId.ToIntorNull();
+                            booking.OrderNo = obj.advancebookingInfo.OrderNo.ToStr();
+                            booking.DepartmentId = obj.advancebookingInfo.DepartmentId.ToIntorNull();
+                            booking.PaymentTypeId = obj.advancebookingInfo.PaymentTypeId.ToIntorNull();
+                            booking.DriverId = obj.advancebookingInfo.DriverId.ToIntorNull();
+
+                            booking.IsConfirmedDriver = obj.advancebookingInfo.DriverId != null;
+                        }
+                    }
+
+                    if (obj.advancebookingInfo.BookingReturn != null
+    && obj.advancebookingInfo.BookingReturn.Ids != null
+    && obj.advancebookingInfo.BookingReturn.Ids.Any())
+                    {
+                        var bookingsToUpdate = db.Bookings
+                            .Where(c => obj.advancebookingInfo.BookingReturn.Ids.Contains(c.Id)
+                                        && c.BookingStatusId == Enums.BOOKINGSTATUS.WAITING && c.MasterJobId != null)
+                            .ToList();
+
+                        foreach (var booking in bookingsToUpdate)
+                        {
+                            booking.FromAddress = obj.advancebookingInfo.BookingReturn.FromAddress.ToStr();
+                            booking.ToAddress = obj.advancebookingInfo.BookingReturn.ToAddress.ToStr();
+
+
+                            booking.PickupDateTime = booking.PickupDateTime.ToDate() + obj.advancebookingInfo.BookingReturn.ReturnPickupDateTime.Value.TimeOfDay;
+                            //   booking.PickupDateTime = obj.advancebookingInfo.BookingReturn.ReturnPickupDateTime;
+
+                            booking.CustomerName = obj.advancebookingInfo.BookingReturn.CustomerName.ToStr();
+
+                            booking.CustomerEmail = obj.advancebookingInfo.BookingReturn.CustomerEmail.ToStr();
+
+                            booking.CustomerMobileNo = obj.advancebookingInfo.BookingReturn.CustomerMobileNo.ToStr();
+
+                            booking.CustomerPhoneNo = obj.advancebookingInfo.BookingReturn.CustomerPhoneNo.ToStr();
+
+
+                            booking.FareRate = obj.advancebookingInfo.BookingReturn.FareRate.ToDecimal();
+
+                            booking.CompanyPrice = obj.advancebookingInfo.BookingReturn.CompanyPrice.ToDecimal();
+
+
+                            if (obj.advancebookingInfo.BookingReturn.CompanyId == null)
+                            {
+
+                                booking.IsCompanyWise = false;
+
+                            }
+                            else
+                            {
+                                booking.IsCompanyWise = true;
+                            }
+                            booking.CompanyId = obj.advancebookingInfo.BookingReturn.CompanyId.ToIntorNull();
+
+
+
+                            booking.VehicleTypeId = obj.advancebookingInfo.BookingReturn.VehicleTypeId.ToIntorNull();
+                            booking.OrderNo = obj.advancebookingInfo.BookingReturn.OrderNo.ToStr();
+
+                            booking.DepartmentId = obj.advancebookingInfo.BookingReturn.DepartmentId.ToIntorNull();
+                            booking.PaymentTypeId = obj.advancebookingInfo.BookingReturn.PaymentTypeId.ToIntorNull();
+
                             if (obj.advancebookingInfo.BookingReturn != null)
-                                booking.ReturnFareRate = obj.advancebookingInfo.BookingReturn.FareRate.ToDecimal();
+                            {
+                                booking.DriverId = obj.advancebookingInfo.BookingReturn.DriverId.ToIntorNull();
+                                //   if (obj.advancebookingInfo.BookingReturn.DriverId != null)
+                                booking.IsConfirmedDriver = obj.advancebookingInfo.BookingReturn.DriverId != null;
+                            }
                         }
-                        catch
-                        {
-
-                        }
-
-                        if (obj.advancebookingInfo.CompanyId == null)
-                        {
-
-                            booking.IsCompanyWise = false;
-
-                        }
-                        else
-                        {
-                            booking.IsCompanyWise = true;
-                        }
-                        booking.CompanyId = obj.advancebookingInfo.CompanyId.ToIntorNull();
-
-
-
-                        booking.VehicleTypeId = obj.advancebookingInfo.VehicleTypeId.ToIntorNull();
-                        booking.OrderNo = obj.advancebookingInfo.OrderNo.ToStr();
-
-                        booking.DepartmentId = obj.advancebookingInfo.DepartmentId.ToIntorNull();
-                        booking.PaymentTypeId = obj.advancebookingInfo.PaymentTypeId.ToIntorNull();
-                        booking.DriverId = obj.advancebookingInfo.DriverId.ToIntorNull();
-
-
-                        //  if (obj.advancebookingInfo.DriverId != null)
-                        booking.IsConfirmedDriver = obj.advancebookingInfo.DriverId != null;
                     }
-                    //
-
-                    foreach (var booking in db.Bookings.Where(c => c.AdvanceBookingId == AdvanceBookingId && c.BookingStatusId == Enums.BOOKINGSTATUS.WAITING && c.MasterJobId != null))
-                    {
 
 
-                        booking.FromAddress = obj.advancebookingInfo.BookingReturn.FromAddress.ToStr();
-                        booking.ToAddress = obj.advancebookingInfo.BookingReturn.ToAddress.ToStr();
-
-
-                        booking.PickupDateTime = booking.PickupDateTime.ToDate() + obj.advancebookingInfo.BookingReturn.ReturnPickupDateTime.Value.TimeOfDay;
-                        //   booking.PickupDateTime = obj.advancebookingInfo.BookingReturn.ReturnPickupDateTime;
-
-                        booking.CustomerName = obj.advancebookingInfo.BookingReturn.CustomerName.ToStr();
-
-                        booking.CustomerEmail = obj.advancebookingInfo.BookingReturn.CustomerEmail.ToStr();
-
-                        booking.CustomerMobileNo = obj.advancebookingInfo.BookingReturn.CustomerMobileNo.ToStr();
-
-                        booking.CustomerPhoneNo = obj.advancebookingInfo.BookingReturn.CustomerPhoneNo.ToStr();
-
-
-                        booking.FareRate = obj.advancebookingInfo.BookingReturn.FareRate.ToDecimal();
-
-                        booking.CompanyPrice = obj.advancebookingInfo.BookingReturn.CompanyPrice.ToDecimal();
-
-
-                        if (obj.advancebookingInfo.BookingReturn.CompanyId == null)
-                        {
-
-                            booking.IsCompanyWise = false;
-
-                        }
-                        else
-                        {
-                            booking.IsCompanyWise = true;
-                        }
-                        booking.CompanyId = obj.advancebookingInfo.BookingReturn.CompanyId.ToIntorNull();
-
-
-
-                        booking.VehicleTypeId = obj.advancebookingInfo.BookingReturn.VehicleTypeId.ToIntorNull();
-                        booking.OrderNo = obj.advancebookingInfo.BookingReturn.OrderNo.ToStr();
-
-                        booking.DepartmentId = obj.advancebookingInfo.BookingReturn.DepartmentId.ToIntorNull();
-                        booking.PaymentTypeId = obj.advancebookingInfo.BookingReturn.PaymentTypeId.ToIntorNull();
-
-                        if (obj.advancebookingInfo.BookingReturn != null)
-                        {
-                            booking.DriverId = obj.advancebookingInfo.BookingReturn.DriverId.ToIntorNull();
-                            //   if (obj.advancebookingInfo.BookingReturn.DriverId != null)
-                            booking.IsConfirmedDriver = obj.advancebookingInfo.BookingReturn.DriverId != null;
-                        }
-                        //foreach (var item in obj.advancebookingInfo.BookingReturn.GetType().GetProperties())
-                        //{
-                        //    try
-                        //    {
-                        //        //
-
-
-                        //        if (item.Name == "Id")
-                        //            continue;
-
-                        //        if (item.Name == "MasterJobId")
-                        //            continue;
-
-                        //        if (item.Name == "AdvanceBookingId")
-                        //            continue;
-
-
-
-                        //        if (item.Name == "BookingStatusId")
-                        //            continue;
-
-
-                        //        if (item.Name == "JourneyTypeId")
-                        //            continue;
-
-                        //        if (item.Name == "booking.Booking1")
-                        //            continue;
-                        //        if (item.Name == "Booking1")
-                        //            continue;
-
-                        //        //
-
-                        //        booking.GetType().GetProperty(item.Name).SetValue(booking, item.GetValue(obj.advancebookingInfo.BookingReturn));
-                        //        //
-
-
-
-
-                        //    }
-                        //    catch (Exception ex)
-                        //    {
-
-                        //    }
-
-                        //}
-
-                    }
+                 
 
                     db.SubmitChanges();
 
