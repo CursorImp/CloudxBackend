@@ -7988,6 +7988,24 @@ namespace SignalRHub.Controllers
                                          FareRate = a.FareRate,
                                          MasterJobId = a.MasterJobId,
                                          BookingStatus = status.StatusName,
+                                         JourneyTypeId = a.JourneyTypeId,
+
+                                     }).ToList();
+                        var ReturnBookingList = list.Where(c => c.MasterJobId != null).OrderBy(c => c.PickupDateTime).ToList();
+                        var Returnlists = (from a in ReturnBookingList
+                                           join status in db.BookingStatus
+                                         on a.BookingStatusId equals status.Id
+                                     select new
+                                     {
+                                         Id = a.Id,
+                                         Booking_ViaLocations = a.Booking_ViaLocations,
+                                         PickupDateTime = a.PickupDateTime,
+                                         FromAddress = a.FromAddress,
+                                         ToAddress = a.ToAddress,
+                                         FareRate = a.FareRate,
+                                         MasterJobId = a.MasterJobId,
+                                         BookingStatus = status.StatusName,
+                                         JourneyTypeId = a.JourneyTypeId,
 
                                      }).ToList();
 
@@ -7995,7 +8013,7 @@ namespace SignalRHub.Controllers
 
                         // oneway=> where bookingstatusid=1 and masterjobid is null
                         // return=> where bookingstatusid=1 and masterjobid is not null
-                        var data = new { OneWayBookingInfo = obj.bookingInfo, ReturnBookingInfo = objReturn, OneWayBookingList = lists.Where(c => c.MasterJobId == null).OrderBy(c => c.PickupDateTime).ToList(), ReturnBookingList = list.Where(c => c.MasterJobId != null).OrderBy(c => c.PickupDateTime).ToList() };
+                        var data = new { OneWayBookingInfo = obj.bookingInfo, ReturnBookingInfo = objReturn, OneWayBookingList = lists.Where(c => c.MasterJobId == null).OrderBy(c => c.PickupDateTime).ToList(), ReturnBookingList = Returnlists };
 
 
 
@@ -8126,7 +8144,21 @@ namespace SignalRHub.Controllers
                         {
                             string FinalQuery = $"UPDATE Booking SET BookingStatusId = 3 WHERE Id = {id} AND BookingStatusId NOT IN (2)";
                             db.ExecuteQuery<int>(FinalQuery);
+
+                            // If return booking handling is enabled
+                            if (obj.HasReturnBooking==true)
+                            {
+                                // Find return bookings linked to this booking
+                                var ReturnBooking = db.Bookings.FirstOrDefault(x => x.MasterJobId == id);
+                                if (ReturnBooking!=null && ReturnBooking.Id>0)
+                                {
+                                    string ReturnQuery = $"UPDATE Booking SET BookingStatusId = 3 WHERE Id = {ReturnBooking.Id} AND BookingStatusId NOT IN (2)";
+                                    db.ExecuteQuery<int>(ReturnQuery);
+                                }
+                                
+                            }
                         }
+                        
                     }
                     else
                     {
