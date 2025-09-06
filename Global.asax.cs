@@ -648,6 +648,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableForcedLoginDriverShortcut", SetVal = "false", description = "Enable Forced Login Driver Shortcut"  },
                              new AppSetting { SetKey = "EnableForceLogoutBtnOnUser", SetVal = "false", description = "Enable Force Logout User"  },
                              new AppSetting { SetKey = "AppUrl", SetVal = "gb.ctcloudx.com", description = "AppUrl (e.x. ctcloudx.com)"  },
+                             new AppSetting { SetKey = "HasDeadMileage", SetVal = "false", description = "HasDeadMileage"  },
                         };
 
                 using (var db = new TaxiDataContext())
