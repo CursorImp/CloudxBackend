@@ -4005,7 +4005,11 @@ namespace SignalRHub.Controllers
                         {
                             routeType = "fastest";
                         }
-
+                        bool HasDeadMileage = false;
+                        if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='HasDeadMileage'").FirstOrDefault().ToStr().Trim() == "true")
+                        {
+                            HasDeadMileage = true;
+                        }
                         var objX = new
                         {
                             originLat = Convert.ToDouble(obj.routeInfo.pickupAddress.Latitude),
@@ -4017,7 +4021,8 @@ namespace SignalRHub.Controllers
                             MapType = HubProcessor.Instance.objPolicy.MapType.ToInt(),
                             sourceType = "hubapi",
                             routeType = routeType,
-                            vias = vias
+                            vias = vias,
+                            HasDeadMileage
                             //vias = obj.routeInfo.viaAddresses.Select(args => new {Via=args.Latitude +","+args.Longitude })
                         };
 
