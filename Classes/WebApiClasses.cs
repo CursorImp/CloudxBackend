@@ -572,6 +572,7 @@ namespace SignalRHub.WebApiClasses
         public string AddLog { get; set; }
         public bool? IsCompanyWise { get; set; }
         public DateTime? PickupDateTime { get; set; }
+        public string PickupDateTimeStr { get; set; }
         public long Id { get; set; }
         public int? FromLocTypeId { get; set; }
         public int? ToLocTypeId { get; set; }
@@ -1450,6 +1451,7 @@ namespace SignalRHub.WebApiClasses
         public string DirectionToMove { get; set; }
         public int MoveToDriverId { get; set; }
         public SMSInfo smsInfo { get; set; }
+        
     }
     public class bookingFare
     {
@@ -1527,6 +1529,7 @@ namespace SignalRHub.WebApiClasses
 
         public int? DriverId { get; set; }
         public DateTime? ReturnPickupDateTime { get;  set; }
+        public List<ClsBooking_ViaLocation> Booking_ViaLocations { get; set; }
     }
 
     public class AuthInfo

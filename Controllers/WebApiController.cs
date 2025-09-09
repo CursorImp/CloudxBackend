@@ -7118,6 +7118,18 @@ namespace SignalRHub.Controllers
                             booking.DriverId = obj.advancebookingInfo.DriverId.ToIntorNull();
 
                             booking.IsConfirmedDriver = obj.advancebookingInfo.DriverId != null;
+
+
+                            string query1 = "delete from Booking_ViaLocations where BookingId={0}";
+                            db.ExecuteCommand(query1, booking.Id);
+                            if (obj.advancebookingInfo.Booking_ViaLocations !=null)
+                            {
+                                foreach (var item in obj.advancebookingInfo.Booking_ViaLocations)
+                                {
+                                    string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue,ViaLocId) VALUES ({0}, {1}, {2}, {3}, {4},NULLIF({5},0))";
+                                    db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", booking.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue, item.ViaLocId > 0 ? item.ViaLocId : 0);
+                                }
+                            }
                         }
                     }
 
@@ -7179,11 +7191,22 @@ namespace SignalRHub.Controllers
                                 //   if (obj.advancebookingInfo.BookingReturn.DriverId != null)
                                 booking.IsConfirmedDriver = obj.advancebookingInfo.BookingReturn.DriverId != null;
                             }
+
+                            string query1 = "delete from Booking_ViaLocations where BookingId={0}";
+                            db.ExecuteCommand(query1, booking.Id);
+                            if (obj.advancebookingInfo.BookingReturn.Booking_ViaLocations != null)
+                            {
+                                foreach (var item in obj.advancebookingInfo.BookingReturn.Booking_ViaLocations)
+                                {
+                                    string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue,ViaLocId) VALUES ({0}, {1}, {2}, {3}, {4},NULLIF({5},0))";
+                                    db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", booking.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue, item.ViaLocId > 0 ? item.ViaLocId : 0);
+                                }
+                            }
                         }
                     }
 
 
-                 
+
 
                     db.SubmitChanges();
 
@@ -7719,6 +7742,92 @@ namespace SignalRHub.Controllers
 
         }
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetSingleAdvanceBookingDetails")]
+        public JsonResult GetSingleAdvanceBookingDetails(WebApiClasses.RequestWebApi obj)
+        {
+            try
+            {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAdvanceBookingDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
+
+            ResponseWebApi response = new ResponseWebApi();
+            using (TaxiDataContext db = new TaxiDataContext())
+            {
+                db.DeferredLoadingEnabled = false;
+
+                long Id = obj.bookingInfo == null ? 0 : obj.bookingInfo.Id.ToLong();
+                try
+                {
+                    if (Id > 0)
+                    {
+                        var list = db.Bookings.Where(c => c.Id == Id).ToList();
+
+                        var objFirstBooking = list.FirstOrDefault(c => c.BookingStatusId == Enums.BOOKINGSTATUS.WAITING);
+
+
+                        if (objFirstBooking == null)
+                            objFirstBooking = list.FirstOrDefault();
+
+                        if (objFirstBooking != null)
+                        {
+                            foreach (var item in objFirstBooking.GetType().GetProperties())
+                            {
+                                try
+                                {
+                                    if (obj.bookingInfo.GetType().GetProperty(item.Name) != null)
+                                        obj.bookingInfo.GetType().GetProperty(item.Name).SetValue(obj.bookingInfo, item.GetValue(objFirstBooking));
+                                }
+                                catch (Exception ex)
+                                {
+
+                                }
+                            }
+                        }
+
+                        obj.bookingInfo.PickupDateTimeStr = obj.bookingInfo.PickupDateTime.Value.ToString("yyyy-MM-dd HH:mm:ss tt");
+
+                        var lists = (from a in list
+                                     join status in db.BookingStatus
+                                         on a.BookingStatusId equals status.Id
+                                     select new
+                                     {
+                                         Id = a.Id,
+                                         ReturnFareRate = a.ReturnFareRate,
+                                         Booking_ViaLocations = db.Booking_ViaLocations.Where(x => x.BookingId == a.Id).ToList(), //a.Booking_ViaLocations,
+                                         PickupDateTime = a.PickupDateTime,
+                                         FromAddress = a.FromAddress,
+                                         ToAddress = a.ToAddress,
+                                         FareRate = a.FareRate,
+                                         MasterJobId = a.MasterJobId,
+                                         BookingStatus = status.StatusName,
+                                         JourneyTypeId = a.JourneyTypeId,
+
+                                     }).ToList();
+
+                        var data = new { bookingInfo = lists.ToList(), booking = obj.bookingInfo };
+
+                        response.Data = data;
+                    }
+                    else
+                    {
+                        response.HasError = true;
+                        response.Message = "Required : BookingID";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    response.Message = ex.Message;
+                    response.HasError = true;
+                }
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -7902,7 +8011,7 @@ namespace SignalRHub.Controllers
                                      {
                                          Id = a.Id,
                                          ReturnFareRate = a.ReturnFareRate,
-                                         Booking_ViaLocations = a.Booking_ViaLocations,
+                                         Booking_ViaLocations = db.Booking_ViaLocations.Where(x => x.BookingId == a.Id).ToList(), //a.Booking_ViaLocations,
                                          PickupDateTime = a.PickupDateTime,
                                          FromAddress = a.FromAddress,
                                          ToAddress = a.ToAddress,
@@ -7916,19 +8025,19 @@ namespace SignalRHub.Controllers
                         var Returnlists = (from a in ReturnBookingList
                                            join status in db.BookingStatus
                                          on a.BookingStatusId equals status.Id
-                                     select new
-                                     {
-                                         Id = a.Id,
-                                         Booking_ViaLocations = a.Booking_ViaLocations,
-                                         PickupDateTime = a.PickupDateTime,
-                                         FromAddress = a.FromAddress,
-                                         ToAddress = a.ToAddress,
-                                         FareRate = a.FareRate,
-                                         MasterJobId = a.MasterJobId,
-                                         BookingStatus = status.StatusName,
-                                         JourneyTypeId = a.JourneyTypeId,
+                                           select new
+                                           {
+                                               Id = a.Id,
+                                               Booking_ViaLocations = db.Booking_ViaLocations.Where(x => x.BookingId == a.Id).ToList(), //a.Booking_ViaLocations,
+                                               PickupDateTime = a.PickupDateTime,
+                                               FromAddress = a.FromAddress,
+                                               ToAddress = a.ToAddress,
+                                               FareRate = a.FareRate,
+                                               MasterJobId = a.MasterJobId,
+                                               BookingStatus = status.StatusName,
+                                               JourneyTypeId = a.JourneyTypeId,
 
-                                     }).ToList();
+                                           }).ToList();
 
                         //      }
 
@@ -8067,19 +8176,19 @@ namespace SignalRHub.Controllers
                             db.ExecuteQuery<int>(FinalQuery);
 
                             // If return booking handling is enabled
-                            if (obj.HasReturnBooking==true)
+                            if (obj.HasReturnBooking == true)
                             {
                                 // Find return bookings linked to this booking
                                 var ReturnBooking = db.Bookings.FirstOrDefault(x => x.MasterJobId == id);
-                                if (ReturnBooking!=null && ReturnBooking.Id>0)
+                                if (ReturnBooking != null && ReturnBooking.Id > 0)
                                 {
                                     string ReturnQuery = $"UPDATE Booking SET BookingStatusId = 3 WHERE Id = {ReturnBooking.Id} AND BookingStatusId NOT IN (2)";
                                     db.ExecuteQuery<int>(ReturnQuery);
                                 }
-                                
+
                             }
                         }
-                        
+
                     }
                     else
                     {
