@@ -649,6 +649,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableForceLogoutBtnOnUser", SetVal = "false", description = "Enable Force Logout User"  },
                              new AppSetting { SetKey = "AppUrl", SetVal = "gb.ctcloudx.com", description = "AppUrl (e.x. ctcloudx.com)"  },
                              new AppSetting { SetKey = "HasDeadMileage", SetVal = "false", description = "HasDeadMileage"  },
+                             new AppSetting { SetKey = "ShowCompanyPriceForAccountJob", SetVal = "1", description = "ShowCompanyPriceForAccountJob"  },
                         };
 
                 using (var db = new TaxiDataContext())
