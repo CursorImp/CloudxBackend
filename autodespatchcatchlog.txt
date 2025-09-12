@@ -719,3 +719,38 @@
 4/29/2025 5:24:07 PMProcedure or function 'stp_GetAutoDispatchBookings' expects parameter '@dtNow', which was not supplied.
 4/29/2025 5:24:12 PMProcedure or function 'stp_GetAutoDispatchBookings' expects parameter '@dtNow', which was not supplied.
 4/29/2025 5:24:17 PMProcedure or function 'stp_GetAutoDispatchBookings' expects parameter '@dtNow', which was not supplied.
+9/3/2025 2:55:07 PMThread was being aborted.
+9/3/2025 5:37:41 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 5:37:46 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 5:37:56 PMA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The wait operation timed out.)
+9/3/2025 5:38:06 PMA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The network location cannot be reached. For information about network troubleshooting, see Windows Help.)
+9/3/2025 5:38:06 PMA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The network location cannot be reached. For information about network troubleshooting, see Windows Help.)
+9/3/2025 5:38:26 PMA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The network location cannot be reached. For information about network troubleshooting, see Windows Help.)
+9/3/2025 5:38:36 PMA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The network location cannot be reached. For information about network troubleshooting, see Windows Help.)
+9/3/2025 5:38:36 PMA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The network location cannot be reached. For information about network troubleshooting, see Windows Help.)
+9/3/2025 5:38:36 PMA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The network location cannot be reached. For information about network troubleshooting, see Windows Help.)
+9/3/2025 7:48:22 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 7:48:32 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 7:48:37 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 7:48:52 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 7:48:56 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 7:50:56 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 7:51:36 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 7:53:01 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 7:53:06 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 7:56:25 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 7:59:16 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 7:59:35 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 8:01:36 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 8:02:26 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 8:08:42 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 8:19:23 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 8:19:24 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 8:22:03 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 8:30:45 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 9:57:13 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/3/2025 9:58:44 PMExecution Timeout Expired.  The timeout period elapsed prior to completion of the operation or the server is not responding.
+9/4/2025 3:05:14 AMThe client was unable to establish a connection because of an error during connection initialization process before login. Possible causes include the following:  the client tried to connect to an unsupported version of SQL Server; the server was too busy to accept new connections; or there was a resource limitation (insufficient memory or maximum allowed connections) on the server. (provider: TCP Provider, error: 0 - An existing connection was forcibly closed by the remote host.)
+9/4/2025 1:41:39 PMThread was being aborted.
+9/9/2025 5:11:51 PMA connection was successfully established with the server, but then an error occurred during the pre-login handshake. (provider: SSL Provider, error: 0 - The wait operation timed out.)
+9/9/2025 5:24:07 PMThread was being aborted.

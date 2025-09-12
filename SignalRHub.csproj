@@ -249,6 +249,7 @@
     <Compile Include="Classes\ClsSendReceipt.cs" />
     <Compile Include="Classes\Clsstp_CalculateGeneralFaresBySubCompany.cs" />
     <Compile Include="Classes\clsZones.cs" />
+    <Compile Include="Classes\DeviceModel.cs" />
     <Compile Include="Classes\DriverAppClasses.cs" />
     <Compile Include="Classes\DriverPDASettings.cs" />
     <Compile Include="Classes\eMessageTypes.cs" />
@@ -283,6 +284,8 @@
     <Compile Include="Classes\stp_GetBookingsDataResult.cs" />
     <Compile Include="Classes\Stripe3DS.cs" />
     <Compile Include="Classes\StripeToken.cs" />
+    <Compile Include="Classes\TerminalLogModel.cs" />
+    <Compile Include="Classes\TerminalReaderResponse.cs" />
     <Compile Include="Classes\TerminalTokenResponse.cs" />
     <Compile Include="Classes\UDPReceiverClass.cs" />
     <Compile Include="Classes\UserConnections.cs" />
