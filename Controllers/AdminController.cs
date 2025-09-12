@@ -25010,6 +25010,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     else
                         model.LocationId = ClientLocationId;
 
+                    model.LocationId = model.LocationId == null ? "" : model.LocationId;
 
                     var count = db.ExecuteCommand(
                        "EXEC insertdevice {0}, {1}, {2}, {3}, {4}, {5}",
