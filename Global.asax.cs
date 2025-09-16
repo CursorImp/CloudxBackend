@@ -651,6 +651,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "HasDeadMileage", SetVal = "false", description = "HasDeadMileage"  },
                              new AppSetting { SetKey = "ShowCompanyPriceForAccountJob", SetVal = "1", description = "ShowCompanyPriceForAccountJob"  },
                              new AppSetting { SetKey = "EnableBookingRecipt", SetVal = "false", description = "EnableBookingRecipt"  },
+                             new AppSetting { SetKey = "ShowMultiDispatchJob", SetVal = "false", description = "ShowMultiDispatchJob"  },
                         };
 
                 using (var db = new TaxiDataContext())
