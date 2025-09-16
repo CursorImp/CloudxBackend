@@ -650,6 +650,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "AppUrl", SetVal = "gb.ctcloudx.com", description = "AppUrl (e.x. ctcloudx.com)"  },
                              new AppSetting { SetKey = "HasDeadMileage", SetVal = "false", description = "HasDeadMileage"  },
                              new AppSetting { SetKey = "ShowCompanyPriceForAccountJob", SetVal = "1", description = "ShowCompanyPriceForAccountJob"  },
+                             new AppSetting { SetKey = "EnableBookingRecipt", SetVal = "false", description = "EnableBookingRecipt"  },
                         };
 
                 using (var db = new TaxiDataContext())
