@@ -1539,6 +1539,16 @@ namespace SignalRHub.Controllers
 
                     }
 
+                    try
+                    {
+                        string query = "SELECT CAST(ISNULL(AllocatedDriver,0) AS BIT) FROM Booking WHERE ID =" + obj.bookingInfo.Id;
+                        obj.bookingInfo.AllocatedDriver = db.ExecuteQuery<bool>(query).FirstOrDefault().ToBool();
+                    }
+                    catch
+                    {
+
+                    }
+
 
 
                     var obj2 = db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id);
@@ -2546,6 +2556,15 @@ namespace SignalRHub.Controllers
                         {
                             db.ExecuteQuery<int>($"exec sp_calculateDriverCommission {objMaster.Current.Id},{objMaster.Current.DriverId}");
                         }
+                    }
+                    catch
+                    {
+                    }
+
+                    try
+                    {
+                        string allocatedDriverQuery = $"Update Booking SET AllocatedDriver={(obj.bookingInfo.AllocatedDriver.ToBool() ? "1" : "0")} WHERE Id={objMaster.Current.Id}";
+                        db.ExecuteQuery<int>(allocatedDriverQuery);
                     }
                     catch
                     {
@@ -7127,7 +7146,7 @@ namespace SignalRHub.Controllers
 
                             string query1 = "delete from Booking_ViaLocations where BookingId={0}";
                             db.ExecuteCommand(query1, booking.Id);
-                            if (obj.advancebookingInfo.Booking_ViaLocations !=null)
+                            if (obj.advancebookingInfo.Booking_ViaLocations != null)
                             {
                                 foreach (var item in obj.advancebookingInfo.Booking_ViaLocations)
                                 {

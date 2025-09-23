@@ -651,6 +651,7 @@ namespace SignalRHub.WebApiClasses
         public DateTime? ToDate { get; set; }
         public Fleet_Driver Driver { get;  set; }
         public Gen_Company Company { get;  set; }
+        public bool? AllocatedDriver { get; set; }
     }
 
     public class Booking_DriverCommsiion
