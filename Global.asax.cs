@@ -3621,7 +3621,7 @@ namespace SignalRHub
                                 // Check for Pre-Allocated Driver First
 
                                 if (Instance.objPolicy.AutoDespatchPriorityForAllocatedDrv.ToBool() && job.AutoDespatch.ToBool() && (job.bookingstatusId.ToInt() == Enums.BOOKINGSTATUS.WAITING || job.bookingstatusId.ToInt() == Enums.BOOKINGSTATUS.PENDING || job.bookingstatusId.ToInt() == Enums.BOOKINGSTATUS.NOTACCEPTED)
-                                    && job.DriverId != null && job.IsConfirmedDriver.ToBool())
+                                    && job.DriverId != null && (job.IsConfirmedDriver.ToBool() || job.AllocatedDriver.ToBool()))
                                 {
 
                                     var objTopDrvInQueueAllocated = (from a in listofJobAvailableDrvs
@@ -3801,7 +3801,7 @@ namespace SignalRHub
 
                                 // add price plot rule
 
-                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.IsConfirmedDriver.ToBool())
+                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.AllocatedDriver.ToBool())
                                 {
                                     listofJobAvailableDrvs = listofJobAvailableDrvs.Where(x => x.DriverId == job.DriverId).ToList();
                                     if (listofJobAvailableDrvs.Count == 0)
@@ -4018,7 +4018,7 @@ namespace SignalRHub
 
                                 if (listofJobAvailableDrvs.Count == 0)
                                 {
-                                    if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.IsConfirmedDriver.ToBool())
+                                    if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.AllocatedDriver.ToBool())
                                     {
                                         continue;
                                     }
@@ -4449,7 +4449,7 @@ namespace SignalRHub
                                         {
                                             // Put Bidding Sub Rule 3
 
-                                            if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.IsConfirmedDriver.ToBool())
+                                            if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.AllocatedDriver.ToBool())
                                             {
                                                 continue;
                                             }
@@ -5264,7 +5264,7 @@ namespace SignalRHub
                                                     {
                                                         // Put Bidding Sub Rule 3
 
-                                                        if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.IsConfirmedDriver.ToBool())
+                                                        if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.AllocatedDriver.ToBool())
                                                         {
                                                             continue;
                                                         }
@@ -5635,7 +5635,7 @@ namespace SignalRHub
                                             {
                                                 // Put Bidding Sub Rule 3
 
-                                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.IsConfirmedDriver.ToBool())
+                                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.AllocatedDriver.ToBool())
                                                 {
                                                     continue;
                                                 }
@@ -6844,7 +6844,7 @@ namespace SignalRHub
 
                             foreach (var job in bookings)
                             {
-                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.IsConfirmedDriver.ToBool())
+                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.AllocatedDriver.ToBool())
                                 {
                                     continue;
                                 }
