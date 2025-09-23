@@ -16024,7 +16024,14 @@ namespace SignalRHub
                 {
                     if (respo == "true")
                     {
-                        General.BroadCastMessage("**action>>" + values[1].ToStr() + ">>" + values[2].ToStr() + ">>" + values[3].ToInt());
+                        if (values[3].ToInt() == 11)
+                        {
+                            General.BroadCastMessage("**refresh required dashboard");
+                        }
+                        else
+                        {
+                            General.BroadCastMessage("**action>>" + values[1].ToStr() + ">>" + values[2].ToStr() + ">>" + values[3].ToInt());
+                        }
                     }
 
                     if (HubProcessor.Instance.listofJobs.Count(c => c.DriverId == values[2].ToInt() && c.JobId == values[1].ToLong()) > 0)
