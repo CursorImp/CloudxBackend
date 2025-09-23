@@ -653,6 +653,8 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableBookingRecipt", SetVal = "false", description = "EnableBookingRecipt"  },
                              new AppSetting { SetKey = "ShowMultiDispatchJob", SetVal = "false", description = "ShowMultiDispatchJob"  },
                              new AppSetting { SetKey = "IsCompanyWiseFare", SetVal = "false", description = "IsCompanyWiseFare"  },
+                             new AppSetting { SetKey = "DispatchAllocatedJobsToAllocatedDriverOnly", SetVal = "0", description = "DispatchAllocatedJobsToAllocatedDriverOnly"  },
+                             new AppSetting { SetKey = "EnableChristmasCars", SetVal = "0", description = "EnableChristmasCars"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -3112,6 +3114,7 @@ namespace SignalRHub
 
                 bool IsUpdated = false;
                 string AutoRefreshVar = string.Empty;
+                var DispatchAllocatedJobsToAllocatedDriverOnly = "0";
 
                 int autoDespatchType = Instance.objPolicy.AutoDespatchType.ToInt();
 
@@ -3139,7 +3142,13 @@ namespace SignalRHub
                 {
 
 
-
+                    try
+                    {
+                        DispatchAllocatedJobsToAllocatedDriverOnly = db.ExecuteQuery<string>($"Select SetVal from AppSettings where SetKey = 'DispatchAllocatedJobsToAllocatedDriverOnly'").FirstOrDefault().ToStr();
+                    }
+                    catch
+                    {
+                    }
 
 
                     //if (Instance.objPolicy.AutoDespatchPriorityForAccJobs.ToBool())
@@ -3792,6 +3801,15 @@ namespace SignalRHub
 
                                 // add price plot rule
 
+                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.IsConfirmedDriver.ToBool())
+                                {
+                                    listofJobAvailableDrvs = listofJobAvailableDrvs.Where(x => x.DriverId == job.DriverId).ToList();
+                                    if (listofJobAvailableDrvs.Count == 0)
+                                    {
+                                        continue;
+                                    }
+                                }
+
                                 try
                                 {
                                     if (listofPricePlots != null && listofPricePlots.Count > 0)
@@ -4000,6 +4018,10 @@ namespace SignalRHub
 
                                 if (listofJobAvailableDrvs.Count == 0)
                                 {
+                                    if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.IsConfirmedDriver.ToBool())
+                                    {
+                                        continue;
+                                    }
                                     if (job.bookingstatusId.ToInt() != Enums.BOOKINGSTATUS.BID)
                                     {
                                         SendJobOnBid(job);
@@ -4011,7 +4033,6 @@ namespace SignalRHub
 
 
                                 }
-
 
                                 if (autoDespatchType == Enums.AUTODESPATCH_TYPES.TOP_STANDING_QUEUE) // AutoDespatch Rule 1 :- Top Standing in Plot Queue
                                 {
@@ -4428,6 +4449,10 @@ namespace SignalRHub
                                         {
                                             // Put Bidding Sub Rule 3
 
+                                            if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.IsConfirmedDriver.ToBool())
+                                            {
+                                                continue;
+                                            }
 
 
                                             if (job.IsBidding.ToBool() && job.bookingstatusId.ToInt() != Enums.BOOKINGSTATUS.BID && job.EnableZoneBidding.ToBool())
@@ -5239,7 +5264,10 @@ namespace SignalRHub
                                                     {
                                                         // Put Bidding Sub Rule 3
 
-
+                                                        if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.IsConfirmedDriver.ToBool())
+                                                        {
+                                                            continue;
+                                                        }
 
                                                         if (job.IsBidding.ToBool() && job.bookingstatusId.ToInt() != Enums.BOOKINGSTATUS.BID && job.EnableZoneBidding.ToBool())
 
@@ -5607,7 +5635,10 @@ namespace SignalRHub
                                             {
                                                 // Put Bidding Sub Rule 3
 
-
+                                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.IsConfirmedDriver.ToBool())
+                                                {
+                                                    continue;
+                                                }
 
                                                 if (job.IsBidding.ToBool() && job.bookingstatusId.ToInt() != Enums.BOOKINGSTATUS.BID && job.EnableZoneBidding.ToBool())
                                                 {
@@ -6813,6 +6844,10 @@ namespace SignalRHub
 
                             foreach (var job in bookings)
                             {
+                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.IsConfirmedDriver.ToBool())
+                                {
+                                    continue;
+                                }
                                 IsUpdated = SendJobOnBid(job);
 
                             }
