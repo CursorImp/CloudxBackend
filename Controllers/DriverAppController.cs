@@ -4451,8 +4451,10 @@ namespace SignalRHub
 
             foreach (Match match in mactches)
             {
-                string tURL = MakeTinyUrl(match.Value);
-                txt = txt.Replace(match.Value, tURL);
+                //string tURL = MakeTinyUrl(match.Value);
+                //txt = txt.Replace(match.Value, tURL);
+                string tURL =General.CreateShortUrlCT(match.Value).GetAwaiter().GetResult();
+                if (string.IsNullOrEmpty(tURL)) { tURL = MakeTinyUrl(match.Value); }
             }
 
             return txt;

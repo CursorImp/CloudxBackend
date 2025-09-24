@@ -18,6 +18,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Web.Security;
 using System.Xml;
@@ -5144,15 +5145,26 @@ namespace SignalRHub
 
             MatchCollection mactches = regx.Matches(txt);
 
+            //foreach (Match match in mactches)
+            //{
+            //    string tURL = MakeTinyUrl(match.Value);
+            //    txt = txt.Replace(match.Value, tURL);
+            //}
+
+
+            //if (txt.ToStr().Contains("tinyurl.com") == false)
+            //    txt = GetShortUrl(txt);
             foreach (Match match in mactches)
             {
-                string tURL = MakeTinyUrl(match.Value);
+                string tURL = CreateShortUrlCT(match.Value).GetAwaiter().GetResult();
+                if (string.IsNullOrEmpty(tURL)) { tURL = MakeTinyUrl(match.Value); }
                 txt = txt.Replace(match.Value, tURL);
             }
 
 
-            if (txt.ToStr().Contains("tinyurl.com") == false)
+            if (txt.ToStr().Contains("tinyurl.com") == false && txt.ToStr().Contains("estiny.app") == false)
                 txt = GetShortUrl(txt);
+
             return txt;
         }
 
@@ -5190,7 +5202,65 @@ namespace SignalRHub
             }
         }
 
+        public static async Task<string> CreateShortUrlCT(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url) || url.Length <= 12)
+            {
+                return url;
+            }
 
+            string shortUrl = url;
+            try
+            {
+                string apiUrl = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/CreateShortUrlCT";
+
+                //var payload = new { longUrl = url };
+                var payload = new { longUrl = url, defaultClientId = HubProcessor.Instance?.objPolicy?.DefaultClientId.ToStr() };
+                // ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                HttpClient httpClient = new HttpClient();
+                var stringContent = new StringContent
+                (Newtonsoft.Json.JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
+
+                HttpResponseMessage response = httpClient.PostAsync(apiUrl, stringContent).Result;
+                httpClient.Dispose();
+                var resp = response.Content.ReadAsStringAsync().Result;
+
+
+                ShortUrlResponse APIResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<ShortUrlResponse>(resp);
+                try
+                {
+
+                    File.AppendAllText(AppContext.BaseDirectory + "\\CreateShortUrl.txt", DateTime.Now.ToStr() + ": resp :" + new JavaScriptSerializer().Serialize(APIResponse) + Environment.NewLine);
+                }
+                catch (Exception ex)
+                {
+
+
+
+                }
+                if (APIResponse != null && !string.IsNullOrEmpty(APIResponse.Data) && !APIResponse.HasError)
+                {
+                    shortUrl = APIResponse.Data.ToStr().Trim();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                System.IO.File.AppendAllText(
+                    AppDomain.CurrentDomain.BaseDirectory + "\\CreateShortUrl_Exception.txt",
+                    $"{DateTime.UtcNow:dd/MM/yyyy HH:mm:ss}, Error: {ex.Message}{Environment.NewLine}"
+                );
+            }
+
+            return shortUrl;
+        }
+
+        public class ShortUrlResponse
+        {
+            public bool HasError { get; set; }
+            public string Data { get; set; }
+            public string Message { get; set; }
+        }
         public static string GetShortUrl(string URL)
         {
 
