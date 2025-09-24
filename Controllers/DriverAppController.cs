@@ -8123,7 +8123,7 @@ namespace SignalRHub
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
                     db.CommandTimeout = 5;
-                    var bookings = db.Bookings.Where(c => c.DriverId == null && c.BookingStatusId == Enums.BOOKINGSTATUS.WAITING && c.PickupDateTime >= DateTime.Now.AddHours(Global.UpcomingJobHour.ToInt()))
+                    var bookings = db.Bookings.Where(c => c.DriverId == null && c.BookingStatusId == Enums.BOOKINGSTATUS.WAITING && c.PickupDateTime >= DateTime.Now && c.PickupDateTime <= DateTime.Now.AddHours(Global.UpcomingJobHour.ToInt()))
                         .OrderBy(c => c.PickupDateTime).ToList();
 
 
