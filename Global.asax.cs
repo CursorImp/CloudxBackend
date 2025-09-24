@@ -98,6 +98,7 @@ namespace SignalRHub
         public static string AutoRecoverOnNoMoveInSec = "0";
         public static string EnableSubCompanyWiseKonnect = "false";
         public static string AllowBidRadiusInMiles = "0";
+        public static string SortPlotByNearestOnPda = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -655,6 +656,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "IsCompanyWiseFare", SetVal = "false", description = "IsCompanyWiseFare"  },
                              new AppSetting { SetKey = "DispatchAllocatedJobsToAllocatedDriverOnly", SetVal = "0", description = "DispatchAllocatedJobsToAllocatedDriverOnly"  },
                              new AppSetting { SetKey = "EnableChristmasCars", SetVal = "0", description = "EnableChristmasCars"  },
+                             new AppSetting { SetKey = "SortPlotByNearestOnPda", SetVal = "0", description = "SortPlotByNearestOnPda"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1498,6 +1500,11 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("AllowBidRadiusInMiles")))
                 {
                     AllowBidRadiusInMiles = GetAppSetting<string>("AllowBidRadiusInMiles").ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("SortPlotByNearestOnPda")))
+                {
+                    SortPlotByNearestOnPda = GetAppSetting<string>("SortPlotByNearestOnPda").ToStr();
 
                 }
 

@@ -1,31 +1,30 @@
 ﻿using DotNetCoords;
-
+using SignalRHub.Classes;
+using SignalRHub.Classes.KonnectSupplier;
+using SMSGateway;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Security.Claims;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Script.Serialization;
+using System.Xml;
 using Taxi_BLL;
 using Taxi_Model;
 using Utils;
-
-using System.Text;
-using System.Security.Claims;
-using System.Drawing;
-using System.Net;
-using System.Threading;
-using System.Data;
-using System.Xml;
-using System.Configuration;
-using SignalRHub.Classes;
-using System.Net.Http;
-using SignalRHub.Classes.KonnectSupplier;
-using System.Threading.Tasks;
 
 namespace SignalRHub
 {
@@ -834,7 +833,15 @@ namespace SignalRHub
 
                     string[] values = json.Data.ToStr().Split(new char[] { '=' });
 
-                    ResponseData data = requestPlotsBidding(json.Data.ToStr());
+                    ResponseData data = new ResponseData();
+                    if (Global.SortPlotByNearestOnPda == "1")
+                    {
+                        data = requestPlotsBiddingByNearestPlot(json.Data.ToStr());
+                    }
+                    else
+                    {
+                        data = requestPlotsBidding(json.Data.ToStr());
+                    }
 
 
                     //try
@@ -2129,8 +2136,16 @@ namespace SignalRHub
 
 
 
-                ResponseData data = requestPlotsBidding(req.PlotBidding.ToStr());
-
+                //ResponseData data = requestPlotsBidding(req.PlotBidding.ToStr());
+                ResponseData data = new ResponseData();
+                if (Global.SortPlotByNearestOnPda == "1")
+                {
+                    data = requestPlotsBiddingByNearestPlot(req.PlotBidding.ToStr());
+                }
+                else
+                {
+                    data = requestPlotsBidding(req.PlotBidding.ToStr());
+                }
 
                 if (data != null && data.Data.ToStr() != "")
                 {
@@ -4453,7 +4468,7 @@ namespace SignalRHub
             {
                 //string tURL = MakeTinyUrl(match.Value);
                 //txt = txt.Replace(match.Value, tURL);
-                string tURL =General.CreateShortUrlCT(match.Value).GetAwaiter().GetResult();
+                string tURL = General.CreateShortUrlCT(match.Value).GetAwaiter().GetResult();
                 if (string.IsNullOrEmpty(tURL)) { tURL = MakeTinyUrl(match.Value); }
             }
 
@@ -8379,14 +8394,14 @@ namespace SignalRHub
 
                         if (driverPlotRow != null)
                         {
-                            list.Add(new ClsPlotBidding { ZoneName = driverPlotRow.ZoneName, Drivers = driverPlotRow.Drivers.ToInt(), J15 = driverPlotRow.ExpiryJobs1.ToInt(), J30 = driverPlotRow.ExpiryJobs2.ToInt(), BidDetails = 1, Rank = rank, DriverWorkStatus = statusName });
+                            list.Add(new ClsPlotBidding { ZoneName = driverPlotRow.ZoneName, Drivers = driverPlotRow.Drivers.ToInt(), J15 = driverPlotRow.ExpiryJobs1.ToInt(), J30 = driverPlotRow.ExpiryJobs2.ToInt(), BidDetails = 1, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
 
                         }
                         else
                         {
 
-                            list.Add(new ClsPlotBidding { ZoneName = "-", Drivers = 0, J15 = 0, J30 = 0, BidDetails = 1, Rank = rank, DriverWorkStatus = statusName });
+                            list.Add(new ClsPlotBidding { ZoneName = "-", Drivers = 0, J15 = 0, J30 = 0, BidDetails = 1, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
                         }
 
@@ -8441,9 +8456,10 @@ namespace SignalRHub
                                     item2.BidDetails = 1;
                                     item2.Rank = rank;
                                     item2.DriverWorkStatus = statusName;
+                                    item2.Distance=0.0;
                                 }
                                 else
-                                    list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = 1, Rank = rank, DriverWorkStatus = statusName });
+                                    list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = 1, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
 
 
@@ -8463,10 +8479,11 @@ namespace SignalRHub
                                 item2.J15 = item.ExpiryJobs1.ToInt();
                                 item2.J30 = item.ExpiryJobs2.ToInt();
                                 item2.DriverWorkStatus = statusName;
+                                item2.Distance = 0.0;
                             }
                             else
                             {
-                                list.Add(new ClsPlotBidding { ZoneName = item.ZoneName, Drivers = item.Drivers.ToInt(), J15 = item.ExpiryJobs1.ToInt(), J30 = item.ExpiryJobs2.ToInt(), Rank = rank, DriverWorkStatus = statusName });
+                                list.Add(new ClsPlotBidding { ZoneName = item.ZoneName, Drivers = item.Drivers.ToInt(), J15 = item.ExpiryJobs1.ToInt(), J30 = item.ExpiryJobs2.ToInt(), Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
 
                             }
@@ -8524,6 +8541,402 @@ namespace SignalRHub
             return data;
         }
 
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("requestPlotsBiddingByNearestPlot")]
+        public ResponseData requestPlotsBiddingByNearestPlot(string mesg)
+        {
+            ResponseData data = new ResponseData();
+
+            if (mesg.ToStr().Trim().Length == 0)
+                return null;
+            //
+            List<ClsPlotBidding> list = new List<ClsPlotBidding>();
+            string response = string.Empty;
+            try
+            {
+                //
+                try
+                {
+                    File.AppendAllText(physicalPath + "\\requestPlotsBiddingApi.txt", DateTime.Now + ": datavalue=" + mesg + Environment.NewLine);
+
+                }
+                catch
+                {
+
+                }
+
+
+
+
+
+                string dataValue = mesg;
+                dataValue = dataValue.Trim();
+
+                string[] values = dataValue.Split(new char[] { '=' });
+
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    try
+                    {
+                        db.CommandTimeout = 4;
+
+                        int driverId = values[0].ToInt();
+
+                        string postedFrom = string.Empty;
+
+
+
+
+                        int? statusId = null;
+
+
+
+
+
+                        string statusName = "";
+
+
+                        if (values.Count() > 3 && ((values[3].ToStr().IsNumeric() && values[3].ToStr().ToDecimal() > 100) || (values[3].ToStr().ToLower() == "iphone")))
+                        {
+                            statusId = db.Fleet_DriverQueueLists.Where(c => c.DriverId == driverId && c.Status == true).Select(c => c.DriverWorkStatusId).FirstOrDefault();
+
+                            statusName = "Available";
+
+                        }
+
+
+
+                        if (statusId != null)
+                        {
+
+                            if (statusId == Enums.Driver_WORKINGSTATUS.ONBREAK)
+                                statusName = "OnBreak";
+
+                            else if (statusId == Enums.Driver_WORKINGSTATUS.FOJ)
+                                statusName = "FOJ";
+                            else if (statusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE)
+                                statusName = "PassengerOnBoard";
+                            else if (statusId == Enums.Driver_WORKINGSTATUS.ONROUTE)
+                                statusName = "ONROUTE";
+                            else if (statusId == Enums.Driver_WORKINGSTATUS.ARRIVED)
+                                statusName = "ARRIVED";
+                            else if (statusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR)
+                                statusName = "SoonToClear";
+                            else if (statusId == Enums.Driver_WORKINGSTATUS.SINBIN)
+                                statusName = "SINBIN";
+                        }
+
+                        var result = db.ExecuteQuery<stp_GetAreaPlotsByVehicleResultEx>("exec stp_GetAreaPlotsByVehicle_nearest {0},{1},{2}", driverId, Instance.objPolicy.PlotsJobExpiryValue1, Instance.objPolicy.PlotsJobExpiryValue2).ToList();
+
+                        int? driverZoneId = db.Fleet_Driver_Locations.Where(c => c.DriverId == driverId)
+                            .Select(a => a.ZoneId).FirstOrDefault();
+
+                        string driverZoneName = string.Empty;
+                        string rank = "";
+                        if (driverZoneId != null)
+                        {
+                            //
+                            try
+                            {
+                                driverZoneName = Instance.listOfZone.FirstOrDefault(c => c.Id == driverZoneId).Area;
+
+                                var objRank = db.ExecuteQuery<ClsDriverRank>("exec stp_getdriverrank {0},{1}", driverId, driverZoneId).FirstOrDefault();
+
+
+
+                                if (objRank == null)
+                                    rank = "-";
+                                else
+                                    rank = objRank.Rank.ToStr();
+                            }
+                            catch (Exception ex)
+                            {
+
+                            }
+                        }
+
+
+
+
+                        stp_GetAreaPlotsByVehicleResultEx driverPlotRow = null;
+                        if (driverZoneName.ToStr().Trim().Length > 0)
+                        {
+
+                            driverPlotRow = result.Where(c => c.ZoneName == driverZoneName).FirstOrDefault();
+                            if (driverPlotRow != null)
+                            {
+                                result.Remove(driverPlotRow);
+
+                            }
+                            else
+                            {
+                            }
+
+                        }
+
+                        LatLng DriverPlotPoint = null;
+
+                        if (driverZoneId.ToInt() > 0)
+                            DriverPlotPoint = GetCentroid(HubProcessor.Instance.listofPolyVertices.Where(c => c.ZoneId == driverZoneId).ToList());
+
+
+                        if (driverPlotRow != null)
+                        {
+                            list.Add(new ClsPlotBidding { ZoneName = driverPlotRow.ZoneName, Drivers = driverPlotRow.Drivers.ToInt(), J15 = driverPlotRow.ExpiryJobs1.ToInt(), J30 = driverPlotRow.ExpiryJobs2.ToInt(), BidDetails = 0, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
+
+                        }
+                        else
+                        {
+
+                            if (statusId != null)
+                            {
+                                list.Add(new ClsPlotBidding { ZoneName = "-", Drivers = 0, J15 = 0, J30 = 0, BidDetails = 0, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
+
+                            }
+                        }
+
+
+
+
+
+
+                        var arr2 = (from a in db.ExecuteQuery<stp_getbiddingAvailablejobsResult>("exec stp_getbiddingjobs {0}", driverId)
+                             .Where(c => c.zonename != "")
+
+                                    select new
+
+                                    {
+                                        Distance = a.biddingradius > 0 && a.JobLatitude != null && a.JobLatitude != 0 ? new LatLng(a.latitude, a.longitude).DistanceMiles(new LatLng(Convert.ToDouble(a.JobLatitude), Convert.ToDouble(a.JobLongitude))) : 0,
+                                        a.zonename,
+                                        a.biddingradius,
+                                        a.zoneid,
+                                        //      a.OrderNo
+
+                                    }).Where(c => c.Distance <= c.biddingradius)
+                                    .GroupBy(args => new
+                                    {
+                                        args.zonename,
+                                        args.zoneid,
+                                        //       args.OrderNo
+
+                                    })
+
+
+
+                                 .Select(args => new
+                                 {
+                                     args.Key.zoneid,
+                                     args.Key.zonename,
+                                     //     args.Key.OrderNo,
+                                     Jobs = args.Count()
+
+
+                                 }).ToList();
+
+
+                        //.Select(args => (args.zoneid + "<<" + args.zonename + "<<" + args.Jobs)).ToArray<string>();
+                        foreach (var item in arr2)
+                        {
+
+                            var item2 = list.FirstOrDefault(c => c.ZoneName == item.zonename);
+
+                            if (item2 != null)
+                            {
+
+                                item2.ZoneId = item.zoneid.ToInt();
+                                item2.Bid = item.Jobs;
+                                item2.BidDetails = 0;
+                                item2.Rank = rank;
+                                item2.DriverWorkStatus = statusName;
+                                //   item2.OrderNo = item.OrderNo;
+                                item2.Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt());
+                            }
+                            else
+                                list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = 0, Rank = rank, DriverWorkStatus = statusName, Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt()) });
+
+
+                            //
+
+                        }
+
+
+                        //      list = list.OrderBy(c => c.Distance).ToList();
+
+                        //
+                        foreach (var item in result)
+                        {
+                            var item2 = list.FirstOrDefault(c => c.ZoneName == item.ZoneName);
+
+                            if (item2 != null)
+                            {
+                                item2.Drivers = item.Drivers.ToInt();
+                                item2.J15 = item.ExpiryJobs1.ToInt();
+                                item2.J30 = item.ExpiryJobs2.ToInt();
+                                item2.DriverWorkStatus = statusName;
+                                //    item2.OrderNo = item.orderno.ToInt();
+                                item2.Distance = GetPointsDistance(DriverPlotPoint, item.Id.ToInt());
+                            }
+                            else
+                            {
+                                list.Add(new ClsPlotBidding { ZoneName = item.ZoneName, Drivers = item.Drivers.ToInt(), J15 = item.ExpiryJobs1.ToInt(), J30 = item.ExpiryJobs2.ToInt(), Rank = rank, DriverWorkStatus = statusName, Distance = GetPointsDistance(DriverPlotPoint, item.Id.ToInt()) });
+
+
+                            }
+
+                        }
+                        ClsPlotBidding driverRow = null;
+
+
+                        if (driverZoneId != null)
+                        {
+
+                            driverRow = list.FirstOrDefault(c => c.ZoneId == driverZoneId);
+
+                        }
+                        else
+                            driverRow = list.FirstOrDefault(c => c.ZoneName == "-");
+
+                        List<ClsPlotBidding> finalList = new List<ClsPlotBidding>();
+
+
+
+
+                        if (list.Where(c => c.Distance == 0).Count() > 0)
+                            finalList.Add(list.Where(c => c.Distance == 0).OrderBy(c => c.Distance).FirstOrDefault());
+
+
+
+
+                        if (DriverPlotPoint != null)
+                        {
+
+
+                            if (DriverPlotPoint.Latitude == 0 && DriverPlotPoint.Longitude == 0)
+                            {
+                                finalList = list.ToList();
+
+                            }
+                            else
+                            {
+                                finalList.AddRange(list.Where(c => c.Bid > 0 && c.Distance > 0).OrderBy(c => c.Distance).ToList());
+                                finalList.AddRange(list.Where(c => c.Distance > 0 && c.Bid == 0 && (c.J15 > 0 || c.J30 > 0)).OrderBy(c => c.Distance).ToList());
+                                finalList.AddRange(list.Where(c => c.Bid == 0 && (c.J15 == 0 && c.J30 == 0) && c.Drivers > 0 && c.Distance > 0).OrderBy(c => c.Distance).ToList());
+                            }
+                        }
+                        else
+                        {
+                            finalList = list.ToList();
+                        }
+                        response = new JavaScriptSerializer().Serialize(finalList);
+                        data.Data = response;
+                        data.IsSuccess = true;
+
+
+
+                        if (statusId != null && statusId == Enums.Driver_WORKINGSTATUS.AVAILABLE && driverId == 219)
+                        {
+                            try
+                            {
+                                File.AppendAllText(physicalPath + "\\plotsBidding_response.txt", DateTime.Now.ToStr() + ": request:" + mesg + Environment.NewLine + "response:" + response + Environment.NewLine + Environment.NewLine);
+
+
+
+
+                            }
+                            catch
+                            {
+
+                            }
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        try
+                        {
+                            File.AppendAllText(physicalPath + "\\requestPlotsBiddingByNearestPlotApi_exception.txt", DateTime.Now.ToStr() + ": " + ex.Message + Environment.NewLine);
+                        }
+                        catch
+                        {
+
+                        }
+
+                        data.Data = ex.Message;
+                        data.IsSuccess = false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                data.Data = ex.Message;
+                data.IsSuccess = false;
+            }
+
+            return data;
+        }
+
+
+        public double GetPointsDistance(LatLng point1, int ZoneId)
+        {
+
+
+            if (point1 == null || point1.Latitude == 0)
+                return 0.0;
+            else
+                return new LatLng(point1).DistanceMiles(GetCentroid(HubProcessor.Instance.listofPolyVertices.Where(c => c.ZoneId == ZoneId).ToList()));
+
+
+
+        }
+
+        public static DotNetCoords.LatLng GetCentroid(List<Gen_Zone_PolyVertice> poly)
+        {
+            double? accumulatedArea = 0.0f;
+            double? centerX = 0.0f;
+            double? centerY = 0.0f;
+
+            for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++)
+            {
+                double? temp = poly[i].Latitude * poly[j].Longitude - poly[j].Latitude * poly[i].Longitude;
+                accumulatedArea += temp;
+                centerX += (poly[i].Latitude + poly[j].Latitude) * temp;
+                centerY += (poly[i].Longitude + poly[j].Longitude) * temp;
+            }
+
+            //if (Math.Abs(accumulatedArea) < 1E-7f)
+            //    return null;  // Avoid division by zero
+
+            accumulatedArea *= 3f;
+            //   return new  LatLng(Convert.ToDouble ( centerX / accumulatedArea), Convert.ToDouble(centerY / accumulatedArea));
+
+            try
+            {
+                return new LatLng(Convert.ToDouble(centerX / accumulatedArea), Convert.ToDouble(centerY / accumulatedArea));
+
+
+            }
+            catch
+            {
+
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\getcentroid_exception.txt", DateTime.Now + ": centerx=" + centerX.ToStr() + ",centery=" + centerY + ",accumulatedArea:" + accumulatedArea + Environment.NewLine);
+
+                }
+                catch
+                {
+
+                }
+
+
+                return new LatLng(0.00, 0.00);
+
+
+            }
+        }
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
