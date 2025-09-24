@@ -102,6 +102,7 @@ namespace SignalRHub
         public static string EnableBidDetails = "0";
         public static string EnableUpcomingJob = "0";
         public static string UpcomingJobHour = "5";
+        public static string ShowBidList = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -663,6 +664,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableBidDetails", SetVal = "0", description = "EnableBidDetails"  },
                              new AppSetting { SetKey = "EnableUpcomingJob", SetVal = "0", description = "EnableUpcomingJob"  },
                              new AppSetting { SetKey = "UpcomingJobHour", SetVal = "5", description = "UpcomingJobHour"  },
+                             new AppSetting { SetKey = "ShowBidList", SetVal = "0", description = "ShowBidList"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1524,6 +1526,10 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("UpcomingJobHour")))
                 {
                     UpcomingJobHour = GetAppSetting<string>("UpcomingJobHour").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("ShowBidList")))
+                {
+                    ShowBidList = GetAppSetting<string>("ShowBidList").ToStr();
                 }
 
 

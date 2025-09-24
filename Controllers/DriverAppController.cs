@@ -11711,6 +11711,8 @@ namespace SignalRHub
                         pda.EnableParkExtraStop = Global.EnableParkExtraStop;
                         pda.EnablePassengerChat = Global.EnablePassengerChat;
                         pda.EnablePickLocation = Global.EnablePickLocation;
+                        pda.EnableUpcomingJob = Global.EnableUpcomingJob;
+                        pda.ShowBidList = Global.ShowBidList;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
@@ -19779,6 +19781,107 @@ namespace SignalRHub
                 res.IsSuccess = false;
                 res.Message = ex.Message;
 
+            }
+
+            return res;
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("requestBidList")]
+        public ResponseData requestBidList(string mesg)
+        {
+            ResponseData res = new ResponseData();
+
+            try
+            {
+
+                string[] values = mesg.Split(new char[] { '=' });
+
+                int driverId = values[1].ToInt();
+                string[] arr = null;
+
+                string response = string.Empty;
+
+                try
+                {
+
+                    File.AppendAllText(physicalPath + "\\" + "requestBidList.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                }
+                catch
+                {
+
+
+                }
+
+
+
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+                    arr = db.ExecuteQuery<stp_getbiddingjobsfulldetailsResult>("exec stp_getbiddingjobsfulldetails {0}", driverId)
+                    .OrderBy(c => c.PickupDateTime)
+
+
+
+
+                  .Select(args => (args.zoneid.ToInt() + "<<" + (args.zonename.ToStr().Trim().Length > 0 ? args.zonename : " - ") + "<<" + "0" + "<<" + args.JobId + "<<" + string.Format("{0:dd/MM/yyyy HH:mm}", args.PickupDateTime) + "<<" + args.FromAddress + "<<" + args.ToAddress + "<<" + args.FareRate + "<<" + args.VehicleType))
+
+                    .ToArray<string>();
+                }
+
+
+                ////
+                string firstRow = "";
+
+                if (arr != null && arr.Count() > 0)
+                {
+                    firstRow = arr[0] + "<<" + "showzonename=0" + "<<" + "showpickupdatetime=1" + "<<" + "showpickup=1" + "<<" + "showdropoff=1" + "<<" + "showfares=1" + "<<" + "showvehicle=1" +
+                        "<<" + "0";
+
+                    arr[0] = firstRow;
+
+                }
+
+
+
+
+
+                if (arr != null)
+                {
+                    response = string.Join(">>", arr);
+
+
+                }
+
+
+
+                res.Data = response;
+                res.IsSuccess = true;
+                res.Message = "success";
+
+
+
+            }
+            catch (Exception ex)
+            {
+
+                try
+                {
+
+                    res.Data = null;
+                    res.IsSuccess = false;
+                    res.Message = ex.Message;
+
+                    File.AppendAllText(physicalPath + "\\" + "requestBidList_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + " ,exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+
+                }
             }
 
             return res;

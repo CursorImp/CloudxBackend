@@ -112,6 +112,7 @@ namespace SignalRHub
         public string EnableParkExtraStop = "";
         public string EnablePassengerChat = "";
         public string EnableUpcomingJob = "";
+        public string ShowBidList = "";
 
     }
 }
