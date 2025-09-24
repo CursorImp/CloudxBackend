@@ -111,6 +111,7 @@ namespace SignalRHub
         public string EnableWaitingOnAddStop = "";
         public string EnableParkExtraStop = "";
         public string EnablePassengerChat = "";
+        public string EnableUpcomingJob = "";
 
     }
 }

@@ -1573,6 +1573,7 @@ namespace SignalRHub
                         pda.DriverPay = Global.DriverPay;
                         pda.enableCallOffice = Global.enableCallOffice;
                         pda.isRingback = Global.enableRingBack;
+                        pda.EnableUpcomingJob = Global.EnableUpcomingJob;
                         pda.SyncBookingHistory = "1";
                    //     pda.EnableWaitingAfterArrive = "1";
                         // new 598
