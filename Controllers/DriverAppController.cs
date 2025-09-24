@@ -8235,6 +8235,14 @@ namespace SignalRHub
             string response = string.Empty;
             try
             {
+                int bidDetails = 0;
+                try
+                {
+                    bidDetails = (!string.IsNullOrEmpty(Global.EnableBidDetails) ? Global.EnableBidDetails.ToInt() : 0);
+                }
+                catch
+                {
+                }
                 //
                 //try
                 //{
@@ -8394,14 +8402,14 @@ namespace SignalRHub
 
                         if (driverPlotRow != null)
                         {
-                            list.Add(new ClsPlotBidding { ZoneName = driverPlotRow.ZoneName, Drivers = driverPlotRow.Drivers.ToInt(), J15 = driverPlotRow.ExpiryJobs1.ToInt(), J30 = driverPlotRow.ExpiryJobs2.ToInt(), BidDetails = 1, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
+                            list.Add(new ClsPlotBidding { ZoneName = driverPlotRow.ZoneName, Drivers = driverPlotRow.Drivers.ToInt(), J15 = driverPlotRow.ExpiryJobs1.ToInt(), J30 = driverPlotRow.ExpiryJobs2.ToInt(), BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
 
                         }
                         else
                         {
 
-                            list.Add(new ClsPlotBidding { ZoneName = "-", Drivers = 0, J15 = 0, J30 = 0, BidDetails = 1, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
+                            list.Add(new ClsPlotBidding { ZoneName = "-", Drivers = 0, J15 = 0, J30 = 0, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
                         }
 
@@ -8453,13 +8461,13 @@ namespace SignalRHub
 
                                     item2.ZoneId = item.zoneid.ToInt();
                                     item2.Bid = item.Jobs;
-                                    item2.BidDetails = 1;
+                                    item2.BidDetails = bidDetails;
                                     item2.Rank = rank;
                                     item2.DriverWorkStatus = statusName;
-                                    item2.Distance=0.0;
+                                    item2.Distance = 0.0;
                                 }
                                 else
-                                    list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = 1, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
+                                    list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
 
 
@@ -8556,9 +8564,11 @@ namespace SignalRHub
             string response = string.Empty;
             try
             {
+                int bidDetails = 0;
                 //
                 try
                 {
+                    bidDetails = (!string.IsNullOrEmpty(Global.EnableBidDetails) ? Global.EnableBidDetails.ToInt() : 0);
                     File.AppendAllText(physicalPath + "\\requestPlotsBiddingApi.txt", DateTime.Now + ": datavalue=" + mesg + Environment.NewLine);
 
                 }
@@ -8685,7 +8695,7 @@ namespace SignalRHub
 
                         if (driverPlotRow != null)
                         {
-                            list.Add(new ClsPlotBidding { ZoneName = driverPlotRow.ZoneName, Drivers = driverPlotRow.Drivers.ToInt(), J15 = driverPlotRow.ExpiryJobs1.ToInt(), J30 = driverPlotRow.ExpiryJobs2.ToInt(), BidDetails = 0, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
+                            list.Add(new ClsPlotBidding { ZoneName = driverPlotRow.ZoneName, Drivers = driverPlotRow.Drivers.ToInt(), J15 = driverPlotRow.ExpiryJobs1.ToInt(), J30 = driverPlotRow.ExpiryJobs2.ToInt(), BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
                         }
                         else
@@ -8693,7 +8703,7 @@ namespace SignalRHub
 
                             if (statusId != null)
                             {
-                                list.Add(new ClsPlotBidding { ZoneName = "-", Drivers = 0, J15 = 0, J30 = 0, BidDetails = 0, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
+                                list.Add(new ClsPlotBidding { ZoneName = "-", Drivers = 0, J15 = 0, J30 = 0, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
                             }
                         }
@@ -8748,14 +8758,14 @@ namespace SignalRHub
 
                                 item2.ZoneId = item.zoneid.ToInt();
                                 item2.Bid = item.Jobs;
-                                item2.BidDetails = 0;
+                                item2.BidDetails = bidDetails;
                                 item2.Rank = rank;
                                 item2.DriverWorkStatus = statusName;
                                 //   item2.OrderNo = item.OrderNo;
                                 item2.Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt());
                             }
                             else
-                                list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = 0, Rank = rank, DriverWorkStatus = statusName, Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt()) });
+                                list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt()) });
 
 
                             //
