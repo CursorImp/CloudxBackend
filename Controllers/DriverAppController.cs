@@ -47,6 +47,7 @@ namespace SignalRHub
     public class DriverAppController : ApiController
     {
 
+        private bool IsDriverBidding = false;
         private bool LoginDrvOnExpiredDoc = false;
         string physicalPath = AppContext.BaseDirectory;
         string physicalPathSyslogfolder = AppContext.BaseDirectory + "\\logs\\systemlogs\\";
@@ -10351,7 +10352,6 @@ namespace SignalRHub
         public ResponseData requestdriverJobBid(string mesg)
         {
             // byte[] inputBuffer = Encoding.UTF8.GetBytes(mesg);
-
             ResponseData res = new ResponseData();
             try
             {
@@ -10361,7 +10361,11 @@ namespace SignalRHub
             {
 
             }
-
+            if (IsDriverBidding == true)
+            {
+                res.Data = "failed:";
+                return res;
+            }
             string dataValue = mesg;
             dataValue = dataValue.Trim();
             ClsDriverBid objAction = new JavaScriptSerializer().Deserialize<ClsDriverBid>(dataValue);
@@ -10391,7 +10395,7 @@ namespace SignalRHub
                     //{
                     Taxi_Model.Booking objBooking = db.Bookings.FirstOrDefault(c => c.Id == jobId);
 
-                    if (objBooking != null)
+                    if (objBooking != null && objBooking.BookingStatusId == Enums.BOOKINGSTATUS.WAITING)
                     {
                         string vehAttributes = objBooking.Fleet_VehicleType.AttributeValues.ToStr().Trim();
 
@@ -10404,182 +10408,188 @@ namespace SignalRHub
                         }
                         else
                         {
-                            jobId = objBooking.Id;
+                            //    jobId = objBooking.Id;
 
-                            string journey = "O/W";
-                            if (objBooking.JourneyTypeId.ToInt() == 2)
-                            {
-                                journey = "Return";
-                            }
-                            else if (objBooking.JourneyTypeId.ToInt() == 3)
-                            {
-                                journey = "W/R";
-                            }
+                            //    string journey = "O/W";
+                            //    if (objBooking.JourneyTypeId.ToInt() == 2)
+                            //    {
+                            //        journey = "Return";
+                            //    }
+                            //    else if (objBooking.JourneyTypeId.ToInt() == 3)
+                            //    {
+                            //        journey = "W/R";
+                            //    }
 
-                            string IsExtra = (objBooking.CompanyId != null || objBooking.FromLocTypeId == Enums.LOCATION_TYPES.AIRPORT || objBooking.ToLocTypeId == Enums.LOCATION_TYPES.AIRPORT) ? "1" : "0";
-                            int i = 0;
-                            string viaP = "";
+                            //    string IsExtra = (objBooking.CompanyId != null || objBooking.FromLocTypeId == Enums.LOCATION_TYPES.AIRPORT || objBooking.ToLocTypeId == Enums.LOCATION_TYPES.AIRPORT) ? "1" : "0";
+                            //    int i = 0;
+                            //    string viaP = "";
 
-                            if (objBooking.Booking_ViaLocations.Count > 0)
-                            {
-                                viaP = "(" + (++i).ToStr() + ")" + string.Join(Environment.NewLine + "(" + (++i).ToStr() + ")", objBooking.Booking_ViaLocations.Select(c => c.ViaLocValue.ToStr()).ToArray<string>());
-                            }
+                            //    if (objBooking.Booking_ViaLocations.Count > 0)
+                            //    {
+                            //        viaP = "(" + (++i).ToStr() + ")" + string.Join(Environment.NewLine + "(" + (++i).ToStr() + ")", objBooking.Booking_ViaLocations.Select(c => c.ViaLocValue.ToStr()).ToArray<string>());
+                            //    }
 
-                            string specialRequirements = objBooking.SpecialRequirements.ToStr();
-                            if (objBooking.SecondaryPaymentTypeId != null && objBooking.CashFares.ToDecimal() > 0)
-                            {
-                                specialRequirements += " , Additional Cash Payment : " + objBooking.CashFares.ToDecimal();
-                            }
+                            //    string specialRequirements = objBooking.SpecialRequirements.ToStr();
+                            //    if (objBooking.SecondaryPaymentTypeId != null && objBooking.CashFares.ToDecimal() > 0)
+                            //    {
+                            //        specialRequirements += " , Additional Cash Payment : " + objBooking.CashFares.ToDecimal();
+                            //    }
 
-                            decimal pdafares = objBooking.GetType().GetProperty(Instance.objPolicy.PDAFaresPropertyName.ToStr().Trim()).GetValue(objBooking, null).ToDecimal();
-
-
-                            string mobileNo = objBooking.CustomerMobileNo.ToStr();
-                            string telNo = objBooking.CustomerPhoneNo.ToStr();
-
-                            if (string.IsNullOrEmpty(mobileNo) && !string.IsNullOrEmpty(telNo))
-                            {
-                                mobileNo = telNo;
-                            }
-                            else if (!string.IsNullOrEmpty(mobileNo) && !string.IsNullOrEmpty(telNo))
-                            {
-                                mobileNo += "/" + telNo;
-                            }
+                            //    decimal pdafares = objBooking.GetType().GetProperty(Instance.objPolicy.PDAFaresPropertyName.ToStr().Trim()).GetValue(objBooking, null).ToDecimal();
 
 
-                            string showFaresValue = objBooking.Gen_PaymentType.ShowFaresOnPDA.ToStr().Trim();
+                            //    string mobileNo = objBooking.CustomerMobileNo.ToStr();
+                            //    string telNo = objBooking.CustomerPhoneNo.ToStr();
 
-                            string showFares = ",\"ShowFares\":\"" + showFaresValue + "\"";
-                            string showSummary = ",\"ShowSummary\":\"" + showFaresValue + "\"";
-                            //string showSummary = string.Empty;
-
-                            string agentDetails = string.Empty;
-                            string parkingandWaiting = string.Empty;
-                            if (objBooking.CompanyId != null)
-                            {
-                                agentDetails = ",\"AgentFees\":\"" + String.Format("{0:0.00}", objBooking.AgentCommission + objBooking.ServiceCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal()) + "\"";
-
-                                parkingandWaiting = ",\"Parking\":\"" + string.Format("{0:0.00}", objBooking.ParkingCharges) + "\",\"Waiting\":\"" + String.Format("{0:0.00}", objBooking.WaitingCharges) + "\"";
-                            }
-                            else
-                            {
-                                agentDetails = ",\"AgentFees\":\"" + String.Format("{0:0.00}", objBooking.ServiceCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal()) + "\"";
-
-                                parkingandWaiting = ",\"Parking\":\"" + string.Format("{0:0.00}", objBooking.CongtionCharges) + "\",\"Waiting\":\"" + String.Format("{0:0.00}", objBooking.MeetAndGreetCharges) + "\"";
-                                //
-                            }
-
-                            string fromAddress = objBooking.FromAddress.ToStr().Trim();
-                            string toAddress = objBooking.ToAddress.ToStr().Trim();
-
-                            if (objBooking.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE || objBooking.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
-                            {
-                                fromAddress = objBooking.FromStreet.ToStr() + " " + objBooking.FromAddress.ToStr();
-
-                            }
-
-                            if (objBooking.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE || objBooking.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
-                            {
-                                toAddress = objBooking.ToStreet.ToStr() + " " + objBooking.ToAddress.ToStr();
-                            }
-
-                            string paymentType = objBooking.Gen_PaymentType.PaymentCategoryId == null ? objBooking.Gen_PaymentType.DefaultIfEmpty().PaymentType.ToStr()
-                                                          : objBooking.Gen_PaymentType.Gen_PaymentCategory.CategoryName.ToStr();
-
-                            string companyName = string.Empty;
+                            //    if (string.IsNullOrEmpty(mobileNo) && !string.IsNullOrEmpty(telNo))
+                            //    {
+                            //        mobileNo = telNo;
+                            //    }
+                            //    else if (!string.IsNullOrEmpty(mobileNo) && !string.IsNullOrEmpty(telNo))
+                            //    {
+                            //        mobileNo += "/" + telNo;
+                            //    }
 
 
+                            //    string showFaresValue = objBooking.Gen_PaymentType.ShowFaresOnPDA.ToStr().Trim();
 
+                            //    string showFares = ",\"ShowFares\":\"" + showFaresValue + "\"";
+                            //    string showSummary = ",\"ShowSummary\":\"" + showFaresValue + "\"";
+                            //    //string showSummary = string.Empty;
 
-                            if (objBooking.CompanyId != null)
-                                companyName = objBooking.Gen_Company.DefaultIfEmpty().CompanyName.ToStr();
+                            //    string agentDetails = string.Empty;
+                            //    string parkingandWaiting = string.Empty;
+                            //    if (objBooking.CompanyId != null)
+                            //    {
+                            //        agentDetails = ",\"AgentFees\":\"" + String.Format("{0:0.00}", objBooking.AgentCommission + objBooking.ServiceCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal()) + "\"";
 
-                            string pickUpPlot = "";
-                            string dropOffPlot = "";
+                            //        parkingandWaiting = ",\"Parking\":\"" + string.Format("{0:0.00}", objBooking.ParkingCharges) + "\",\"Waiting\":\"" + String.Format("{0:0.00}", objBooking.WaitingCharges) + "\"";
+                            //    }
+                            //    else
+                            //    {
+                            //        agentDetails = ",\"AgentFees\":\"" + String.Format("{0:0.00}", objBooking.ServiceCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal()) + "\"";
 
-                            pickUpPlot = objBooking.ZoneId != null ? "<<<" + objBooking.Gen_Zone1.DefaultIfEmpty().ZoneName.ToStr() : "";
-                            dropOffPlot = objBooking.DropOffZoneId != null ? "<<<" + objBooking.Gen_Zone.DefaultIfEmpty().ZoneName.ToStr() : "";
+                            //        parkingandWaiting = ",\"Parking\":\"" + string.Format("{0:0.00}", objBooking.CongtionCharges) + "\",\"Waiting\":\"" + String.Format("{0:0.00}", objBooking.MeetAndGreetCharges) + "\"";
+                            //        //
+                            //    }
 
+                            //    string fromAddress = objBooking.FromAddress.ToStr().Trim();
+                            //    string toAddress = objBooking.ToAddress.ToStr().Trim();
 
-                            response = "PreJobId:" + "{ \"JobId\" :\"" + objBooking.Id.ToStr() +
-                         "\", \"Pickup\":\"" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? objBooking.FromDoorNo + "-" + fromAddress + pickUpPlot : fromAddress + pickUpPlot) +
-                         "\", \"Destination\":\"" + (!string.IsNullOrEmpty(objBooking.ToDoorNo) ? objBooking.ToDoorNo + "-" + toAddress + dropOffPlot : toAddress + dropOffPlot) + "\"," +
-                         "\"PickupDateTime\":\"" + string.Format("{0:dd/MM/yyyy   HH:mm}", objBooking.PickupDateTime) + "\"" +
-                         ",\"Cust\":\"" + objBooking.CustomerName + "\",\"Mob\":\"" + mobileNo + " " + "\",\"Fare\":\"" + string.Format("{0:0.00}", drvPrice) + "\",\"Vehicle\":\"" + objBooking.Fleet_VehicleType.VehicleType + "\",\"Account\":\"" + companyName + " " + "\"" +
-                           ",\"Lug\":\"" + objBooking.NoofLuggages.ToInt() + "\",\"Passengers\":\"" + objBooking.NoofPassengers.ToInt() + "\",\"Journey\":\"" + journey + "\",\"Payment\":\"" + paymentType + "\",\"Special\":\"" + specialRequirements + " " + "\",\"Extra\":\"" + IsExtra + "\",\"Via\":\"" + viaP + " " + "\"" +
-                        parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", drvPrice) + "\"" +
-                        agentDetails +
-                           ",\"Did\":\"" + driverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + " }";
+                            //    if (objBooking.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE || objBooking.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                            //    {
+                            //        fromAddress = objBooking.FromStreet.ToStr() + " " + objBooking.FromAddress.ToStr();
 
-                            //
-                            if (specialRequirements.Contains("\r\n") == false)
-                            {
-                                if (response.Contains("\r\n"))
-                                {
-                                    response = response.Replace("\r\n", " ").Trim();
-                                }
-                                else
-                                {
-                                    if (response.Contains("\n"))
-                                    {
-                                        response = response.Replace("\n", " ").Trim();
-                                    }
-                                }
-                            }
-                            if (response.Contains("&"))
-                            {
-                                response = response.Replace("&", "And");
-                            }
+                            //    }
 
-                            if (response.Contains(">"))
-                                response = response.Replace(">", " ");
+                            //    if (objBooking.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE || objBooking.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                            //    {
+                            //        toAddress = objBooking.ToStreet.ToStr() + " " + objBooking.ToAddress.ToStr();
+                            //    }
 
-                            if (response.Contains("="))
-                                response = response.Replace("=", " ");
+                            //    string paymentType = objBooking.Gen_PaymentType.PaymentCategoryId == null ? objBooking.Gen_PaymentType.DefaultIfEmpty().PaymentType.ToStr()
+                            //                                  : objBooking.Gen_PaymentType.Gen_PaymentCategory.CategoryName.ToStr();
+
+                            //    string companyName = string.Empty;
 
 
 
 
-                            DateTime elapedTime = DateTime.Now.AddSeconds(Instance.objPolicy.BiddingElapsedTime.ToInt());
+                            //    if (objBooking.CompanyId != null)
+                            //        companyName = objBooking.Gen_Company.DefaultIfEmpty().CompanyName.ToStr();
 
-                            if (Global.listofDrvBidding == null)
-                                Global.listofDrvBidding = new List<ClsDriverBid>();
+                            //    string pickUpPlot = "";
+                            //    string dropOffPlot = "";
 
-                            ClsDriverBid obj = new ClsDriverBid();
-                            obj.JobMessage = response;
-                            obj.DriverId = driverId;
-                            obj.JobZoneId = zoneId;
-                            obj.JobId = jobId;
-                            obj.DriverPrice = drvPrice;
-                            obj.BiddingDateTime = DateTime.Now;
-                            obj.BiddingType = Instance.objPolicy.BiddingType.ToInt();
+                            //    pickUpPlot = objBooking.ZoneId != null ? "<<<" + objBooking.Gen_Zone1.DefaultIfEmpty().ZoneName.ToStr() : "";
+                            //    dropOffPlot = objBooking.DropOffZoneId != null ? "<<<" + objBooking.Gen_Zone.DefaultIfEmpty().ZoneName.ToStr() : "";
 
-                            var objFirstBidJob = Global.listofDrvBidding.FirstOrDefault(c => c.JobId == jobId);
 
-                            if (objFirstBidJob != null)
-                            {
-                                elapedTime = objFirstBidJob.ElapsedTime.ToDateTime();
-                            }
+                            //    response = "PreJobId:" + "{ \"JobId\" :\"" + objBooking.Id.ToStr() +
+                            // "\", \"Pickup\":\"" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? objBooking.FromDoorNo + "-" + fromAddress + pickUpPlot : fromAddress + pickUpPlot) +
+                            // "\", \"Destination\":\"" + (!string.IsNullOrEmpty(objBooking.ToDoorNo) ? objBooking.ToDoorNo + "-" + toAddress + dropOffPlot : toAddress + dropOffPlot) + "\"," +
+                            // "\"PickupDateTime\":\"" + string.Format("{0:dd/MM/yyyy   HH:mm}", objBooking.PickupDateTime) + "\"" +
+                            // ",\"Cust\":\"" + objBooking.CustomerName + "\",\"Mob\":\"" + mobileNo + " " + "\",\"Fare\":\"" + string.Format("{0:0.00}", drvPrice) + "\",\"Vehicle\":\"" + objBooking.Fleet_VehicleType.VehicleType + "\",\"Account\":\"" + companyName + " " + "\"" +
+                            //   ",\"Lug\":\"" + objBooking.NoofLuggages.ToInt() + "\",\"Passengers\":\"" + objBooking.NoofPassengers.ToInt() + "\",\"Journey\":\"" + journey + "\",\"Payment\":\"" + paymentType + "\",\"Special\":\"" + specialRequirements + " " + "\",\"Extra\":\"" + IsExtra + "\",\"Via\":\"" + viaP + " " + "\"" +
+                            //parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", drvPrice) + "\"" +
+                            //agentDetails +
+                            //   ",\"Did\":\"" + driverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + " }";
 
-                            obj.ElapsedTime = elapedTime;
+                            //    //
+                            //    if (specialRequirements.Contains("\r\n") == false)
+                            //    {
+                            //        if (response.Contains("\r\n"))
+                            //        {
+                            //            response = response.Replace("\r\n", " ").Trim();
+                            //        }
+                            //        else
+                            //        {
+                            //            if (response.Contains("\n"))
+                            //            {
+                            //                response = response.Replace("\n", " ").Trim();
+                            //            }
+                            //        }
+                            //    }
+                            //    if (response.Contains("&"))
+                            //    {
+                            //        response = response.Replace("&", "And");
+                            //    }
 
-                            Global.listofDrvBidding.Add(obj);
+                            //    if (response.Contains(">"))
+                            //        response = response.Replace(">", " ");
 
+                            //    if (response.Contains("="))
+                            //        response = response.Replace("=", " ");
+
+
+
+
+                            //    DateTime elapedTime = DateTime.Now.AddSeconds(Instance.objPolicy.BiddingElapsedTime.ToInt());
+
+                            //    if (Global.listofDrvBidding == null)
+                            //        Global.listofDrvBidding = new List<ClsDriverBid>();
+
+                            //    ClsDriverBid obj = new ClsDriverBid();
+                            //    obj.JobMessage = response;
+                            //    obj.DriverId = driverId;
+                            //    obj.JobZoneId = zoneId;
+                            //    obj.JobId = jobId;
+                            //    obj.DriverPrice = drvPrice;
+                            //    obj.BiddingDateTime = DateTime.Now;
+                            //    obj.BiddingType = Instance.objPolicy.BiddingType.ToInt();
+
+                            //    var objFirstBidJob = Global.listofDrvBidding.FirstOrDefault(c => c.JobId == jobId);
+
+                            //    if (objFirstBidJob != null)
+                            //    {
+                            //        elapedTime = objFirstBidJob.ElapsedTime.ToDateTime();
+                            //    }
+
+                            //    obj.ElapsedTime = elapedTime;
+                            ////objBooking.BookingStatusId = Enums.BOOKINGSTATUS.PENDING_START;
+                            ////objBooking.DriverId = driverId;
+                            ////db.SubmitChanges();
+                            //Global.listofDrvBidding.Add(obj);
+                            IsDriverBidding = true;
+                            General.OnDespatching(HubProcessor.Instance.objPolicy, objBooking, db.Fleet_Drivers.FirstOrDefault(c => c.Id == driverId), 3, false, "system");
                             response = "Your Bidding Request has been sent successfully!:";
-
-                            General.BroadCastMessage("**driver bid>>" + jobId + ">>" + driverId);
+                            IsDriverBidding = false;
+                            //General.BroadCastMessage("**refresh required dashboard");
+                            //General.BroadCastMessage("**driver bid>>" + jobId + ">>" + driverId);
 
                         }
                     }
                     else
                     {
                         response = "failed:";
+                        IsDriverBidding = false;
                     }
                     //  }
                 }
             }
             catch (Exception ex)
             {
+                IsDriverBidding = false;
                 try
                 {
                     File.AppendAllText(physicalPath + "\\requestdriverjobbid_exception.txt", DateTime.Now.ToStr() + ":" + response + ":" + dataValue.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
