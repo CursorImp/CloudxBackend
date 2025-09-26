@@ -665,6 +665,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableUpcomingJob", SetVal = "0", description = "EnableUpcomingJob"  },
                              new AppSetting { SetKey = "UpcomingJobHour", SetVal = "5", description = "UpcomingJobHour"  },
                              new AppSetting { SetKey = "ShowBidList", SetVal = "0", description = "ShowBidList"  },
+                             new AppSetting { SetKey = "EnableQuotedOnlineBooking", SetVal = "0", description = "EnableQuotedOnlineBooking"  },
                         };
 
                 using (var db = new TaxiDataContext())
