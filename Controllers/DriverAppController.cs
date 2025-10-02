@@ -1,31 +1,30 @@
 ﻿using DotNetCoords;
-
+using SignalRHub.Classes;
+using SignalRHub.Classes.KonnectSupplier;
+using SMSGateway;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Security.Claims;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Script.Serialization;
+using System.Xml;
 using Taxi_BLL;
 using Taxi_Model;
 using Utils;
-
-using System.Text;
-using System.Security.Claims;
-using System.Drawing;
-using System.Net;
-using System.Threading;
-using System.Data;
-using System.Xml;
-using System.Configuration;
-using SignalRHub.Classes;
-using System.Net.Http;
-using SignalRHub.Classes.KonnectSupplier;
-using System.Threading.Tasks;
 
 namespace SignalRHub
 {
@@ -48,6 +47,7 @@ namespace SignalRHub
     public class DriverAppController : ApiController
     {
 
+        private bool IsDriverBidding = false;
         private bool LoginDrvOnExpiredDoc = false;
         string physicalPath = AppContext.BaseDirectory;
         string physicalPathSyslogfolder = AppContext.BaseDirectory + "\\logs\\systemlogs\\";
@@ -834,7 +834,15 @@ namespace SignalRHub
 
                     string[] values = json.Data.ToStr().Split(new char[] { '=' });
 
-                    ResponseData data = requestPlotsBidding(json.Data.ToStr());
+                    ResponseData data = new ResponseData();
+                    if (Global.SortPlotByNearestOnPda == "1")
+                    {
+                        data = requestPlotsBiddingByNearestPlot(json.Data.ToStr());
+                    }
+                    else
+                    {
+                        data = requestPlotsBidding(json.Data.ToStr());
+                    }
 
 
                     //try
@@ -2129,8 +2137,16 @@ namespace SignalRHub
 
 
 
-                ResponseData data = requestPlotsBidding(req.PlotBidding.ToStr());
-
+                //ResponseData data = requestPlotsBidding(req.PlotBidding.ToStr());
+                ResponseData data = new ResponseData();
+                if (Global.SortPlotByNearestOnPda == "1")
+                {
+                    data = requestPlotsBiddingByNearestPlot(req.PlotBidding.ToStr());
+                }
+                else
+                {
+                    data = requestPlotsBidding(req.PlotBidding.ToStr());
+                }
 
                 if (data != null && data.Data.ToStr() != "")
                 {
@@ -4451,8 +4467,10 @@ namespace SignalRHub
 
             foreach (Match match in mactches)
             {
-                string tURL = MakeTinyUrl(match.Value);
-                txt = txt.Replace(match.Value, tURL);
+                //string tURL = MakeTinyUrl(match.Value);
+                //txt = txt.Replace(match.Value, tURL);
+                string tURL = General.CreateShortUrlCT(match.Value).GetAwaiter().GetResult();
+                if (string.IsNullOrEmpty(tURL)) { tURL = MakeTinyUrl(match.Value); }
             }
 
             return txt;
@@ -8079,6 +8097,328 @@ namespace SignalRHub
             return res;
         }
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("requestupcomingjoblist")] 
+        public ResponseData requestupcomingjoblist(string mesg)
+        {
+            try
+            {
+
+                File.AppendAllText(physicalPath + "\\" + "requestupcomingjoblist.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", json: " + mesg.ToString() + Environment.NewLine);
+            }
+            catch
+            {
+
+
+            }
+
+            ResponseData res = new ResponseData();
+            try
+            {
+                JobActionEx objAction = new JavaScriptSerializer().Deserialize<JobActionEx>(mesg.ToStr());
+
+                int driverId = int.Parse(objAction.DrvId);
+                string driverNo = objAction.DrvNo;
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    db.CommandTimeout = 5;
+                    var bookings = db.Bookings.Where(c => c.DriverId == null && c.BookingStatusId == Enums.BOOKINGSTATUS.WAITING && c.PickupDateTime >= DateTime.Now && c.PickupDateTime <= DateTime.Now.AddHours(Global.UpcomingJobHour.ToInt()))
+                        .OrderBy(c => c.PickupDateTime).ToList();
+
+
+                    StringBuilder s = new StringBuilder();
+                    foreach (var objBooking in bookings)
+
+                    {
+                        if (objBooking != null)
+                        {
+
+                            string customerMobileNo = objBooking.CustomerMobileNo.ToStr().Trim();
+
+                            string customerName = objBooking.CustomerName;
+
+                            string via = string.Join(",", objBooking.Booking_ViaLocations.Select(c => c.ViaLocValue.ToStr()).ToArray<string>());
+
+                            if (!string.IsNullOrEmpty(via.Trim()))
+                                via = "Via: " + via;
+
+                            string specialReq = objBooking.SpecialRequirements.ToStr().Trim();
+                            if (!string.IsNullOrEmpty(specialReq))
+                                specialReq = "Special Req: " + specialReq;
+
+
+
+
+                            string custNo = !string.IsNullOrEmpty(objBooking.CustomerMobileNo) ? objBooking.CustomerMobileNo : objBooking.CustomerPhoneNo;
+
+                            string paymentType = objBooking.Gen_PaymentType.PaymentCategoryId == null ? objBooking.Gen_PaymentType.DefaultIfEmpty().PaymentType.ToStr()
+                                     : objBooking.Gen_PaymentType.Gen_PaymentCategory.CategoryName.ToStr();
+
+                            string journey = "O/W";
+
+                            if (objBooking.JourneyTypeId.ToInt() == 3)
+                            {
+                                journey = "W/R";
+                            }
+
+
+                            string IsExtra = (objBooking.CompanyId != null || objBooking.FromLocTypeId == Enums.LOCATION_TYPES.AIRPORT || objBooking.ToLocTypeId == Enums.LOCATION_TYPES.AIRPORT) ? "1" : "0";
+                            int i = 1;
+                            string viaP = "";
+
+
+
+                            if (objBooking.Booking_ViaLocations.Count > 0)
+                            {
+
+                                viaP = string.Join(" * ", objBooking.Booking_ViaLocations.Select(c => "(" + i++.ToStr() + ")" + c.ViaLocValue.ToStr()).ToArray<string>());
+                            }
+
+
+                            string mobileNo = objBooking.CustomerMobileNo.ToStr();
+                            string telNo = objBooking.CustomerPhoneNo.ToStr();
+
+
+
+                            if (string.IsNullOrEmpty(mobileNo) && !string.IsNullOrEmpty(telNo))
+                            {
+                                mobileNo = telNo;
+                            }
+                            else if (!string.IsNullOrEmpty(mobileNo) && !string.IsNullOrEmpty(telNo))
+                            {
+                                mobileNo += "/" + telNo;
+                            }
+
+
+                            string pickUpPlot = "";
+                            string dropOffPlot = "";
+                            string companyName = string.Empty;
+
+
+
+
+                            if (objBooking.CompanyId != null)
+                                companyName = objBooking.Gen_Company.DefaultIfEmpty().CompanyName.ToStr();
+
+
+
+
+
+                            pickUpPlot = objBooking.ZoneId != null ? "<<<" + objBooking.Gen_Zone1.ZoneName.ToStr() : "";
+                            dropOffPlot = objBooking.DropOffZoneId != null ? "<<<" + objBooking.Gen_Zone.ZoneName.ToStr() : "";
+
+
+
+
+                            string fromdoorno = objBooking.FromDoorNo.ToStr().Trim();
+                            if (fromdoorno.Length > 0 && fromdoorno.WordCount() > 2 && fromdoorno.Contains(" "))
+                            {
+
+                                try
+                                {
+
+                                    fromdoorno = fromdoorno.Replace(" ", "-");
+                                }
+                                catch
+                                {
+
+
+                                }
+
+                            }
+
+                            string fromAddress = objBooking.FromAddress.ToStr().Trim();
+                            string toAddress = objBooking.ToAddress.ToStr().Trim();
+
+                            if (objBooking.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE || objBooking.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                            {
+                                fromAddress = objBooking.FromStreet.ToStr() + " " + objBooking.FromAddress.ToStr();
+
+                            }
+
+                            if (objBooking.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE || objBooking.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                            {
+                                toAddress = objBooking.ToStreet.ToStr() + " " + objBooking.ToAddress.ToStr();
+
+                            }
+
+
+                            //half card and cash
+                            string specialRequirements = objBooking.SpecialRequirements.ToStr();
+                            if (objBooking.SecondaryPaymentTypeId != null && objBooking.CashFares.ToDecimal() > 0)
+                            {
+
+                                specialRequirements += " , Additional Cash Payment : " + objBooking.CashFares.ToDecimal();
+                            }
+
+
+
+
+                            decimal pdafares = objBooking.GetType().GetProperty(HubProcessor.Instance.objPolicy.PDAFaresPropertyName.ToStr().Trim()).GetValue(objBooking, null).ToDecimal();
+
+
+                            string msg = string.Empty;
+
+
+
+
+                            string showFaresValue = objBooking.Gen_PaymentType.ShowFaresOnPDA.ToStr().Trim();
+
+                            string showFares = ",\"ShowFares\":\"" + showFaresValue + "\"";
+                            string showSummary = ",\"ShowSummary\":\"" + showFaresValue + "\"";
+
+                            string agentDetails = string.Empty;
+                            string parkingandWaiting = string.Empty;
+                            if (objBooking.CompanyId != null)
+                            {
+                                agentDetails = ",\"AgentFees\":\"" + String.Format("{0:0.00}", objBooking.AgentCommission) + "\"";
+                                parkingandWaiting = ",\"Parking\":\"" + string.Format("{0:0.00}", objBooking.ParkingCharges) + "\",\"Waiting\":\"" + String.Format("{0:0.00}", objBooking.WaitingCharges) + "\"";
+
+                            }
+                            else
+                            {
+
+                                parkingandWaiting = ",\"Parking\":\"" + string.Format("{0:0.00}", objBooking.CongtionCharges) + "\",\"Waiting\":\"" + String.Format("{0:0.00}", objBooking.MeetAndGreetCharges) + "\"";
+                                //
+
+                            }
+
+                            if (specialRequirements.ToStr().Contains("\""))
+                                specialRequirements = specialRequirements.ToStr().Replace("\"", "-").Trim();
+
+
+                            string toDoorNo = objBooking.ToDoorNo.ToStr().Trim();
+
+                            if (objBooking.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT && objBooking.JourneyTypeId.ToInt() == Enums.JOURNEY_TYPES.RETURN)
+                                toDoorNo = string.Empty;
+                            else if (toDoorNo.Length > 0)
+                                toDoorNo = toDoorNo + "-";
+
+
+                            string summary = string.Empty;
+
+                            List<ChargesSummary> listofSummary = new List<ChargesSummary>();
+
+                            listofSummary.Add(new ChargesSummary { label = "Fares", value = string.Format("{0:0.00}", objBooking.FareRate.ToDecimal()) });
+
+                            listofSummary.Add(new ChargesSummary { label = "Parking", value = string.Format("{0:0.00}", objBooking.CongtionCharges.ToDecimal()) });
+                            listofSummary.Add(new ChargesSummary { label = "Waiting", value = string.Format("{0:0.00}", objBooking.MeetAndGreetCharges.ToDecimal()) });
+                            listofSummary.Add(new ChargesSummary { label = "Extras", value = string.Format("{0:0.00}", objBooking.ExtraDropCharges.ToDecimal()) });
+                            listofSummary.Add(new ChargesSummary { label = "Fee", value = string.Format("{0:0.00}", objBooking.AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal() + objBooking.ServiceCharges.ToDecimal()) });
+
+                            summary = ",\"Summary\":" + Newtonsoft.Json.JsonConvert.SerializeObject(listofSummary);
+
+                            msg = "{ \"JobId\" :\"" + objBooking.Id +
+                                  "\", \"Pickup\":\"" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? fromdoorno + "-" + fromAddress + pickUpPlot : fromAddress + pickUpPlot) +
+                                    "\", \"Destination\":\"" + (toDoorNo + toAddress + dropOffPlot) + "\"," +
+                                  "\"PickupDateTime\":\"" + string.Format("{0:dd/MM/yyyy   HH:mm}", objBooking.PickupDateTime) + "\"" +
+                                  ",\"Cust\":\"" + objBooking.CustomerName + "\",\"Mob\":\"" + mobileNo + " " + "\",\"Fare\":\"" + pdafares + "\",\"Vehicle\":\"" + objBooking.Fleet_VehicleType.VehicleType + "\",\"Account\":\"" + companyName + " " + "\"" +
+                                 ",\"Lug\":\"" + objBooking.NoofLuggages.ToInt() + "\",\"Passengers\":\"" + objBooking.NoofPassengers.ToInt() + "\",\"Journey\":\"" + journey + "\",\"Payment\":\"" + paymentType + "\",\"Special\":\"" + specialRequirements + " " + "\",\"Extra\":\"" + IsExtra + "\",\"Via\":\"" + viaP + " " + "\"" +
+
+                               ",\"CompanyId\":\"" + objBooking.CompanyId.ToInt() + "\",\"SubCompanyId\":\"" + objBooking.SubcompanyId.ToInt() + "\",\"QuotedPrice\":\"" + (objBooking.IsQuotedPrice.ToBool() ? "1" : "0") + "\"" +
+
+
+                                 parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", objBooking.FareRate) + "\"" +
+                                   agentDetails +
+
+
+                                 ",\"Did\":\"" + driverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + summary + " }";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                            if (msg.Contains("\r\n"))
+                            {
+                                msg = msg.Replace("\r\n", " ").Trim();
+                            }
+                            else
+                            {
+                                if (msg.Contains("\n"))
+                                {
+                                    msg = msg.Replace("\n", " ").Trim();
+
+                                }
+
+                            }
+
+                            if (msg.Contains("&"))
+                            {
+                                msg = msg.Replace("&", "And");
+                            }
+
+                            if (msg.Contains(">"))
+                                msg = msg.Replace(">", " ");
+
+
+                            if (msg.Contains("="))
+                                msg = msg.Replace("=", " ");
+
+
+                            msg += ",";
+
+                            s.Append(msg);
+
+
+
+
+
+
+
+
+                        }
+
+                    }
+
+
+
+                    string resp = s.ToStr();
+
+                    if (resp.ToStr().Trim().EndsWith(","))
+                        resp = resp.Remove(resp.ToStr().LastIndexOf(","));
+
+                    if (resp.ToStr().Trim().Length > 10)
+                    {
+
+                        resp = "[" + resp + "]";
+
+                    }
+                    //
+
+
+
+                    //return resp;
+                    res.Data = resp;
+                    res.IsSuccess = true;
+                    res.Message = "";
+
+
+                    s = null;
+                    GC.Collect();
+
+                }
+            }
+            catch (Exception ex)
+            {
+                //return "exceptionoccurred";
+                res.Data = null;
+                res.IsSuccess = false;
+                res.Message = ex.Message;
+            }
+
+            return res;
+        }
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -8218,6 +8558,14 @@ namespace SignalRHub
             string response = string.Empty;
             try
             {
+                int bidDetails = 0;
+                try
+                {
+                    bidDetails = (!string.IsNullOrEmpty(Global.EnableBidDetails) ? Global.EnableBidDetails.ToInt() : 0);
+                }
+                catch
+                {
+                }
                 //
                 //try
                 //{
@@ -8377,14 +8725,14 @@ namespace SignalRHub
 
                         if (driverPlotRow != null)
                         {
-                            list.Add(new ClsPlotBidding { ZoneName = driverPlotRow.ZoneName, Drivers = driverPlotRow.Drivers.ToInt(), J15 = driverPlotRow.ExpiryJobs1.ToInt(), J30 = driverPlotRow.ExpiryJobs2.ToInt(), BidDetails = 1, Rank = rank, DriverWorkStatus = statusName });
+                            list.Add(new ClsPlotBidding { ZoneName = driverPlotRow.ZoneName, Drivers = driverPlotRow.Drivers.ToInt(), J15 = driverPlotRow.ExpiryJobs1.ToInt(), J30 = driverPlotRow.ExpiryJobs2.ToInt(), BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
 
                         }
                         else
                         {
 
-                            list.Add(new ClsPlotBidding { ZoneName = "-", Drivers = 0, J15 = 0, J30 = 0, BidDetails = 1, Rank = rank, DriverWorkStatus = statusName });
+                            list.Add(new ClsPlotBidding { ZoneName = "-", Drivers = 0, J15 = 0, J30 = 0, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
                         }
 
@@ -8436,12 +8784,13 @@ namespace SignalRHub
 
                                     item2.ZoneId = item.zoneid.ToInt();
                                     item2.Bid = item.Jobs;
-                                    item2.BidDetails = 1;
+                                    item2.BidDetails = bidDetails;
                                     item2.Rank = rank;
                                     item2.DriverWorkStatus = statusName;
+                                    item2.Distance = 0.0;
                                 }
                                 else
-                                    list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = 1, Rank = rank, DriverWorkStatus = statusName });
+                                    list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
 
 
@@ -8461,10 +8810,11 @@ namespace SignalRHub
                                 item2.J15 = item.ExpiryJobs1.ToInt();
                                 item2.J30 = item.ExpiryJobs2.ToInt();
                                 item2.DriverWorkStatus = statusName;
+                                item2.Distance = 0.0;
                             }
                             else
                             {
-                                list.Add(new ClsPlotBidding { ZoneName = item.ZoneName, Drivers = item.Drivers.ToInt(), J15 = item.ExpiryJobs1.ToInt(), J30 = item.ExpiryJobs2.ToInt(), Rank = rank, DriverWorkStatus = statusName });
+                                list.Add(new ClsPlotBidding { ZoneName = item.ZoneName, Drivers = item.Drivers.ToInt(), J15 = item.ExpiryJobs1.ToInt(), J30 = item.ExpiryJobs2.ToInt(), Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
 
 
                             }
@@ -8522,6 +8872,404 @@ namespace SignalRHub
             return data;
         }
 
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("requestPlotsBiddingByNearestPlot")]
+        public ResponseData requestPlotsBiddingByNearestPlot(string mesg)
+        {
+            ResponseData data = new ResponseData();
+
+            if (mesg.ToStr().Trim().Length == 0)
+                return null;
+            //
+            List<ClsPlotBidding> list = new List<ClsPlotBidding>();
+            string response = string.Empty;
+            try
+            {
+                int bidDetails = 0;
+                //
+                try
+                {
+                    bidDetails = (!string.IsNullOrEmpty(Global.EnableBidDetails) ? Global.EnableBidDetails.ToInt() : 0);
+                    File.AppendAllText(physicalPath + "\\requestPlotsBiddingApi.txt", DateTime.Now + ": datavalue=" + mesg + Environment.NewLine);
+
+                }
+                catch
+                {
+
+                }
+
+
+
+
+
+                string dataValue = mesg;
+                dataValue = dataValue.Trim();
+
+                string[] values = dataValue.Split(new char[] { '=' });
+
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    try
+                    {
+                        db.CommandTimeout = 4;
+
+                        int driverId = values[0].ToInt();
+
+                        string postedFrom = string.Empty;
+
+
+
+
+                        int? statusId = null;
+
+
+
+
+
+                        string statusName = "";
+
+
+                        if (values.Count() > 3 && ((values[3].ToStr().IsNumeric() && values[3].ToStr().ToDecimal() > 100) || (values[3].ToStr().ToLower() == "iphone")))
+                        {
+                            statusId = db.Fleet_DriverQueueLists.Where(c => c.DriverId == driverId && c.Status == true).Select(c => c.DriverWorkStatusId).FirstOrDefault();
+
+                            statusName = "Available";
+
+                        }
+
+
+
+                        if (statusId != null)
+                        {
+
+                            if (statusId == Enums.Driver_WORKINGSTATUS.ONBREAK)
+                                statusName = "OnBreak";
+
+                            else if (statusId == Enums.Driver_WORKINGSTATUS.FOJ)
+                                statusName = "FOJ";
+                            else if (statusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE)
+                                statusName = "PassengerOnBoard";
+                            else if (statusId == Enums.Driver_WORKINGSTATUS.ONROUTE)
+                                statusName = "ONROUTE";
+                            else if (statusId == Enums.Driver_WORKINGSTATUS.ARRIVED)
+                                statusName = "ARRIVED";
+                            else if (statusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR)
+                                statusName = "SoonToClear";
+                            else if (statusId == Enums.Driver_WORKINGSTATUS.SINBIN)
+                                statusName = "SINBIN";
+                        }
+
+                        var result = db.ExecuteQuery<stp_GetAreaPlotsByVehicleResultEx>("exec stp_GetAreaPlotsByVehicle_nearest {0},{1},{2}", driverId, Instance.objPolicy.PlotsJobExpiryValue1, Instance.objPolicy.PlotsJobExpiryValue2).ToList();
+
+                        int? driverZoneId = db.Fleet_Driver_Locations.Where(c => c.DriverId == driverId)
+                            .Select(a => a.ZoneId).FirstOrDefault();
+
+                        string driverZoneName = string.Empty;
+                        string rank = "";
+                        if (driverZoneId != null)
+                        {
+                            //
+                            try
+                            {
+                                driverZoneName = Instance.listOfZone.FirstOrDefault(c => c.Id == driverZoneId).Area;
+
+                                var objRank = db.ExecuteQuery<ClsDriverRank>("exec stp_getdriverrank {0},{1}", driverId, driverZoneId).FirstOrDefault();
+
+
+
+                                if (objRank == null)
+                                    rank = "-";
+                                else
+                                    rank = objRank.Rank.ToStr();
+                            }
+                            catch (Exception ex)
+                            {
+
+                            }
+                        }
+
+
+
+
+                        stp_GetAreaPlotsByVehicleResultEx driverPlotRow = null;
+                        if (driverZoneName.ToStr().Trim().Length > 0)
+                        {
+
+                            driverPlotRow = result.Where(c => c.ZoneName == driverZoneName).FirstOrDefault();
+                            if (driverPlotRow != null)
+                            {
+                                result.Remove(driverPlotRow);
+
+                            }
+                            else
+                            {
+                            }
+
+                        }
+
+                        LatLng DriverPlotPoint = null;
+
+                        if (driverZoneId.ToInt() > 0)
+                            DriverPlotPoint = GetCentroid(HubProcessor.Instance.listofPolyVertices.Where(c => c.ZoneId == driverZoneId).ToList());
+
+
+                        if (driverPlotRow != null)
+                        {
+                            list.Add(new ClsPlotBidding { ZoneName = driverPlotRow.ZoneName, Drivers = driverPlotRow.Drivers.ToInt(), J15 = driverPlotRow.ExpiryJobs1.ToInt(), J30 = driverPlotRow.ExpiryJobs2.ToInt(), BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
+
+                        }
+                        else
+                        {
+
+                            if (statusId != null)
+                            {
+                                list.Add(new ClsPlotBidding { ZoneName = "-", Drivers = 0, J15 = 0, J30 = 0, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
+
+                            }
+                        }
+
+
+
+
+
+
+                        var arr2 = (from a in db.ExecuteQuery<stp_getbiddingAvailablejobsResult>("exec stp_getbiddingjobs {0}", driverId)
+                             .Where(c => c.zonename != "")
+
+                                    select new
+
+                                    {
+                                        Distance = a.biddingradius > 0 && a.JobLatitude != null && a.JobLatitude != 0 ? new LatLng(a.latitude, a.longitude).DistanceMiles(new LatLng(Convert.ToDouble(a.JobLatitude), Convert.ToDouble(a.JobLongitude))) : 0,
+                                        a.zonename,
+                                        a.biddingradius,
+                                        a.zoneid,
+                                        //      a.OrderNo
+
+                                    }).Where(c => c.Distance <= c.biddingradius)
+                                    .GroupBy(args => new
+                                    {
+                                        args.zonename,
+                                        args.zoneid,
+                                        //       args.OrderNo
+
+                                    })
+
+
+
+                                 .Select(args => new
+                                 {
+                                     args.Key.zoneid,
+                                     args.Key.zonename,
+                                     //     args.Key.OrderNo,
+                                     Jobs = args.Count()
+
+
+                                 }).ToList();
+
+
+                        //.Select(args => (args.zoneid + "<<" + args.zonename + "<<" + args.Jobs)).ToArray<string>();
+                        foreach (var item in arr2)
+                        {
+
+                            var item2 = list.FirstOrDefault(c => c.ZoneName == item.zonename);
+
+                            if (item2 != null)
+                            {
+
+                                item2.ZoneId = item.zoneid.ToInt();
+                                item2.Bid = item.Jobs;
+                                item2.BidDetails = bidDetails;
+                                item2.Rank = rank;
+                                item2.DriverWorkStatus = statusName;
+                                //   item2.OrderNo = item.OrderNo;
+                                item2.Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt());
+                            }
+                            else
+                                list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt()) });
+
+
+                            //
+
+                        }
+
+
+                        //      list = list.OrderBy(c => c.Distance).ToList();
+
+                        //
+                        foreach (var item in result)
+                        {
+                            var item2 = list.FirstOrDefault(c => c.ZoneName == item.ZoneName);
+
+                            if (item2 != null)
+                            {
+                                item2.Drivers = item.Drivers.ToInt();
+                                item2.J15 = item.ExpiryJobs1.ToInt();
+                                item2.J30 = item.ExpiryJobs2.ToInt();
+                                item2.DriverWorkStatus = statusName;
+                                //    item2.OrderNo = item.orderno.ToInt();
+                                item2.Distance = GetPointsDistance(DriverPlotPoint, item.Id.ToInt());
+                            }
+                            else
+                            {
+                                list.Add(new ClsPlotBidding { ZoneName = item.ZoneName, Drivers = item.Drivers.ToInt(), J15 = item.ExpiryJobs1.ToInt(), J30 = item.ExpiryJobs2.ToInt(), Rank = rank, DriverWorkStatus = statusName, Distance = GetPointsDistance(DriverPlotPoint, item.Id.ToInt()) });
+
+
+                            }
+
+                        }
+                        ClsPlotBidding driverRow = null;
+
+
+                        if (driverZoneId != null)
+                        {
+
+                            driverRow = list.FirstOrDefault(c => c.ZoneId == driverZoneId);
+
+                        }
+                        else
+                            driverRow = list.FirstOrDefault(c => c.ZoneName == "-");
+
+                        List<ClsPlotBidding> finalList = new List<ClsPlotBidding>();
+
+
+
+
+                        if (list.Where(c => c.Distance == 0).Count() > 0)
+                            finalList.Add(list.Where(c => c.Distance == 0).OrderBy(c => c.Distance).FirstOrDefault());
+
+
+
+
+                        if (DriverPlotPoint != null)
+                        {
+
+
+                            if (DriverPlotPoint.Latitude == 0 && DriverPlotPoint.Longitude == 0)
+                            {
+                                finalList = list.ToList();
+
+                            }
+                            else
+                            {
+                                finalList.AddRange(list.Where(c => c.Bid > 0 && c.Distance > 0).OrderBy(c => c.Distance).ToList());
+                                finalList.AddRange(list.Where(c => c.Distance > 0 && c.Bid == 0 && (c.J15 > 0 || c.J30 > 0)).OrderBy(c => c.Distance).ToList());
+                                finalList.AddRange(list.Where(c => c.Bid == 0 && (c.J15 == 0 && c.J30 == 0) && c.Drivers > 0 && c.Distance > 0).OrderBy(c => c.Distance).ToList());
+                            }
+                        }
+                        else
+                        {
+                            finalList = list.ToList();
+                        }
+                        response = new JavaScriptSerializer().Serialize(finalList);
+                        data.Data = response;
+                        data.IsSuccess = true;
+
+
+
+                        if (statusId != null && statusId == Enums.Driver_WORKINGSTATUS.AVAILABLE && driverId == 219)
+                        {
+                            try
+                            {
+                                File.AppendAllText(physicalPath + "\\plotsBidding_response.txt", DateTime.Now.ToStr() + ": request:" + mesg + Environment.NewLine + "response:" + response + Environment.NewLine + Environment.NewLine);
+
+
+
+
+                            }
+                            catch
+                            {
+
+                            }
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        try
+                        {
+                            File.AppendAllText(physicalPath + "\\requestPlotsBiddingByNearestPlotApi_exception.txt", DateTime.Now.ToStr() + ": " + ex.Message + Environment.NewLine);
+                        }
+                        catch
+                        {
+
+                        }
+
+                        data.Data = ex.Message;
+                        data.IsSuccess = false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                data.Data = ex.Message;
+                data.IsSuccess = false;
+            }
+
+            return data;
+        }
+
+
+        public double GetPointsDistance(LatLng point1, int ZoneId)
+        {
+
+
+            if (point1 == null || point1.Latitude == 0)
+                return 0.0;
+            else
+                return new LatLng(point1).DistanceMiles(GetCentroid(HubProcessor.Instance.listofPolyVertices.Where(c => c.ZoneId == ZoneId).ToList()));
+
+
+
+        }
+
+        public static DotNetCoords.LatLng GetCentroid(List<Gen_Zone_PolyVertice> poly)
+        {
+            double? accumulatedArea = 0.0f;
+            double? centerX = 0.0f;
+            double? centerY = 0.0f;
+
+            for (int i = 0, j = poly.Count - 1; i < poly.Count; j = i++)
+            {
+                double? temp = poly[i].Latitude * poly[j].Longitude - poly[j].Latitude * poly[i].Longitude;
+                accumulatedArea += temp;
+                centerX += (poly[i].Latitude + poly[j].Latitude) * temp;
+                centerY += (poly[i].Longitude + poly[j].Longitude) * temp;
+            }
+
+            //if (Math.Abs(accumulatedArea) < 1E-7f)
+            //    return null;  // Avoid division by zero
+
+            accumulatedArea *= 3f;
+            //   return new  LatLng(Convert.ToDouble ( centerX / accumulatedArea), Convert.ToDouble(centerY / accumulatedArea));
+
+            try
+            {
+                return new LatLng(Convert.ToDouble(centerX / accumulatedArea), Convert.ToDouble(centerY / accumulatedArea));
+
+
+            }
+            catch
+            {
+
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\getcentroid_exception.txt", DateTime.Now + ": centerx=" + centerX.ToStr() + ",centery=" + centerY + ",accumulatedArea:" + accumulatedArea + Environment.NewLine);
+
+                }
+                catch
+                {
+
+                }
+
+
+                return new LatLng(0.00, 0.00);
+
+
+            }
+        }
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -9603,34 +10351,21 @@ namespace SignalRHub
         [System.Web.Http.Route("requestdriverJobBid")]
         public ResponseData requestdriverJobBid(string mesg)
         {
+            // byte[] inputBuffer = Encoding.UTF8.GetBytes(mesg);
+            ResponseData res = new ResponseData();
             try
             {
-
-                File.AppendAllText(physicalPath + "\\" + "requestdriverJobBid.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                File.AppendAllText(physicalPath + "\\requestdriverJobBid.txt", DateTime.Now.ToStr() + " Request:" + mesg + Environment.NewLine);
             }
             catch
             {
 
-
             }
-
-            ResponseData res = new ResponseData();
-            //string dataValue = msg;
-            //dataValue = dataValue.Trim();
-
-            //string[] values = dataValue.Split(new char[] { '=' });
-            //string response = string.Empty;
-
-            //int zoneId = values[1].ToInt();
-
-            //int driverId = values[2].ToInt();
-
-            //long jobId = 0;
-            //string zoneName = string.Empty;
-
-
-
-
+            if (IsDriverBidding == true)
+            {
+                res.Data = "failed:";
+                return res;
+            }
             string dataValue = mesg;
             dataValue = dataValue.Trim();
             ClsDriverBid objAction = new JavaScriptSerializer().Deserialize<ClsDriverBid>(dataValue);
@@ -9645,572 +10380,282 @@ namespace SignalRHub
             long jobId = objAction.JobId.ToLong();
 
             string zoneName = objAction.JobZoneName.ToStr();
-            //   decimal drvPrice = objAction.DriverPrice.ToDecimal();
-
-
-
-
-            ClsBidAction objBid = null;
-
-
+            decimal drvPrice = objAction.DriverPrice.ToDecimal();
             try
             {
-
-
-                //if (dataValue.Contains("jsonstring|"))
-                //{
-                //    objBid = new JavaScriptSerializer().Deserialize<ClsBidAction>(values[5].Replace("jsonstring|", ""));
-
-                //}
-
-
-                if (Instance.objPolicy == null)
-                    Instance.objPolicy = General.GetObject<Gen_SysPolicy_Configuration>(c => c.SysPolicyId == 1);
-
-
-
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    db.CommandTimeout = 8;
+                    //  Gen_SysPolicy_Configuration objPolicy = db.Gen_SysPolicy_Configurations.FirstOrDefault(c => c.SysPolicyId == 1);
 
-
-                    //if (objBid != null)
+                    //if (Instance.objPolicy.EnableBidding.ToBool() == false)
                     //{
-                    //    if (objBid.AllocatedJobId > 0 && objBid.Status == "8")
-                    //    {
-
-                    //        if (db.Bookings.Where(c => c.Id == objBid.AllocatedJobId &&
-                    //                               (c.DriverId == driverId && c.IsConfirmedDriver == true)
-                    //                               && c.BookingStatusId == Enums.BOOKINGSTATUS.WAITING
-                    //                                ).Count() > 0)
-                    //        {
-
-                    //            objBid.Message = "failed:You already have a job allocated.";
-                    //            Clients.Caller.driverBid(new JavaScriptSerializer().Serialize(objBid));
-                    //            return;
-                    //        }
-                    //        else
-                    //        {
-                    //            if (objBid.AllocatedJobId > 0 && listofDrvBidding != null &&
-                    //                listofDrvBidding.Where(c => c.DriverId == driverId && c.JobId != jobId && c.ElapsedTime > DateTime.Now).Count() > 0)
-                    //            {
-                    //                var lastElapsedTime = listofDrvBidding
-                    //                    .Where(c => c.DriverId == driverId && c.JobId != jobId && c.ElapsedTime > DateTime.Now)
-                    //                    .Select(c => c.ElapsedTime)
-                    //                    .OrderByDescending(c => c).FirstOrDefault();
-
-                    //                var secs = (lastElapsedTime.Value.Subtract(DateTime.Now).TotalSeconds.ToInt()) + 5;
-
-                    //                objBid.Message = "failed:You have already bidded on other job." +
-                    //                            Environment.NewLine + "Now you can bid on other job for next " + secs + " seconds";
-                    //                Clients.Caller.driverBid(new JavaScriptSerializer().Serialize(objBid));
-                    //                return;
-
-
-                    //            }
-
-
-                    //        }
-                    //    }
-                    //    else
-                    //    {
-
-                    //        if (objBid.Status == "7")
-                    //        {
-                    //            objBid.Message = "failed:You cannot bid on POB status";
-                    //            Clients.Caller.driverBid(new JavaScriptSerializer().Serialize(objBid));
-                    //            return;
-
-                    //        }
-                    //    }
-
-
+                    //    response = "Failed:";
                     //}
+                    //else
+                    //{
+                    Taxi_Model.Booking objBooking = db.Bookings.FirstOrDefault(c => c.Id == jobId);
 
-                    Taxi_Model.Booking objBooking = null;
-
-
-
-                    DateTime fromPickupDate = DateTime.Now.AddMinutes(-60);
-                    DateTime tillPickupDate = DateTime.Now.AddMinutes(120);
-
-
-                    if (zoneId > 0)
+                    if (objBooking != null && objBooking.BookingStatusId == Enums.BOOKINGSTATUS.WAITING)
                     {
+                        string vehAttributes = objBooking.Fleet_VehicleType.AttributeValues.ToStr().Trim();
 
+                        int vehicleTypeId = db.Fleet_Drivers.Where(c => c.Id == driverId).Select(c => c.VehicleTypeId).FirstOrDefault().ToInt();
 
-                        // long BidjobId = 0;
-
-
-                        //BidjobId = db.stp_getdriverbidjob(driverId, zoneId, zoneName).FirstOrDefault().DefaultIfEmpty().Id;
-
-
-                        objBooking = db.Bookings.FirstOrDefault(c => c.Id == jobId);
-
-                        //
-
-                    }
-
-
-                    //
-                    if (objBooking != null && objBooking.BookingStatusId.ToInt() == Enums.BOOKINGSTATUS.BID && objBooking.IsBidding.ToBool() && objBooking.ZoneId != null)
-                    {
-
-                        jobId = objBooking.Id;
-
-                        string journey = "O/W";
-                        if (objBooking.JourneyTypeId.ToInt() == 2)
+                        if (vehAttributes.Contains("," + vehicleTypeId.ToStr() + ",") == false)
                         {
-                            journey = "Return";
-                        }
-                        else if (objBooking.JourneyTypeId.ToInt() == 3)
-                        {
-                            journey = "W/R";
-                        }
-
-
-                        string IsExtra = (objBooking.CompanyId != null || objBooking.FromLocTypeId == Enums.LOCATION_TYPES.AIRPORT || objBooking.ToLocTypeId == Enums.LOCATION_TYPES.AIRPORT) ? "1" : "0";
-                        int i = 0;
-                        string viaP = "";
-
-                        if (objBooking.Booking_ViaLocations.Count > 0)
-                        {
-                            viaP = "(" + (++i).ToStr() + ")" + string.Join(Environment.NewLine + "(" + (++i).ToStr() + ")", objBooking.Booking_ViaLocations.Select(c => c.ViaLocValue.ToStr()).ToArray<string>());
-                        }
-
-
-                        string specialRequirements = objBooking.SpecialRequirements.ToStr();
-                        if (objBooking.SecondaryPaymentTypeId != null && objBooking.CashFares.ToDecimal() > 0)
-                        {
-
-                            specialRequirements += " , Additional Cash Payment : " + objBooking.CashFares.ToDecimal();
-                        }
-
-                        decimal pdafares = objBooking.GetType().GetProperty(Instance.objPolicy.PDAFaresPropertyName.ToStr().Trim()).GetValue(objBooking, null).ToDecimal();
-
-                        //  pdafares = objBooking.TotalCharges.ToDecimal();
-
-                        mesg = string.Empty;
-
-                        string mobileNo = objBooking.CustomerMobileNo.ToStr();
-                        string telNo = objBooking.CustomerPhoneNo.ToStr();
-
-                        //  Fleet_Driver ObjDriver = General.GetObject<Fleet_Driver>(c => c.Id == driverId);
-
-                        //  decimal drvPdaVersion = ObjDriver.Fleet_Driver_PDASettings.Count > 0 ? ObjDriver.Fleet_Driver_PDASettings[0].CurrentPdaVersion.ToDecimal() : 9.80m;
-
-                        decimal drvPdaVersion = 20.00m;
-
-                        if (string.IsNullOrEmpty(mobileNo) && !string.IsNullOrEmpty(telNo))
-                        {
-                            mobileNo = telNo;
-                        }
-                        else if (!string.IsNullOrEmpty(mobileNo) && !string.IsNullOrEmpty(telNo))
-                        {
-                            mobileNo += "/" + telNo;
-                        }
-
-                        if (drvPdaVersion >= 11 && Instance.objPolicy.PDAJobAlertOnly.ToBool() == false)
-                        {
-                            //  string showFaresValue = objBooking.Gen_PaymentType.ShowFaresOnPDA.ToStr().Trim();
-
-                            string showFaresValue = objBooking.IsQuotedPrice.ToBool() == true ? "1" : objBooking.Gen_PaymentType.ShowFaresOnPDA.ToStr().Trim();
-
-
-
-                            string showFares = ",\"ShowFares\":\"" + showFaresValue + "\"";
-                            string showSummary = ",\"ShowSummary\":\"" + showFaresValue + "\"";
-                            //   string showSummary = string.Empty;
-
-                            string agentDetails = string.Empty;
-                            string parkingandWaiting = string.Empty;
-                            if (objBooking.CompanyId != null)
-                            {
-                                agentDetails = ",\"AgentFees\":\"" + String.Format("{0:0.00}", objBooking.AgentCommission) + "\"";
-                                parkingandWaiting = ",\"Parking\":\"" + string.Format("{0:0.00}", objBooking.ParkingCharges) + "\",\"Waiting\":\"" + String.Format("{0:0.00}", objBooking.WaitingCharges) + "\"";
-
-                            }
-                            else
-                            {
-
-                                parkingandWaiting = ",\"Parking\":\"" + string.Format("{0:0.00}", objBooking.CongtionCharges) + "\",\"Waiting\":\"" + String.Format("{0:0.00}", objBooking.MeetAndGreetCharges) + "\"";
-                                //
-
-                            }
-
-
-
-                            string fromAddress = objBooking.FromAddress.ToStr().Trim();
-                            string toAddress = objBooking.ToAddress.ToStr().Trim();
-
-                            if (objBooking.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE || objBooking.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
-                            {
-                                fromAddress = objBooking.FromStreet.ToStr() + " " + objBooking.FromAddress.ToStr();
-
-                            }
-
-                            if (objBooking.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE || objBooking.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
-                            {
-                                toAddress = objBooking.ToStreet.ToStr() + " " + objBooking.ToAddress.ToStr();
-                            }
-
-                            string paymentType = objBooking.Gen_PaymentType.PaymentCategoryId == null ? objBooking.Gen_PaymentType.DefaultIfEmpty().PaymentType.ToStr()
-                                                          : objBooking.Gen_PaymentType.Gen_PaymentCategory.CategoryName.ToStr();
-
-
-
-                            string companyName = string.Empty;
-
-                            if (drvPdaVersion < 11 && objBooking.CompanyId != null && objBooking.Gen_Company.DefaultIfEmpty().AccountTypeId.ToInt() != Enums.ACCOUNT_TYPE.CASH)
-                                companyName = objBooking.Gen_Company.DefaultIfEmpty().CompanyName;
-                            else
-                                companyName = objBooking.Gen_Company.DefaultIfEmpty().CompanyName.ToStr();
-
-
-
-                            string pickUpPlot = "";
-                            string dropOffPlot = "";
-                            if (drvPdaVersion > 9 && drvPdaVersion != 13.4m)
-                            {
-                                pickUpPlot = objBooking.ZoneId != null ? "<<<" + objBooking.Gen_Zone1.DefaultIfEmpty().ZoneName.ToStr() : "";
-                                dropOffPlot = objBooking.DropOffZoneId != null ? "<<<" + objBooking.Gen_Zone.DefaultIfEmpty().ZoneName.ToStr() : "";
-                            }
-
-
-                            string fromdoorno = objBooking.FromDoorNo.ToStr().Trim();
-
-                            if (drvPdaVersion == 23.50m)
-                            {
-
-                                if (fromdoorno.Length > 0 && fromdoorno.WordCount() > 2 && fromdoorno.Contains(" "))
-                                {
-
-                                    try
-                                    {
-
-                                        fromdoorno = fromdoorno.Replace(" ", "-");
-                                    }
-                                    catch
-                                    {
-
-
-                                    }
-                                }
-
-                                if (fromAddress.ToStr().Trim().Contains("-"))
-                                {
-                                    fromAddress = fromAddress.Replace("-", "  ");
-
-                                }
-                            }
-
-
-
-
-
-                            string pickupDateTime = string.Format("{0:dd/MM/yyyy   HH:mm}", objBooking.PickupDateTime);
-
-
-
-
-                            //try
-                            //{
-                            //    if (objBooking.BookingDate.Value.AddMinutes(10) > objBooking.PickupDateTime.Value)
-                            //    {
-
-                            //        pickupDateTime = pickupDateTime + "<<ASAP";
-                            //    }
-                            //}
-                            //catch
-                            //{
-
-                            //}
-
-                            string appendString = "";
-
-
-                            try
-                            {
-                                appendString = ",\"ShowOnlyPlot\":\"" + "0" + "\"" +
-                                 ",\"ExtraCharges\":\"" + objBooking.ExtraDropCharges.ToDecimal() + "\"" +
-                                  ",\"BookingFee\":\"" + 0.00 + "\"" +
-                                  ",\"BgColor\":\"" + "" + "\"";
-
-                                if (objBooking.BookingDate.Value.AddMinutes(10) > objBooking.PickupDateTime.Value)
-                                {
-                                    //if (Global.enableASAPonPDA == "1")
-                                    //{
-
-                                    appendString += ",\"priority\":\"" + "ASAP" + "\"";
-                                    // }
-                                }
-
-                            }
-                            catch
-                            {
-
-                            }
-
-                            //
-
-                            //if (objBooking.CompanyId != null && Global.enableBookingRefOnAccJob == "1")
-                            //{
-                            //    if (specialRequirements.Length == 0)
-                            //        specialRequirements = "Booking Ref- " + objBooking.BookingNo.ToStr();
-                            //    else
-                            //        specialRequirements = "Booking Ref- " + objBooking.BookingNo.ToStr() + " , " + specialRequirements;
-                            //}
-
-                            if (specialRequirements.ToStr().Contains("\""))
-                                specialRequirements = specialRequirements.ToStr().Replace("\"", "-").Trim();
-
-
-                            string toDoorNo = objBooking.ToDoorNo.ToStr().Trim();
-
-                            if (objBooking.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT && objBooking.JourneyTypeId.ToInt() == Enums.JOURNEY_TYPES.RETURN)
-                                toDoorNo = string.Empty;
-                            else if (toDoorNo.Length > 0)
-                                toDoorNo = toDoorNo + "-";
-
-
-                            response = "JobId:" + "{ \"JobId\" :\"" + objBooking.Id.ToStr() +
-                         "\", \"Pickup\":\"" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? fromdoorno + "-" + fromAddress + pickUpPlot : fromAddress + pickUpPlot) +
-                         "\", \"Destination\":\"" + (toDoorNo + toAddress + dropOffPlot) + "\"," +
-                         "\"PickupDateTime\":\"" + pickupDateTime + "\"" +
-                         ",\"Cust\":\"" + objBooking.CustomerName + "\",\"Mob\":\"" + mobileNo + " " + "\",\"Fare\":\"" + string.Format("{0:0.00}", pdafares) + "\",\"Vehicle\":\"" + objBooking.Fleet_VehicleType.VehicleType + "\",\"Account\":\"" + companyName + " " + "\"" +
-                           ",\"Lug\":\"" + objBooking.NoofLuggages.ToInt() + "\",\"Passengers\":\"" + objBooking.NoofPassengers.ToInt() + "\",\"Journey\":\"" + journey + "\",\"Payment\":\"" + paymentType + "\",\"Special\":\"" + specialRequirements + " " + "\",\"Extra\":\"" + IsExtra + "\",\"Via\":\"" + viaP + " " + "\"" +
-                        parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", objBooking.FareRate) + "\"" +
-                        agentDetails +
-                           ",\"Did\":\"" + driverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + appendString + " }";
-
-
-                            if (response.Contains("\r\n"))
-                            {
-                                response = response.Replace("\r\n", " ").Trim();
-                            }
-                            else
-                            {
-                                if (response.Contains("\n"))
-                                {
-                                    response = response.Replace("\n", " ").Trim();
-
-                                }
-
-                            }
-
-                            if (response.Contains("&"))
-                            {
-                                response = response.Replace("&", "And");
-                            }
-
-                            if (response.Contains(">"))
-                                response = response.Replace(">", " ");
-
-
-                            if (response.Contains("="))
-                                response = response.Replace("=", " ");
-
+                            response = "invalid:Vehicle Requirement doesn’t match";
+                            res.IsSuccess = true;
                         }
                         else
                         {
+                            //    jobId = objBooking.Id;
+
+                            //    string journey = "O/W";
+                            //    if (objBooking.JourneyTypeId.ToInt() == 2)
+                            //    {
+                            //        journey = "Return";
+                            //    }
+                            //    else if (objBooking.JourneyTypeId.ToInt() == 3)
+                            //    {
+                            //        journey = "W/R";
+                            //    }
+
+                            //    string IsExtra = (objBooking.CompanyId != null || objBooking.FromLocTypeId == Enums.LOCATION_TYPES.AIRPORT || objBooking.ToLocTypeId == Enums.LOCATION_TYPES.AIRPORT) ? "1" : "0";
+                            //    int i = 0;
+                            //    string viaP = "";
+
+                            //    if (objBooking.Booking_ViaLocations.Count > 0)
+                            //    {
+                            //        viaP = "(" + (++i).ToStr() + ")" + string.Join(Environment.NewLine + "(" + (++i).ToStr() + ")", objBooking.Booking_ViaLocations.Select(c => c.ViaLocValue.ToStr()).ToArray<string>());
+                            //    }
+
+                            //    string specialRequirements = objBooking.SpecialRequirements.ToStr();
+                            //    if (objBooking.SecondaryPaymentTypeId != null && objBooking.CashFares.ToDecimal() > 0)
+                            //    {
+                            //        specialRequirements += " , Additional Cash Payment : " + objBooking.CashFares.ToDecimal();
+                            //    }
+
+                            //    decimal pdafares = objBooking.GetType().GetProperty(Instance.objPolicy.PDAFaresPropertyName.ToStr().Trim()).GetValue(objBooking, null).ToDecimal();
+
+
+                            //    string mobileNo = objBooking.CustomerMobileNo.ToStr();
+                            //    string telNo = objBooking.CustomerPhoneNo.ToStr();
+
+                            //    if (string.IsNullOrEmpty(mobileNo) && !string.IsNullOrEmpty(telNo))
+                            //    {
+                            //        mobileNo = telNo;
+                            //    }
+                            //    else if (!string.IsNullOrEmpty(mobileNo) && !string.IsNullOrEmpty(telNo))
+                            //    {
+                            //        mobileNo += "/" + telNo;
+                            //    }
+
+
+                            //    string showFaresValue = objBooking.Gen_PaymentType.ShowFaresOnPDA.ToStr().Trim();
+
+                            //    string showFares = ",\"ShowFares\":\"" + showFaresValue + "\"";
+                            //    string showSummary = ",\"ShowSummary\":\"" + showFaresValue + "\"";
+                            //    //string showSummary = string.Empty;
+
+                            //    string agentDetails = string.Empty;
+                            //    string parkingandWaiting = string.Empty;
+                            //    if (objBooking.CompanyId != null)
+                            //    {
+                            //        agentDetails = ",\"AgentFees\":\"" + String.Format("{0:0.00}", objBooking.AgentCommission + objBooking.ServiceCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal()) + "\"";
+
+                            //        parkingandWaiting = ",\"Parking\":\"" + string.Format("{0:0.00}", objBooking.ParkingCharges) + "\",\"Waiting\":\"" + String.Format("{0:0.00}", objBooking.WaitingCharges) + "\"";
+                            //    }
+                            //    else
+                            //    {
+                            //        agentDetails = ",\"AgentFees\":\"" + String.Format("{0:0.00}", objBooking.ServiceCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal()) + "\"";
+
+                            //        parkingandWaiting = ",\"Parking\":\"" + string.Format("{0:0.00}", objBooking.CongtionCharges) + "\",\"Waiting\":\"" + String.Format("{0:0.00}", objBooking.MeetAndGreetCharges) + "\"";
+                            //        //
+                            //    }
+
+                            //    string fromAddress = objBooking.FromAddress.ToStr().Trim();
+                            //    string toAddress = objBooking.ToAddress.ToStr().Trim();
+
+                            //    if (objBooking.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE || objBooking.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                            //    {
+                            //        fromAddress = objBooking.FromStreet.ToStr() + " " + objBooking.FromAddress.ToStr();
+
+                            //    }
+
+                            //    if (objBooking.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE || objBooking.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                            //    {
+                            //        toAddress = objBooking.ToStreet.ToStr() + " " + objBooking.ToAddress.ToStr();
+                            //    }
+
+                            //    string paymentType = objBooking.Gen_PaymentType.PaymentCategoryId == null ? objBooking.Gen_PaymentType.DefaultIfEmpty().PaymentType.ToStr()
+                            //                                  : objBooking.Gen_PaymentType.Gen_PaymentCategory.CategoryName.ToStr();
+
+                            //    string companyName = string.Empty;
 
 
 
-                            response = "JobId:" + objBooking.Id +
-                                ":Pickup:" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? objBooking.FromDoorNo + "-" + objBooking.FromAddress : objBooking.FromAddress) +
 
-                                ":Destination:" + (!string.IsNullOrEmpty(objBooking.ToDoorNo) ? objBooking.ToDoorNo + "-" + objBooking.ToAddress : objBooking.ToAddress) +
-                                  ":PickupDateTime:" + string.Format("{0:dd/MM/yyyy      HH:mm}", objBooking.PickupDateTime) +
-                                       ":Cust:" + objBooking.CustomerName + ":Mob:" + objBooking.CustomerMobileNo.ToStr() + " " + ":Fare:" + objBooking.FareRate
-                                      + ":Vehicle:" + objBooking.Fleet_VehicleType.VehicleType + ":Account:" + objBooking.Gen_Company.DefaultIfEmpty().CompanyName + " " +
-                                      ":Lug:" + objBooking.NoofLuggages.ToInt() + ":Passengers:" + objBooking.NoofPassengers.ToInt() + ":Journey:" + journey +
-                                      ":Payment:" + objBooking.Gen_PaymentType.DefaultIfEmpty().PaymentType.ToStr() + ":Special:" + objBooking.SpecialRequirements.ToStr() + " "
-                                      + ":Extra:" + IsExtra + ":Via:" + viaP + " " + ":Did:" + driverId;
+                            //    if (objBooking.CompanyId != null)
+                            //        companyName = objBooking.Gen_Company.DefaultIfEmpty().CompanyName.ToStr();
+
+                            //    string pickUpPlot = "";
+                            //    string dropOffPlot = "";
+
+                            //    pickUpPlot = objBooking.ZoneId != null ? "<<<" + objBooking.Gen_Zone1.DefaultIfEmpty().ZoneName.ToStr() : "";
+                            //    dropOffPlot = objBooking.DropOffZoneId != null ? "<<<" + objBooking.Gen_Zone.DefaultIfEmpty().ZoneName.ToStr() : "";
+
+
+                            //    response = "PreJobId:" + "{ \"JobId\" :\"" + objBooking.Id.ToStr() +
+                            // "\", \"Pickup\":\"" + (!string.IsNullOrEmpty(objBooking.FromDoorNo) ? objBooking.FromDoorNo + "-" + fromAddress + pickUpPlot : fromAddress + pickUpPlot) +
+                            // "\", \"Destination\":\"" + (!string.IsNullOrEmpty(objBooking.ToDoorNo) ? objBooking.ToDoorNo + "-" + toAddress + dropOffPlot : toAddress + dropOffPlot) + "\"," +
+                            // "\"PickupDateTime\":\"" + string.Format("{0:dd/MM/yyyy   HH:mm}", objBooking.PickupDateTime) + "\"" +
+                            // ",\"Cust\":\"" + objBooking.CustomerName + "\",\"Mob\":\"" + mobileNo + " " + "\",\"Fare\":\"" + string.Format("{0:0.00}", drvPrice) + "\",\"Vehicle\":\"" + objBooking.Fleet_VehicleType.VehicleType + "\",\"Account\":\"" + companyName + " " + "\"" +
+                            //   ",\"Lug\":\"" + objBooking.NoofLuggages.ToInt() + "\",\"Passengers\":\"" + objBooking.NoofPassengers.ToInt() + "\",\"Journey\":\"" + journey + "\",\"Payment\":\"" + paymentType + "\",\"Special\":\"" + specialRequirements + " " + "\",\"Extra\":\"" + IsExtra + "\",\"Via\":\"" + viaP + " " + "\"" +
+                            //parkingandWaiting + ",\"DriverFares\":\"" + String.Format("{0:0.00}", drvPrice) + "\"" +
+                            //agentDetails +
+                            //   ",\"Did\":\"" + driverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + " }";
+
+                            //    //
+                            //    if (specialRequirements.Contains("\r\n") == false)
+                            //    {
+                            //        if (response.Contains("\r\n"))
+                            //        {
+                            //            response = response.Replace("\r\n", " ").Trim();
+                            //        }
+                            //        else
+                            //        {
+                            //            if (response.Contains("\n"))
+                            //            {
+                            //                response = response.Replace("\n", " ").Trim();
+                            //            }
+                            //        }
+                            //    }
+                            //    if (response.Contains("&"))
+                            //    {
+                            //        response = response.Replace("&", "And");
+                            //    }
+
+                            //    if (response.Contains(">"))
+                            //        response = response.Replace(">", " ");
+
+                            //    if (response.Contains("="))
+                            //        response = response.Replace("=", " ");
+
+
+
+
+                            //    DateTime elapedTime = DateTime.Now.AddSeconds(Instance.objPolicy.BiddingElapsedTime.ToInt());
+
+                            //    if (Global.listofDrvBidding == null)
+                            //        Global.listofDrvBidding = new List<ClsDriverBid>();
+
+                            //    ClsDriverBid obj = new ClsDriverBid();
+                            //    obj.JobMessage = response;
+                            //    obj.DriverId = driverId;
+                            //    obj.JobZoneId = zoneId;
+                            //    obj.JobId = jobId;
+                            //    obj.DriverPrice = drvPrice;
+                            //    obj.BiddingDateTime = DateTime.Now;
+                            //    obj.BiddingType = Instance.objPolicy.BiddingType.ToInt();
+
+                            //    var objFirstBidJob = Global.listofDrvBidding.FirstOrDefault(c => c.JobId == jobId);
+
+                            //    if (objFirstBidJob != null)
+                            //    {
+                            //        elapedTime = objFirstBidJob.ElapsedTime.ToDateTime();
+                            //    }
+
+                            //    obj.ElapsedTime = elapedTime;
+                            ////objBooking.BookingStatusId = Enums.BOOKINGSTATUS.PENDING_START;
+                            ////objBooking.DriverId = driverId;
+                            ////db.SubmitChanges();
+                            //Global.listofDrvBidding.Add(obj);
+                            IsDriverBidding = true;
+                            General.OnDespatching(HubProcessor.Instance.objPolicy, objBooking, db.Fleet_Drivers.FirstOrDefault(c => c.Id == driverId), 3, false, "system");
+                            response = "Your Bidding Request has been sent successfully!:";
+                            IsDriverBidding = false;
+                            //General.BroadCastMessage("**refresh required dashboard");
+                            //General.BroadCastMessage("**driver bid>>" + jobId + ">>" + driverId);
+
                         }
-
-
-                        if (Instance.objPolicy.BiddingType.ToInt() == Enums.BIDDING_TYPES.FASTEST_FINGER
-                            || Instance.objPolicy.BiddingType.ToInt() == Enums.BIDDING_TYPES.NEAREST_DRIVER
-                            || Instance.objPolicy.BiddingType.ToInt() == Enums.BIDDING_TYPES.LONGEST_WAITING_QUEUE)
-                        {
-
-
-                            DateTime elapedTime = DateTime.Now.AddSeconds(Instance.objPolicy.BiddingElapsedTime.ToInt());
-
-
-                            if (Instance.objPolicy != null && Instance.objPolicy.BiddingType.ToInt() == Enums.BIDDING_TYPES.FASTEST_FINGER)
-                            {
-                                elapedTime = DateTime.Now;
-
-
-                            }
-
-                            if (Global.listofDrvBidding == null)
-                                Global.listofDrvBidding = new List<ClsDriverBid>();
-
-
-                            //ClsDriverBid objFirstBidJob = null;
-
-
-                            //if(listofDrvBidding!=null)
-                            //    listofDrvBidding.FirstOrDefault(c => c.JobId == jobId && c.DriverId == driverId);
-
-                            //if (objFirstBidJob != null)
-                            //{
-                            //    objFirstBidJob.ElapsedTime = objFirstBidJob.ElapsedTime.ToDateTime();
-
-                            //}
-
-                            var objFirstBidJob = Global.listofDrvBidding.FirstOrDefault(c => c.JobId == jobId);
-
-                            if (objFirstBidJob != null)
-                            {
-                                elapedTime = objFirstBidJob.ElapsedTime.ToDateTime();
-
-                            }
-
-
-                            if (objFirstBidJob != null && objFirstBidJob.DriverId == driverId)
-                            {
-                                objFirstBidJob.ElapsedTime = elapedTime;
-
-                            }
-                            else
-                            {
-
-                                //
-                                ClsDriverBid obj = new ClsDriverBid();
-                                obj.JobMessage = response;
-                                obj.DriverId = driverId;
-                                obj.JobZoneId = zoneId;
-                                obj.JobZoneName = zoneName.ToStr();
-                                obj.JobId = jobId;
-                                obj.BiddingDateTime = DateTime.Now;
-                                obj.BiddingType = Instance.objPolicy.BiddingType.ToInt();
-                                //  obj.FromPostCode = objBooking.FromPostCode.ToStr().Trim().ToUpper();
-                                //  obj.FromAddress = objBooking.FromAddress.ToStr().Trim().ToUpper();
-
-                                obj.ElapsedTime = elapedTime;
-
-
-                                if (objBid != null)
-                                    obj.DriverNo = objBid.DrvNo.ToStr();
-
-                                Global.listofDrvBidding.Add(obj);
-                            }
-
-
-                            try
-                            {
-                                if (Instance.listofJobs.Count(c => c.DriverId == driverId && c.MessageTypeId == eMessageTypes.BIDALERT) > 0)
-                                {
-                                    Instance.listofJobs.RemoveAll(c => c.DriverId == driverId && c.MessageTypeId == eMessageTypes.BIDALERT);
-
-
-                                }
-                            }
-                            catch
-                            {
-
-
-                            }
-
-
-                            response = "You Bidding Request has been sent successfully!:";
-
-
-
-                            General.BroadCastMessage("**driver bid>>" + jobId + ">>" + driverId);
-
-                        }
-
-
                     }
                     else
                     {
                         response = "failed:";
+                        IsDriverBidding = false;
                     }
-
+                    //  }
                 }
-
-                //   }
-
-
             }
             catch (Exception ex)
             {
-                response = "failed:";
+                IsDriverBidding = false;
+                try
+                {
+                    File.AppendAllText(physicalPath + "\\requestdriverjobbid_exception.txt", DateTime.Now.ToStr() + ":" + response + ":" + dataValue.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch (Exception ex2)
+                {
+
+
+
+
+
+                }
+            }
+
+            //send message back to PDA
+            //if (objAction.AppVersion.ToStr() == "iphone")
+            //    Clients.Caller.driverBid(response);
+            //else
+            //    Clients.Caller.driverJobBid(response);
+
+            //Byte[] byteResponse = Encoding.UTF8.GetBytes(response);
+            //tcpClient.GetStream().Write(byteResponse, 0, byteResponse.Length);
+
+            try
+            {
+                File.AppendAllText(physicalPath + "\\requestdriverjobbidresp.txt", DateTime.Now.ToStr() + ":" + response + ":" + dataValue.ToStr() + Environment.NewLine);
+            }
+            catch (Exception ex)
+            {
+
+
+
+
+
+            }
+
+            if (response.ToLower() != "failed:" && response.ToLower().StartsWith("invalid:") == false)
+            {
+                int? bidStatusId = 2;
+
+                if (response == "Your Bidding Request has been sent successfully!:")
+                    bidStatusId = 4;
+
+                General.SP_SaveBid(jobId, driverId, objAction.DriverPrice.ToDecimal(), bidStatusId, objAction.DriverNo.ToStr(), "Drv(" + objAction.DriverNo.ToStr() + ") - Bid " + objAction.DriverPrice.ToDecimal() + " on this Job");
+                res.IsSuccess = true;
+
+
+
 
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\requestdriverBid_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
-
+                    File.AppendAllText(physicalPath + "\\requestdriverjobbidresponse.txt", DateTime.Now.ToStr() + ":" + response + ":" + dataValue.ToStr() + Environment.NewLine);
                 }
-                catch
+                catch (Exception ex)
                 {
 
 
+
+
+
                 }
-
-
             }
 
 
-            try
-            {
-                if (response != "failed:" && objBid != null)
-                {
-                    objBid.Message = response;
-
-                    if (objBid.Status == "8")
-                    {
-
-                        objBid.AllocatedJobId = jobId;
-                    }
-
-                    //var res = new JavaScriptSerializer().Serialize(objBid);
-                    //Clients.Caller.driverJobBid(res);
-                    ///-------------------------------------------------------------------------------
-                    ///
-                    res.Data = new JavaScriptSerializer().Serialize(objBid);
-                    res.IsSuccess = true;
-                    res.Message = "";
-
-                }
-                else
-                {
-
-                    ///Clients.Caller.driverJobBid(response);-----------------------------------------------------------------
-                    ///
-                    res.Data = response;
-                    res.IsSuccess = true;
-                    res.Message = "";
-                }
-
-                if (response != "failed:")
-                {
-                    int? bidStatusId = 2;
-
-                    if (response == "You Bidding Request has been sent successfully!:")
-                        bidStatusId = 4;
-
-
-
-                    General.SP_SaveBid(jobId, driverId, 0.00m, bidStatusId, "", "");
-
-                }
-
-            }
-            catch
-            {
-                response = "failed:";
-                ///Clients.Caller.driverJobBid(response);------------------------------------------------------------------
-                ///
-                res.Data = null;
-                res.IsSuccess = false;
-                res.Message = response;
-            }
+            res.Data = response;
 
             return res;
         }
@@ -10964,6 +11409,8 @@ namespace SignalRHub
                         pda.EnableParkExtraStop = Global.EnableParkExtraStop;
                         pda.EnablePassengerChat = Global.EnablePassengerChat;
                         pda.EnablePickLocation = Global.EnablePickLocation;
+                        pda.EnableUpcomingJob = Global.EnableUpcomingJob;
+                        pda.ShowBidList = Global.ShowBidList;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
@@ -16024,7 +16471,14 @@ namespace SignalRHub
                 {
                     if (respo == "true")
                     {
-                        General.BroadCastMessage("**action>>" + values[1].ToStr() + ">>" + values[2].ToStr() + ">>" + values[3].ToInt());
+                        if (values[3].ToInt() == 11)
+                        {
+                            General.BroadCastMessage("**refresh required dashboard");
+                        }
+                        else
+                        {
+                            General.BroadCastMessage("**action>>" + values[1].ToStr() + ">>" + values[2].ToStr() + ">>" + values[3].ToInt());
+                        }
                     }
 
                     if (HubProcessor.Instance.listofJobs.Count(c => c.DriverId == values[2].ToInt() && c.JobId == values[1].ToLong()) > 0)
@@ -19025,6 +19479,107 @@ namespace SignalRHub
                 res.IsSuccess = false;
                 res.Message = ex.Message;
 
+            }
+
+            return res;
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("requestBidList")]
+        public ResponseData requestBidList(string mesg)
+        {
+            ResponseData res = new ResponseData();
+
+            try
+            {
+
+                string[] values = mesg.Split(new char[] { '=' });
+
+                int driverId = values[1].ToInt();
+                string[] arr = null;
+
+                string response = string.Empty;
+
+                try
+                {
+
+                    File.AppendAllText(physicalPath + "\\" + "requestBidList.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                }
+                catch
+                {
+
+
+                }
+
+
+
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+                    arr = db.ExecuteQuery<stp_getbiddingjobsfulldetailsResult>("exec stp_getbiddingjobsfulldetails {0}", driverId)
+                    .OrderBy(c => c.PickupDateTime)
+
+
+
+
+                  .Select(args => (args.zoneid.ToInt() + "<<" + (args.zonename.ToStr().Trim().Length > 0 ? args.zonename : " - ") + "<<" + "0" + "<<" + args.JobId + "<<" + string.Format("{0:dd/MM/yyyy HH:mm}", args.PickupDateTime) + "<<" + args.FromAddress + "<<" + args.ToAddress + "<<" + args.FareRate + "<<" + args.VehicleType))
+
+                    .ToArray<string>();
+                }
+
+
+                ////
+                string firstRow = "";
+
+                if (arr != null && arr.Count() > 0)
+                {
+                    firstRow = arr[0] + "<<" + "showzonename=0" + "<<" + "showpickupdatetime=1" + "<<" + "showpickup=1" + "<<" + "showdropoff=1" + "<<" + "showfares=1" + "<<" + "showvehicle=1" +
+                        "<<" + "0";
+
+                    arr[0] = firstRow;
+
+                }
+
+
+
+
+
+                if (arr != null)
+                {
+                    response = string.Join(">>", arr);
+
+
+                }
+
+
+
+                res.Data = response;
+                res.IsSuccess = true;
+                res.Message = "success";
+
+
+
+            }
+            catch (Exception ex)
+            {
+
+                try
+                {
+
+                    res.Data = null;
+                    res.IsSuccess = false;
+                    res.Message = ex.Message;
+
+                    File.AppendAllText(physicalPath + "\\" + "requestBidList_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + " ,exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+
+                }
             }
 
             return res;

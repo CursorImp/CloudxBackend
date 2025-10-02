@@ -83,5 +83,7 @@ namespace SignalRHub
         public int? BookingTypeId { get; set; }
         [Column(Storage = "_SubcompanyId", DbType = "int")]
         public int? SubcompanyId { get; set; }
+        [Column(Storage = "_AllocatedDriver", DbType = "Bit")]
+        public bool? AllocatedDriver { get; set; }
     }
 }

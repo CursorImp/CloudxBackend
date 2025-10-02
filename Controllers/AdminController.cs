@@ -20930,53 +20930,53 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 if (!string.IsNullOrEmpty(contents))
                 {
                     var objDriverList = new TaxiDataContext().ExecuteQuery<int>("Select DriverId from Fleet_DriverQueueList where Status=1").ToList();
-                    
-                        new System.Threading.Thread(delegate ()
+
+                    new System.Threading.Thread(delegate ()
+                    {
+                        try
                         {
-                            try
+                            foreach (var item in objDriverList)
                             {
-                                foreach (var item in objDriverList)
+                                int driverId = item;
+                                try
                                 {
-                                    int driverId = item;
-                                    try
-                                    {
-                                        HubProcessor.Instance.listofJobs.Add(new clsPDA
-                                        {
-
-                                            DriverId = driverId,
-                                            JobId = 0,
-                                            MessageDateTime = DateTime.Now.AddSeconds(-50),
-                                            JobMessage = contents.ToStr(),
-                                            MessageTypeId = 12
-                                        });
-
-                                    }
-                                    catch
+                                    HubProcessor.Instance.listofJobs.Add(new clsPDA
                                     {
 
-                                    }
-                                    //
-                                    //
-                                    SocketIO.SendToSocket(driverId.ToStr(), contents.ToStr(), "updateSetting");
+                                        DriverId = driverId,
+                                        JobId = 0,
+                                        MessageDateTime = DateTime.Now.AddSeconds(-50),
+                                        JobMessage = contents.ToStr(),
+                                        MessageTypeId = 12
+                                    });
 
-                                    try
-                                    {
-                                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverbtnUpdateSetting1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",contents:" + contents + Environment.NewLine);
-                                    }
-                                    catch
-                                    {
-                                    }
+                                }
+                                catch
+                                {
+
+                                }
+                                //
+                                //
+                                SocketIO.SendToSocket(driverId.ToStr(), contents.ToStr(), "updateSetting");
+
+                                try
+                                {
+                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverbtnUpdateSetting1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",contents:" + contents + Environment.NewLine);
+                                }
+                                catch
+                                {
                                 }
                             }
-                            catch
-                            {
+                        }
+                        catch
+                        {
 
-                            }
+                        }
 
-                        }).Start();
+                    }).Start();
 
-                        System.Threading.Thread.Sleep(2000);
-                    }
+                    System.Threading.Thread.Sleep(2000);
+                }
             }
             catch
             {
@@ -21894,7 +21894,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                             response.Message = $"{driverNo} manually logged In Successfully.";
                             try
                             {
-                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "LoginDriver.txt", DateTime.Now + " "+ driverId + " has manually logged In"  + Environment.NewLine);
+                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "LoginDriver.txt", DateTime.Now + " " + driverId + " has manually logged In" + Environment.NewLine);
 
                             }
                             catch
@@ -21956,7 +21956,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                               .FirstOrDefault()
                               .ToLong();
                     driverNo = db.Fleet_Drivers.Where(b => b.Id == driverId).Select(d => d.DriverNo).FirstOrDefault().ToString();
-                    
+
 
 
 
@@ -22200,7 +22200,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         .Where(b => b.DriverId == driverId && b.BookingStatusId == Enums.BOOKINGSTATUS.DISPATCHED ||
                                                                b.BookingStatusId == Enums.BOOKINGSTATUS.COMPLETED)
                         .OrderByDescending(b => b.PickupDateTime)
-                        .Select(b => new 
+                        .Select(b => new
                         {
                             JobId = b.Id,
                             PickupDateTime = b.PickupDateTime,
@@ -23495,15 +23495,15 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             try
             {
 
-                
+
                 PaymentConfig objMerchantInfo = null;
                 Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
                 int SubcompanyId = 1;
                 if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
-                    
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId);
+
                 }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
@@ -23543,7 +23543,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         Customerobj = General.GetObject<Customer>(c => c.MobileNo == objBooking.CustomerMobileNo.ToStr().Trim());
                     }
 
-                        if (Customerobj.CreditCardDetails.ToStr().ToLower().StartsWith("cus"))
+                    if (Customerobj.CreditCardDetails.ToStr().ToLower().StartsWith("cus"))
                     {
                         CustomerStripeID = Customerobj?.CreditCardDetails?.ToStr();
                         CardDetails = GetCardDetailsKP(Customerobj.Id);
@@ -23673,8 +23673,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
-                   
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId);
+
                 }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
@@ -23695,7 +23695,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                     string CustomerStripeID = "";
                     DriverAppController.CustomerCardDetails CardDetails = new DriverAppController.CustomerCardDetails();
-                  
+
                     Customer Customerobj = null;
                     if (!string.IsNullOrEmpty(objBooking.CustomerMobileNo))
                     {
@@ -23816,15 +23816,15 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             try
             {
-               
+
                 PaymentConfig objMerchantInfo = null;
                 Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
                 int SubcompanyId = 1;
                 if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
-                    
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId);
+
                 }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
@@ -24075,15 +24075,15 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             try
             {
-               
+
                 PaymentConfig objMerchantInfo = null;
                 Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
                 int SubcompanyId = 1;
                 if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
-                   
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId);
+
                 }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
@@ -24282,15 +24282,15 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             try
             {
 
-              
+
                 PaymentConfig objMerchantInfo = null;
                 Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj.bookingId);
                 int SubcompanyId = 1;
                 if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
-                   
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId);
+
                 }
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
@@ -24300,7 +24300,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 else
                 {
-                    
+
                     Booking_Log RefundLog = null;
                     if (objBooking.Booking_Logs != null)
                     {
@@ -24410,10 +24410,10 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId); 
-                   
+                    objMerchantInfo = General.GetKoNectConfigDetails(SubcompanyId);
+
                 }
-            
+
                 if (objMerchantInfo == null || (string.IsNullOrEmpty(objMerchantInfo.ApplicationId) || string.IsNullOrEmpty(objMerchantInfo.PaypalID)))
                 {
                     response.Message = "Payment Gateway Configuration is not defined in Settings!";
@@ -25211,6 +25211,10 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 int pageSize = obj.pageSize > 0 ? obj.pageSize : 10;
                 int totalRecords = 0;
 
+                var search = obj.searchTerm.ToStr().Trim();
+                decimal number;
+
+                bool isNumeric = decimal.TryParse(search, out number);
 
                 DataSet ds = new DataSet();
                 using (System.Data.SqlClient.SqlConnection sqlconn = new System.Data.SqlClient.SqlConnection(Cryptography.Decrypt(System.Configuration.ConfigurationManager.AppSettings["ConnectionString"].ToStr(), "tcloudX@@!", true)))
@@ -25242,7 +25246,12 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     if (objMaster.Current != null)
                     {
                         Fare obj1 = objMaster.Current;
-                        totalRecords = obj1.Fare_ChargesDetails.Count();
+                        totalRecords = obj1.Fare_ChargesDetails
+                            .Where(x =>
+                                string.IsNullOrEmpty(search)
+                                || (isNumeric && (x.Rate == number || x.CompanyRate == number))
+                                || (x.FromAddress.Contains(search) || x.ToAddress.Contains(search))
+                            ).Count();
 
                         List_Fare_PDAMeters = (from b in obj1.Fare_OtherCharges
                                                select new
@@ -25256,6 +25265,9 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                                                }).ToList();
                         List_Fare_ChargesDetails = (from b in obj1.Fare_ChargesDetails
+                                                    where string.IsNullOrEmpty(search)
+                                                     || (isNumeric && (b.Rate == number || b.CompanyRate == number))
+                                                     || (b.FromAddress.Contains(search) || b.ToAddress.Contains(search))
                                                     select new
                                                     {
                                                         Id = b.Id,
