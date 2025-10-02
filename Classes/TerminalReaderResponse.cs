@@ -54,7 +54,7 @@ namespace SignalRHub.Classes
         public string LocationId { get; set; }
 
         [JsonProperty("location")]
-        public object Location { get; set; }
+        public string Location { get; set; }
 
         [JsonProperty("metadata")]
         public Metadata Metadata { get; set; }

@@ -25006,7 +25006,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 {
                     model.ConnectedAccountId = paymentGateway.PaypalID;
                     if (terminal.Response != null)
-                        model.LocationId = terminal.Response.LocationId;
+                        model.LocationId = terminal.Response.Location;
                     else
                         model.LocationId = ClientLocationId;
 
