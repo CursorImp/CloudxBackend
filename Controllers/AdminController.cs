@@ -24908,7 +24908,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                             d.LocationId,
                             d.SerialNumber,
                             d.Status,
-                            d.CreatedAt
+                            d.CreatedAt,
+                            d.Motostatus
                         }),
                         TotalCount = devices.Count
                     };
@@ -24949,7 +24950,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                             d.LocationId,
                             d.SerialNumber,
                             d.Status,
-                            d.CreatedAt
+                            d.CreatedAt,
+                            d.Motostatus
                         }),
                         TotalCount = devices.Count
                     };
@@ -25013,13 +25015,14 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     model.LocationId = model.LocationId == null ? "" : model.LocationId;
 
                     var count = db.ExecuteCommand(
-                       "EXEC insertdevice {0}, {1}, {2}, {3}, {4}, {5}",
+                       "EXEC insertdevice {0}, {1}, {2}, {3}, {4}, {5},{6}",
                        model.ConnectedAccountId ?? (object)DBNull.Value,
                        model.RegistrationCode ?? (object)DBNull.Value,
                        model.Label ?? (object)DBNull.Value,
                        model.LocationId ?? (object)DBNull.Value,
                        model.SerialNumber ?? (object)DBNull.Value,
-                       model.Status ?? (object)DBNull.Value
+                       model.Status ?? (object)DBNull.Value,
+                       model.Motostatus ?? (object)DBNull.Value
                    );
 
                     if (count > 0)
