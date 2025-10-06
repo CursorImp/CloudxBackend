@@ -5162,8 +5162,8 @@ namespace SignalRHub
             }
 
 
-            if (txt.ToStr().Contains("tinyurl.com") == false && txt.ToStr().Contains("estiny.app") == false)
-                txt = GetShortUrl(txt);
+            //if (txt.ToStr().Contains("tinyurl.com") == false && txt.ToStr().Contains("estiny.app") == false)
+            //    txt = GetShortUrl(txt);
 
             return txt;
         }

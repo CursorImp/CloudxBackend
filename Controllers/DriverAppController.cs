@@ -19078,9 +19078,19 @@ namespace SignalRHub
                                 db.stp_BookingLog(jobId, "DRIVER", "Via (POB) : " + via);
 
                             }
-                            if (objAction.JStatus.ToStr() == "13")
+                            else if (objAction.JStatus.ToStr() == "13")
                             {
                                 db.stp_BookingLog(jobId, "DRIVER", "Via (NOPICKUP) : " + via);
+                            }
+                            else if (objAction.JStatus.ToStr() == "2")
+                            {
+                                try
+                                {
+                                    db.ExecuteQuery<int>("update booking_viaLocations set iscurrentstop=1, ClearedDateTime=getdate() where bookingid=" + jobId + " and vialocvalue='" + via + "'");
+                                }
+                                catch {
+                                }
+                                db.stp_BookingLog(jobId, "DRIVER", "Via (DROP OFF) : " + via);
                             }
 
                             db.ExecuteQuery<int>("update booking_viaLocations set iscurrentstop=0 where bookingid=" + jobId + " and vialocvalue!='" + via + "'");
