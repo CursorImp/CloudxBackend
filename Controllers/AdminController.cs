@@ -11571,7 +11571,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                              IbanNumber = s.IbanNumber,
                                              BlcNumber = s.BlcNumber,
                                              HasVat = c.HasVat,
-                                             ReportParameterHideExtraCharge = "False"
+                                             ReportParameterHideExtraCharge = "True"
                                              //HideBankDetail=c.HideBankDetails
                                          }).ToList();
                     response.Data = new
