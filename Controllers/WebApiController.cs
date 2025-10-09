@@ -2530,7 +2530,7 @@ namespace SignalRHub.Controllers
 
                         try
                         {
-                            if (objMaster.Current.Id > 0 && obj.editbookingInfo != null && objMaster.Current.DriverId != null)
+                            if (objMaster.Current.Id > 0 && objMaster.Current.DriverId != null)
                             {
                                 General.UpdateJobToDriverPDA(objMaster.Current.Id);
 
