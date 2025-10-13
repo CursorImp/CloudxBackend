@@ -10292,6 +10292,10 @@ namespace SignalRHub.Controllers
             {
                 objSubcompany.IsTpCompany = /*ReportViewer1.Tag.ToStr() == "invoice" &&*/ objSubcompany != null && objSubcompany.UseDifferentEmailForInvoices.ToBool() ? true : false;
             }
+            if (obj.isInvoiceOrStatement != "true")
+            {
+                objSubcompany.UseDifferentEmailForInvoices = false;
+            }
             string exportType = obj.exportType;
             byte[] pdfBytes = Convert.FromBase64String(base64File);
             MemoryStream pdfStream = new MemoryStream(pdfBytes);

@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Reflection;
 using System.Web;
+using Taxi_BLL;
 using Taxi_Model;
 using Utils;
 
@@ -78,13 +79,21 @@ namespace SignalRHub.Classes
                 if (objSubCompany != null && objSubCompany.SmtpHost.ToStr().Trim().Length > 0)
                 {
 
-                    smptHost = objSubCompany.SmtpHost.ToStr().Trim();
-                    port = objSubCompany.SmtpPort.ToInt();
-                    userName = objSubCompany.SmtpUserName.ToStr().Trim();
-                    pwd = objSubCompany.SmtpPassword.ToStr().Trim();
-                    emailcc = objSubCompany.EmailCC.ToStr().Trim();
-                    enableSSL = objSubCompany.SmtpHasSSL.ToBool();
-                    companyName = objSubCompany.CompanyName.ToStr().Trim();
+                    smptHost = objSubCompany.UseDifferentEmailForInvoices==true?objSubCompany.SmtpInvoiceHost : objSubCompany.SmtpHost.ToStr().Trim();
+                    port = objSubCompany.UseDifferentEmailForInvoices==true?objSubCompany.SmtpInvoicePort.ToInt() : objSubCompany.SmtpPort.ToInt();
+                    userName = objSubCompany.UseDifferentEmailForInvoices==true?objSubCompany.SmtpInvoiceUserName.ToStr().Trim() : objSubCompany.SmtpUserName.ToStr().Trim();
+                    pwd = objSubCompany.UseDifferentEmailForInvoices==true?objSubCompany.SmtpInvoicePassword.ToStr().Trim() : objSubCompany.SmtpPassword.ToStr().Trim();
+                    emailcc = objSubCompany.UseDifferentEmailForInvoices==true?objSubCompany.AccountEmailCC.ToStr().Trim() : objSubCompany.EmailCC.ToStr().Trim();
+                    enableSSL = objSubCompany.UseDifferentEmailForInvoices==true?objSubCompany.SmtpInvoiceSSL.ToBool() : objSubCompany.SmtpHasSSL.ToBool();
+                    companyName = objSubCompany.UseDifferentEmailForInvoices==true?objSubCompany.CompanyName.ToStr().Trim() : objSubCompany.CompanyName.ToStr().Trim();
+                    
+                    
+                    //port = objSubCompany.SmtpPort.ToInt();
+                    //userName = objSubCompany.SmtpUserName.ToStr().Trim();
+                    //pwd = objSubCompany.SmtpPassword.ToStr().Trim();
+                    //emailcc = objSubCompany.EmailCC.ToStr().Trim();
+                    //enableSSL = objSubCompany.SmtpHasSSL.ToBool();
+                    //companyName = objSubCompany.CompanyName.ToStr().Trim();
                     //FromEmail = userName;
 
 
@@ -125,7 +134,8 @@ namespace SignalRHub.Classes
                         }
                         else
                         {
-                            FromEmail = userName;
+                            FromEmail = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.SmtpInvoiceUserName : objSubCompany.EmailAddress;
+                            //FromEmail = userName;
                         }
                     }
                     using (MailMessage message = new MailMessage())

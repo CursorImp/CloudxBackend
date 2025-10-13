@@ -577,6 +577,7 @@ namespace SignalRHub.Classes
         public string ZoneId { get; set; }
         public bool IsBlocked { get;  set; }
         public int Minutes { get;  set; }
+        public string isInvoiceOrStatement { get;  set; }
     }
     public class FareDto
     {
@@ -1212,6 +1213,12 @@ namespace SignalRHub.Classes
         public string FormTab { get; set; }
         public bool? DisplaySettings { get; set; }
         public string HeaderText { get; set; }
+    }
+    public class PushNotificationRequest
+    {
+        public string Title { get; set; }
+        public string Message { get; set; }
+        public List<string> Tokens { get; set; }
     }
     public class ResponseAdminApi
     {
