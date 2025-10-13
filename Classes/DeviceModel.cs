@@ -15,5 +15,6 @@ namespace SignalRHub.Classes
         public string SerialNumber { get; set; }
         public string Status { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool? Motostatus { get; set; }
     }
 }

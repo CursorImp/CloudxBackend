@@ -103,6 +103,7 @@ namespace SignalRHub
         public static string EnableUpcomingJob = "0";
         public static string UpcomingJobHour = "5";
         public static string ShowBidList = "0";
+        public static string EnableOnlineBookingEmail = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -666,6 +667,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "UpcomingJobHour", SetVal = "5", description = "UpcomingJobHour"  },
                              new AppSetting { SetKey = "ShowBidList", SetVal = "0", description = "ShowBidList"  },
                              new AppSetting { SetKey = "EnableQuotedOnlineBooking", SetVal = "0", description = "EnableQuotedOnlineBooking"  },
+                             new AppSetting { SetKey = "EnableOnlineBookingEmail", SetVal = "0", description = "EnableOnlineBookingEmail"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1532,7 +1534,10 @@ namespace SignalRHub
                 {
                     ShowBidList = GetAppSetting<string>("ShowBidList").ToStr();
                 }
-
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableOnlineBookingEmail")))
+                {
+                    EnableOnlineBookingEmail = GetAppSetting<string>("EnableOnlineBookingEmail").ToStr();
+                }
 
             }
             catch (Exception ex)

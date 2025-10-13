@@ -25,9 +25,9 @@ namespace SignalRHub
 {
     public class ThirdPartyViewModel
     {
-       
-           
-       
+
+
+
         public string DispatchTripID { get; set; }
         public string SupplierTripID { get; set; }
         public string SupplierID { get; set; }
@@ -297,7 +297,7 @@ namespace SignalRHub
                                 }
                                 catch { }
 
-                                SocketIO.SendToSocket(driverId.ToStr(), "<<Cleared Job>>" + jobId.ToLong().ToStr(), "forceClearJob",recordId);
+                                SocketIO.SendToSocket(driverId.ToStr(), "<<Cleared Job>>" + jobId.ToLong().ToStr(), "forceClearJob", recordId);
 
                             }
                             catch (Exception ex)
@@ -327,7 +327,7 @@ namespace SignalRHub
                                         MessageDateTime = DateTime.Now.AddSeconds(-30),
                                         JobMessage = "<<Cleared Job>>",
                                         MessageTypeId = 3,
-                                         Id=recordId
+                                        Id = recordId
                                     });
 
 
@@ -1757,7 +1757,7 @@ namespace SignalRHub
         private List<stp_GetBookingsDataResult> GetRequiredData()
         {
 
-            
+
             List<stp_GetBookingsDataResult> query = null;
             try
             {
@@ -1788,7 +1788,7 @@ namespace SignalRHub
 
 
 
-       
+
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -2358,7 +2358,7 @@ namespace SignalRHub
                 obj.Amount = (increasedAmount * 100).ToInt();
 
 
-       
+
 
 
                 obj.Description = companyName + " | " + obj.BookingId.ToStr() + " | " + "Fares : " + obj.ActualFares + " - " + increasedAmount.ToStr() + " GBP" + " | " + obj.Description.ToStr();
@@ -2776,7 +2776,7 @@ namespace SignalRHub
         }
 
 
-      
+
 
 
         private void RefreshRequiredDashboard(string bookingId = "")
@@ -3069,7 +3069,7 @@ namespace SignalRHub
 
                         if (respo == "true")
                         {
-                           
+
                             (new TaxiDataContext()).stp_UpdateJob(jobId, objAction.DrvId.ToInt(), 6, 6, HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
 
                             if (HubProcessor.Instance.objPolicy.EnableArrivalBookingText.ToBool())
@@ -3192,9 +3192,9 @@ namespace SignalRHub
 
                                 }
 
-                              
 
-                          
+
+
 
 
                                 objAction.objMeterTariff = new MeterTarrif();
@@ -3616,7 +3616,7 @@ namespace SignalRHub
                             }
                             catch (Exception ex)
                             {
-                                
+
 
 
                             }
@@ -3711,7 +3711,7 @@ namespace SignalRHub
             }
             catch (Exception ex)
             {
-               
+
                 // ENUtils.ShowMessage(ex.Message);
                 return "";
             }
@@ -3800,7 +3800,7 @@ namespace SignalRHub
 
 
 
-              HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + mobNo.Trim() + " = " + message);
+                HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + mobNo.Trim() + " = " + message);
 
             }
             catch (Exception ex)
@@ -3903,7 +3903,7 @@ namespace SignalRHub
                 //
 
                 File.AppendAllText(AppContext.BaseDirectory + "\\ResetApp.txt", DateTime.Now.ToStr() + " request" + value + Environment.NewLine);
-            
+
             }
             catch
             {
@@ -3913,7 +3913,7 @@ namespace SignalRHub
 
         }
 
-            [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("changeAutoDispatchMode")]
         public string ChangeAutoDispatchMode(string value)
@@ -3992,19 +3992,19 @@ namespace SignalRHub
             //
             try
             {
-             
+
 
                 string dataValue = mesg;
                 dataValue = dataValue.Trim();
 
                 string[] values = dataValue.Split(new char[] { '=' });
 
-              
+
 
                 if (new TaxiDataContext().Bookings.Count(c => c.Id == values[1].ToLong() && c.DriverId == values[2].ToInt()) > 0)
                     IsAvalable = "true";
 
-              
+
 
                 int jobstatusId = values[3].ToInt();
 
@@ -4022,7 +4022,7 @@ namespace SignalRHub
             }
             catch (Exception ex)
             {
-               
+
             }
 
 
@@ -4036,7 +4036,7 @@ namespace SignalRHub
         {
             try
             {
-              
+
 
                 string dataValue = mesg;
                 dataValue = dataValue.Trim();
@@ -4054,27 +4054,27 @@ namespace SignalRHub
 
                         string driverId = values[1].ToStr().Trim();
 
-                        
-                      
+
+
 
                         var result = db.stp_GetAreaPlotsByVehicle(driverId.ToInt()
-                                ,HubProcessor.Instance.objPolicy.PlotsJobExpiryValue1, HubProcessor.Instance.objPolicy.PlotsJobExpiryValue2);
+                                , HubProcessor.Instance.objPolicy.PlotsJobExpiryValue1, HubProcessor.Instance.objPolicy.PlotsJobExpiryValue2);
 
 
 
-                       
-                           
 
-                           
-                                arr = (from a in result
-                                       orderby a.Drivers descending, a.orderno
-                                       select (a.ZoneName + "," +
-                                                a.ExpiryJobs1 + "," + a.ExpiryJobs2
-                                           + "," + a.Drivers)).ToArray<string>();
-                           
-                           
-                       
-                      
+
+
+
+                        arr = (from a in result
+                               orderby a.Drivers descending, a.orderno
+                               select (a.ZoneName + "," +
+                                        a.ExpiryJobs1 + "," + a.ExpiryJobs2
+                                   + "," + a.Drivers)).ToArray<string>();
+
+
+
+
                     }
                     catch (Exception ex)
                     {
@@ -4090,10 +4090,10 @@ namespace SignalRHub
                 }
 
                 //send message back to PDA
-               
+
 
                 return (driverPlot + string.Join(">>", arr));
-               
+
             }
             catch (Exception ex)
             {
@@ -4102,7 +4102,7 @@ namespace SignalRHub
         }
 
 
-     
+
 
 
         [System.Web.Http.HttpGet]
@@ -4113,7 +4113,7 @@ namespace SignalRHub
             string rtn = "false";
             try
             {
-              
+
                 string dataValue = msg;
                 dataValue = dataValue.Trim();
 
@@ -4122,9 +4122,9 @@ namespace SignalRHub
                 if (values.Count() >= 7)
                 {
                     //send acknowledgement message to PDA
-                    rtn="true";
+                    rtn = "true";
 
-                   
+
                 }
 
                 (new TaxiDataContext()).stp_SendMessage(values[1].ToInt(), values[2].ToInt(), values[3].ToStr(), "", values[4].ToStr(), values[5].ToStr());
@@ -4148,7 +4148,7 @@ namespace SignalRHub
             {
                 string[] values = dataValue.Split(new char[] { '=' });
 
-              
+
 
                 if (values.Count() >= 9)
                 {
@@ -4165,7 +4165,7 @@ namespace SignalRHub
                     General.BroadCastMessage("**logout>>Driver " + values[2] + " is Logout");
                 }
 
-              
+
 
                 rtn = "true";
             }
@@ -4242,7 +4242,7 @@ namespace SignalRHub
                                     }
                                     else
                                     {
-                                       
+
                                         db.stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
                                     }
                                 }
@@ -4262,7 +4262,7 @@ namespace SignalRHub
                             }
                             else
                             {
-                               
+
                                 db.stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
                             }
 
@@ -4284,7 +4284,7 @@ namespace SignalRHub
                     {
                         if (jobStatusId != Enums.BOOKINGSTATUS.ONROUTE && jobStatusId != Enums.BOOKINGSTATUS.ARRIVED && jobStatusId != Enums.BOOKINGSTATUS.STC)
                         {
-                           
+
                             (new TaxiDataContext()).stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
 
                         }
@@ -4417,7 +4417,7 @@ namespace SignalRHub
 
                                 if (respo == "true")
                                 {
-                                   
+
                                     (new TaxiDataContext()).stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
 
                                     //  DispatchJobSMS(values[1].ToLong(), jobStatusId);
@@ -4461,7 +4461,7 @@ namespace SignalRHub
 
                                 {
 
-                                
+
 
                                     if (HubProcessor.Instance.objPolicy.RestrictMilesOnSTC.ToDecimal() > 0 && isAuto.ToStr() != "1" && objAction.Dropoff.ToStr().Trim().Length > 0 && objAction.DrvNo.ToStr().Trim().Length > 0)
                                     {
@@ -4490,7 +4490,8 @@ namespace SignalRHub
 
                                                 long jobId = values[1].ToLong();
 
-                                                var objBooker = db.Bookings.Select(args => new {
+                                                var objBooker = db.Bookings.Select(args => new
+                                                {
                                                     args.Id,
                                                     args.JourneyTypeId,
                                                     args.FromAddress,
@@ -4647,7 +4648,7 @@ namespace SignalRHub
                                 {
                                     try
                                     {
-                                      
+
                                         db.stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
 
                                         if (isAuto.ToStr() == "1")
@@ -4738,7 +4739,7 @@ namespace SignalRHub
                         //{
 
                         //}
-                       
+
                         (new TaxiDataContext()).stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
                     }
 
@@ -5633,7 +5634,8 @@ namespace SignalRHub
 
 
 
-                                var objBooker = db.Bookings.Select(args => new {
+                                var objBooker = db.Bookings.Select(args => new
+                                {
                                     args.Id,
                                     args.JourneyTypeId,
                                     args.FromAddress,
@@ -5808,7 +5810,7 @@ namespace SignalRHub
                             //    pickupDateTime = DateTime.Now;
                             //}
 
-                          //  var zone = db.Gen_Zones.FirstOrDefault(c => c.ZoneName == "Congestion");
+                            //  var zone = db.Gen_Zones.FirstOrDefault(c => c.ZoneName == "Congestion");
 
 
                             decimal congestion = 0.00m;
@@ -5927,7 +5929,7 @@ namespace SignalRHub
 
                             try
                             {
-                               
+
                                 (new TaxiDataContext()).stp_UpdateJob(jobId, obj.DrvId.ToInt(), Enums.BOOKINGSTATUS.STC, 5, 0);
 
                                 General.BroadCastMessage("**action>>" + jobId.ToStr() + ">>" + obj.DrvId.ToStr() + ">>" + Enums.BOOKINGSTATUS.STC);
@@ -6147,7 +6149,7 @@ namespace SignalRHub
                             info.Mileage = General.CalculateDistanceFromAPI(info.FromAddress, info.ToAddress);
                         }
 
-                            info.Miles = info.Mileage.ToStr();
+                        info.Miles = info.Mileage.ToStr();
 
                         var objFares = new WebApiClasses.ClsDispatchFares();
                         try
@@ -6306,11 +6308,11 @@ namespace SignalRHub
 
 
                 }
-               
+
             }
             catch (Exception ex)
             {
-                
+
             }
 
             return obj;
@@ -6408,7 +6410,7 @@ namespace SignalRHub
                         info.FromType = booking.FromLocTypeId == 1 ? "airport" : "address";
                         info.ToType = booking.ToLocTypeId == 1 ? "airport" : "address";
                         info.CompanyId = booking.CompanyId.ToInt();
-                        
+
                         try
                         {
                             info.PickupDateTime = string.Format("{0:dd/MM/yyyy HH:mm}", booking.PickupDateTime);
@@ -6420,7 +6422,7 @@ namespace SignalRHub
                         info.RouteCoordinates = "-2";
                         info.VehicleTypeId = booking.VehicleTypeId.ToInt();
                         info.SubCompanyId = 1;
-                     
+
                         bool stopAlreadyExist = false;
 
                         try
@@ -6447,7 +6449,7 @@ namespace SignalRHub
                                 info.Via[cnt] = new ViaAddresses();
                                 info.Via[cnt].Viatype = "Address";
                                 info.Via[cnt].Viaaddress = stop.ToStr();
-                             
+
 
                                 try
                                 {
@@ -6476,8 +6478,8 @@ namespace SignalRHub
                                 {
                                     string postcodeStop = GetPostCodeMatch(stop.ToStr().ToUpper());
 
-                                    if(postcodeStop.Length==0 || postcodeStop.Contains(" ")==false)
-                                    info.Via[0].ViaCoordinates = obj.Latitude + "," + obj.Longitude;
+                                    if (postcodeStop.Length == 0 || postcodeStop.Contains(" ") == false)
+                                        info.Via[0].ViaCoordinates = obj.Latitude + "," + obj.Longitude;
 
 
 
@@ -6592,14 +6594,14 @@ namespace SignalRHub
                         var res = (db.ExecuteQuery<DefaultPolicies>("select * from DefaultPolicies where PolicyName='Add Via Charges'").FirstOrDefault());
                         if (res != null)
                         {
-                            booking.ExtraDropCharges = booking.ExtraDropCharges.ToDecimal() +res.Value.ToInt();
+                            booking.ExtraDropCharges = booking.ExtraDropCharges.ToDecimal() + res.Value.ToInt();
                         }
                         else
                         {
                             booking.ExtraDropCharges = booking.ExtraDropCharges.ToDecimal();
                         }
 
-                            obj.Extra = booking.ExtraDropCharges.ToDecimal();
+                        obj.Extra = booking.ExtraDropCharges.ToDecimal();
                         obj.Waiting = booking.MeetAndGreetCharges.ToDecimal();
 
                         //   obj.Extra = objFares.ExtraCharges;
@@ -7010,38 +7012,41 @@ namespace SignalRHub
                     {
                         using (TaxiDataContext db = new TaxiDataContext())
                         {
-                            var genSubCompany = db.Gen_SubCompanies
+                            var genSubCompany = db.Gen_SubCompanies.Where(x => x.CompanyName == obj.companyName).FirstOrDefault();
+                            //var genSubCompany = db.Gen_SubCompanies
 
-                                    .Select(args => new
-                                    {
-                                        args.CompanyName,
-                                        args.EmailAddress,
-                                        args.SmtpHost,
-                                        args.SmtpPassword,
-                                        args.SmtpUserName,
-                                        args.SmtpPort,
-                                        args.SmtpHasSSL,
-                                        args.EmailCC
-                                    }
-                                    ).FirstOrDefault();
-                            if (genSubCompany == null)
-                            {
-                                genSubCompany = db.Gen_SubCompanies.Where(c => c.Id == 1)
-                                   .Select(args => new
-                                   {
-                                       args.CompanyName,
-                                       args.EmailAddress,
-                                       args.SmtpHost,
-                                       args.SmtpPassword,
-                                       args.SmtpUserName,
-                                       args.SmtpPort,
-                                       args.SmtpHasSSL,
-                                       args.EmailCC
-                                   }
-                                   ).FirstOrDefault();
-                            }
-                            ClsEASendEmail cls = new ClsEASendEmail(genSubCompany.EmailAddress, obj.email.ToStr().Trim(), "Link for Card Payment " + obj?.bookingRef.ToStr(), "Please click on the link to process the payment for your journey with " + obj?.companyName.ToStr() + Environment.NewLine + "Ref No - " + obj?.bookingRef.ToStr().Trim() + ".<br/>" + "<a href='" + obj.PreAuthUrl.ToStr() + "'>" + obj.PreAuthUrl.ToStr() + "</a>", genSubCompany.SmtpHost, genSubCompany.EmailCC);
-                            IsSent = cls.Send(obj.email.ToStr(), genSubCompany.SmtpUserName, genSubCompany.SmtpPassword);
+                            //        .Select(args => new
+                            //        {
+                            //            args.CompanyName,
+                            //            args.EmailAddress,
+                            //            args.SmtpHost,
+                            //            args.SmtpPassword,
+                            //            args.SmtpUserName,
+                            //            args.SmtpPort,
+                            //            args.SmtpHasSSL,
+                            //            args.EmailCC
+                            //        }
+                            //        ).FirstOrDefault();
+                            //if (genSubCompany == null)
+                            //{
+                            //    genSubCompany = db.Gen_SubCompanies.Where(c => c.Id == 1)
+                            //       .Select(args => new
+                            //       {
+                            //           args.CompanyName,
+                            //           args.EmailAddress,
+                            //           args.SmtpHost,
+                            //           args.SmtpPassword,
+                            //           args.SmtpUserName,
+                            //           args.SmtpPort,
+                            //           args.SmtpHasSSL,
+                            //           args.EmailCC
+                            //       }
+                            //       ).FirstOrDefault();
+                            //}
+
+                            IsSent = ClsEmail.SendPaymentKPLink("Link for Card Payment " + obj?.bookingRef.ToStr(), "Please click on the link to process the payment for your journey with " + obj?.companyName.ToStr() + Environment.NewLine + "Ref No - " + obj?.bookingRef.ToStr().Trim() + ".<br/>" + "<a href='" + obj.PreAuthUrl.ToStr() + "'>" + obj.PreAuthUrl.ToStr() + "</a>", genSubCompany.EmailAddress, obj.email.ToStr().Trim(), genSubCompany);
+                            //ClsEASendEmail cls = new ClsEASendEmail(genSubCompany.EmailAddress, obj.email.ToStr().Trim(), "Link for Card Payment " + obj?.bookingRef.ToStr(), "Please click on the link to process the payment for your journey with " + obj?.companyName.ToStr() + Environment.NewLine + "Ref No - " + obj?.bookingRef.ToStr().Trim() + ".<br/>" + "<a href='" + obj.PreAuthUrl.ToStr() + "'>" + obj.PreAuthUrl.ToStr() + "</a>", genSubCompany.SmtpHost, genSubCompany.EmailCC);
+                            //IsSent = cls.Send(obj.email.ToStr(), genSubCompany.SmtpUserName, genSubCompany.SmtpPassword);
 
                             if (IsSent)
                             {
@@ -7175,7 +7180,7 @@ namespace SignalRHub
                                 //{
                                 //    Customer objcustomer = db.Customers.Where(c => c.MobileNo == objBooking.CustomerMobileNo).FirstOrDefault();
                                 //    objBooking.CustomerId = objcustomer.Id;
-                                  
+
                                 //    db.ExecuteQuery<int>("update Customer set CreditCardDetails='" + obj.customerid.ToStr() + "' where Id=" + objBooking.CustomerId);
                                 //    if ((db.ExecuteQuery<int>("select count(*) from Customer_CCDetails where CustomerId=" + objBooking.CustomerId.ToLong()).FirstOrDefault()) > 0)
                                 //    {
@@ -7733,37 +7738,37 @@ namespace SignalRHub
                         //    objcustomer = db.Customers.Where(c => c.MobileNo == CustomerPhoneNumber).FirstOrDefault();
                         //}
                         Customer objcustomer = null;
-                        if (!string.IsNullOrEmpty(CustomerPhoneNumber)) 
-                        { 
-                         objcustomer = db.Customers.Where(c => c.MobileNo == CustomerPhoneNumber).FirstOrDefault();
-                        if (objcustomer != null && !string.IsNullOrEmpty(obj.customerid) && !string.IsNullOrEmpty(obj.paymentMethodId))
+                        if (!string.IsNullOrEmpty(CustomerPhoneNumber))
                         {
-                            db.ExecuteQuery<int>("update Customer set CreditCardDetails='" + obj.customerid.ToStr() + "' where Id=" + objcustomer.Id);
-                            if ((db.ExecuteQuery<int>("select count(*) from Customer_CCDetails where CustomerId=" + objcustomer.Id.ToLong()).FirstOrDefault()) > 0)
+                            objcustomer = db.Customers.Where(c => c.MobileNo == CustomerPhoneNumber).FirstOrDefault();
+                            if (objcustomer != null && !string.IsNullOrEmpty(obj.customerid) && !string.IsNullOrEmpty(obj.paymentMethodId))
                             {
-                                db.ExecuteQuery<int>("update Customer_CCDetails set IsDefault=0 where CustomerId=" + objcustomer.Id);
+                                db.ExecuteQuery<int>("update Customer set CreditCardDetails='" + obj.customerid.ToStr() + "' where Id=" + objcustomer.Id);
+                                if ((db.ExecuteQuery<int>("select count(*) from Customer_CCDetails where CustomerId=" + objcustomer.Id.ToLong()).FirstOrDefault()) > 0)
+                                {
+                                    db.ExecuteQuery<int>("update Customer_CCDetails set IsDefault=0 where CustomerId=" + objcustomer.Id);
+                                }
+
+                                // string CardDetails = $"Token: {obj.paymentMethodId} | {obj.message}";
+                                string CardDetails = $"KonnectPayToken: {obj.paymentMethodId} | {obj.message}";
+                                db.ExecuteQuery<int>("insert into Customer_CCDetails(CustomerId,CCDetails,AddOn,AddBy,IsDefault)VALUES(" + objcustomer.Id + ",'" + CardDetails + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','Eurosoft',1)");
+
+                                rtn = "true";
+
                             }
-
-                            // string CardDetails = $"Token: {obj.paymentMethodId} | {obj.message}";
-                            string CardDetails = $"KonnectPayToken: {obj.paymentMethodId} | {obj.message}";
-                            db.ExecuteQuery<int>("insert into Customer_CCDetails(CustomerId,CCDetails,AddOn,AddBy,IsDefault)VALUES(" + objcustomer.Id + ",'" + CardDetails + "','" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "','Eurosoft',1)");
-
-                            rtn = "true";
-
-                        }
-                        else
-                        {
-                            try
+                            else
                             {
-                                File.AppendAllText(AppContext.BaseDirectory + "\\UpdateDataFromCardRegisterKOnnectPay.txt", DateTime.Now.ToStr() + "Error in saving Card Details of Customer :" + new JavaScriptSerializer().Serialize(objcustomer) + Environment.NewLine);
-                            }
-                            catch
-                            {
-                            }
+                                try
+                                {
+                                    File.AppendAllText(AppContext.BaseDirectory + "\\UpdateDataFromCardRegisterKOnnectPay.txt", DateTime.Now.ToStr() + "Error in saving Card Details of Customer :" + new JavaScriptSerializer().Serialize(objcustomer) + Environment.NewLine);
+                                }
+                                catch
+                                {
+                                }
                                 rtn = "false";
 
                             }
-                    }
+                        }
                         else
                         {
                             try
@@ -7958,7 +7963,7 @@ namespace SignalRHub
                     return rtn = "false";
                 }
                 string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
-                
+
                 if (objBooking == null) { return rtn = "false"; }
 
                 ReqDTO.bookingRef = objBooking.BookingNo;
@@ -8051,7 +8056,7 @@ namespace SignalRHub
                     return rtn = "false";
                 }
                 string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
-               
+
                 if (objBooking == null) { return rtn = "false"; }
                 string paymentIntentId = string.Empty;
                 if (objBooking?.BookingPayment != null && !string.IsNullOrEmpty(objBooking?.BookingPayment?.AuthCode))
@@ -8296,9 +8301,9 @@ namespace SignalRHub
             ResponseSupplierApi response = new ResponseSupplierApi();
             try
             {
-                if(subcompanyid  == 0)
+                if (subcompanyid == 0)
                 {
-                    response.Message ="Required Sub CompanyID";
+                    response.Message = "Required Sub CompanyID";
                     response.HasError = true;
                 }
                 string StripeAPIURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];

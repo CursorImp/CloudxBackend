@@ -16,6 +16,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mail;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -24912,7 +24913,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                             d.LocationId,
                             d.SerialNumber,
                             d.Status,
-                            d.CreatedAt
+                            d.CreatedAt,
+                            d.Motostatus
                         }),
                         TotalCount = devices.Count
                     };
@@ -24953,7 +24955,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                             d.LocationId,
                             d.SerialNumber,
                             d.Status,
-                            d.CreatedAt
+                            d.CreatedAt,
+                            d.Motostatus
                         }),
                         TotalCount = devices.Count
                     };
@@ -25017,13 +25020,14 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     model.LocationId = model.LocationId == null ? "" : model.LocationId;
 
                     var count = db.ExecuteCommand(
-                       "EXEC insertdevice {0}, {1}, {2}, {3}, {4}, {5}",
+                       "EXEC insertdevice {0}, {1}, {2}, {3}, {4}, {5},{6}",
                        model.ConnectedAccountId ?? (object)DBNull.Value,
                        model.RegistrationCode ?? (object)DBNull.Value,
                        model.Label ?? (object)DBNull.Value,
                        model.LocationId ?? (object)DBNull.Value,
                        model.SerialNumber ?? (object)DBNull.Value,
-                       model.Status ?? (object)DBNull.Value
+                       model.Status ?? (object)DBNull.Value,
+                       model.Motostatus ?? (object)DBNull.Value
                    );
 
                     if (count > 0)
@@ -27306,7 +27310,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                 PaymentType = b.PaymentType,
                                 SpecialRequirements = a.SpecialRequirements,
                                 FlightNumber = a.FromFlightNo,
-                                PaymentComments = a.PaymentComments
+                                PaymentComments = a.PaymentComments,                                
 
                             }).ToList();
                 }
@@ -27345,13 +27349,61 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
 
                     if (obj.BookingStatusId.ToInt() == 1)
-
+                    {
+                        
                         db.stp_UpdateOnlineJobStatus(obj.Id, Enums.BOOKINGSTATUS.WAITING, "OnlineBooking Accept", "Accept", "Controller");
+                        if (Global.EnableOnlineBookingEmail == "1")
+                        {
+                            string subject = "";
+                            string FromEmail = "";
+
+                            var booking = db.Bookings.Where(x => x.Id == obj.Id).Select(x => new { PickupDateTime = x.PickupDateTime, BookingNo = x.BookingNo, SubCompanyId = x.SubcompanyId,CustomerEmail = x.CustomerEmail }).FirstOrDefault();
+
+                            var subCompany = db.ExecuteQuery<WebApiClasses.Gen_SubcompanyFields>($"select Id,EmailAddress,SmtpEmailAddress,SmtpInvoiceEmailAddress,SmtpDriverEmailAddress,CAST(ISNULL(UseDifferentEmailForInvoices,0) AS BIT) UseDifferentEmailForInvoices,SmtpInvoiceUserName from Gen_SubCompany WHERE Id={booking.SubCompanyId}").FirstOrDefault();
+
+                            
+
+                            subject = "Online BOOKING CONFIRMATION -  " + string.Format("{0:dd MMMM yyyy}", booking.PickupDateTime)
+                                     + ", TIME " + string.Format("{0:HH.mm}", booking.PickupDateTime) + " - BOOKING ID "
+                                     + booking.BookingNo.ToStr();
+
+                            
+
+                            WebApiClasses.RequestWebApi obj1 = new WebApiClasses.RequestWebApi();
+                            obj1.emailInfo = new WebApiClasses.EmailInfo();
+                            obj1.emailInfo.From = subCompany.EmailAddress;
+                            obj1.emailInfo.BookingId = obj.Id;
+                            obj1.emailInfo.Subject = subject;
+                            obj1.emailInfo.To = booking.CustomerEmail;
+
+                            WebApiController controller = new WebApiController();
+                            controller.SendConfirmationEmail(obj1);
+                        }
+
+                    }
                     else
-
+                    {
                         db.stp_UpdateOnlineJobStatus(obj.Id, Enums.BOOKINGSTATUS.CANCELLED, "OnlineBooking Declined:" + "", "Declined", "Controller");
+                        if (Global.EnableOnlineBookingEmail == "1")
+                        {
+                            string subject = "";
+                            string FromEmail = "";
+                            var booking = db.Bookings.Where(x => x.Id == obj.Id).Select(x => new { PickupDateTime = x.PickupDateTime, BookingNo = x.BookingNo, CustomerEmail = x.CustomerEmail, SubCompanyId = x.SubcompanyId }).FirstOrDefault();
+                            var objSubcompany = new TaxiDataContext().Gen_SubCompanies.FirstOrDefault(x => x.Id == booking.SubCompanyId.ToInt());
+                            
+                            
+                            subject = "Online Cancelled BOOKING -  " + string.Format("{0:dd MMMM yyyy}", booking.PickupDateTime)
+                                     + ", TIME " + string.Format("{0:HH.mm}", booking.PickupDateTime) + " - BOOKING ID "
+                                     + booking.BookingNo.ToStr();
 
+                           
+                            List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
+                            string body = "your booking Ref " + booking.BookingNo + " has been Cancelled from our System";
 
+                            ClsEmail Email = new ClsEmail();
+                            ClsEmail.Send(subject, body, objSubcompany.EmailAddress, booking.CustomerEmail, attachments, objSubcompany, "");
+                        }
+                    }
                 }
                 //
 
