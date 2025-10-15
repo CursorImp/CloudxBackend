@@ -27359,18 +27359,13 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         if (Global.EnableOnlineBookingEmail == "1")
                         {
                             string subject = "";
-                            string FromEmail = "";
+                            
 
                             var booking = db.Bookings.Where(x => x.Id == obj.Id).Select(x => new { PickupDateTime = x.PickupDateTime, BookingNo = x.BookingNo, SubCompanyId = x.SubcompanyId, CustomerEmail = x.CustomerEmail }).FirstOrDefault();
 
-                            var subCompany = db.ExecuteQuery<WebApiClasses.Gen_SubcompanyFields>($"select Id,EmailAddress,SmtpEmailAddress,SmtpInvoiceEmailAddress,SmtpDriverEmailAddress,CAST(ISNULL(UseDifferentEmailForInvoices,0) AS BIT) UseDifferentEmailForInvoices,SmtpInvoiceUserName from Gen_SubCompany WHERE Id={booking.SubCompanyId}").FirstOrDefault();
+                            var subCompany = db.ExecuteQuery<WebApiClasses.Gen_SubcompanyFields>($"select Id,CompanyName,EmailAddress,SmtpEmailAddress,SmtpInvoiceEmailAddress,SmtpDriverEmailAddress,CAST(ISNULL(UseDifferentEmailForInvoices,0) AS BIT) UseDifferentEmailForInvoices,SmtpInvoiceUserName from Gen_SubCompany WHERE Id={booking.SubCompanyId}").FirstOrDefault();
 
-
-
-                            subject = "Online BOOKING CONFIRMATION -  " + string.Format("{0:dd MMMM yyyy}", booking.PickupDateTime)
-                                     + ", TIME " + string.Format("{0:HH.mm}", booking.PickupDateTime) + " - BOOKING ID "
-                                     + booking.BookingNo.ToStr();
-
+                            subject = subCompany.CompanyName + " booking receipt " + booking.BookingNo.ToStr();
 
 
                             WebApiClasses.RequestWebApi obj1 = new WebApiClasses.RequestWebApi();
@@ -27381,7 +27376,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                             obj1.emailInfo.To = booking.CustomerEmail;
 
                             WebApiController controller = new WebApiController();
-                            controller.SendConfirmationEmail(obj1);
+                            controller.SendOnlineBookingmail(obj1);
                         }
 
                     }
@@ -27390,22 +27385,22 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         db.stp_UpdateOnlineJobStatus(obj.Id, Enums.BOOKINGSTATUS.CANCELLED, "OnlineBooking Declined:" + "", "Declined", "Controller");
                         if (Global.EnableOnlineBookingEmail == "1")
                         {
-                            string subject = "";
-                            string FromEmail = "";
+                            string subject = "";                            
                             var booking = db.Bookings.Where(x => x.Id == obj.Id).Select(x => new { PickupDateTime = x.PickupDateTime, BookingNo = x.BookingNo, CustomerEmail = x.CustomerEmail, SubCompanyId = x.SubcompanyId }).FirstOrDefault();
                             var objSubcompany = new TaxiDataContext().Gen_SubCompanies.FirstOrDefault(x => x.Id == booking.SubCompanyId.ToInt());
+                            
+                            subject = "Apologies — We Couldn’t Accept Your Booking REF :" + booking.BookingNo.ToStr();
+                            
+                            WebApiClasses.RequestWebApi obj1 = new WebApiClasses.RequestWebApi();
+                            obj1.emailInfo = new WebApiClasses.EmailInfo();
+                            obj1.emailInfo.From = objSubcompany.EmailAddress;
+                            obj1.emailInfo.BookingId = obj.Id;
+                            obj1.emailInfo.Subject = subject;
+                            obj1.emailInfo.To = booking.CustomerEmail;
 
-
-                            subject = "Online Cancelled BOOKING -  " + string.Format("{0:dd MMMM yyyy}", booking.PickupDateTime)
-                                     + ", TIME " + string.Format("{0:HH.mm}", booking.PickupDateTime) + " - BOOKING ID "
-                                     + booking.BookingNo.ToStr();
-
-
-                            List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
-                            string body = "your booking Ref " + booking.BookingNo + " has been Cancelled from our System";
-
-                            ClsEmail Email = new ClsEmail();
-                            ClsEmail.Send(subject, body, objSubcompany.EmailAddress, booking.CustomerEmail, attachments, objSubcompany, "");
+                            WebApiController controller = new WebApiController();
+                            controller.SendOnlineBookingmail(obj1);
+                            
                         }
                     }
                 }

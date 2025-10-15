@@ -1792,6 +1792,7 @@ namespace SignalRHub.WebApiClasses
         public string SmtpEmailAddress { get; set; }
         public string SmtpInvoiceEmailAddress { get; set; }
         public string SmtpDriverEmailAddress { get; set; }
+        public string CompanyName { get; set; }
     }
 
     public class ClsBookingListData
