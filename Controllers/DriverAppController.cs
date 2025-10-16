@@ -5514,7 +5514,83 @@ namespace SignalRHub
                                         }
 
                                     }
+                                    else if (!string.IsNullOrEmpty(objBooking.CustomerCreditCardDetails) && objBooking.CustomerCreditCardDetails.ToStr().Trim().StartsWith("pi_") && !objBooking.CustomerCreditCardDetails.ToStr().Trim().Contains("secret_"))
+                                    {
+                                       // Gen_SysPolicy_PaymentDetail obj2 = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                                        obj = General.GetKoNectConfigDetails(SubcompanyId);
+                                        IsAuthorize = true;
+                                        makePaymentResponse.Gateways.Add(new { GatewayName = "konnectpay" });
+                                        makePaymentResponse.ResponseType = (int)ResponseType.Direct;
+                                        try
+                                        {
+                                            File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", Booking is Authorize for : " + mesg + " KP-Config:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                                        }
+                                        catch
+                                        {
+                                        }
+                                        if (obj != null)
+                                        {
 
+                                            ClsPaymentInformation objPaymentDetails = new ClsPaymentInformation();
+
+                                            objPaymentDetails.BookingNo = objBooking.BookingNo.ToStr().Trim();
+
+                                            objPaymentDetails.Price = Price;
+
+                                            objPaymentDetails.Total = Price.ToStr();
+
+                                            objPaymentDetails.PaymentGatewayID = obj.PaymentGatewayId.ToStr();
+                                            objPaymentDetails.TokenDetails = objBooking.CustomerCreditCardDetails.ToStr();
+                                            objPaymentDetails.BookingId = objBooking.Id.ToStr();
+
+                                            try
+                                            {
+                                                if (objBooking.CustomerId != null)
+                                                { objPaymentDetails.StripeCustomerId = db.Customers.Where(c => c.Id == objBooking.CustomerId).Select(c => c.CreditCardDetails).FirstOrDefault().ToStr(); }
+                                            }
+                                            catch
+                                            {
+
+                                            }
+                                            //Calling New Payment Method for stripe KonnectPay
+                                            string response = MakePaymentKonnectPay(obj, objPaymentDetails, objBooking, IsAuthorize);
+                                            makePaymentResponse.ResponseType = (int)ResponseType.Direct;
+                                            if (!string.IsNullOrEmpty(response) && response.StartsWith("success:"))
+                                            {
+                                                makePaymentResponse.TransactionId = response.Replace("success:", "").Trim();
+                                                makePaymentResponse.IsTransactionSuccess = true;
+                                                makePaymentResponse.ResponseType = (int)ResponseType.Direct;
+                                                makePaymentResponse.TransactionMessage = "Payment Successfull";
+
+                                                res.Data = Newtonsoft.Json.JsonConvert.SerializeObject(makePaymentResponse);
+                                                res.IsSuccess = true;
+                                                res.Message = makePaymentResponse.TransactionMessage;
+
+                                            }
+                                            else
+                                            {
+                                                makePaymentResponse.IsTransactionSuccess = false;
+                                                makePaymentResponse.TransactionMessage = response?.ToLower().Replace("failed:", "").Trim();
+                                                makePaymentResponse.TransactionId = "";
+
+                                                res.Message = makePaymentResponse.TransactionMessage;
+                                                res.Data = Newtonsoft.Json.JsonConvert.SerializeObject(makePaymentResponse);
+                                                res.IsSuccess = false;
+
+                                            }
+                                            try
+                                            {
+                                                File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",KonnectPay Response : " + response + Environment.NewLine);
+                                            }
+                                            catch
+                                            {
+                                            }
+                                            return res;
+
+                                        }
+
+                                    }
+                                  
                                     else
                                     {
                                         if (objBooking.CustomerCreditCardDetails.ToStr().Trim().StartsWith("pi_") && objBooking.CustomerCreditCardDetails.ToStr().Trim().Contains("secret_"))
@@ -6351,7 +6427,7 @@ namespace SignalRHub
         /// <summary>
         /// This Method is to make payment for Konnect Pay Account
         /// </summary>
-        private string MakePaymentKonnectPay(Gen_SysPolicy_PaymentDetail obj, ClsPaymentInformation objCard, Booking objBooking, bool IsAuthorize)
+        private string MakePaymentKonnectPay(Classes.KonnectPay.PaymentConfig obj, ClsPaymentInformation objCard, Booking objBooking, bool IsAuthorize)
         {
             string rtn = string.Empty;
             string DefaultCurrency = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrency"];
