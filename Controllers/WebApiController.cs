@@ -10709,170 +10709,311 @@ namespace SignalRHub.Controllers
         [System.Web.Http.Route("GetNearestDrivers")]
         public JsonResult GetNearestDrivers(WebApiClasses.RequestWebApi obj)
         {
-            //
-
-            try
-            {
-
-
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetNearestDrivers.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + obj.addressInfo.Address.ToStr().ToUpper().Trim() + Environment.NewLine);
-            }
-            catch
-            {
-
-            }
-
             ResponseWebApi response = new ResponseWebApi();
 
             try
             {
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetNearestDrivers.txt",
+                    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + obj.addressInfo.Address.ToStr().ToUpper().Trim() + Environment.NewLine);
+            }
+            catch { }
 
-
-
+            try
+            {
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-
                     string searchValue = obj.addressInfo.Address.ToStr().ToUpper().Trim();
-                    try
+                    int loctypeId = Enums.LOCATION_TYPES.ADDRESS;
+                    double? latitude = obj.addressInfo.Latitude;
+                    double? longitude = obj.addressInfo.Longitude;
+
+                    // Try to find location in Gen_Locations
+                    var objLoc = db.Gen_Locations.FirstOrDefault(c =>
+                        c.Address.ToUpper() == searchValue || c.FullLocationName.ToUpper() == searchValue);
+
+                    if (objLoc != null)
                     {
-                        var objLoc = db.Gen_Locations.FirstOrDefault(c => c.Address.ToUpper() == searchValue || c.FullLocationName.ToUpper() == searchValue);
-                        int loctypeId = Enums.LOCATION_TYPES.ADDRESS;
-                        //   double? latitude = null;
-                        //  double? longitude = null;
-                        double? latitude = obj.addressInfo.Latitude;
-                        double? longitude = obj.addressInfo.Longitude;
+                        if (objLoc.LocationTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                            loctypeId = objLoc.LocationTypeId.ToInt();
 
-                        if (objLoc != null)
+                        if (objLoc.Latitude != null && objLoc.Latitude != 0)
                         {
-                            if (objLoc.LocationTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
-                                loctypeId = objLoc.LocationTypeId.ToInt();
+                            obj.addressInfo.Latitude = objLoc.Latitude;
+                            obj.addressInfo.Longitude = objLoc.Longitude;
+                            latitude = objLoc.Latitude;
+                            longitude = objLoc.Longitude;
+                        }
+                    }
 
+                    obj.addressInfo.locTypeId = loctypeId;
 
+                    // If still no coordinates, try lookup
+                    if (latitude == null || latitude == 0)
+                    {
+                        var loc = db.stp_getCoordinatesByAddress(searchValue, General.GetPostCodeMatch(searchValue)).FirstOrDefault();
+                        if (loc != null && loc.Latitude != 0)
+                        {
+                            obj.addressInfo.Latitude = loc.Latitude;
+                            obj.addressInfo.Longitude = loc.Longtiude;
+                            latitude = loc.Latitude;
+                            longitude = loc.Longtiude;
+                        }
+                    }
 
-                            if (objLoc.Latitude != null && objLoc.Latitude != 0)
+                    // Assign zone info
+                    obj.addressInfo.zoneId = General.GetZoneId(searchValue);
+                    if (obj.addressInfo.zoneId.ToInt() > 0)
+                    {
+                        obj.addressInfo.zoneName = db.Gen_Zones
+                            .Where(c => c.Id == obj.addressInfo.zoneId)
+                            .Select(c => c.ZoneName)
+                            .FirstOrDefault();
+                    }
+
+                    // Get nearest drivers (core logic)
+                    if (latitude != null && latitude != 0)
+                    {
+                        try
+                        {
+                            var ListofAvailDrvs = (from a in db.GetTable<Fleet_DriverQueueList>()
+                                                   where a.Status == true && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
+                                                   join b in db.GetTable<Fleet_Driver_Location>() on a.DriverId equals b.DriverId
+                                                   join d in db.GetTable<Fleet_Driver>() on a.DriverId equals d.Id
+                                                   where b.Latitude != 0
+                                                   select new
+                                                   {
+                                                       a.DriverId,
+                                                       d.DriverNo,
+                                                       b.LocationName,
+                                                       b.Latitude,
+                                                       b.Longitude
+                                                   }).ToList();
+
+                            var nearestDrivers = ListofAvailDrvs
+                                .Select(args => new
+                                {
+                                    args.DriverId,
+                                    args.DriverNo,
+                                    MilesAwayFromPickup = new DotNetCoords.LatLng(args.Latitude, args.Longitude)
+                                        .DistanceMiles(new DotNetCoords.LatLng(Convert.ToDouble(latitude), Convert.ToDouble(longitude))),
+                                    args.Latitude,
+                                    args.Longitude,
+                                    args.LocationName
+                                })
+                                .OrderBy(args => args.MilesAwayFromPickup)
+                                .Take(3)
+                                .ToList();
+
+                            // Build NearestDrivers list
+                            foreach (var drv in nearestDrivers)
                             {
-                                obj.addressInfo.Latitude = objLoc.Latitude;
-                                obj.addressInfo.Longitude = objLoc.Longitude;
-                                latitude = objLoc.Latitude;
-                                longitude = objLoc.Longitude;
+                                string eta = General.GetETATime(drv.Latitude + "," + drv.Longitude,
+                                    Convert.ToDouble(latitude) + "," + Convert.ToDouble(longitude), "").ToStr();
+
+                                if (obj.addressInfo.NearestDrivers == null)
+                                    obj.addressInfo.NearestDrivers = new List<string>();
+
+                                obj.addressInfo.NearestDrivers.Add(
+                                    "Drv " + drv.DriverNo + " - " + eta + "_LatLng" + drv.Latitude + "," + drv.Longitude + "_Id" + drv.DriverId
+                                );
                             }
                         }
-
-                        obj.addressInfo.locTypeId = loctypeId;
-
-
-
-                        if (latitude == null || latitude == 0)
-                        {
-                            var loc = General.GetLocationCoordByDisplayPosition(searchValue);
-                            //var loc1 = db.stp_getCoordinatesByAddress(searchValue, General.GetPostCodeMatch(searchValue)).FirstOrDefault();
-
-                            if (loc != null && loc.Latitude != 0)
-                            {
-
-                                obj.addressInfo.Latitude = loc.Latitude;
-                                //obj.addressInfo.Longitude = loc.Longtiude;
-                                obj.addressInfo.Longitude = loc.Longitude;
-
-                                latitude = loc.Latitude;
-                                //longitude = loc.Longtiude;
-                                longitude = loc.Longitude;
-                            }
-
-                        }
-
-
-                        obj.addressInfo.zoneId = General.GetZoneId(searchValue);
-
-                        if (obj.addressInfo.zoneId.ToInt() > 0)
-                        {
-                            obj.addressInfo.zoneName = db.Gen_Zones.Where(c => c.Id == obj.addressInfo.zoneId).Select(c => c.ZoneName).FirstOrDefault();
-
-                        }
-
-                        if (latitude != null && latitude != 0)
+                        catch (Exception ex)
                         {
                             try
                             {
-
-                                var ListofAvailDrvs = (from a in db.GetTable<Fleet_DriverQueueList>().Where(c => c.Status == true &&
-                                            (c.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE))
-                                                       join b in db.GetTable<Fleet_Driver_Location>().Where(c => c.Latitude != 0)
-
-                                                       on a.DriverId equals b.DriverId
-
-                                                       join d in db.GetTable<Fleet_Driver>() on a.DriverId equals d.Id
-
-                                                       select new
-                                                       {
-                                                           DriverId = a.DriverId,
-                                                           DriverNo = d.DriverNo,
-                                                           DriverLocation = b.LocationName,
-                                                           Latitude = b.Latitude,
-                                                           Longitude = b.Longitude,
-                                                       }).ToList();
-                                var nearestDrivers = ListofAvailDrvs.Select(args => new
-                                {
-                                    args.DriverId,
-
-                                    MilesAwayFromPickup = new DotNetCoords.LatLng(args.Latitude, args.Longitude).DistanceMiles(new DotNetCoords.LatLng(Convert.ToDouble(latitude), Convert.ToDouble(longitude))),
-                                    args.DriverNo,
-                                    Latitude = args.Latitude,
-                                    Longitude = args.Longitude,
-                                    Location = args.DriverLocation
-
-                                }).OrderBy(args => args.MilesAwayFromPickup)
-                                .Take(3).ToList();
-
-                                for (int i = 0; i < nearestDrivers.Count; i++)
-                                {
-                                    string time = string.Empty;
-
-                                    time = General.GetETATime(nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude, Convert.ToDouble(latitude) + "," + Convert.ToDouble(longitude), "").ToStr();
-
-                                    if (obj.addressInfo.NearestDrivers == null)
-                                        obj.addressInfo.NearestDrivers = new List<string>();
-
-                                    obj.addressInfo.NearestDrivers.Add("Drv " + nearestDrivers[i].DriverNo + " - " + time + "_LatLng" + nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude + "_Id" + nearestDrivers[i].DriverId);
-
-                                }
+                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetNearestDrivers_exception.txt",
+                                    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) +
+                                    ",exception:" + ex.Message + Environment.NewLine);
                             }
-                            catch (Exception ex)
-                            {
-                                try
-                                {
-                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAddressDetails_exceptionnearestdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + ",exception:" + ex.Message + Environment.NewLine);
-                                }
-                                catch
-                                {
-
-                                }
-                            }
+                            catch { }
                         }
-                        response.Data = obj.addressInfo;
-                        //
                     }
-                    catch (Exception ex)
-                    {
 
-                    }
+                    response.Data = obj.addressInfo;
                 }
+
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAddressDetails_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + Environment.NewLine);
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetNearestDrivers_response.txt",
+                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + Environment.NewLine);
                 }
-                catch
-                {
-
-                }
+                catch { }
             }
-            catch
+            catch (Exception ex)
             {
                 response.HasError = true;
-                response.Message = "exception occured";
+                response.Message = "exception occured: " + ex.Message;
             }
+
             return new CustomJsonResult { Data = response };
         }
+        //public JsonResult GetNearestDrivers(WebApiClasses.RequestWebApi obj)
+        //{
+        //    //
+
+        //    try
+        //    {
+
+
+        //        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetNearestDrivers.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + obj.addressInfo.Address.ToStr().ToUpper().Trim() + Environment.NewLine);
+        //    }
+        //    catch
+        //    {
+
+        //    }
+
+        //    ResponseWebApi response = new ResponseWebApi();
+
+        //    try
+        //    {
+
+
+
+        //        using (TaxiDataContext db = new TaxiDataContext())
+        //        {
+
+        //            string searchValue = obj.addressInfo.Address.ToStr().ToUpper().Trim();
+        //            try
+        //            {
+        //                var objLoc = db.Gen_Locations.FirstOrDefault(c => c.Address.ToUpper() == searchValue || c.FullLocationName.ToUpper() == searchValue);
+        //                int loctypeId = Enums.LOCATION_TYPES.ADDRESS;
+        //                //   double? latitude = null;
+        //                //  double? longitude = null;
+        //                double? latitude = obj.addressInfo.Latitude;
+        //                double? longitude = obj.addressInfo.Longitude;
+
+        //                if (objLoc != null)
+        //                {
+        //                    if (objLoc.LocationTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+        //                        loctypeId = objLoc.LocationTypeId.ToInt();
+
+
+
+        //                    if (objLoc.Latitude != null && objLoc.Latitude != 0)
+        //                    {
+        //                        obj.addressInfo.Latitude = objLoc.Latitude;
+        //                        obj.addressInfo.Longitude = objLoc.Longitude;
+        //                        latitude = objLoc.Latitude;
+        //                        longitude = objLoc.Longitude;
+        //                    }
+        //                }
+
+        //                obj.addressInfo.locTypeId = loctypeId;
+
+
+
+        //                if (latitude == null || latitude == 0)
+        //                {
+        //                    var loc = General.GetLocationCoordByDisplayPosition(searchValue);
+        //                    //var loc1 = db.stp_getCoordinatesByAddress(searchValue, General.GetPostCodeMatch(searchValue)).FirstOrDefault();
+
+        //                    if (loc != null && loc.Latitude != 0)
+        //                    {
+
+        //                        obj.addressInfo.Latitude = loc.Latitude;
+        //                        //obj.addressInfo.Longitude = loc.Longtiude;
+        //                        obj.addressInfo.Longitude = loc.Longitude;
+
+        //                        latitude = loc.Latitude;
+        //                        //longitude = loc.Longtiude;
+        //                        longitude = loc.Longitude;
+        //                    }
+
+        //                }
+
+
+        //                obj.addressInfo.zoneId = General.GetZoneId(searchValue);
+
+        //                if (obj.addressInfo.zoneId.ToInt() > 0)
+        //                {
+        //                    obj.addressInfo.zoneName = db.Gen_Zones.Where(c => c.Id == obj.addressInfo.zoneId).Select(c => c.ZoneName).FirstOrDefault();
+
+        //                }
+
+        //                if (latitude != null && latitude != 0)
+        //                {
+        //                    try
+        //                    {
+
+        //                        var ListofAvailDrvs = (from a in db.GetTable<Fleet_DriverQueueList>().Where(c => c.Status == true &&
+        //                                    (c.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE))
+        //                                               join b in db.GetTable<Fleet_Driver_Location>().Where(c => c.Latitude != 0)
+
+        //                                               on a.DriverId equals b.DriverId
+
+        //                                               join d in db.GetTable<Fleet_Driver>() on a.DriverId equals d.Id
+
+        //                                               select new
+        //                                               {
+        //                                                   DriverId = a.DriverId,
+        //                                                   DriverNo = d.DriverNo,
+        //                                                   DriverLocation = b.LocationName,
+        //                                                   Latitude = b.Latitude,
+        //                                                   Longitude = b.Longitude,
+        //                                               }).ToList();
+        //                        var nearestDrivers = ListofAvailDrvs.Select(args => new
+        //                        {
+        //                            args.DriverId,
+
+        //                            MilesAwayFromPickup = new DotNetCoords.LatLng(args.Latitude, args.Longitude).DistanceMiles(new DotNetCoords.LatLng(Convert.ToDouble(latitude), Convert.ToDouble(longitude))),
+        //                            args.DriverNo,
+        //                            Latitude = args.Latitude,
+        //                            Longitude = args.Longitude,
+        //                            Location = args.DriverLocation
+
+        //                        }).OrderBy(args => args.MilesAwayFromPickup)
+        //                        .Take(3).ToList();
+
+        //                        for (int i = 0; i < nearestDrivers.Count; i++)
+        //                        {
+        //                            string time = string.Empty;
+
+        //                            time = General.GetETATime(nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude, Convert.ToDouble(latitude) + "," + Convert.ToDouble(longitude), "").ToStr();
+
+        //                            if (obj.addressInfo.NearestDrivers == null)
+        //                                obj.addressInfo.NearestDrivers = new List<string>();
+
+        //                            obj.addressInfo.NearestDrivers.Add("Drv " + nearestDrivers[i].DriverNo + " - " + time + "_LatLng" + nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude + "_Id" + nearestDrivers[i].DriverId);
+
+        //                        }
+        //                    }
+        //                    catch (Exception ex)
+        //                    {
+        //                        try
+        //                        {
+        //                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAddressDetails_exceptionnearestdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + ",exception:" + ex.Message + Environment.NewLine);
+        //                        }
+        //                        catch
+        //                        {
+
+        //                        }
+        //                    }
+        //                }
+        //                response.Data = obj.addressInfo;
+        //                //
+        //            }
+        //            catch (Exception ex)
+        //            {
+
+        //            }
+        //        }
+        //        try
+        //        {
+        //            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAddressDetails_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + Environment.NewLine);
+        //        }
+        //        catch
+        //        {
+
+        //        }
+        //    }
+        //    catch
+        //    {
+        //        response.HasError = true;
+        //        response.Message = "exception occured";
+        //    }
+        //    return new CustomJsonResult { Data = response };
+        //}
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
