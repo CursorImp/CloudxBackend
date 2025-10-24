@@ -56,7 +56,41 @@ namespace SignalRHub.Controllers
         }
 
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("UpdateEscort")]
+        public JsonResult UpdateEscort(WebApiClasses.RequestWebApi obj)
+        {
+            ResponseWebApi response = new ResponseWebApi();
 
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    long bookingId = obj.bookingInfo.Id.ToLong();
+                    // Get escort id as nullable int
+                    int? escortId = obj.bookingInfo.EscortId.ToIntorNull();
+
+                    // Inline SQL update (EscortId is a foreign key, can be null)
+                    string sql = escortId == null || escortId == 0
+                        ? $"UPDATE Booking SET EscortId = null WHERE Id = {bookingId}"
+                        : $"UPDATE Booking SET EscortId = {escortId} WHERE Id = {bookingId}";
+
+                    db.ExecuteCommand(sql);
+
+                    response.HasError = false;
+                    response.Message = "Escort updated successfully";
+                    response.Data = bookingId;
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
 
 
         #region Phase#1
