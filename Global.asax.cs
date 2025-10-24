@@ -9236,7 +9236,7 @@ namespace SignalRHub
 
                                                         try
                                                         {
-
+                                                            Thread.Sleep(200);
                                                             Instance.listofJobs.Add(new clsPDA
                                                             {
                                                                 JobId = availBiddingDriver.a.JobId,
