@@ -16122,7 +16122,14 @@ namespace SignalRHub
                         {
                             using (TaxiDataContext db = new TaxiDataContext())
                             {
-                                db.stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
+                                try
+                                {
+                                    db.ExecuteQuery<int>("exec stp_UpdateJob {0},{1},{2},{3},{4},{5}", values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt(), true);
+                                }
+                                catch
+                                {
+                                    db.stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), HubProcessor.Instance.objPolicy.SinBinTimer.ToInt());
+                                }
                             }
                         }
 

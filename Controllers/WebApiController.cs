@@ -10151,8 +10151,15 @@ namespace SignalRHub.Controllers
                             }
                             else
                             {
-                                db.stp_UpdateJob(jobId, driverId, JobStatusId.ToIntorNull(), DriverStatusId.ToIntorNull(), -1);
-
+                                try
+                                {
+                                    db.ExecuteQuery<int>("exec stp_UpdateJob {0},{1},{2},{3},{4},{5}", jobId, driverId, JobStatusId.ToIntorNull(), DriverStatusId.ToIntorNull(), -1, true);
+                                }
+                                catch {
+                                    db.stp_UpdateJob(jobId, driverId, JobStatusId.ToIntorNull(), DriverStatusId.ToIntorNull(), -1);
+                                }
+                                
+                                
                             }
 
 
