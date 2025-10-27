@@ -1,34 +1,30 @@
-﻿using Microsoft.AspNet.SignalR;
+﻿using AsterNET;
+using AsterNET.Manager;
+using AsterNET.Manager.Event;
+using DotNetCoords;
+using Microsoft.AspNet.SignalR;
+using SignalRHub.WebApiClasses;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
+using System.Web.Http;
+using System.Web.Mvc;
+using System.Web.Routing;
 using System.Web.Security;
 using System.Web.SessionState;
+using System.Xml;
 using Taxi_BLL;
 using Taxi_Model;
 using Utils;
-using AsterNET;
-
-
-
-using System.Configuration;
-using System.IO;
-
-using HMSMS = SMSGateway.HypermediaGateway;
 using DSSMS = SMSGateway.DinstarSMSGateway;
-using AsterNET.Manager.Event;
-using AsterNET.Manager;
-
-using System.Web.Mvc;
-using System.Web.Routing;
-using System.Web.Http;
-using DotNetCoords;
-using System.Threading;
-using System.Data;
-using System.Xml;
-using SignalRHub.WebApiClasses;
-using System.Runtime.CompilerServices;
+using HMSMS = SMSGateway.HypermediaGateway;
 
 namespace SignalRHub
 {
@@ -43,7 +39,7 @@ namespace SignalRHub
         private static CallerIdVOIP_Configuration objAsterik = null;
         private ManagerConnection manager = null;
         private string physicalPath = AppContext.BaseDirectory;
-        private enum GatewayType { HypermediaSMSGateway = 1, DinstarSMSGateway = 2 }
+        private enum GatewayType { HypermediaSMSGateway = 1, DinstarSMSGateway = 2, VonagSMSGateWay = 5 }
         private static GatewayType SelectedGateway = GatewayType.DinstarSMSGateway;
         private string DefaultClientId { get; set; }
         private DinstarSettings DSSMS_Settings = null;
@@ -51,6 +47,7 @@ namespace SignalRHub
 
         public static HMSMS.SmsGateway HMSMS_smsgateway = null;
         public static DSSMS.SmsGateway DSSMS_smsgateway = null;
+        //public static VonageClient vonageClient = null;
 
 
         private static System.Timers.Timer callerIDTimer = null;
@@ -104,6 +101,8 @@ namespace SignalRHub
         public static string UpcomingJobHour = "5";
         public static string ShowBidList = "0";
         public static string EnableOnlineBookingEmail = "0";
+        public static string VonageApiKey = "";
+        public static string VonageApiSecret = "";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -668,6 +667,8 @@ namespace SignalRHub
                              new AppSetting { SetKey = "ShowBidList", SetVal = "0", description = "ShowBidList"  },
                              new AppSetting { SetKey = "EnableQuotedOnlineBooking", SetVal = "0", description = "EnableQuotedOnlineBooking"  },
                              new AppSetting { SetKey = "EnableOnlineBookingEmail", SetVal = "0", description = "EnableOnlineBookingEmail"  },
+                             new AppSetting { SetKey = "VonageApiKey", SetVal = "", description = "VonageApiKey"  },
+                             new AppSetting { SetKey = "VonageApiSecret", SetVal = "", description = "VonageApiSecret"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -717,7 +718,8 @@ namespace SignalRHub
                 Instance.autoDispatchTimer = new System.Timers.Timer(5000);
 
                 //Hook up the Elapsed event for the timer 
-                Instance.autoDispatchTimer.Elapsed += AutoDispatchActivity;
+                //Instance.autoDispatchTimer.Elapsed += AutoDispatchActivity;
+                Instance.autoDispatchTimer.Elapsed += async (sender, e) => await AutoDispatchActivityAsync(sender, e);
 
                 Instance.autoDispatchTimer.AutoReset = true;
                 Instance.autoDispatchTimer.Enabled = true;
@@ -1175,6 +1177,10 @@ namespace SignalRHub
                         {
                             SelectedGateway = GatewayType.DinstarSMSGateway;
                         }
+                        else if (_selectgateway == 5)
+                        {
+                            SelectedGateway = GatewayType.VonagSMSGateWay;
+                        }
                     }
                 }
 
@@ -1334,7 +1340,15 @@ namespace SignalRHub
                     if (smsInbox == "1")
                         DSSMS_smsgateway.OnPostMessageIn += DSSMS_smsgateway_OnPostMessageIn;
                 }
+                //else if (SelectedGateway == GatewayType.VonagSMSGateWay)
+                //{
+                //    var credentials = Credentials.FromApiKeyAndSecret(
+                //                VonageApiKey,
+                //                VonageApiSecret
+                //                );
 
+                //    vonageClient = new VonageClient(credentials);
+                //}
                 //
 
                 // InitializeDefaultSettings
@@ -1537,6 +1551,14 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableOnlineBookingEmail")))
                 {
                     EnableOnlineBookingEmail = GetAppSetting<string>("EnableOnlineBookingEmail").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("VonageApiKey")))
+                {
+                    VonageApiKey = GetAppSetting<string>("VonageApiKey").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("VonageApiSecret")))
+                {
+                    VonageApiSecret = GetAppSetting<string>("VonageApiSecret").ToStr();
                 }
 
             }
@@ -2718,6 +2740,15 @@ namespace SignalRHub
 
                 if (SelectedGateway == GatewayType.HypermediaSMSGateway)
                     HMSMS_smsgateway.Send(number, message);
+                //else if (SelectedGateway == GatewayType.DinstarSMSGateway)
+                //{
+                //    vonageClient.SmsClient.SendAnSmsAsync(new Vonage.Messaging.SendSmsRequest()
+                //    {
+                //        To = number,
+                //        From = "",
+                //        Text = message
+                //    });
+                //}
                 else
                     DSSMS_smsgateway.Send(number, message);
 
@@ -2863,7 +2894,94 @@ namespace SignalRHub
 
 
         #region AutoDispatch
+        private async Task AutoDispatchActivityAsync(object source, System.Timers.ElapsedEventArgs e)
+        {
+            try
+            {
+                if (!IsPerformingAutoDespatchActivity)
+                {
+                    if (Instance.objPolicy.EnableAutoDespatch.ToBool())
+                    {
+                        await semaphoreSlim.WaitAsync();
+                        await Task.Run(async () =>
+                        {
+                            try
+                            {
+                                File.AppendAllText(
+                                        Path.Combine(physicalPath, "AutoDispatchActivityAsync_start.txt"),
+                                        $"{DateTime.Now}: AutoDispatchActivityAsync_start"
+                                    );
+                                using (TaxiDataContext db = new TaxiDataContext())
+                                {
+                                    if (!IsPerformingAutoDespatchActivity)
+                                    {
+                                        db.CommandTimeout = 5;
 
+                                        var bookings = db.ExecuteQuery<stp_GetAutoDispatchBookingsResultEx>(
+                                            "exec stp_GetAutoDispatchBookings"
+                                        ).ToList();
+
+                                        if (bookings.Count > 0)
+                                        {
+                                            await PerformAutoDespatchActivityAsync(bookings);
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                try
+                                {
+                                    File.AppendAllText(
+                                        Path.Combine(physicalPath, "autodespatchcatchlog.txt"),
+                                        $"{DateTime.Now}: {ex.Message}{Environment.NewLine}"
+                                    );
+                                }
+                                catch { }
+                            }
+                            finally
+                            {
+                                //When the task is ready, release the semaphore. It is vital to ALWAYS release the semaphore when we are ready, or else we will end up with a Semaphore that is forever locked.
+                                //This is why it is important to do the Release within a try...finally clause; program execution may crash or take a different path, this way you are guaranteed execution
+                                semaphoreSlim.Release();
+                            }
+                        });
+                    }
+
+                    if (Instance.objPolicy.EnableBidding.ToBool())
+                    {
+                        await Task.Run(async () =>
+                        {
+                            try
+                            {
+                                if (Instance.objPolicy.EnableBiddingForChauffers.ToBool())
+                                {
+                                    await CheckChaufferBiddingJobsAsync();
+
+                                    try
+                                    {
+                                        File.AppendAllText(
+                                            Path.Combine(AppContext.BaseDirectory, "CHECKCHAUFFERBIDDING.txt"),
+                                            $"{DateTime.Now}{Environment.NewLine}"
+                                        );
+                                    }
+                                    catch { }
+                                }
+                                else
+                                {
+                                    await CheckBiddingJobsAsync();
+                                }
+                            }
+                            catch { }
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log or handle error
+            }
+        }
         private void AutoDispatchActivity(Object source, System.Timers.ElapsedEventArgs e)
         {
 
@@ -2978,6 +3096,7 @@ namespace SignalRHub
 
 
         }
+        static SemaphoreSlim semaphoreSlim = new SemaphoreSlim(1, 1);
         public static List<ClsAutoDespatchPlot> listofSuccessAutoDespatch = null;
         public static List<Gen_PricePlot> listofPricePlots = null;
         private static bool IsPerformingAutoDespatchActivity = false;
@@ -3122,7 +3241,28 @@ namespace SignalRHub
 
 
 
-
+        private async Task PerformAutoDespatchActivityAsync(List<stp_GetAutoDispatchBookingsResultEx> bookings)
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    PerformAutoDespatchActivity(bookings);
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        File.AppendAllText("PerformAutoDespatchActivityAsync_Error.txt",
+                            $"{DateTime.Now}: {ex.Message}{Environment.NewLine}");
+                    }
+                    catch
+                    {
+                        // swallow logging exception
+                    }
+                }
+            });
+        }
         private void PerformAutoDespatchActivity(List<stp_GetAutoDispatchBookingsResultEx> bookings)
         {
 
@@ -3145,7 +3285,16 @@ namespace SignalRHub
 
                     return;
                 }
+                try
+                {
+                    File.AppendAllText("PerformingAutoDespatchActivity_true.txt", DateTime.Now.ToStr() + ": performing autodespatch" + Environment.NewLine);
 
+                }
+                catch
+                {
+
+
+                }
 
                 IsPerformingAutoDespatchActivity = true;
 
@@ -6969,7 +7118,14 @@ namespace SignalRHub
             {
 
                 IsPerformingAutoDespatchActivity = false;
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\PerformingAutoDespatchActivity_false.txt", DateTime.Now.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
 
+                }
 
 
             }
@@ -8363,6 +8519,28 @@ namespace SignalRHub
             }
         }
 
+        private async Task CheckChaufferBiddingJobsAsync()
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    CheckChaufferBiddingJobs();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        File.AppendAllText("CheckChaufferBiddingJobs_Error.txt",
+                            $"{DateTime.Now}: {ex.Message}{Environment.NewLine}");
+                    }
+                    catch
+                    {
+                        // swallow logging exception
+                    }
+                }
+            });
+        }
         private void CheckChaufferBiddingJobs()
         {
 
@@ -8511,6 +8689,28 @@ namespace SignalRHub
         List<int?> listofRemovedBiddingDrivers;
         public static List<ClsDriverBid> listofDrvBidding = null;
 
+        private async Task CheckBiddingJobsAsync()
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    CheckBiddingJobs();
+                }
+                catch (Exception ex)
+                {
+                    try
+                    {
+                        File.AppendAllText("CheckBiddingJobsAsync_Error.txt",
+                            $"{DateTime.Now}: {ex.Message}{Environment.NewLine}");
+                    }
+                    catch
+                    {
+                        // swallow logging exception
+                    }
+                }
+            });
+        }
         private void CheckBiddingJobs()
         {
 
@@ -9036,7 +9236,7 @@ namespace SignalRHub
 
                                                         try
                                                         {
-
+                                                            Thread.Sleep(200);
                                                             Instance.listofJobs.Add(new clsPDA
                                                             {
                                                                 JobId = availBiddingDriver.a.JobId,
