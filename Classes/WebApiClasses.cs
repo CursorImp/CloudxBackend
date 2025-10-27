@@ -907,6 +907,7 @@ namespace SignalRHub.WebApiClasses
         public int totalCompleted;
         public int totalInCompleted;
         public int totalQuotation;
+        public int totalOnline;
 
     }
 

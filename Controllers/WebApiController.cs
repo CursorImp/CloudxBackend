@@ -584,6 +584,7 @@ namespace SignalRHub.Controllers
                     data.objBookingCount.totalCancelled = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.CANCELLED).FirstOrDefault().DefaultIfEmpty().count;
                     data.objBookingCount.totalNoPickup = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.NOPICKUP).FirstOrDefault().DefaultIfEmpty().count; ;
                     data.objBookingCount.totalCompleted = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.DISPATCHED).FirstOrDefault().DefaultIfEmpty().count;
+                    data.objBookingCount.totalOnline = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.WAITING_WEBBOOKING).FirstOrDefault().DefaultIfEmpty().count;
                     var data1 = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, 0, "", 1).ToList();
                     data.objBookingCount.totalInCompleted = data1.Where(a =>
                         a.PickupDate.HasValue &&
