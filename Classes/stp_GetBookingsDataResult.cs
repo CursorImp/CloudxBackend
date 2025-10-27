@@ -134,5 +134,6 @@ namespace SignalRHub
         public long? EscortId { get; set; }
         public bool? HasEscort { get; set; }
         public string BookingTypeName { get; set; }
+        public string OrderNo { get; set; }
     }
 }
