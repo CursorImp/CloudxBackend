@@ -26785,7 +26785,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         string trimmedPhoneNumber = phoneNumber.Trim();
                         if (!string.IsNullOrEmpty(trimmedPhoneNumber))
                         {
-                            General.AddSMS(trimmedPhoneNumber, $"request pda=0=0=Message>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}", 1);
+                            General.AddSMS(trimmedPhoneNumber, msg, 1);
                         }
                     }
                     response.Data = "Messages Sent Successfully";
