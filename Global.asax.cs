@@ -23,6 +23,8 @@ using System.Xml;
 using Taxi_BLL;
 using Taxi_Model;
 using Utils;
+using Vonage;
+using Vonage.Request;
 using DSSMS = SMSGateway.DinstarSMSGateway;
 using HMSMS = SMSGateway.HypermediaGateway;
 
@@ -47,7 +49,7 @@ namespace SignalRHub
 
         public static HMSMS.SmsGateway HMSMS_smsgateway = null;
         public static DSSMS.SmsGateway DSSMS_smsgateway = null;
-        //public static VonageClient vonageClient = null;
+        public static VonageClient vonageClient = null;
 
 
         private static System.Timers.Timer callerIDTimer = null;
@@ -103,6 +105,8 @@ namespace SignalRHub
         public static string EnableOnlineBookingEmail = "0";
         public static string VonageApiKey = "";
         public static string VonageApiSecret = "";
+        public static string VonageSenderName = "CabTreasure";
+        public static string HideAccountName = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -669,6 +673,8 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableOnlineBookingEmail", SetVal = "0", description = "EnableOnlineBookingEmail"  },
                              new AppSetting { SetKey = "VonageApiKey", SetVal = "", description = "VonageApiKey"  },
                              new AppSetting { SetKey = "VonageApiSecret", SetVal = "", description = "VonageApiSecret"  },
+                             new AppSetting { SetKey = "VonageSenderName", SetVal = "CabTreasure", description = "VonageSenderName"  },
+                             new AppSetting { SetKey = "HideAccountName", SetVal = "0", description = "HideAccountName"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1340,15 +1346,9 @@ namespace SignalRHub
                     if (smsInbox == "1")
                         DSSMS_smsgateway.OnPostMessageIn += DSSMS_smsgateway_OnPostMessageIn;
                 }
-                //else if (SelectedGateway == GatewayType.VonagSMSGateWay)
-                //{
-                //    var credentials = Credentials.FromApiKeyAndSecret(
-                //                VonageApiKey,
-                //                VonageApiSecret
-                //                );
-
-                //    vonageClient = new VonageClient(credentials);
-                //}
+                else if (SelectedGateway == GatewayType.VonagSMSGateWay)
+                {
+                }
                 //
 
                 // InitializeDefaultSettings
@@ -1559,6 +1559,14 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("VonageApiSecret")))
                 {
                     VonageApiSecret = GetAppSetting<string>("VonageApiSecret").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("VonageSenderName")))
+                {
+                    VonageSenderName = GetAppSetting<string>("VonageSenderName").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("HideAccountName")))
+                {
+                    HideAccountName = GetAppSetting<string>("HideAccountName").ToStr();
                 }
 
             }
@@ -2740,15 +2748,33 @@ namespace SignalRHub
 
                 if (SelectedGateway == GatewayType.HypermediaSMSGateway)
                     HMSMS_smsgateway.Send(number, message);
-                //else if (SelectedGateway == GatewayType.DinstarSMSGateway)
-                //{
-                //    vonageClient.SmsClient.SendAnSmsAsync(new Vonage.Messaging.SendSmsRequest()
-                //    {
-                //        To = number,
-                //        From = "",
-                //        Text = message
-                //    });
-                //}
+                else if (SelectedGateway == GatewayType.VonagSMSGateWay)
+                {
+                    var credentials = Credentials.FromApiKeyAndSecret(
+                                VonageApiKey,
+                                VonageApiSecret
+                                );
+
+                    vonageClient = new VonageClient(credentials);
+                    if (vonageClient != null)
+                    {
+                        if (number.StartsWith("07"))
+                        {
+                            number = "+44" + number.Substring(1); // remove leading 0 and prefix with 44
+                        }
+                        var request = new Vonage.Messaging.SendSmsRequest()
+                        {
+                            To = number,
+                            From = VonageSenderName,
+                            Text = message
+                        };
+
+                        // Block and wait for the async call to complete
+                        var response = vonageClient.SmsClient.SendAnSmsAsync(request).GetAwaiter().GetResult();
+
+
+                    }
+                }
                 else
                     DSSMS_smsgateway.Send(number, message);
 
