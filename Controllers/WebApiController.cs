@@ -2499,6 +2499,31 @@ namespace SignalRHub.Controllers
                         }
                         try
                         {
+                            if (!string.IsNullOrEmpty(obj.bookingInfo.OrderNo) && obj.bookingInfo.CompanyId > 0)
+                            {
+                                // Check if the order number already exists for this company
+                                bool exists = db.Gen_Company_OrderNumbers
+                                    .Any(x => x.CompanyId == obj.bookingInfo.CompanyId && x.OrderNo == obj.bookingInfo.OrderNo);
+
+                                if (!exists)
+                                {
+                                    // Create and add new order number entry
+                                    var newOrderNumber = new Gen_Company_OrderNumber
+                                    {
+                                        OrderNo = obj.bookingInfo.OrderNo,
+                                        CompanyId = obj.bookingInfo.CompanyId.Value
+                                    };
+
+                                    db.Gen_Company_OrderNumbers.InsertOnSubmit(newOrderNumber);
+                                    db.SubmitChanges();
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                        try
+                        {
                             string query1 = "delete from Booking_ViaLocations where BookingId={0}";
                             db.ExecuteCommand(query1, objMaster.Current.Id);
                             foreach (var item in obj.bookingInfo.Booking_ViaLocations)
