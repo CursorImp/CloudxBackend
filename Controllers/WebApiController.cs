@@ -1616,6 +1616,15 @@ namespace SignalRHub.Controllers
                             obj.bookingInfo.Driver = driver;
                         }
                     }
+
+                    try
+                    {
+                        if (obj2.Customer != null && !string.IsNullOrEmpty(obj2.Customer.LikesAndDislikes))
+                            obj.bookingInfo.PermanentNotes = obj2.Customer.LikesAndDislikes;
+                    }
+                    catch
+                    {
+                    }
                     try
                     {
                         foreach (var item in obj2.GetType().GetProperties())
@@ -2176,6 +2185,8 @@ namespace SignalRHub.Controllers
 
                                 if (objMaster.Current.Id > 0)
                                 {
+                                    if (item.Name == "CustomerId")
+                                        continue;
                                     if (item.Name == "CallRefNo")
                                         continue;
 
@@ -2469,7 +2480,23 @@ namespace SignalRHub.Controllers
 
                         objMaster.ReturnCustomerPrice = objMaster.Current.ServiceCharges.ToDecimal();
                         objMaster.Save();
-
+                        try
+                        {
+                            if (obj.editbookingInfo != null && obj.editbookingInfo.CustomerId != null && obj.bookingInfo.PermanentNotes != null)
+                            {
+                                var CustomerId = obj.editbookingInfo.CustomerId.ToInt();
+                                Customer cus = new Customer();
+                                objMaster.Current.Customer = cus;
+                                objMaster.Current.Customer.Id = CustomerId;
+                            }
+                            if (obj.bookingInfo.PermanentNotes != null)
+                            {
+                                db.ExecuteQuery<int>("update Customer set LikesAndDislikes='" + obj.bookingInfo.PermanentNotes + "'where Id=" + objMaster.Current.Customer.Id);
+                            }
+                        }
+                        catch
+                        {
+                        }
                         try
                         {
                             string query1 = "delete from Booking_ViaLocations where BookingId={0}";
@@ -9795,6 +9822,7 @@ namespace SignalRHub.Controllers
                             BookingBackgroundColor = a.BookingType.BackgroundColor,
                             PermanentNotes = a.NoOfChilds,
                             SpecialReq = a.SpecialRequirements,
+                            LikesAndDisLikes = a.Customer != null ? a.Customer.LikesAndDislikes : ""
                         })
                         .OrderByDescending(c => c.PickupDate)
                         .Take(100)

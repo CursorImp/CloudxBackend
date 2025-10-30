@@ -675,6 +675,8 @@ namespace SignalRHub
                              new AppSetting { SetKey = "VonageApiSecret", SetVal = "", description = "VonageApiSecret"  },
                              new AppSetting { SetKey = "VonageSenderName", SetVal = "CabTreasure", description = "VonageSenderName"  },
                              new AppSetting { SetKey = "HideAccountName", SetVal = "0", description = "HideAccountName"  },
+                             new AppSetting { SetKey = "ShowMsgToAllController", SetVal = "false", description = "ShowMsgToAllController"  },
+
                         };
 
                 using (var db = new TaxiDataContext())

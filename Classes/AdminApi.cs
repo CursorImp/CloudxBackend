@@ -578,6 +578,7 @@ namespace SignalRHub.Classes
         public bool IsBlocked { get;  set; }
         public int Minutes { get;  set; }
         public string isInvoiceOrStatement { get;  set; }
+        public int[] ControllerIds { get; set; }
     }
     public class FareDto
     {

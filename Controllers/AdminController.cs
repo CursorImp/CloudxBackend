@@ -21594,6 +21594,45 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             return Json(response, JsonRequestBehavior.AllowGet);
         }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendMessageToAllWebUsers")]
+        public JsonResult SendMessageToAllWebUsers(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                string msg = obj.Message;
+
+                // Example: send to specific users (IDs)
+                if (obj.ControllerIds != null && obj.ControllerIds.Any())
+                {
+                    foreach (int userId in obj.ControllerIds)
+                    {
+                        // Custom SignalR message format (like your ForceLogoutUser)
+                        var message = $"**sendmessagecontroller>>{userId}>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}";
+                        General.BroadCastMessage(message);
+                    }
+                }
+                else
+                {
+                    // Send to all web users if no specific UserIds are passed
+                    var message = $"**sendmessagecontroller>>0>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}";
+                    General.BroadCastMessage(message);
+                }
+
+                response.Data = new { Message = "Messages sent successfully" };
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("RecallBooking")]
