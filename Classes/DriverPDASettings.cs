@@ -113,6 +113,7 @@ namespace SignalRHub
         public string EnablePassengerChat = "";
         public string EnableUpcomingJob = "";
         public string ShowBidList = "";
+        public string HideAccountName = "";
 
     }
 }

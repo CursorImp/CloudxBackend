@@ -11487,6 +11487,7 @@ namespace SignalRHub
                         pda.EnablePickLocation = Global.EnablePickLocation;
                         pda.EnableUpcomingJob = Global.EnableUpcomingJob;
                         pda.ShowBidList = Global.ShowBidList;
+                        pda.HideAccountName = Global.HideAccountName;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
