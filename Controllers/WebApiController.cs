@@ -11467,5 +11467,100 @@ namespace SignalRHub.Controllers
             return Json(response, JsonRequestBehavior.AllowGet);
 
         }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetAllMessages")]
+        public JsonResult GetAllMessages(WebApiClasses.RequestWebApi obj)
+        {
+            try
+            {
+                // Log incoming request
+                System.IO.File.AppendAllText(
+                    AppContext.BaseDirectory + "\\GetAllMessages.txt",
+                    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
+                    ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine
+                );
+            }
+            catch
+            {
+                // ignore logging failure
+            }
+
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    // The MessageType (Inbox/Outbox) will be passed via obj.MessageType
+                    string messageType = obj.MessageType ?? "";
+
+
+                    if (messageType == "Inbox")
+                    {
+                        var data = (from a in General.GetQueryable<Taxi_Model.Message>(c => c.MessageType != null && c.MessageType == "Inbox")
+
+                                    select new
+                                    {
+                                        Id = a.Id,
+                                        SenderId = a.SenderId,
+                                        Name = a.SenderName,
+                                        Message = a.MessageBody,
+                                        Time = a.MessageCreatedOn,
+                                        SendFrom = a.SendFrom,
+                                        MessageType = a.MessageType
+
+                                    }).OrderByDescending(c => c.Id).Take(1000).ToList();
+                        response.Data = data;
+                    }
+                    else
+                    {
+                        var data = (from a in General.GetQueryable<Taxi_Model.Message>(c => c.SendFrom != null && c.SendFrom == "pda")
+
+                                    select new
+                                    {
+                                        Id = a.Id,
+                                        SenderId = a.SenderId,
+                                        Name = a.SenderName,
+                                        Message = a.MessageBody,
+                                        Time = a.MessageCreatedOn,
+                                        SendFrom = a.SendFrom,
+                                        MessageType = a.MessageType
+
+
+                                    }).OrderByDescending(c => c.Id).Take(1000).ToList();
+                        response.Data = data;
+                    }
+
+
+
+
+                    response.HasError = false;
+                    response.Message = "Success";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+
+                try
+                {
+                    System.IO.File.AppendAllText(
+                        AppContext.BaseDirectory + "\\GetAllMessages_exception.txt",
+                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
+                        ",json:" + new JavaScriptSerializer().Serialize(obj) +
+                        ",exception:" + ex.Message + Environment.NewLine
+                    );
+                }
+                catch
+                {
+                    // ignore logging failure
+                }
+            }
+
+            return new CustomJsonResult { Data = response };
+        }
     }
 }

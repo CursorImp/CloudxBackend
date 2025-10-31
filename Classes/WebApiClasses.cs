@@ -1454,7 +1454,7 @@ namespace SignalRHub.WebApiClasses
         public string DirectionToMove { get; set; }
         public int MoveToDriverId { get; set; }
         public SMSInfo smsInfo { get; set; }
-        
+        public string MessageType { get; set; }
     }
     public class bookingFare
     {
