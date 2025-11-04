@@ -21572,16 +21572,28 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             ResponseAdminApi response = new ResponseAdminApi();
             try
             {
-                //string drvIds = obj.DriverIds;
-                //string[] driverId = obj.DriverIds.Split(',');
                 string msg = obj.Message;
                 foreach (int itemId in obj.DriverIds)
                 {
                     General.requestPDA("request pda=" + itemId + "=" + 0 + "=" + "Message>>" + msg + ">>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4");
+
+
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        var driver = db.Fleet_Drivers.FirstOrDefault(x => x.Id == itemId);
+
+                        SentSM objSms = new SentSM();
+                        objSms.SentOn = DateTime.Now;
+                        objSms.SentTo = driver.MobileNo.ToStr().Trim();
+                        objSms.SMSBody = msg;
+                        objSms.SentBy = obj.UserName;
+
+                        db.SentSMs.InsertOnSubmit(objSms);
+                        db.SubmitChanges();
+
+                    }
+
                 }
-                //General.SendMessageToPDA("request pda=" + drvIds + "=" + 0 + "="
-                //               + "Message>>" + msg + ">>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4");
-                //SocketIO.SendToSocket(drvIds, msg, "=4");
                 response.Data = new
                 {
                     Message = "Messages Sent Successfully"
@@ -21610,14 +21622,29 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 {
                     foreach (int userId in obj.ControllerIds)
                     {
-                        // Custom SignalR message format (like your ForceLogoutUser)
-                        var message = $"**sendmessagecontroller>>{userId}>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}";
+
+                        var message = $"**sendmessagecontroller>>{userId}>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}>>{obj.UserName}";
                         General.BroadCastMessage(message);
+                        using (TaxiDataContext db = new TaxiDataContext())
+                        {
+                            var user = db.UM_Users.FirstOrDefault(x => x.Id == userId);
+
+                            SentSM objSms = new SentSM();
+                            objSms.SentOn = DateTime.Now;
+                            objSms.SentTo = user.UserName.ToStr().Trim();
+                            objSms.SMSBody = msg;
+                            objSms.SentBy = obj.UserName;
+
+                            db.SentSMs.InsertOnSubmit(objSms);
+                            db.SubmitChanges();
+
+                        }
+
                     }
                 }
                 else
                 {
-                    // Send to all web users if no specific UserIds are passed
+
                     var message = $"**sendmessagecontroller>>0>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}";
                     General.BroadCastMessage(message);
                 }
@@ -21629,9 +21656,9 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 response.HasError = true;
                 response.Message = ex.Message;
             }
-
             return Json(response, JsonRequestBehavior.AllowGet);
         }
+
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -26824,7 +26851,20 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         string trimmedPhoneNumber = phoneNumber.Trim();
                         if (!string.IsNullOrEmpty(trimmedPhoneNumber))
                         {
-                            General.AddSMS(trimmedPhoneNumber, msg, 1);
+                            General.AddSMS(trimmedPhoneNumber, $"request pda=0=0=Message>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}", 1);
+                        }
+
+                        using (TaxiDataContext db = new TaxiDataContext())
+                        {
+                            SentSM objSms = new SentSM();
+                            objSms.SentOn = DateTime.Now;
+                            objSms.SentTo = trimmedPhoneNumber.ToStr();
+                            objSms.SMSBody = msg;
+                            objSms.SentBy = obj.UserName.ToStr();
+
+                            db.SentSMs.InsertOnSubmit(objSms);
+                            db.SubmitChanges();
+
                         }
                     }
                     response.Data = "Messages Sent Successfully";
@@ -26837,6 +26877,29 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             }
             return Json(response, JsonRequestBehavior.AllowGet);
         }
+        //[System.Web.Http.HttpGet]
+        //[System.Web.Http.HttpPost]
+        //[System.Web.Http.Route("SendPushNotification")]
+        //public async Task<JsonResult> SendPushNotification([FromBody] PushNotificationRequest request)
+        //{
+        //    var response = new ResponseAdminApi();
+        //    try
+        //    {
+        //        foreach (var token in request.Tokens)
+        //        {
+        //            await FcmNotification.SendNotificationAsync(request.Title, request.Message, token);
+        //        }
+        //        response.HasError = false;
+        //        response.Message = "Notifications sent successfully.";
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        response.HasError = true;
+        //        response.Message = "Error while sending notifications: " + ex.Message;
+        //    }
+        //    return Json(response, JsonRequestBehavior.AllowGet);
+        //}
+
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -27321,6 +27384,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                             select new WebApiClasses.ClsOnlineBooking
                             {
                                 Id = a.Id,
+                                VehicleTypeId=a.VehicleTypeId,
                                 BookingNo = a.BookingNo,
                                 BookingDate = a.BookingDate,
                                 //BookingDateString = a.BookingDate.HasValue ? "" : a.BookingDate.Value.ToString("dd-MMM-yyyy"),

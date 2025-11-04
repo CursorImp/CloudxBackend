@@ -1902,7 +1902,8 @@ namespace SignalRHub.Controllers
                       .Select(datarow => new
                       {
                           Id = datarow.Field<int>("Id"),
-                          VehicleType = datarow.Field<string>("VehicleType")
+                          VehicleType = datarow.Field<string>("VehicleType"),
+                          IsActive = datarow.Field<bool?>("IsActive"),
                       });
 
 
@@ -11562,5 +11563,78 @@ namespace SignalRHub.Controllers
 
             return new CustomJsonResult { Data = response };
         }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetAllSentMessages")]
+        public JsonResult GetAllSentMessages(WebApiClasses.RequestWebApi obj)
+        {
+            try
+            {
+                // Log incoming request
+                System.IO.File.AppendAllText(
+                    AppContext.BaseDirectory + "\\GetAllMessages.txt",
+                    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
+                    ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine
+                );
+            }
+            catch
+            {
+                // ignore logging failure
+            }
+
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+                DateTime filterDate = DateTime.Now.AddDays(-90).Date;
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var data = db.SentSMs
+                        .Where(c => c.SentOn >= filterDate)
+                        .Select(c => new
+                        {
+                            Id = c.Id,
+                            To = c.SentTo,
+                            Message = c.SMSBody,
+                            SentOn = c.SentOn,
+                            By = c.SentBy
+                        })
+                        .OrderByDescending(c => c.SentOn)
+                        .Take(1000)
+                        .ToList();
+
+                    response.Data = data;
+                    response.HasError = false;
+                    response.Message = "Success";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+
+                try
+                {
+                    System.IO.File.AppendAllText(
+                        AppContext.BaseDirectory + "\\GetAllMessages_exception.txt",
+                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
+                        ",json:" + new JavaScriptSerializer().Serialize(obj) +
+                        ",exception:" + ex.Message + Environment.NewLine
+                    );
+                }
+                catch
+                {
+                    // ignore logging failure
+                }
+            }
+
+            return new CustomJsonResult { Data = response };
+        }
+
+
+
     }
 }

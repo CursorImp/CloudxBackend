@@ -93,6 +93,7 @@ namespace SignalRHub.WebApiClasses
         public string ToDoorNo;
         public string ToStreet;
         public int? BookingStatusId { get; set; }
+        public int? VehicleTypeId { get; set; }
         public int? BookingTypeId;
         public string CompanyName;
         public string VehicleType;
@@ -1835,6 +1836,7 @@ namespace SignalRHub.WebApiClasses
         private string _Driver;
 
         private System.Nullable<int> _DriverId;
+        private System.Nullable<int> _VehicleTypeId;
 
         private string _Vehicle;
 
@@ -2162,6 +2164,21 @@ namespace SignalRHub.WebApiClasses
                 if ((this._DriverId != value))
                 {
                     this._DriverId = value;
+                }
+            }
+        }
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_VehicleTypeId", DbType = "Int")]
+        public System.Nullable<int> VehicleTypeId
+        {
+            get
+            {
+                return this._VehicleTypeId;
+            }
+            set
+            {
+                if ((this._VehicleTypeId != value))
+                {
+                    this._VehicleTypeId = value;
                 }
             }
         }
