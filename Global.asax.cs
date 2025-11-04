@@ -677,6 +677,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "HideAccountName", SetVal = "0", description = "HideAccountName"  },
                              new AppSetting { SetKey = "ShowMsgToAllController", SetVal = "false", description = "ShowMsgToAllController"  },
                              new AppSetting { SetKey = "EnableInbox", SetVal = "false", description = "EnableInbox"  },
+                             new AppSetting { SetKey = "EnableIsActiveVehicleType", SetVal = "true", description = "Enable Is Active on vehicle type"  },
 
                         };
 
