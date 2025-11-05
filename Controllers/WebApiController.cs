@@ -6266,6 +6266,121 @@ namespace SignalRHub.Controllers
 
             return new CustomJsonResult { Data = response };
         }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetTrackEscort")]
+        public JsonResult GetTrackEscort(WebApiClasses.RequestWebApi obj)
+        {
+            //
+
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+
+                ClsDashboardModel data = new ClsDashboardModel();
+                //using (TaxiDataContext db = new TaxiDataContext("Data Source=88.198.21.250,58527;Initial Catalog=AscotCars;User ID=asc321;Password=asc321!;Trusted_Connection=False;"))
+                //{
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+                    string query = @"
+                    SELECT 
+                        Id = ISNULL(z.Id, 0),
+                        ZoneName = ISNULL(z.ZoneName, l.NewZoneName),
+                        e.Id AS EscortId,
+                        e.EscortNo,
+                        b.DriverId,
+                        l.PlotDate,
+                        l.Latitude,
+                        l.Longitude,
+                        l.Speed,
+                        LocationName = ISNULL(z.ZoneName, l.NewZoneName),
+                        dq.DriverWorkStatusId,
+                        ws.WorkStatus,
+                        ws.BackgroundColor,
+                        fm.PlateNo,
+                        l.EstimatedTimeLeft,
+                        UpdateDate = l.UpdateDate,
+                        WaitSinceOn = ISNULL(dq.WaitSinceOn, GETDATE())
+                    FROM Gen_Escort_Location l
+                    INNER JOIN Gen_Escort e ON e.Id = l.EscortId
+                    INNER JOIN Booking b ON b.Id = " + obj.bookingInfo.Id.ToInt() + @"
+                    INNER JOIN Fleet_DriverQueueList dq ON dq.DriverId = b.DriverId AND dq.Status = 1
+                    INNER JOIN Fleet_DriverWorkingStatus ws ON ws.Id = dq.DriverWorkStatusId
+                    LEFT JOIN Gen_Zones z ON z.Id = l.ZoneId
+                    LEFT JOIN Fleet_Master fm ON dq.FleetMasterId = fm.Id
+                    WHERE l.EscortId = " + obj.bookingInfo.EscortId.ToInt();
+
+                    var resp = db.ExecuteQuery<clsTrackEscort>(query).FirstOrDefault();
+
+
+                    if (obj.bookingInfo.Id > 0)
+                    {
+
+
+                        if (obj.bookingInfo.FromAddress.ToStr().Trim().Length == 0)
+                        {
+                            var objBookingInfo = db.Bookings.Where(c => c.Id == obj.bookingInfo.Id).Select(args => new { args.FromAddress, args.ToAddress }).FirstOrDefault();
+
+
+                            if (objBookingInfo != null)
+                            {
+                                obj.bookingInfo.FromAddress = objBookingInfo.FromAddress.ToStr();
+                                obj.bookingInfo.ToAddress = objBookingInfo.ToAddress.ToStr();
+
+                            }
+                        }
+
+                        var coord = db.stp_getCoordinatesByAddress(obj.bookingInfo.FromAddress.ToStr().Trim().ToUpper(), General.GetPostCodeMatch(obj.bookingInfo.FromAddress.ToStr().Trim().ToUpper())).FirstOrDefault();
+
+                        if (coord != null)
+
+                        {
+                            resp.PickupAddress = new AddressInfo();
+                            resp.PickupAddress.Address = obj.bookingInfo.FromAddress.ToStr();
+                            resp.PickupAddress.Latitude = coord.Latitude;
+                            resp.PickupAddress.Longitude = coord.Longtiude;
+
+                        }
+
+                        coord = db.stp_getCoordinatesByAddress(obj.bookingInfo.ToAddress.ToStr().Trim().ToUpper(), General.GetPostCodeMatch(obj.bookingInfo.ToAddress.ToStr().Trim().ToUpper())).FirstOrDefault();
+
+                        if (coord != null)
+
+                        {
+                            resp.destinationAddress = new AddressInfo();
+                            resp.destinationAddress.Address = obj.bookingInfo.ToAddress.ToStr();
+                            resp.destinationAddress.Latitude = coord.Latitude;
+                            resp.destinationAddress.Longitude = coord.Longtiude;
+
+                        }
+                    }
+
+                    response.Data = resp;
+
+
+
+
+
+                }
+
+
+
+                
+
+            }
+            catch (Exception ex)
+            {
+
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+
+
+            return new CustomJsonResult { Data = response };
+        }
 
 
         [System.Web.Http.HttpGet]
