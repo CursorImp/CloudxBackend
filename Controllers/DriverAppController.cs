@@ -17398,6 +17398,15 @@ namespace SignalRHub
 
 
                                         }
+                                        else
+                                        {
+                                            FareMeterSettings fareJsonArr = new FareMeterSettings(true);
+                                            fareJsonArr.EnableViaAction = Global.EnableViaAction.ToStr();
+                                            //if ((values[7].ToDecimal() >= 102.63m && values[7].ToDecimal() < 120))
+                                            //    fareJsonArr.EnableViaAction = "3";
+
+                                            fareJson = ",jsonstring|" + new JavaScriptSerializer().Serialize(fareJsonArr).Replace(",", "|");
+                                        }
 
                                     }
                                     catch
