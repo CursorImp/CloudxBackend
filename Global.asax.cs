@@ -2,6 +2,8 @@
 using AsterNET.Manager;
 using AsterNET.Manager.Event;
 using DotNetCoords;
+//using FirebaseAdmin;
+//using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNet.SignalR;
 using SignalRHub.WebApiClasses;
 using System;
@@ -488,7 +490,13 @@ namespace SignalRHub
 
             }
             initializeSettings();
-
+            //try
+            //{
+            //    InitializeFirebase();
+            //}
+            //catch
+            //{
+            //}
 
             try
             {
@@ -678,6 +686,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "ShowMsgToAllController", SetVal = "false", description = "ShowMsgToAllController"  },
                              new AppSetting { SetKey = "EnableInbox", SetVal = "false", description = "EnableInbox"  },
                              new AppSetting { SetKey = "EnableIsActiveVehicleType", SetVal = "true", description = "Enable Is Active on vehicle type"  },
+                             new AppSetting { SetKey = "EnableTrackEscort", SetVal = "true", description = "Enable Track Escort" },
 
                         };
 
@@ -1043,7 +1052,17 @@ namespace SignalRHub
 
 
 
-
+        //private void InitializeFirebase()
+        //{
+        //    if (FirebaseApp.DefaultInstance == null)
+        //    {
+        //        var path = HttpContext.Current.Server.MapPath("~/App_Data/firebase-key.json");
+        //        FirebaseApp.Create(new AppOptions()
+        //        {
+        //            Credential = GoogleCredential.FromFile(path)
+        //        });
+        //    }
+        //}
         public static int? CallerIdType = null;
         private void initializeSettings()
         {

@@ -820,6 +820,52 @@ namespace SignalRHub.WebApiClasses
         public DateTime WaitSinceOn { get; set; }
     }
 
+    public class clsTrackEscort
+    {
+        public clsTrackEscort()
+        {
+
+        }
+
+        public AddressInfo PickupAddress { get; set; }
+        public AddressInfo destinationAddress { get; set; }
+
+        // Escort info
+        public long EscortId { get; set; }
+        public string EscortNo { get; set; }
+
+        // Driver info (linked via booking)
+        public int DriverId { get; set; }
+
+        // Location / Zone info
+        public int Id { get; set; } // Zone or location ID (from query)
+        public string ZoneName { get; set; }
+        public string LocationName { get; set; }
+
+        // Coordinates
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+
+        // Tracking and movement
+        public double Speed { get; set; }
+        public DateTime? PlotDate { get; set; }
+        public DateTime UpdateDate { get; set; }
+        public DateTime WaitSinceOn { get; set; }
+
+        // Status and appearance
+        public int? DriverWorkStatusId { get; set; }
+        public string WorkStatus { get; set; }
+        public string BackgroundColor { get; set; }
+        public string MapIcon { get; set; }
+
+        // Vehicle info
+        public string PlateNo { get; set; }
+
+        // ETA and time
+        public string EstimatedTimeLeft { get; set; }
+
+    }
+
 
     public class WebAccountData
     {
@@ -852,6 +898,7 @@ namespace SignalRHub.WebApiClasses
         public long DriverLoginId { get; set; }
         public string LoginFrom { get; set; }
         public long? CurrentJobId { get; set; }
+        public long? EscortId { get; set; }
         public double? longitude { get; set; }
         public double? latitude { get; set; }
         public int? VehicleTypeId1 { get; set; }
