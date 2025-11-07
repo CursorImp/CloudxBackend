@@ -21629,25 +21629,24 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         {
                             var user = db.UM_Users.FirstOrDefault(x => x.Id == userId);
 
-                            SentSM objSms = new SentSM();
-                            objSms.SentOn = DateTime.Now;
-                            objSms.SentTo = user.UserName.ToStr().Trim();
-                            objSms.SMSBody = msg;
-                            objSms.SentBy = obj.UserName;
+                            InternalMessaging internalMsg = new InternalMessaging
+                            {
+                                MessageText = msg,
+                                IsWelcomeMsg = false,
+                                AddOn = DateTime.Now,
+                                IsRead = false,
+                                SenderName = obj.UserName,
+                                ReceiveTo = user.Id
+                            };
 
-                            db.SentSMs.InsertOnSubmit(objSms);
+                            db.InternalMessagings.InsertOnSubmit(internalMsg);
                             db.SubmitChanges();
 
                         }
 
                     }
                 }
-                else
-                {
-
-                    var message = $"**sendmessagecontroller>>0>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}";
-                    General.BroadCastMessage(message);
-                }
+                
 
                 response.Data = new { Message = "Messages sent successfully" };
             }
