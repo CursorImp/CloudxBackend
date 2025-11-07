@@ -11750,6 +11750,95 @@ namespace SignalRHub.Controllers
             return new CustomJsonResult { Data = response };
         }
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetAllControllerMessages")]
+        public JsonResult GetAllControllerMessages(WebApiClasses.RequestWebApi obj)
+        {
+            // Initialize response object
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+                // Optional logging
+                try
+                {
+                    System.IO.File.AppendAllText(
+                        AppContext.BaseDirectory + "\\GetAllControllerMessages.txt",
+                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
+                        ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine
+                    );
+                }
+                catch { }
+
+                // Validate input
+                if (obj == null || string.IsNullOrEmpty(obj.Type))
+                {
+                    response.HasError = true;
+                    response.Message = "Invalid request";
+                    return new CustomJsonResult { Data = response };
+                }
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    List<object> messages = new List<object>();
+
+                    if (obj.Type.Equals("sent", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Sent messages for logged-in user
+                        messages = (from a in db.InternalMessagings
+                                    where a.SenderName.ToLower() == obj.UserName.ToLower() // Use obj.UserName instead of AppVars
+                                    orderby a.AddOn descending
+                                    select new
+                                    {
+                                        Id = a.Id,
+                                        Recipient = a.ReceiveTo != null ? db.UM_Users.FirstOrDefault(u => u.Id == a.ReceiveTo).UserName : "",
+                                        MessageText = a.MessageText,
+                                        DateTime = a.AddOn
+                                    }).ToList<object>();
+                    }
+                    else
+                    {
+                        // Inbox messages for logged-in user
+                        int? userId = obj.UserId; // make sure RequestWebApi has UserId
+                        messages = (from a in db.InternalMessagings
+                                    join b in db.UM_Users on a.SenderName equals b.UserName
+                                    where a.ReceiveTo == userId
+                                    orderby a.AddOn descending
+                                    select new
+                                    {
+                                        Id = a.Id,
+                                        Sender = a.SenderName,
+                                        MessageText = a.MessageText,
+                                        DateTime = a.AddOn
+                                    }).ToList<object>();
+                    }
+
+                    response.Data = messages;
+                    response.HasError = false;
+                    response.Message = "Success";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+
+                try
+                {
+                    System.IO.File.AppendAllText(
+                        AppContext.BaseDirectory + "\\GetAllControllerMessages_exception.txt",
+                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
+                        ",json:" + new JavaScriptSerializer().Serialize(obj) +
+                        ",exception:" + ex.Message + Environment.NewLine
+                    );
+                }
+                catch { }
+            }
+
+            return new CustomJsonResult { Data = response };
+        }
+
 
 
     }
