@@ -6285,7 +6285,7 @@ namespace SignalRHub.Controllers
                 {
 
                     string query = @"
-                    SELECT 
+                    SELECT TOP 1
                         Id = ISNULL(z.Id, 0),
                         ZoneName = ISNULL(z.ZoneName, l.NewZoneName),
                         e.Id AS EscortId,
@@ -6310,7 +6310,8 @@ namespace SignalRHub.Controllers
                     INNER JOIN Fleet_DriverWorkingStatus ws ON ws.Id = dq.DriverWorkStatusId
                     LEFT JOIN Gen_Zones z ON z.Id = l.ZoneId
                     LEFT JOIN Fleet_Master fm ON dq.FleetMasterId = fm.Id
-                    WHERE l.EscortId = " + obj.bookingInfo.EscortId.ToInt();
+                    WHERE l.EscortId = " + obj.bookingInfo.EscortId.ToInt() + @"
+                    ORDER BY l.Id DESC";
 
                     var resp = db.ExecuteQuery<clsTrackEscort>(query).FirstOrDefault();
 
