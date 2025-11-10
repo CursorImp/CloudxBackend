@@ -8,11 +8,14 @@ using Microsoft.AspNet.SignalR;
 using SignalRHub.WebApiClasses;
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -43,14 +46,16 @@ namespace SignalRHub
         private static CallerIdVOIP_Configuration objAsterik = null;
         private ManagerConnection manager = null;
         private string physicalPath = AppContext.BaseDirectory;
-        private enum GatewayType { HypermediaSMSGateway = 1, DinstarSMSGateway = 2, VonagSMSGateWay = 5 }
+        private enum GatewayType { HypermediaSMSGateway = 1, DinstarSMSGateway = 2, TaxiLocalGateway = 3, VonagSMSGateWay = 5, ClickSend = 6 }
         private static GatewayType SelectedGateway = GatewayType.DinstarSMSGateway;
         private string DefaultClientId { get; set; }
         private DinstarSettings DSSMS_Settings = null;
         private HypermediaSettings HMSMS_Settings = null;
+        private SignalRHub.Classes.TaxiLocalSettings TaxiLocal_Settings = null;
 
         public static HMSMS.SmsGateway HMSMS_smsgateway = null;
         public static DSSMS.SmsGateway DSSMS_smsgateway = null;
+        public static SignalRHub.Classes.TaxiLocalSettings TLSMS_smsgateway = null;
         public static VonageClient vonageClient = null;
 
 
@@ -108,6 +113,9 @@ namespace SignalRHub
         public static string VonageApiKey = "";
         public static string VonageApiSecret = "";
         public static string VonageSenderName = "CabTreasure";
+        public static string ClickSendUserName = "";
+        public static string ClickSendApiKey = "";
+        public static string ClickSendCompanyName = "CabTreasure";
         public static string HideAccountName = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
@@ -687,6 +695,9 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableInbox", SetVal = "false", description = "EnableInbox"  },
                              new AppSetting { SetKey = "EnableIsActiveVehicleType", SetVal = "true", description = "Enable Is Active on vehicle type"  },
                              new AppSetting { SetKey = "EnableTrackEscort", SetVal = "true", description = "Enable Track Escort" },
+                             new AppSetting { SetKey = "ClickSendApiKey", SetVal = "", description = "ClickSendApiKey"  },
+                             new AppSetting { SetKey = "ClickSendUserName", SetVal = "", description = "ClickSendUserName"  },
+                             new AppSetting { SetKey = "ClickSendCompanyName", SetVal = "CabTreasure", description = "ClickSendCompanyName"  },
 
                         };
 
@@ -1206,9 +1217,17 @@ namespace SignalRHub
                         {
                             SelectedGateway = GatewayType.DinstarSMSGateway;
                         }
+                        else if (_selectgateway == 3)
+                        {
+                            SelectedGateway = GatewayType.TaxiLocalGateway;
+                        }
                         else if (_selectgateway == 5)
                         {
                             SelectedGateway = GatewayType.VonagSMSGateWay;
+                        }
+                        else if (_selectgateway == 6)
+                        {
+                            SelectedGateway = GatewayType.ClickSend;
                         }
                     }
                 }
@@ -1368,6 +1387,20 @@ namespace SignalRHub
 
                     if (smsInbox == "1")
                         DSSMS_smsgateway.OnPostMessageIn += DSSMS_smsgateway_OnPostMessageIn;
+                }
+                else if (SelectedGateway == GatewayType.TaxiLocalGateway)
+                {
+                    Global.TLSMS_smsgateway = new SignalRHub.Classes.TaxiLocalSettings();
+                    Gen_SysPolicy_SMSConfiguration sms = null;
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        sms = db.Gen_SysPolicy_SMSConfigurations.FirstOrDefault();
+                    }
+
+                    TLSMS_smsgateway.SenderName = sms.ClickSMSSenderName;
+                    TLSMS_smsgateway.Password = sms.ClickSMSPassword;
+                    TLSMS_smsgateway.UserName = sms.ClickSMSUserName;
+                    TLSMS_smsgateway.APIKey = sms.ClickSMSApiKey;
                 }
                 else if (SelectedGateway == GatewayType.VonagSMSGateWay)
                 {
@@ -1590,6 +1623,18 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("HideAccountName")))
                 {
                     HideAccountName = GetAppSetting<string>("HideAccountName").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("ClickSendUserName")))
+                {
+                    ClickSendUserName = GetAppSetting<string>("ClickSendUserName").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("ClickSendApiKey")))
+                {
+                    ClickSendApiKey = GetAppSetting<string>("ClickSendApiKey").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("ClickSendCompanyName")))
+                {
+                    ClickSendCompanyName = GetAppSetting<string>("ClickSendCompanyName").ToStr();
                 }
 
             }
@@ -2770,7 +2815,23 @@ namespace SignalRHub
             {
 
                 if (SelectedGateway == GatewayType.HypermediaSMSGateway)
+                {
                     HMSMS_smsgateway.Send(number, message);
+                }
+                else if (SelectedGateway == GatewayType.TaxiLocalGateway)
+                {
+                    number = number.Replace("+447", "447").ToStr();
+                    LocalText_SendingSms(number, message);
+                }
+                else if (SelectedGateway == GatewayType.ClickSend)
+                {
+                    if (number.StartsWith("07"))
+                        number = "+44" + number.Substring(1);
+                    else if (number.StartsWith("447"))
+                        number = "+" + number;
+                    //ClickSend_SendingSms(number, message, "iTaxi");
+                    ClickSend_SendingSms(number, message, ClickSendCompanyName);
+                }
                 else if (SelectedGateway == GatewayType.VonagSMSGateWay)
                 {
                     var credentials = Credentials.FromApiKeyAndSecret(
@@ -2799,14 +2860,118 @@ namespace SignalRHub
                     }
                 }
                 else
+                {
                     DSSMS_smsgateway.Send(number, message);
+                }
 
             }
         }
 
 
 
+        public static string ClickSend_SendingSms(string mobile, string message, string companyName = null)
+        {
+            try
+            {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
 
+                //string username = "shifaul.ahmed@gmail.com";
+                //string apiKey = "FF756888-F59D-35FD-2B34-56A660614A9C";
+                string username = ClickSendUserName;
+                string apiKey = ClickSendApiKey;
+
+                string auth = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{apiKey}"));
+
+                using (var client = new WebClient())
+                {
+                    client.Headers[HttpRequestHeader.ContentType] = "application/json";
+                    client.Headers[HttpRequestHeader.Authorization] = "Basic " + auth;
+
+
+                    var body = new
+                    {
+                        messages = new[]
+                        { new {
+                            source = "dotnet",
+                            body = message,
+                            to = mobile,
+                            from = companyName
+                            }
+                        }
+                    };
+
+                    string json = Newtonsoft.Json.JsonConvert.SerializeObject(body);
+
+                    string response = client.UploadString("https://rest.clicksend.com/v3/sms/send", "POST", json);
+
+                    try
+                    {
+                        File.AppendAllText(AppContext.BaseDirectory + "\\ClickSend_SendingSms.txt", DateTime.Now + "," + response + Environment.NewLine);
+                    }
+                    catch { }
+
+                    return response;
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\ClickSend_SendingSms_exception.txt", DateTime.Now + "," + ex.Message + Environment.NewLine);
+                }
+                catch { }
+
+                return ex.Message;
+            }
+        }
+
+
+        public static string LocalText_SendingSms(string Mobile, string Message)
+        {
+            try
+            {
+                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                using (var wb = new WebClient())
+                {
+                    NameValueCollection data = new NameValueCollection()
+        {
+            {"apikey", Global.TLSMS_smsgateway.APIKey},
+            {"numbers", Mobile},
+            {"message", Message},
+            {"sender", Global.TLSMS_smsgateway.SenderName},
+            {"username", Global.TLSMS_smsgateway.UserName},
+            {"password", Global.TLSMS_smsgateway.Password}
+        };
+
+                    byte[] response = wb.UploadValues("https://api.txtlocal.com/send/", data);
+                    string result = System.Text.Encoding.UTF8.GetString(response);
+                    try
+                    {
+                        File.AppendAllText(AppContext.BaseDirectory + "\\TextLocal_SendingSms.txt", DateTime.Now.ToStr() + "," + result + Environment.NewLine);
+                    }
+                    catch
+                    {
+
+
+                    }
+
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\TextLocal_SendingSms_exception.txt", DateTime.Now.ToStr() + "," + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+
+                }
+                return ex.Message;
+            }
+        }
 
 
 
