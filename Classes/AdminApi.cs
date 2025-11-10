@@ -8,6 +8,15 @@ using Taxi_Model;
 
 namespace SignalRHub.Classes
 {
+    public class TaxiLocalSettings
+    {
+        public string ServerBaseURL { get; set; }
+        public string UserName { get; set; }
+        public string Password { get; set; }
+        public string DefaultClientId { get; set; }
+        public string APIKey { get; set; }
+        public string SenderName { get; set; }
+    }
     public class FleetDriver_ExpireList
     {
         public int Id { get; set; }
