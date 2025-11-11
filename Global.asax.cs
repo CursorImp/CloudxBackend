@@ -698,6 +698,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "ClickSendApiKey", SetVal = "", description = "ClickSendApiKey"  },
                              new AppSetting { SetKey = "ClickSendUserName", SetVal = "", description = "ClickSendUserName"  },
                              new AppSetting { SetKey = "ClickSendCompanyName", SetVal = "CabTreasure", description = "ClickSendCompanyName"  },
+                             new AppSetting { SetKey = "ApplyCreditCardExtraSurcharge", SetVal = "false", description = "ApplyCreditCardExtraSurcharge"  },
 
                         };
 
