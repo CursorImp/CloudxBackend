@@ -7027,7 +7027,7 @@ namespace SignalRHub
                     client.BaseAddress = new Uri(StripeAPIBaseURL);
                     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
                     var content = new StringContent(DataObj, Encoding.UTF8, "application/json");
-                    var postTask = client.PostAsync(StripeAPIBaseURL + "/v1/terminal/CreatePaymentIntent", content).Result;
+                    var postTask = client.PostAsync(StripeAPIBaseURL + "/v1/terminal/CreatePaymentIntent/Moto", content).Result;
                     string PayResp = postTask.Content.ReadAsStringAsync().Result;
                     resp = new JavaScriptSerializer().Deserialize<PaymentIntentResponse>(PayResp);
                 }
