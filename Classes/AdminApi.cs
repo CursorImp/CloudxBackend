@@ -579,6 +579,8 @@ namespace SignalRHub.Classes
         public int Minutes { get;  set; }
         public string isInvoiceOrStatement { get;  set; }
         public int[] ControllerIds { get; set; }
+        public bool? ShowDestinationAfterPOB { get;  set; }
+        public bool? EnableDriverConnect { get;  set; }
     }
     public class FareDto
     {

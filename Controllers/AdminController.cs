@@ -561,31 +561,18 @@ namespace SignalRHub.Controllers
                 //
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    //int? Id = obj.fleetVehicleType.Id;
+            
 
                     int? Id = obj.fleetDriver.Id;
-                    //if (Id == 0)
-                    //{
+                   
 
-                    //    //UM_User obj_User = General.GetQueryable<UM_User>(null).OrderByDescending(c => c.Id).FirstOrDefault();
-                    //    //objuser.New();
-
-                    //}
-                    //else
-                    //{
-                    //    objdriver.GetByPrimaryKey(Id);
-                    //    objdriver.Edit();
-                    //}
-
-
-                    //int driverId = obj.fleetDriver.Id.ToInt();
                     var objQueue = db.Fleet_DriverQueueLists.Where(a => a.DriverId == Id && a.Status == true).OrderByDescending(c => c.Id).FirstOrDefault();
 
                     if (objQueue == null)
                     {
                         response.Message = "You can't update pda settings at this time " + Environment.NewLine + "Please Login a Driver before updating it";
                         response.HasError = true;
-                        //ENUtils.ShowMessage("You can't update pda settings at this time " + Environment.NewLine + "Please Login a Driver before updating it");
+                        
                         return Json(response, JsonRequestBehavior.AllowGet);
                     }
                     else
@@ -597,9 +584,9 @@ namespace SignalRHub.Controllers
                             {
                                 response.Message = "Driver PDA is not working at the moment! Please Re-Login it or Check pda Internet settings";
                                 response.HasError = true;
-                                //ENUtils.ShowMessage("You can't update pda settings at this time " + Environment.NewLine + "Please Login a Driver before updating it");
+                              
                                 return Json(response, JsonRequestBehavior.AllowGet);
-                                //ENUtils.ShowMessage("Driver PDA is not working at the moment! Please Re-Login it or Check pda Internet settings");                                
+                                                           
 
                             }
                         }
@@ -609,7 +596,6 @@ namespace SignalRHub.Controllers
                     decimal version = obj.fleetDriver.Fleet_Driver_PDASettings[0].CurrentPdaVersion.ToDecimal();
 
                     string biddingMessage = string.Empty;
-                    //please check logic below
                     var policy = db.Gen_SysPolicy_Configurations.Where(m => m.SysPolicyId == 1).FirstOrDefault();
                     if (obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding == true)
                     {
@@ -670,8 +656,6 @@ namespace SignalRHub.Controllers
                         }
                     }
 
-                    //btnUpdateSettings.Enabled = false;
-
                     StringBuilder contents = new StringBuilder();
                     contents.Append("update settings<<<");
 
@@ -685,95 +669,76 @@ namespace SignalRHub.Controllers
                     }
 
                     DriverPDASettings pda = new DriverPDASettings();
+
                     pda.Ip = HubProcessor.Instance.objPolicy.ListenerIP.ToStr();
                     pda.DrvId = obj.fleetDriver.Id.ToStr();
                     pda.DrvNo = obj.fleetDriver.DriverNo.ToStr();
                     pda.DrvName = obj.fleetDriver.DriverName.ToStr().Trim();
                     pda.VehType = obj.fleetDriver.Fleet_VehicleType.VehicleType.ToStr().ToUpper();
-                    pda.GPSInterval = "4";
-                    pda.EnableJobExtraCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJobExtraCharges == true ? "1" : "0";
-                    pda.ShowCompletedJobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCompletedJob == true ? "1" : "0";   //((chkShowCompletedJobs.Checked ? "1" : "0")); // Show Completed Jobs
-                    pda.EnableBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding == true ? "1" : "0"; //(chkEnableBidding.Checked ? "1" : "0"); // Enable Bidding
-                    pda.ShowPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlots == true ? "1" : "0"; //(chkShowPlots.Checked ? "1" : "0"); // Show Plots  -- index 10
-                    pda.ShowNavigation = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowNavigation == true ? "1" : "0"; //((chkShowNavigation.Checked ? "1" : "0")); // Show Plots -- index 11
-                    pda.JobTimeout = obj.fleetDriver.Fleet_Driver_PDASettings[0].JobTimeOutInterval.ToString(); //((numJobTimeout.Value.ToStr())); // Show Plots -- index 12
-                    pda.ZoneInterval = (("40")); // Zone Update Interval -- index 13
-                    pda.SoundOnZoneChange = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnZoneChange.ToBool() ? "1" : "0"; // property Missing         //== true ? "1" : "0";    //((chkShowSoundOnZoneChange.Checked ? "1" : "0")); // Sound On Zone Change -- index 14
-                    pda.MessageStayOnScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen == true ? "1" : "0"; //((chkMessageStay.Checked ? "1" : "0")); // Message Stay -- index 15
+                    pda.ShowCompletedJobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCompletedJob == true ? "1" : "0";
+                    pda.DisableJobAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares == true ? "1" : "0";
+                    pda.EnableBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding == true ? "1" : "0"; 
+                    pda.ShowPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlots == true ? "1" : "0"; 
+                    pda.JobTimeout = obj.fleetDriver.Fleet_Driver_PDASettings[0].JobTimeOutInterval.ToString(); 
+                    pda.SoundOnZoneChange = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnZoneChange.ToBool() ? "1" : "0"; 
+                    pda.MessageStayOnScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen == true ? "1" : "0";
+                    pda.EnableCompanyCars = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen == true ? "1" : "0";
+                    pda.EnableFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeter == true ? "1" : "0";
+                    pda.ShowCustomerNo = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCustomerMobileNo == true ? "1" : "0";
+                    //pda.HidePickupAndDest = obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickAndDestination == true ? "1" : "0";
+                    pda.NavigationType = navigationApp;
+                    pda.EnableFlagDown = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFlagDown == true ? "1" : "0";
+                    pda.DisablePanic = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisablePanicButton.ToBool() ? "1" : "0";
+                    pda.DisableRank = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableDriverRank.ToBool() ? "1" : "0"; 
+                    pda.MeterVoice = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterVoice.ToBool() ? "1" : "0";
+                    pda.DisableChangeJobPlot = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots.ToBool() ? "1" : "0"; 
+                    pda.EnableJ15Jobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJ15J30Jobs.ToBool() ? "1" : "0";  
+                    pda.EnableLogoutAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableLogoutAuthorization.ToBool() ? "1" : "0";
+                    pda.EnableIgnoreArrive = obj.fleetDriver.Fleet_Driver_PDASettings[0].IgnoreArriveAction.ToBool() ? "1" : "0";
+                    pda.DisableMeterForAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareMeterOnAccJob == true ? "1" : "0";
+                    pda.EnableCallCustomer = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableCallCustomer == true ? "1" : "0";
+                    pda.EnableRecoverJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableRecoverJob == true ? "1" : "0";  
+                    pda.EnableMeterWaitingCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterWaitingCharges == true ? "1" : "0";
+                    pda.DisableBase = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableBase == true ? "1" : "0";   
+                    pda.DisableBreak = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableOnBreak == true ? "1" : "0";  
+                    pda.DisableRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJob == true ? "1" : "0";  
+                    pda.DisableChangeDest = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeDestination == true ? "1" : "0";
+                    pda.DisableNoPickup = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableNoPickup == true ? "1" : "0";
+                    pda.ShowSpecialReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront == true ? "1" : "0";  
+                    pda.DisableFareOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareOnAccJob == true ? "1" : "0";  
+                    pda.DisableSTC = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSTC == true ? "1" : "0"; 
+                    pda.NotifyOnJobLate = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnJobLate == true ? "1" : "0"; 
+                    pda.EnableAutoRotate = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen == true ? "1" : "0";  
+                    pda.ShowPlotOnOffer = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlotOnJobOffer == true ? "1" : "0";  
+                    pda.showDestAfterPob = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowDestinationAfterPOB == true ? "1" : "0";
+                    pda.OnBreakDur = obj.fleetDriver.Fleet_Driver_PDASettings[0].BreakTime.ToStr();  
+                    pda.ManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares == true ? "1" : "0"; 
+                    pda.BiddingType = biddingMessage;
+                    pda.FareMeterType = FareMessage;
 
-                    pda.EnableCompanyCars = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen == true ? "1" : "0"; //((chkEnableCompanyCars.Checked ? "1" : "0")); // Show Plots -- index 16
-                                                                                                                                 //  pda.Append((" ") + ","); // Show Plots -- index 17
-                    pda.EnableFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeter == true ? "1" : "0"; // ((chkEnableFareMeter.Checked ? "1" : "0")); // Show Plots -- index 18
-
-                    pda.ShowCustomerNo = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCustomerMobileNo == true ? "1" : "0";  // property Missing     //((chkShowCustomerMobileNo.Checked ? "1" : "0")); // Show Plots -- index 19
-
-                    pda.HidePickupAndDest = obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickAndDestination == true ? "1" : "0";  // Property Missing    // ((chkHidePickupAndDest.Checked ? "1" : "0")); // Show Plots -- index 20                    
-
-                    if (pda.HidePickupAndDest == "1")
-                    {
-                        if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToDecimal() == 1)
-                            pda.HidePickupAndDest = "2";
-
-                        else if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToDecimal() == 2)
-                            pda.HidePickupAndDest = "3";
-
-                    }
                     //if (pda.HidePickupAndDest == "1")
                     //{
-                    //    if (ddlHidePickupAndDestinationType.SelectedIndex == 1)
-                    //        pda.HidePickupAndDest = "2";
-                    //    else if (ddlHidePickupAndDestinationType.SelectedIndex == 2)
-                    //        pda.HidePickupAndDest = "3";
-                    //    else if (ddlHidePickupAndDestinationType.SelectedIndex == 3)
-                    //        pda.HidePickupAndDest = "4";
+                    //    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToDecimal() == 1)
+                    //        pda.OldPdaVersion = "2";
+                    //    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToDecimal() == 2)
+                    //        pda.OldPdaVersion = "3";
+                    //    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToDecimal() == 0)
+                    //        pda.OldPdaVersion = "0";
+                    //}
+                    //else
+                    //{
+                    //    pda.OldPdaVersion = "0";
                     //}
 
+                    //if (pda.HidePickupAndDest == "1")
+                    //{
+                    //    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToDecimal() == 1)
+                    //        pda.HidePickupAndDest = "2";
 
-                    pda.EnableLogoutOnRejectJob = "0";  // property missing   //((chkEnableLogoutOnReject.Checked ? "1" : "0")); // Show Plots -- index 21
+                    //    else if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToDecimal() == 2)
+                    //        pda.HidePickupAndDest = "3";
 
-                    //--
-                    pda.FontSize = "20"; // index no 23
-                    pda.NavigationType = (navigationApp);
-                    //pda.NavigationType = "4"; // DeviceId -- index 24
-
-
-                    pda.EnableFlagDown = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFlagDown == true ? "1" : "0";  //((chkEnableFlagDown.Checked ? "1" : "0")); // -- index 25
-                    pda.MessageStayOnScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen == true ? "1" : "0";  //((chkMessageStay.Checked ? "1" : "0")); // -- index 26
-
-                    pda.DisablePanic = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisablePanicButton.ToBool() ? "1" : "0"; // property missing   //((chkDisablePanic.Checked ? "1" : "0")); // index 27
-                    pda.DisableRank = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableDriverRank.ToBool() ? "1" : "0";  // Property missing  // ((chkDisableRank.Checked ? "1" : "0")); // index 28
-
-                    pda.MeterVoice = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterVoice.ToBool() ? "1" : "0"; //property missing   //((chkVoiceOnClearMeter.Checked ? "1" : "0")); // index 28
-                    pda.DisableChangeJobPlot = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots.ToBool() ? "1" : "0";  //property missing   //((chkDisableChangeJobPlot.Checked ? "1" : "0"));// index 30
-
-                    pda.EnableJ15Jobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJ15J30Jobs.ToBool() ? "1" : "0";  // property missing //((chkEnableJ15Jobs.Checked ? "1" : "0")); // index 31
-                    pda.EnableLogoutAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableLogoutAuthorization.ToBool() ? "1" : "0";  //property Missing   //((chkEnableLogoutAuthorization.Checked ? "1" : "0")); // index 32
-                    pda.EnableIgnoreArrive = obj.fleetDriver.Fleet_Driver_PDASettings[0].IgnoreArriveAction.ToBool() ? "1" : "0";  //property Missing //((chkIgnoreArriveAction.Checked ? "1" : "0")); // index 33
-                    pda.BiddingType = biddingMessage; // ((txtBiddingMessage.Text.Trim() == string.Empty ? " " : txtBiddingMessage.Text.Trim())); // index 34
-
-                    pda.FareMeterType = FareMessage;  // ((txtFareMessage.Text.Trim() == string.Empty ? " " : txtFareMessage.Text.Trim())); // index 35
-                    pda.EnableOptMeter = "0";  //property Missing // ((chkEnableOptionalMeter.Checked ? "1" : "0")); // index 36
-                    pda.DisableMeterForAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareMeterOnAccJob == true ? "1" : "0";  //property Missing // ((chkDisableMeterAccJob.Checked ? "1" : "0"));// index 37
-                    pda.Courier = "0"; // index 38
-                    pda.ShowFaresOnExtraCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowFaresOnExtraCharges == true ? "1" : "0";   // ((chkShowFareonExtraCharges.Checked ? "1" : "0")); // index 39
-                    pda.EnableCallCustomer = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableCallCustomer == true ? "1" : "0";   // ((chkEnableCallCustomer.Checked ? "1" : "0")); // index 40
-                    pda.EnableRecoverJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableRecoverJob == true ? "1" : "0";   // ((chkEnableRecoverJob.Checked ? "1" : "0"));// index 41
-                    pda.EnableMeterWaitingCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterWaitingCharges == true ? "1" : "0";  //property Missing // ((chkEnableMeterWaitingCharges.Checked ? "1" : "0")); // index 42
-                    pda.LogoutOnOverShift = obj.fleetDriver.Fleet_Driver_PDASettings[0].LogoutOnOverShift == true ? "1" : "0";   // ((chkShiftOverLogout.Checked ? "1" : "0")); // // Shift Logout                 
-                    pda.DisableBase = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableBase == true ? "1" : "0";  // ((chkDisableBase.Checked ? "1" : "0")); // //Disable Base // DeviceId -- index 44               
-                    pda.DisableBreak = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableOnBreak == true ? "1" : "0";  //property Missing // ((chkDisableOnBreak.Checked ? "1" : "0")); // //Disable OnBreak -- index 45
-                    pda.DisableRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJob == true ? "1" : "0";  // ((chkDisableRejectJob.Checked ? "1" : "0")); // //Disable Reject Job
-                    pda.DisableChangeDest = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeDestination == true ? "1" : "0";  //property Missing // ((chkDisableChangeDest.Checked ? "1" : "0"));
-                    pda.ShowJobasAlert = "0";  //property Missing // ((chkShowJobAsAlert.Checked ? "1" : "0"));
-                    pda.DisableNoPickup = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableNoPickup == true ? "1" : "0";   // ((chkDisableNoPickup.Checked ? "1" : "0"));
-                    pda.DisableAlarm = "0";  //property Missing // ((chkDisableAlarm.Checked ? "1" : "0"));
-                    pda.ShowSpecialReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront == true ? "1" : "0";  //property Missing // ((chkShowSpecReq.Checked ? "1" : "0"));
-                    pda.DisableFareOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareOnAccJob == true ? "1" : "0";  // ((chkDisableFareOnAccJob.Checked ? "1" : "0"));
-                    pda.DisableSTC = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSTC == true ? "1" : "0";  // ((chkDisableSTC.Checked ? "1" : "0"));
-                    pda.ShowAlertOnJobLate = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowJobAsAlert == true ? "1" : "0";  //property Missing // ((chkShowAlertOnJobLater.Checked ? "1" : "0"));
-                    pda.EnableAutoRotate = "0";  //property Missing //((chkEnableAutoRotate.Checked ? "1" : "0"));
-                    pda.ShowPlotOnOffer = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlotOnJobOffer == true ? "1" : "0";  //property Missing //((ShowPlotOnJobOffer.Checked ? "1" : "0"));
-
+                    //}
 
                     try
                     {
@@ -782,30 +747,7 @@ namespace SignalRHub.Controllers
                     catch
                     {
                     }
-
-                    pda.OnBreakDur = obj.fleetDriver.Fleet_Driver_PDASettings[0].BreakTime.ToStr();  // property missing //((numBreakDuration.Value.ToStr()));
-                    pda.ManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares == true ? "1" : "0";  // property missing (manualFares);
-                    pda.EnablePriceBid = "0";  // property missing ((chkEnablePriceBidding.Checked ? "1" : "0"));
-                    pda.DrvWaitingMins = "0";  // property missing(drvWaitingCharges.ToStr());
-                    pda.AccWaitingMins = "0";  // property missing (drvAccWaitingCharges.ToStr());
-                    // need to comment
-                    pda.DisableJobAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares == true ? "1" : "0";  // property missing((chkDisableJobAuth.Checked ? "1" : "0"));
-                                                                                                                             //new
-                                                                                                                             //pda.isDriverConnectEnabled = obj.fleetDriver.Fleet_Driver_PDASettings[0].ManualFares == true ? "1" : "0";  // property missing((chkEnableDriverConnect.Checked ? "1" : "0"));
-                                                                                                                             //   pda.disableWriteMsg =  "0";
-
-                    pda.showDestAfterPob = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowDestinationAfterPOB == true ? "1" : "0";  // property missing((chkShowDestAfterPOB.Checked ? "1" : "0"));
-                    //if (pda.isDriverConnectEnabled.ToStr() == "1" && AppVars.objPolicyConfiguration.DriverConnectCredentials.ToStr().Trim().Length > 0)
-                    //{
-                    //    string[] drvConnectArr = AppVars.objPolicyConfiguration.DriverConnectCredentials.ToStr().Trim().Split(',');
-
-                    //    pda.drvConHost = drvConnectArr[0].ToStr();
-                    //    pda.drvConusername = drvConnectArr[1].ToStr();
-                    //    pda.drvConPass = drvConnectArr[2].ToStr();
-                    //    pda.drvConPort = drvConnectArr[3].ToStr();
-
-                    //}
-                    //
+                    
                     string json = Newtonsoft.Json.JsonConvert.SerializeObject(pda);
                     contents.Append(json);
 
@@ -860,104 +802,62 @@ namespace SignalRHub.Controllers
                     Fleet_Driver_PDASetting objPDA = null;
                     if (obj.fleetDriver.Fleet_Driver_PDASettings.Count == 0)
                         objdriver.Current.Fleet_Driver_PDASettings.Add(new Fleet_Driver_PDASetting());
-
                     objPDA = objdriver.Current.Fleet_Driver_PDASettings[0];
-                    objPDA.ShowPlotOnJobOffer = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlotOnJobOffer; // MISSING PROPERTY  //ShowPlotOnJobOffer.Checked;
+                    objPDA.ShowPlotOnJobOffer = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlotOnJobOffer; 
                     objPDA.DriverId = objdriver.Current.Id;
-                    objPDA.ShowFaresOnExtraCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowFaresOnExtraCharges; //chkShowFareonExtraCharges.Checked;
-                    objPDA.EnableJobExtraCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJobExtraCharges; //chkEnableJobExtraCharges.Checked;
-                    objPDA.EnableFareMeterWaitingCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterWaitingCharges; //chkEnableMeterWaitingCharges.Checked;
-                    objPDA.EnableRecoverJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableRecoverJob; //chkEnableRecoverJob.Checked;
-                    objPDA.EnableCallCustomer = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableCallCustomer; //chkEnableCallCustomer.Checked;
-                    objPDA.EnableBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding; //chkEnableBidding.Checked;
-                    objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen; //chkEnableAutoRotate.Checked;
-                    objPDA.EnableFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeter; //chkEnableFareMeter.Checked;
-                    objPDA.EnableFlagDown = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFlagDown; //chkEnableFlagDown.Checked;
-                    objPDA.EnableJ15J30Jobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJ15J30Jobs; //chkEnableJ15Jobs.Checked;
-                    objPDA.EnableLogoutAuthorization = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableLogoutAuthorization; //chkEnableLogoutAuthorization.Checked;
-                    objPDA.DisableChangeJobPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots; //chkDisableChangeJobPlot.Checked;
-                    objPDA.BreakTime = obj.fleetDriver.Fleet_Driver_PDASettings[0].BreakTime; //numBreakDuration.Value.ToInt();
-                    objPDA.DisableDriverRank = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableDriverRank; //chkDisableRank.Checked;
-                    objPDA.DisablePanicButton = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisablePanicButton; //chkDisablePanic.Checked;
-                    objPDA.DisableFareMeterOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareMeterOnAccJob; //chkDisableMeterAccJob.Checked;
-                    objPDA.NavigationApp = obj.fleetDriver.Fleet_Driver_PDASettings[0].NavigationApp; // navigationApp.ToInt();
-                    objPDA.MessageStayOnScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen; //chkMessageStay.Checked;
-                    objPDA.ShowCompletedJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCompletedJob; //chkShowCompletedJobs.Checked;
-                    objPDA.ShowCustomerMobileNo = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCustomerMobileNo; //chkShowCustomerMobileNo.Checked;
-                    objPDA.ShowNavigation = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowNavigation; //chkShowNavigation.Checked;
-                    objPDA.ShowPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlots; //chkShowPlots.Checked;
-                    objPDA.FareMeterType = obj.fleetDriver.Fleet_Driver_PDASettings[0].FareMeterType; //txtFareMessage.Text.Trim();
-                    objPDA.BiddingType = obj.fleetDriver.Fleet_Driver_PDASettings[0].BiddingType; // txtBiddingMessage.Text.Trim();
-                    objPDA.JobTimeOutInterval = obj.fleetDriver.Fleet_Driver_PDASettings[0].JobTimeOutInterval; // numJobTimeout.Value.ToInt();
-                    objPDA.NotifyOnZoneChange = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnZoneChange; //chkShowSoundOnZoneChange.Checked;
-                    objPDA.HasCompanyCars = obj.fleetDriver.Fleet_Driver_PDASettings[0].HasCompanyCars; // chkEnableCompanyCars.Checked;
-                    objPDA.LogoutOnRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].LogoutOnRejectJob; //chkEnableLogoutOnReject.Checked;
-                    objPDA.IgnoreArriveAction = obj.fleetDriver.Fleet_Driver_PDASettings[0].IgnoreArriveAction; //chkIgnoreArriveAction.Checked;
-                    objPDA.GPSInterval = 3;
-                    objPDA.HidePickAndDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickAndDestination.ToBool();// chkHidePickupAndDest.Checked;
-
-
-                    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickAndDestination.ToBool())
-                    {
-                        if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToInt() == 1)
-                            objPDA.OldPdaVersion = 2;
-
-                        if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToInt() == 2)
-                            objPDA.OldPdaVersion = 3;
-                        if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToInt() == 0)
-                            objPDA.OldPdaVersion = 0;
-                    }
-                    else
-                        objPDA.OldPdaVersion = 0;
-                    //if (objPDA.HidePickAndDestination.ToBool())  // must be check logic
+                    objPDA.EnableFareMeterWaitingCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterWaitingCharges; 
+                    objPDA.EnableRecoverJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableRecoverJob;
+                    objPDA.EnableCallCustomer = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableCallCustomer; 
+                    objPDA.EnableBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding; 
+                    objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen; 
+                    objPDA.EnableFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeter;
+                    objPDA.EnableFlagDown = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFlagDown; 
+                    objPDA.EnableJ15J30Jobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJ15J30Jobs; 
+                    objPDA.EnableLogoutAuthorization = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableLogoutAuthorization;
+                    objPDA.DisableChangeJobPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots; 
+                    objPDA.BreakTime = obj.fleetDriver.Fleet_Driver_PDASettings[0].BreakTime; 
+                    objPDA.DisableDriverRank = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableDriverRank; 
+                    objPDA.DisablePanicButton = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisablePanicButton; 
+                    objPDA.DisableFareMeterOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareMeterOnAccJob; 
+                    objPDA.NavigationApp = obj.fleetDriver.Fleet_Driver_PDASettings[0].NavigationApp;
+                    objPDA.MessageStayOnScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen;
+                    objPDA.ShowCompletedJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCompletedJob;
+                    objPDA.ShowCustomerMobileNo = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCustomerMobileNo; 
+                    objPDA.ShowPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlots;
+                    objPDA.JobTimeOutInterval = obj.fleetDriver.Fleet_Driver_PDASettings[0].JobTimeOutInterval;
+                    objPDA.NotifyOnZoneChange = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnZoneChange;
+                    objPDA.HasCompanyCars = obj.fleetDriver.Fleet_Driver_PDASettings[0].HasCompanyCars;
+                    objPDA.IgnoreArriveAction = obj.fleetDriver.Fleet_Driver_PDASettings[0].IgnoreArriveAction; 
+                    //objPDA.HidePickAndDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickAndDestination.ToBool();
+                    objPDA.NotifyOnJobLate = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnJobLate; 
+                    objPDA.OptionalFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].OptionalFareMeter; 
+                    objPDA.DisableOnBreak = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableOnBreak;
+                    objPDA.DisableBase = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableBase; 
+                    objPDA.DisableRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJob;
+                    objPDA.DisableChangeDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeDestination; 
+                    objPDA.DisableRejectJobAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJobAuth; 
+                    objPDA.DisableFareOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareOnAccJob;
+                    objPDA.DisableSTC = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSTC; 
+                    objPDA.DisableNoPickup = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableNoPickup; 
+                    objPDA.ShowSpecReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront; 
+                    objPDA.EnableManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares; 
+                    objPDA.EnableFareMeterVoice = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterVoice;
+                    objPDA.ShowDestinationAfterPOB = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowDestinationAfterPOB; 
+                    objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen; 
+                    objPDA.BiddingType = biddingMessage; 
+                    objPDA.FareMeterType = FareMessage; 
+                    //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickAndDestination.ToBool())
                     //{
-                    //working below please check
-                    //if (ddlHidePickupAndDestinationType.SelectedIndex == 0)    /// PROPERTY MISSING
-                    //    objPDA.OldPdaVersion = 1;
-                    //if (ddlHidePickupAndDestinationType.SelectedIndex == 1)
-                    //    objPDA.OldPdaVersion = 2;
-                    //if (ddlHidePickupAndDestinationType.SelectedIndex == 2)
-                    //    objPDA.OldPdaVersion = 3;
-                    //if (ddlHidePickupAndDestinationType.SelectedIndex == 3)
-                    //    objPDA.OldPdaVersion = 4;
+                    //    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToInt() == 1)
+                    //        objPDA.OldPdaVersion = 2;
 
-                    //working
-                    //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickupAndDestinationType == 0)    /// PROPERTY MISSING
-                    //    objPDA.OldPdaVersion = 1;
-                    //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickupAndDestinationType == 1)
-                    //    objPDA.OldPdaVersion = 2;
-                    //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickupAndDestinationType == 2)
-                    //    objPDA.OldPdaVersion = 3;
-                    //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickupAndDestinationType == 3)
-                    //    objPDA.OldPdaVersion = 4;
-
+                    //    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToInt() == 2)
+                    //        objPDA.OldPdaVersion = 3;
+                    //    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToInt() == 0)
+                    //        objPDA.OldPdaVersion = 0;
                     //}
                     //else
-
                     //    objPDA.OldPdaVersion = 0;
-                    objPDA.LogoutOnOverShift = obj.fleetDriver.Fleet_Driver_PDASettings[0].LogoutOnOverShift; //chkShiftOverLogout.Checked;
-                    objPDA.NotifyOnJobLate = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnJobLate; //chkShowAlertOnJobLater.Checked;
-                    objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen; //chkEnableAutoRotate.Checked;
-                    objPDA.OptionalFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].OptionalFareMeter; //chkEnableOptionalMeter.Checked;
-                    objPDA.DisableChangeJobPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots; //chkDisableChangeJobPlot.Checked;
-                    objPDA.DisableOnBreak = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableOnBreak; //chkDisableOnBreak.Checked;
-                    objPDA.DisableBase = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableBase; //chkDisableBase.Checked;
-                    objPDA.DisableRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJob; //chkDisableRejectJob.Checked;
-                    objPDA.DisableChangeDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeDestination; //chkDisableChangeDest.Checked;
-                    objPDA.DisableRejectJobAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJobAuth; //chkDisableJobAuth.Checked;
-                    objPDA.DisableFareOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareOnAccJob; //chkDisableFareOnAccJob.Checked;
-                    objPDA.DisableSTC = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSTC; //chkDisableSTC.Checked;
-                    objPDA.DisableSetAlarm = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSetAlarm; //chkDisableAlarm.Checked;
-                    objPDA.DisableNoPickup = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableNoPickup; //chkDisableNoPickup.Checked;
-                    objPDA.ShowJobAsAlert = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowJobAsAlert; //chkShowJobAsAlert.Checked;
-                    objPDA.ShowSpecReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront; //chkShowSpecReq.Checked;
-                    objPDA.EnablePriceBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnablePriceBidding; //chkEnablePriceBidding.Checked;
-                    objPDA.EnableManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares; //chkEnableManualFares.Checked;
-                    objPDA.EnableOptionalManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableOptionalManualFares; //chkEnableOptionalManualFares.Checked;
-                    objPDA.EnableFareMeterVoice = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterVoice; //chkVoiceOnClearMeter.Checked;
-                    objPDA.EnableDriverConnect = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableDriverConnect; //chkEnableDriverConnect.Checked;
-                    objPDA.ShowDestinationAfterPOB = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowDestinationAfterPOB; //chkShowDestAfterPOB.Checked;
-
 
                     objdriver.Save();
 
@@ -14508,7 +14408,41 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 }
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
+                    string biddingMessage = string.Empty;
+                    var policy = db.Gen_SysPolicy_Configurations.Where(m => m.SysPolicyId == 1).FirstOrDefault();
+                    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding == true)
+                    {
 
+                        if (policy.BiddingType.ToInt() == 1)
+                        {
+                            biddingMessage = "Fastest Finger";
+                        }
+                        else if (policy.BiddingType.ToInt() == 2)
+                        {
+                            biddingMessage = "Nearest Driver";
+                        }
+                        else if (policy.BiddingType.ToInt() == 3)
+                        {
+                            biddingMessage = "Longest Waiting in Queue";
+                        }
+
+                    }
+
+                    string FareMessage = string.Empty;
+                    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeter == true)
+                    {
+
+                        if (policy.EnablePeakOffPeakFares.ToBool())
+                        {
+                            FareMessage = "PeakOff Peak Fares";
+                        }
+                        else
+                        {
+                            FareMessage = "Mileage Fares";
+
+                        }
+
+                    }
 
                     int? Id = obj.fleetDriver.Id;
 
@@ -14691,89 +14625,150 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
 
                     Fleet_Driver_PDASetting objPDA = new Fleet_Driver_PDASetting();
+
+
+
+                    objPDA.ShowPlotOnJobOffer = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlotOnJobOffer;
+                    objPDA.DriverId = objdriver.Current.Id;
+                    objPDA.EnableFareMeterWaitingCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterWaitingCharges;
+                    objPDA.EnableRecoverJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableRecoverJob;
+                    objPDA.EnableCallCustomer = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableCallCustomer;
+                    objPDA.EnableBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding;
+                    objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen;
+                    objPDA.EnableFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeter;
+                    objPDA.EnableFlagDown = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFlagDown;
+                    objPDA.EnableJ15J30Jobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJ15J30Jobs;
+                    objPDA.EnableLogoutAuthorization = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableLogoutAuthorization;
+                    objPDA.DisableChangeJobPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots;
+                    objPDA.BreakTime = obj.fleetDriver.Fleet_Driver_PDASettings[0].BreakTime;
+                    objPDA.DisableDriverRank = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableDriverRank;
+                    objPDA.DisablePanicButton = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisablePanicButton;
+                    objPDA.DisableFareMeterOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareMeterOnAccJob;
+                    objPDA.NavigationApp = obj.fleetDriver.Fleet_Driver_PDASettings[0].NavigationApp;
+                    objPDA.MessageStayOnScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen;
+                    objPDA.ShowCompletedJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCompletedJob;
+                    objPDA.ShowCustomerMobileNo = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCustomerMobileNo;
+                    objPDA.ShowPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlots;
+                    objPDA.JobTimeOutInterval = obj.fleetDriver.Fleet_Driver_PDASettings[0].JobTimeOutInterval;
+                    objPDA.NotifyOnZoneChange = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnZoneChange;
+                    objPDA.HasCompanyCars = obj.fleetDriver.Fleet_Driver_PDASettings[0].HasCompanyCars;
+                    objPDA.IgnoreArriveAction = obj.fleetDriver.Fleet_Driver_PDASettings[0].IgnoreArriveAction;
+                    //objPDA.HidePickAndDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickAndDestination.ToBool();
+                    objPDA.NotifyOnJobLate = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnJobLate;
+                    objPDA.OptionalFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].OptionalFareMeter;
+                    objPDA.DisableOnBreak = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableOnBreak;
+                    objPDA.DisableBase = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableBase;
+                    objPDA.DisableRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJob;
+                    objPDA.DisableChangeDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeDestination;
+                    objPDA.DisableRejectJobAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJobAuth;
+                    objPDA.DisableFareOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareOnAccJob;
+                    objPDA.DisableSTC = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSTC;
+                    objPDA.DisableNoPickup = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableNoPickup;
+                    objPDA.ShowSpecReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront;
+                    objPDA.EnableManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares;
+                    objPDA.EnableFareMeterVoice = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterVoice;
+                    objPDA.ShowDestinationAfterPOB = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowDestinationAfterPOB;
+                    objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen;
+                    objPDA.BiddingType = biddingMessage;
+                    objPDA.FareMeterType = FareMessage;
+                    //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickAndDestination.ToBool())
+                    //{
+                    //    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToInt() == 1)
+                    //        objPDA.OldPdaVersion = 2;
+
+                    //    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToInt() == 2)
+                    //        objPDA.OldPdaVersion = 3;
+                    //    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToInt() == 0)
+                    //        objPDA.OldPdaVersion = 0;
+                    //}
+                    //else
+                    //    objPDA.OldPdaVersion = 0;
+
+
+
                     //if (objdriver.Current.Fleet_Driver_PDASettings.Count == 0)
                     //    objdriver.Current.Fleet_Driver_PDASettings.Add(new Fleet_Driver_PDASetting());
                     //objPDA = objdriver.Current.Fleet_Driver_PDASettings[0];
-                    objPDA.ShowPlotOnJobOffer = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlotOnJobOffer; // MISSING PROPERTY  //ShowPlotOnJobOffer.Checked;
-                    objPDA.DriverId = objdriver.Current.Id;
-                    objPDA.ShowFaresOnExtraCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowFaresOnExtraCharges; //chkShowFareonExtraCharges.Checked;
-                    objPDA.EnableJobExtraCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJobExtraCharges; //chkEnableJobExtraCharges.Checked;
-                    objPDA.EnableFareMeterWaitingCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterWaitingCharges; //chkEnableMeterWaitingCharges.Checked;
-                    objPDA.EnableRecoverJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableRecoverJob; //chkEnableRecoverJob.Checked;
-                    objPDA.EnableCallCustomer = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableCallCustomer; //chkEnableCallCustomer.Checked;
-                    objPDA.EnableBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding; //chkEnableBidding.Checked;
-                    objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen; //chkEnableAutoRotate.Checked;
-                    objPDA.EnableFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeter; //chkEnableFareMeter.Checked;
-                    objPDA.EnableFlagDown = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFlagDown; //chkEnableFlagDown.Checked;
-                    objPDA.EnableJ15J30Jobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJ15J30Jobs; //chkEnableJ15Jobs.Checked;
-                    objPDA.EnableLogoutAuthorization = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableLogoutAuthorization; //chkEnableLogoutAuthorization.Checked;
-                    objPDA.DisableChangeJobPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots; //chkDisableChangeJobPlot.Checked;
-                    objPDA.BreakTime = obj.fleetDriver.Fleet_Driver_PDASettings[0].BreakTime; //numBreakDuration.Value.ToInt();
-                    objPDA.DisableDriverRank = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableDriverRank; //chkDisableRank.Checked;
-                    objPDA.DisablePanicButton = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisablePanicButton; //chkDisablePanic.Checked;
-                    objPDA.DisableFareMeterOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareMeterOnAccJob; //chkDisableMeterAccJob.Checked;
-                    objPDA.NavigationApp = obj.fleetDriver.Fleet_Driver_PDASettings[0].NavigationApp; // navigationApp.ToInt();
-                    objPDA.MessageStayOnScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen; //chkMessageStay.Checked;
-                    objPDA.ShowCompletedJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCompletedJob; //chkShowCompletedJobs.Checked;
-                    objPDA.ShowCustomerMobileNo = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCustomerMobileNo; //chkShowCustomerMobileNo.Checked;
-                    objPDA.ShowNavigation = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowNavigation; //chkShowNavigation.Checked;
-                    objPDA.ShowPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlots; //chkShowPlots.Checked;
-                    objPDA.FareMeterType = obj.fleetDriver.Fleet_Driver_PDASettings[0].FareMeterType; //txtFareMessage.Text.Trim();
-                    objPDA.BiddingType = obj.fleetDriver.Fleet_Driver_PDASettings[0].BiddingType; // txtBiddingMessage.Text.Trim();
-                    objPDA.JobTimeOutInterval = obj.fleetDriver.Fleet_Driver_PDASettings[0].JobTimeOutInterval; // numJobTimeout.Value.ToInt();
-                    objPDA.NotifyOnZoneChange = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnZoneChange; //chkShowSoundOnZoneChange.Checked;
-                    objPDA.HasCompanyCars = obj.fleetDriver.Fleet_Driver_PDASettings[0].HasCompanyCars; // chkEnableCompanyCars.Checked;
-                    objPDA.LogoutOnRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].LogoutOnRejectJob; //chkEnableLogoutOnReject.Checked;
-                    objPDA.IgnoreArriveAction = obj.fleetDriver.Fleet_Driver_PDASettings[0].IgnoreArriveAction; //chkIgnoreArriveAction.Checked;
-                    objPDA.GPSInterval = 3;
-                    objPDA.HidePickAndDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickAndDestination; //chkHidePickupAndDest.Checked;
-                    if (objPDA.HidePickAndDestination.ToBool())  // must be check logic
-                    {
-                        //working below please check
-                        //if (ddlHidePickupAndDestinationType.SelectedIndex == 0)    /// PROPERTY MISSING
-                        //    objPDA.OldPdaVersion = 1;
-                        //if (ddlHidePickupAndDestinationType.SelectedIndex == 1)
-                        //    objPDA.OldPdaVersion = 2;
-                        //if (ddlHidePickupAndDestinationType.SelectedIndex == 2)
-                        //    objPDA.OldPdaVersion = 3;
-                        //if (ddlHidePickupAndDestinationType.SelectedIndex == 3)
-                        //    objPDA.OldPdaVersion = 4;
+                    //objPDA.ShowPlotOnJobOffer = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlotOnJobOffer; // MISSING PROPERTY  //ShowPlotOnJobOffer.Checked;
+                    //objPDA.DriverId = objdriver.Current.Id;
+                    //objPDA.ShowFaresOnExtraCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowFaresOnExtraCharges; //chkShowFareonExtraCharges.Checked;
+                    //objPDA.EnableJobExtraCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJobExtraCharges; //chkEnableJobExtraCharges.Checked;
+                    //objPDA.EnableFareMeterWaitingCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterWaitingCharges; //chkEnableMeterWaitingCharges.Checked;
+                    //objPDA.EnableRecoverJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableRecoverJob; //chkEnableRecoverJob.Checked;
+                    //objPDA.EnableCallCustomer = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableCallCustomer; //chkEnableCallCustomer.Checked;
+                    //objPDA.EnableBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding; //chkEnableBidding.Checked;
+                    //objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen; //chkEnableAutoRotate.Checked;
+                    //objPDA.EnableFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeter; //chkEnableFareMeter.Checked;
+                    //objPDA.EnableFlagDown = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFlagDown; //chkEnableFlagDown.Checked;
+                    //objPDA.EnableJ15J30Jobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJ15J30Jobs; //chkEnableJ15Jobs.Checked;
+                    //objPDA.EnableLogoutAuthorization = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableLogoutAuthorization; //chkEnableLogoutAuthorization.Checked;
+                    //objPDA.DisableChangeJobPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots; //chkDisableChangeJobPlot.Checked;
+                    //objPDA.BreakTime = obj.fleetDriver.Fleet_Driver_PDASettings[0].BreakTime; //numBreakDuration.Value.ToInt();
+                    //objPDA.DisableDriverRank = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableDriverRank; //chkDisableRank.Checked;
+                    //objPDA.DisablePanicButton = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisablePanicButton; //chkDisablePanic.Checked;
+                    //objPDA.DisableFareMeterOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareMeterOnAccJob; //chkDisableMeterAccJob.Checked;
+                    //objPDA.NavigationApp = obj.fleetDriver.Fleet_Driver_PDASettings[0].NavigationApp; // navigationApp.ToInt();
+                    //objPDA.MessageStayOnScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen; //chkMessageStay.Checked;
+                    //objPDA.ShowCompletedJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCompletedJob; //chkShowCompletedJobs.Checked;
+                    //objPDA.ShowCustomerMobileNo = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCustomerMobileNo; //chkShowCustomerMobileNo.Checked;
+                    //objPDA.ShowNavigation = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowNavigation; //chkShowNavigation.Checked;
+                    //objPDA.ShowPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlots; //chkShowPlots.Checked;
+                    //objPDA.FareMeterType = obj.fleetDriver.Fleet_Driver_PDASettings[0].FareMeterType; //txtFareMessage.Text.Trim();
+                    //objPDA.BiddingType = obj.fleetDriver.Fleet_Driver_PDASettings[0].BiddingType; // txtBiddingMessage.Text.Trim();
+                    //objPDA.JobTimeOutInterval = obj.fleetDriver.Fleet_Driver_PDASettings[0].JobTimeOutInterval; // numJobTimeout.Value.ToInt();
+                    //objPDA.NotifyOnZoneChange = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnZoneChange; //chkShowSoundOnZoneChange.Checked;
+                    //objPDA.HasCompanyCars = obj.fleetDriver.Fleet_Driver_PDASettings[0].HasCompanyCars; // chkEnableCompanyCars.Checked;
+                    //objPDA.LogoutOnRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].LogoutOnRejectJob; //chkEnableLogoutOnReject.Checked;
+                    //objPDA.IgnoreArriveAction = obj.fleetDriver.Fleet_Driver_PDASettings[0].IgnoreArriveAction; //chkIgnoreArriveAction.Checked;
+                    //objPDA.GPSInterval = 3;
+                    //objPDA.HidePickAndDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickAndDestination; //chkHidePickupAndDest.Checked;
+                    //if (objPDA.HidePickAndDestination.ToBool())  // must be check logic
+                    //{
+                    //    //working below please check
+                    //    //if (ddlHidePickupAndDestinationType.SelectedIndex == 0)    /// PROPERTY MISSING
+                    //    //    objPDA.OldPdaVersion = 1;
+                    //    //if (ddlHidePickupAndDestinationType.SelectedIndex == 1)
+                    //    //    objPDA.OldPdaVersion = 2;
+                    //    //if (ddlHidePickupAndDestinationType.SelectedIndex == 2)
+                    //    //    objPDA.OldPdaVersion = 3;
+                    //    //if (ddlHidePickupAndDestinationType.SelectedIndex == 3)
+                    //    //    objPDA.OldPdaVersion = 4;
 
-                        //working
-                        //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickupAndDestinationType == 0)    /// PROPERTY MISSING
-                        //    objPDA.OldPdaVersion = 1;
-                        //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickupAndDestinationType == 1)
-                        //    objPDA.OldPdaVersion = 2;
-                        //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickupAndDestinationType == 2)
-                        //    objPDA.OldPdaVersion = 3;
-                        //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickupAndDestinationType == 3)
-                        //    objPDA.OldPdaVersion = 4;
+                    //    //working
+                    //    //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickupAndDestinationType == 0)    /// PROPERTY MISSING
+                    //    //    objPDA.OldPdaVersion = 1;
+                    //    //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickupAndDestinationType == 1)
+                    //    //    objPDA.OldPdaVersion = 2;
+                    //    //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickupAndDestinationType == 2)
+                    //    //    objPDA.OldPdaVersion = 3;
+                    //    //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickupAndDestinationType == 3)
+                    //    //    objPDA.OldPdaVersion = 4;
 
-                    }
-                    else
-                        objPDA.OldPdaVersion = 0;
-                    objPDA.LogoutOnOverShift = obj.fleetDriver.Fleet_Driver_PDASettings[0].LogoutOnOverShift; //chkShiftOverLogout.Checked;
-                    objPDA.NotifyOnJobLate = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnJobLate; //chkShowAlertOnJobLater.Checked;
-                    objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen; //chkEnableAutoRotate.Checked;
-                    objPDA.OptionalFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].OptionalFareMeter; //chkEnableOptionalMeter.Checked;
-                    objPDA.DisableChangeJobPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots; //chkDisableChangeJobPlot.Checked;
-                    objPDA.DisableOnBreak = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableOnBreak; //chkDisableOnBreak.Checked;
-                    objPDA.DisableBase = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableBase; //chkDisableBase.Checked;
-                    objPDA.DisableRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJob; //chkDisableRejectJob.Checked;
-                    objPDA.DisableChangeDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeDestination; //chkDisableChangeDest.Checked;
-                    objPDA.DisableRejectJobAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJobAuth; //chkDisableJobAuth.Checked;
-                    objPDA.DisableFareOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareOnAccJob; //chkDisableFareOnAccJob.Checked;
-                    objPDA.DisableSTC = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSTC; //chkDisableSTC.Checked;
-                    objPDA.DisableSetAlarm = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSetAlarm; //chkDisableAlarm.Checked;
-                    objPDA.DisableNoPickup = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableNoPickup; //chkDisableNoPickup.Checked;
-                    objPDA.ShowJobAsAlert = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowJobAsAlert; //chkShowJobAsAlert.Checked;
-                    objPDA.ShowSpecReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront; //chkShowSpecReq.Checked;
-                    objPDA.EnablePriceBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnablePriceBidding; //chkEnablePriceBidding.Checked;
-                    objPDA.EnableManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares; //chkEnableManualFares.Checked;
-                    objPDA.EnableOptionalManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableOptionalManualFares; //chkEnableOptionalManualFares.Checked;
-                    objPDA.EnableFareMeterVoice = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterVoice; //chkVoiceOnClearMeter.Checked;
-                    objPDA.EnableDriverConnect = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableDriverConnect; //chkEnableDriverConnect.Checked;
-                    objPDA.ShowDestinationAfterPOB = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowDestinationAfterPOB; //chkShowDestAfterPOB.Checked;
+                    //}
+                    //else
+                    //    objPDA.OldPdaVersion = 0;
+                    //objPDA.LogoutOnOverShift = obj.fleetDriver.Fleet_Driver_PDASettings[0].LogoutOnOverShift; //chkShiftOverLogout.Checked;
+                    //objPDA.NotifyOnJobLate = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnJobLate; //chkShowAlertOnJobLater.Checked;
+                    //objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen; //chkEnableAutoRotate.Checked;
+                    //objPDA.OptionalFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].OptionalFareMeter; //chkEnableOptionalMeter.Checked;
+                    //objPDA.DisableChangeJobPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots; //chkDisableChangeJobPlot.Checked;
+                    //objPDA.DisableOnBreak = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableOnBreak; //chkDisableOnBreak.Checked;
+                    //objPDA.DisableBase = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableBase; //chkDisableBase.Checked;
+                    //objPDA.DisableRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJob; //chkDisableRejectJob.Checked;
+                    //objPDA.DisableChangeDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeDestination; //chkDisableChangeDest.Checked;
+                    //objPDA.DisableRejectJobAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJobAuth; //chkDisableJobAuth.Checked;
+                    //objPDA.DisableFareOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareOnAccJob; //chkDisableFareOnAccJob.Checked;
+                    //objPDA.DisableSTC = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSTC; //chkDisableSTC.Checked;
+                    //objPDA.DisableSetAlarm = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSetAlarm; //chkDisableAlarm.Checked;
+                    //objPDA.DisableNoPickup = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableNoPickup; //chkDisableNoPickup.Checked;
+                    //objPDA.ShowJobAsAlert = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowJobAsAlert; //chkShowJobAsAlert.Checked;
+                    //objPDA.ShowSpecReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront; //chkShowSpecReq.Checked;
+                    //objPDA.EnablePriceBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnablePriceBidding; //chkEnablePriceBidding.Checked;
+                    //objPDA.EnableManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares; //chkEnableManualFares.Checked;
+                    //objPDA.EnableOptionalManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableOptionalManualFares; //chkEnableOptionalManualFares.Checked;
+                    //objPDA.EnableFareMeterVoice = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterVoice; //chkVoiceOnClearMeter.Checked;
+                    //objPDA.EnableDriverConnect = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableDriverConnect; //chkEnableDriverConnect.Checked;
+                    //objPDA.ShowDestinationAfterPOB = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowDestinationAfterPOB; //chkShowDestAfterPOB.Checked;
                     //objMaster.Save();
                     //--
 
@@ -20491,8 +20486,8 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                 decimal drvWaitingCharges = 0.00m;
                 decimal drvAccWaitingCharges = 0.00m;
-
-
+                string biddingMessage = string.Empty;
+                string FareMessage = string.Empty;
                 string navigationApp = "4";
 
 
@@ -20512,302 +20507,169 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                 {
                     listofLoginDrivers = db.Fleet_DriverQueueLists.Where(c => c.Status == true).Select(c => c.DriverId).ToList<int?>();
 
-                }
-
-
-                DriverBO objMaster = new DriverBO();
-                StringBuilder contents = new StringBuilder();
-                for (int i = 0; i < list2.Count; i++)
-                {
-                    cnter++;
-
-                    objMaster.GetByPrimaryKey(list2[i].DriverId.ToInt());
-                    objMaster.Edit();
 
 
 
-
-                    string manualFares = (objPda.EnableManualFares.ToBool() ? "1" : "0");
-
-
-                    if (objPda.EnableOptionalManualFares.ToBool() && objPda.EnableManualFares.ToBool())
-                        manualFares = "2";
-
-                    if (objPda.EnableJobExtraCharges.ToBool())// chkEnableJobExtraCharges.Checked)
+                    DriverBO objMaster = new DriverBO();
+                    
+                    for (int i = 0; i < list2.Count; i++)
                     {
-                        var obj1 = General.GetObject<Fleet_VehicleType>(c => c.DriverWaitingChargesPerHour != null && c.DriverWaitingChargesPerHour > 0);
+                        StringBuilder contents = new StringBuilder();
+                        cnter++;
+
+                        objMaster.GetByPrimaryKey(list2[i].DriverId.ToInt());
+                        objMaster.Edit();
 
 
-                        if (obj1 != null)
+
+
+                        string manualFares = (objPda.EnableManualFares.ToBool() ? "1" : "0");
+
+
+                        if (objPda.EnableOptionalManualFares.ToBool() && objPda.EnableManualFares.ToBool())
+                            manualFares = "2";
+
+                        if (objPda.EnableJobExtraCharges.ToBool())// chkEnableJobExtraCharges.Checked)
+                        {
+                            var obj1 = General.GetObject<Fleet_VehicleType>(c => c.DriverWaitingChargesPerHour != null && c.DriverWaitingChargesPerHour > 0);
+
+
+                            if (obj1 != null)
+                            {
+
+                                drvWaitingCharges = obj1.DriverWaitingChargesPerHour.ToDecimal();
+                                drvAccWaitingCharges = obj1.AccountWaitingChargesPerHour.ToDecimal();
+
+                            }
+                        }
+
+                        decimal version = list2[i].PDAVersion.ToDecimal();//0.00m;
+                        
+                        //please check logic below
+                        var policy = db.Gen_SysPolicy_Configurations.Where(m => m.SysPolicyId == 1).FirstOrDefault();
+                        if (objPda.EnableBidding == true)
                         {
 
-                            drvWaitingCharges = obj1.DriverWaitingChargesPerHour.ToDecimal();
-                            drvAccWaitingCharges = obj1.AccountWaitingChargesPerHour.ToDecimal();
+                            if (policy.BiddingType.ToInt() == 1)
+                            {
+                                biddingMessage = "Fastest Finger";
+                            }
+                            else if (policy.BiddingType.ToInt() == 2)
+                            {
+                                biddingMessage = "Nearest Driver";
+                            }
+                            else if (policy.BiddingType.ToInt() == 3)
+                            {
+                                biddingMessage = "Longest Waiting in Queue";
+                            }
 
                         }
-                    }
 
-                    decimal version = list2[i].PDAVersion.ToDecimal();//0.00m;
-
-
-                    contents = new StringBuilder();
-                    contents.Append("update settings<<<");
-
-
-                    //if (version >= 14)
-                    //{
-                    // update settings in json Format
-
-                    DriverPDASettings pda = new DriverPDASettings();
-                    ////  pda.Ip = AppVars.objPolicyConfiguration.ListenerIP.ToStr().Trim();
-                    pda.DrvId = objMaster.Current.Id.ToStr();
-
-                    pda.DrvNo = objMaster.Current.DriverNo.ToStr();
-                    pda.DrvName = objMaster.Current.DriverName.ToStr().Trim();
-                    pda.VehType = objMaster.Current.Fleet_VehicleType.VehicleType.ToStr().ToUpper();
-                    pda.GPSInterval = "4";
-
-                    pda.EnableJobExtraCharges = ((objPda.EnableJobExtraCharges.ToBool() ? "1" : "0"));  // Extra Charges
-                    pda.ShowCompletedJobs = ((objPda.ShowCompletedJob.ToBool() ? "1" : "0")); // Show Completed Jobs
-
-                    pda.DisableJobAuth = ((objPda.DisableRejectJobAuth.ToBool() ? "1" : "0")); // Show Completed Jobs
-
-                    pda.EnableBidding = (objPda.EnableBidding.ToBool() ? "1" : "0"); // Enable Bidding
-
-                    pda.ShowPlots = (objPda.ShowPlots.ToBool() ? "1" : "0"); // Show Plots  -- index 10
-
-                    pda.ShowNavigation = ((objPda.ShowNavigation.ToBool() ? "1" : "0")); // Show Plots -- index 11
-
-                    pda.JobTimeout = ((objPda.JobTimeOutInterval.ToStr())); // Show Plots -- index 12
-                    pda.ZoneInterval = (("40")); // Zone Update Interval -- index 13
-
-                    pda.SoundOnZoneChange = ((objPda.NotifyOnZoneChange.ToBool() ? "1" : "0"));
-
-                    pda.MessageStayOnScreen = ((objPda.MessageStayOnScreen.ToBool() ? "1" : "0")); // Message Stay -- index 15
-
-
-                    pda.EnableCompanyCars = ((objPda.HasCompanyCars.ToBool() ? "1" : "0")); // Show Plots -- index 16
-
-                    pda.EnableFareMeter = ((objPda.EnableFareMeter.ToBool() ? "1" : "0")); // Show Plots -- index 18
-                    pda.ShowCustomerNo = ((objPda.ShowCustomerMobileNo.ToBool() ? "1" : "0")); // Show Plots -- index 19
-                    pda.HidePickupAndDest = ((objPda.HidePickAndDestination.ToBool() ? "1" : "0")); // Show Plots -- index 20
-
-                    if (pda.HidePickupAndDest == "1")
-                    {
-                        if (objPda.OldPdaVersion.ToDecimal() == 1)
-                            pda.HidePickupAndDest = "2";
-
-                        else if (objPda.OldPdaVersion.ToDecimal() == 2)
-                            pda.HidePickupAndDest = "3";
-
-                    }
-
-
-
-
-                    pda.EnableLogoutOnRejectJob = ((objPda.LogoutOnRejectJob.ToBool() ? "1" : "0")); // Show Plots -- index 21
-
-
-                    pda.FontSize = "20"; // index no 23
-                    pda.NavigationType = (objPda.NavigationApp.ToStr());// navigationApp); // DeviceId -- index 24
-
-
-                    pda.EnableFlagDown = ((objPda.EnableFlagDown.ToBool() ? "1" : "0")); // -- index 25
-                    pda.MessageStayOnScreen = ((objPda.MessageStayOnScreen.ToBool() ? "1" : "0")); // -- index 26
-
-                    pda.DisablePanic = ((objPda.DisablePanicButton.ToBool() ? "1" : "0")); // index 27
-                    ///chkDisablePanic.Checked 
-                    pda.DisableRank = ((objPda.DisableDriverRank.ToBool() ? "1" : "0")); // index 28
-                                                                                         // chkDisableRank.Checked
-
-
-                    pda.MeterVoice = ((objPda.EnableFareMeterVoice.ToBool() ? "1" : "0"));
-                    pda.DisableChangeJobPlot = ((objPda.DisableChangeJobPlots.ToBool() ? "1" : "0"));// index 30
-
-                    pda.EnableJ15Jobs = ((objPda.EnableJ15J30Jobs.ToBool() ? "1" : "0")); // index 31
-                                                                                          //chkEnableJ15Jobs.Checked 
-                    pda.EnableLogoutAuth = ((objPda.EnableLogoutAuthorization.ToBool() ? "1" : "0")); // index 32
-                    pda.EnableIgnoreArrive = ((objPda.IgnoreArriveAction.ToBool() ? "1" : "0")); // index 33
-
-
-                    pda.BiddingType = "Nearest Driver"; // index 34
-                    pda.FareMeterType = "peak"; // index 35
-                                                //pda.BiddingType = "gasgiashgiopa hagsioh gasioh gaioashgioas hgioah siogah siogah siogh agasgasgasasgNearest Driver"; // index 34
-                                                //pda.FareMeterType = "diigh dfgh dfiohg dfiohg dfiohg dfioh gdfioh gdiofh giodf hgiodfh gdfioh giodfh gdfioh gdfioh giodh gdpeak"; // index 35
-
-
-                    pda.EnableOptMeter = ((objPda.EnableOptionalManualFares.ToBool() ? "1" : "0")); // index 36
-                    ///chkEnableOptionalMeter.Checked
-                    pda.DisableMeterForAccJob = ((objPda.DisableFareMeterOnAccJob.ToBool() ? "1" : "0"));// index 37
-
-                    pda.Courier = "0"; // index 38
-
-                    pda.ShowFaresOnExtraCharges = ((objPda.ShowFaresOnExtraCharges.ToBool() ? "1" : "0")); // index 39
-                    pda.EnableCallCustomer = ((objPda.EnableCallCustomer.ToBool() ? "1" : "0")); // index 40
-
-
-                    pda.EnableRecoverJob = ((objPda.EnableRecoverJob.ToBool() ? "1" : "0"));// index 41
-
-                    pda.EnableMeterWaitingCharges = ((objPda.EnableFareMeterWaitingCharges.ToBool() ? "1" : "0")); // index 42
-
-                    pda.LogoutOnOverShift = ((objPda.LogoutOnOverShift.ToBool() ? "1" : "0")); // // Shift Logout                 
-                    pda.DisableBase = ((objPda.DisableBase.ToBool() ? "1" : "0")); // //Disable Base // DeviceId -- index 44               
-                    pda.DisableBreak = ((objPda.DisableOnBreak.ToBool() ? "1" : "0")); // //Disable OnBreak -- index 45
-                    pda.DisableRejectJob = ((objPda.DisableRejectJob.ToBool() ? "1" : "0")); // //Disable Reject Job
-
-
-                    pda.DisableChangeDest = ((objPda.DisableChangeDestination.ToBool() ? "1" : "0"));
-
-
-                    pda.ShowJobasAlert = ((objPda.ShowJobAsAlert.ToBool() ? "1" : "0"));
-                    pda.DisableNoPickup = ((objPda.DisableNoPickup.ToBool() ? "1" : "0"));
-                    pda.DisableAlarm = ((objPda.DisableSetAlarm.ToBool() ? "1" : "0"));
-                    // chkDisableAlarm.Checked
-                    pda.ShowSpecialReqOnFront = ((objPda.ShowSpecReqOnFront.ToBool() ? "1" : "0"));
-
-                    pda.DisableFareOnAccJob = ((objPda.DisableFareOnAccJob.ToBool() ? "1" : "0"));
-                    pda.DisableSTC = ((objPda.DisableSTC.ToBool() ? "1" : "0"));
-
-
-                    // version 10.0
-                    pda.ShowAlertOnJobLate = ((objPda.ShowJobAsAlert.ToBool() ? "1" : "0"));
-                    pda.EnableAutoRotate = ((objPda.EnableAutoRotateScreen.ToBool() ? "1" : "0"));
-                    pda.ShowPlotOnOffer = ((objPda.ShowPlotOnJobOffer.ToBool() ? "1" : "0"));
-                    //ShowPlotOnJobOffer.Checked
-
-                    pda.OnBreakDur = ((objPda.BreakTime.ToStr()));// numBreakDuration.Value.ToStr()));
-
-                    pda.ManualFares = (manualFares);
-                    pda.EnablePriceBid = ((objPda.EnablePriceBidding.ToBool() ? "1" : "0"));
-
-                    pda.DrvWaitingMins = ("0");
-                    pda.AccWaitingMins = ("0");
-
-                    string json = Newtonsoft.Json.JsonConvert.SerializeObject(pda);
-
-                    contents.Append(json);
-
-                    ////new Thread(delegate ()
-                    ////{
-                    ////    General.SendMessageToPDA("request pda=" + 0 + "=" + objMaster.Current.Id + "=" + contents + "=12=" + objMaster.Current.DriverNo);
-                    ////}).Start();
-
-                    //System.Threading.Thread.Sleep(2000);
-
-                    //objMaster.GetByPrimaryKey(objMaster.PrimaryKeyValue);
-
-                    Fleet_Driver_PDASetting objPDA = null;
-
-                    if (objMaster.Current.Fleet_Driver_PDASettings.Count == 0)
-                        objMaster.Current.Fleet_Driver_PDASettings.Add(new Fleet_Driver_PDASetting());
-
-
-
-                    objPDA = objMaster.Current.Fleet_Driver_PDASettings[0];
-
-
-                    objPDA.CurrentPdaVersion = version;
-                    objPDA.ShowPlotOnJobOffer = objPda.ShowPlotOnJobOffer;// ShowPlotOnJobOffer.Checked;
-                    objPDA.DriverId = objMaster.Current.Id;
-                    objPDA.ShowFaresOnExtraCharges = false;// chkShowFareonExtraCharges.Checked;
-
-                    objPDA.EnableJobExtraCharges = false;// chkEnableJobExtraCharges.Checked;
-                    objPDA.EnableFareMeterWaitingCharges = objPda.EnableFareMeterWaitingCharges;// chkEnableMeterWaitingCharges.Checked;
-                    objPDA.EnableRecoverJob = objPda.EnableRecoverJob;// chkEnableRecoverJob.Checked;
-                    objPDA.EnableCallCustomer = objPda.EnableCallCustomer;// chkEnableCallCustomer.Checked;
-                    objPDA.EnableBidding = objPda.EnableBidding;// chkEnableBidding.Checked;
-                    objPDA.EnableAutoRotateScreen = objPda.EnableAutoRotateScreen;// chkEnableAutoRotate.Checked;
-                    objPDA.EnableFareMeter = objPda.EnableFareMeter;// chkEnableFareMeter.Checked;
-                    objPDA.EnableFlagDown = objPda.EnableFlagDown;// chkEnableFlagDown.Checked;
-                    objPDA.EnableJ15J30Jobs = objPda.EnableJ15J30Jobs;// chkEnableJ15Jobs.Checked;
-                    objPDA.EnableLogoutAuthorization = objPda.EnableLogoutAuthorization;// chkEnableLogoutAuthorization.Checked;
-                    objPDA.DisableChangeJobPlots = objPda.DisableChangeJobPlots;// chkDisableChangeJobPlot.Checked;
-                    objPDA.BreakTime = objPda.BreakTime;// numBreakDuration.Value.ToInt();
-                    objPDA.DisableDriverRank = objPda.DisableDriverRank;// chkDisableRank.Checked;
-                    objPDA.DisablePanicButton = objPda.DisablePanicButton;// chkDisablePanic.Checked;
-                    objPDA.DisableFareMeterOnAccJob = objPda.DisableFareMeterOnAccJob;// chkDisableMeterAccJob.Checked;
-
-
-                    objPDA.NavigationApp = objPda.NavigationApp;// navigationApp.ToInt();
-                    objPDA.MessageStayOnScreen = objPda.MessageStayOnScreen;// chkMessageStay.Checked;
-                    objPDA.ShowCompletedJob = objPda.ShowCompletedJob;// chkShowCompletedJobs.Checked;
-                    objPDA.ShowCustomerMobileNo = objPda.ShowCustomerMobileNo;// chkShowCustomerMobileNo.Checked;
-                    objPDA.ShowNavigation = objPda.ShowNavigation;// chkShowNavigation.Checked;
-                    objPDA.ShowPlots = objPda.ShowPlots;// chkShowPlots.Checked;
-
-
-                    objPDA.FareMeterType = "peak";// txtFareMessage.Text.Trim();
-                    objPDA.BiddingType = "Nearest Driver";// txtBiddingMessage.Text.Trim();
-
-                    objPDA.JobTimeOutInterval = objPda.JobTimeOutInterval;// numJobTimeout.Value.ToInt();
-                    objPDA.NotifyOnZoneChange = objPda.NotifyOnZoneChange;// chkShowSoundOnZoneChange.Checked;
-
-                    objPDA.HasCompanyCars = objPda.HasCompanyCars;// chkEnableCompanyCars.Checked;
-                    objPDA.LogoutOnRejectJob = objPda.LogoutOnRejectJob;// chkEnableLogoutOnReject.Checked;
-                    objPDA.IgnoreArriveAction = objPda.IgnoreArriveAction;// chkIgnoreArriveAction.Checked;
-                    objPDA.GPSInterval = objPda.GPSInterval;// 3;
-                    objPDA.HidePickAndDestination = objPda.HidePickAndDestination;// chkHidePickupAndDest.Checked;
-
-
-                    if (objPDA.HidePickAndDestination.ToBool())
-                    {
-                        if (objPda.OldPdaVersion.ToDecimal() == 1)
-                            objPDA.OldPdaVersion = 2;
-                        if (objPda.OldPdaVersion.ToDecimal() == 2)
-                            objPDA.OldPdaVersion = 3;
-
-
-                    }
-                    else
-                        objPDA.OldPdaVersion = 0;
-
-
-                    objPDA.LogoutOnOverShift = objPda.LogoutOnOverShift;// chkShiftOverLogout.Checked;
-                    objPDA.NotifyOnJobLate = objPda.NotifyOnJobLate;// chkShowAlertOnJobLater.Checked;
-                    objPDA.EnableAutoRotateScreen = objPda.EnableAutoRotateScreen;// chkEnableAutoRotate.Checked;
-                    objPDA.OptionalFareMeter = objPda.OptionalFareMeter;// chkEnableOptionalMeter.Checked;
-                    objPDA.DisableChangeJobPlots = objPda.DisableChangeJobPlots;// chkDisableChangeJobPlot.Checked;
-                    objPDA.DisableOnBreak = objPda.DisableOnBreak;// chkDisableOnBreak.Checked;
-                    objPDA.DisableBase = objPda.DisableBase;// chkDisableBase.Checked;
-
-                    objPDA.DisableRejectJob = objPda.DisableRejectJob;// chkDisableRejectJob.Checked;
-                    objPDA.DisableChangeDestination = objPda.DisableChangeDestination;// chkDisableChangeDest.Checked;
-
-
-
-                    objPDA.DisableFareOnAccJob = objPda.DisableFareOnAccJob;// chkDisableFareOnAccJob.Checked;
-                    objPDA.DisableSTC = objPda.DisableSTC;// chkDisableSTC.Checked;
-                    objPDA.DisableSetAlarm = objPda.DisableSetAlarm;// chkDisableAlarm.Checked;
-                    objPDA.DisableNoPickup = objPda.DisableNoPickup;// chkDisableNoPickup.Checked;
-                    objPDA.ShowJobAsAlert = objPda.ShowJobAsAlert;// chkShowJobAsAlert.Checked;
-                    objPDA.ShowSpecReqOnFront = objPda.ShowSpecReqOnFront;// chkShowSpecReq.Checked;
-
-
-                    objPDA.EnablePriceBidding = objPda.EnablePriceBidding;// chkEnablePriceBidding.Checked;
-                    objPDA.EnableManualFares = objPda.EnableManualFares;// chkEnableManualFares.Checked;
-                    objPDA.EnableOptionalManualFares = objPda.EnableOptionalManualFares;// chkEnableOptionalManualFares.Checked;
-                    objPDA.EnableFareMeterVoice = objPda.EnableFareMeterVoice.ToBool();
-
-                    if (listofLoginDrivers.Count(c => c == objMaster.Current.Id) == 0)
-                    {
-                        objMaster.Current.Fleet_Driver_OfflineJobs.Clear();
-
-                        objMaster.Current.Fleet_Driver_OfflineJobs.Add(new Fleet_Driver_OfflineJob
+                       
+                        if (objPda.EnableFareMeter == true)
                         {
-                            DriverId = objMaster.Current.Id
-                            ,
-                            OfflineMessage = contents + "=12",
-                            //    UpdatedBy = AppVars.LoginObj.UserName.ToStr(),
-                            UpdatedOn = DateTime.Now
-                        });
 
+                            if (policy.EnablePeakOffPeakFares.ToBool())
+                            {
+                                FareMessage = "PeakOff Peak Fares";
+                            }
+                            else
+                            {
+                                FareMessage = "Mileage Fares";
+
+                            }
+
+                        }
+
+                        contents = new StringBuilder();
+                        contents.Append("update settings<<<");
+
+                        DriverPDASettings pda = new DriverPDASettings();
+
+                        pda.DrvId = objMaster.Current.Id.ToStr();
+                        pda.DrvNo = objMaster.Current.DriverNo.ToStr();
+                        pda.DrvName = objMaster.Current.DriverName.ToStr().Trim();
+                        pda.VehType = objMaster.Current.Fleet_VehicleType.VehicleType.ToStr().ToUpper();
+                        pda.ShowCompletedJobs = ((objPda.ShowCompletedJob.ToBool() ? "1" : "0"));
+                        pda.DisableJobAuth = ((objPda.DisableRejectJobAuth.ToBool() ? "1" : "0"));
+                        pda.EnableBidding = (objPda.EnableBidding.ToBool() ? "1" : "0");
+                        pda.ShowPlots = (objPda.ShowPlots.ToBool() ? "1" : "0");
+                        pda.JobTimeout = ((objPda.JobTimeOutInterval.ToStr()));
+                        pda.SoundOnZoneChange = ((objPda.NotifyOnZoneChange.ToBool() ? "1" : "0"));
+                        pda.MessageStayOnScreen = ((objPda.MessageStayOnScreen.ToBool() ? "1" : "0"));
+                        pda.EnableCompanyCars = ((objPda.HasCompanyCars.ToBool() ? "1" : "0"));
+                        pda.EnableFareMeter = ((objPda.EnableFareMeter.ToBool() ? "1" : "0"));
+                        pda.ShowCustomerNo = ((objPda.ShowCustomerMobileNo.ToBool() ? "1" : "0"));
+                        //pda.HidePickupAndDest = ((objPda.HidePickAndDestination.ToBool() ? "1" : "0"));
+                        pda.NavigationType = (objPda.NavigationApp.ToStr());
+                        pda.EnableFlagDown = ((objPda.EnableFlagDown.ToBool() ? "1" : "0"));
+                        pda.DisablePanic = ((objPda.DisablePanicButton.ToBool() ? "1" : "0"));
+                        pda.DisableRank = ((objPda.DisableDriverRank.ToBool() ? "1" : "0"));
+                        pda.MeterVoice = ((objPda.EnableFareMeterVoice.ToBool() ? "1" : "0"));
+                        pda.DisableChangeJobPlot = ((objPda.DisableChangeJobPlots.ToBool() ? "1" : "0"));
+                        pda.EnableJ15Jobs = ((objPda.EnableJ15J30Jobs.ToBool() ? "1" : "0"));
+                        pda.EnableLogoutAuth = ((objPda.EnableLogoutAuthorization.ToBool() ? "1" : "0"));
+                        pda.EnableIgnoreArrive = ((objPda.IgnoreArriveAction.ToBool() ? "1" : "0"));
+                        pda.DisableMeterForAccJob = ((objPda.DisableFareMeterOnAccJob.ToBool() ? "1" : "0"));
+                        pda.EnableCallCustomer = ((objPda.EnableCallCustomer.ToBool() ? "1" : "0"));
+                        pda.EnableRecoverJob = ((objPda.EnableRecoverJob.ToBool() ? "1" : "0"));
+                        pda.EnableMeterWaitingCharges = ((objPda.EnableFareMeterWaitingCharges.ToBool() ? "1" : "0"));
+                        pda.DisableBase = ((objPda.DisableBase.ToBool() ? "1" : "0"));
+                        pda.DisableBreak = ((objPda.DisableOnBreak.ToBool() ? "1" : "0"));
+                        pda.DisableRejectJob = ((objPda.DisableRejectJob.ToBool() ? "1" : "0"));
+                        pda.DisableChangeDest = ((objPda.DisableChangeDestination.ToBool() ? "1" : "0"));
+                        pda.DisableNoPickup = ((objPda.DisableNoPickup.ToBool() ? "1" : "0"));
+                        pda.ShowSpecialReqOnFront = ((objPda.ShowSpecReqOnFront.ToBool() ? "1" : "0"));
+                        pda.DisableFareOnAccJob = ((objPda.DisableFareOnAccJob.ToBool() ? "1" : "0"));
+                        pda.DisableSTC = ((objPda.DisableSTC.ToBool() ? "1" : "0"));
+                        pda.NotifyOnJobLate = ((objPda.NotifyOnJobLate.ToBool() ? "1" : "0"));
+                        pda.EnableAutoRotate = ((objPda.EnableAutoRotateScreen.ToBool() ? "1" : "0"));
+                        pda.ShowPlotOnOffer = ((objPda.ShowPlotOnJobOffer.ToBool() ? "1" : "0"));
+                        pda.showDestAfterPob = ((obj.ShowDestinationAfterPOB.ToBool() ? "1" : "0"));
+                        pda.OnBreakDur = ((objPda.BreakTime.ToStr()));
+                        pda.ManualFares = (manualFares);
+                        pda.BiddingType = biddingMessage;
+                        pda.FareMeterType = FareMessage;
+
+                        //if (pda.HidePickupAndDest == "1")
+                        //{
+                        //    if (objPda.OldPdaVersion.ToDecimal() == 1)
+                        //        pda.OldPdaVersion = "2";
+                        //    if (objPda.OldPdaVersion.ToDecimal() == 2)
+                        //        pda.OldPdaVersion = "3";
+                        //    if (objPda.OldPdaVersion.ToDecimal() == 0)
+                        //        pda.OldPdaVersion = "0";
+                        //}
+                        //else
+                        //{
+                        //    pda.OldPdaVersion = "0";
+                        //}
+                     
+                        string json = Newtonsoft.Json.JsonConvert.SerializeObject(pda);
+
+                        contents.Append(json);
+                        if (listofLoginDrivers.Count(c => c == objMaster.Current.Id) == 0)
+                        {
+                            objMaster.Current.Fleet_Driver_OfflineJobs.Add(new Fleet_Driver_OfflineJob
+                            {
+                                DriverId = objMaster.Current.Id
+                                ,
+                                OfflineMessage = contents + "=12",
+                                UpdatedBy = "",
+                                UpdatedOn = DateTime.Now
+                            });
+
+
+                        }
+                        objMaster.CheckDataValidation = false;
+                        objMaster.Save();
+                        objMaster.Clear();
+                        updateBulkSettingNotifyOnPDA(contents.ToStr(), objMaster.Current.Id);
 
                     }
+                   
 
-                    objMaster.Save();
-                    objMaster.Clear();
                 }
-                //updateBulkSettingNotifyOnPDA(contents.ToStr());
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
                     var objSavedSettings = db.Gen_SysPolicy_PDASettings.FirstOrDefault();
@@ -20818,106 +20680,76 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     }
 
 
-
-
-                    //// objSavedSettings.CurrentPdaVersion = AppVars.objPolicyConfiguration.PDAVersion;
-                    objSavedSettings.ShowPlotOnJobOffer = objPda.ShowPlotOnJobOffer;// ShowPlotOnJobOffer.Checked;
-
-                    objSavedSettings.ShowFaresOnExtraCharges = false;// chkShowFareonExtraCharges.Checked;
-
-
+                    objSavedSettings.ShowPlotOnJobOffer = objPda.ShowPlotOnJobOffer;
                     objSavedSettings.DisableRejectJobAuth = objPda.DisableRejectJobAuth.ToBool();
-
-                    objSavedSettings.EnableJobExtraCharges = false;// chkEnableJobExtraCharges.Checked;
-                    objSavedSettings.EnableFareMeterWaitingCharges = objPda.EnableFareMeterWaitingCharges;// chkEnableMeterWaitingCharges.Checked;
-                    objSavedSettings.EnableRecoverJob = objPda.EnableRecoverJob;// chkEnableRecoverJob.Checked;
-                    objSavedSettings.EnableCallCustomer = objPda.EnableCallCustomer;// chkEnableCallCustomer.Checked;
-                    objSavedSettings.EnableBidding = objPda.EnableBidding;// chkEnableBidding.Checked;
-                    objSavedSettings.EnableAutoRotateScreen = objPda.EnableAutoRotateScreen;// chkEnableAutoRotate.Checked;
-                    objSavedSettings.EnableFareMeter = objPda.EnableFareMeter;// chkEnableFareMeter.Checked;
-                    objSavedSettings.EnableFlagDown = objPda.EnableFlagDown;// chkEnableFlagDown.Checked;
-                    objSavedSettings.EnableJ15J30Jobs = objPda.EnableJ15J30Jobs;// chkEnableJ15Jobs.Checked;
-                    objSavedSettings.EnableLogoutAuthorization = objPda.EnableLogoutAuthorization;// chkEnableLogoutAuthorization.Checked;
-                    objSavedSettings.DisableChangeJobPlots = objPda.DisableChangeJobPlots;// chkDisableChangeJobPlot.Checked;
-                    objSavedSettings.BreakTime = objPda.BreakTime;// numBreakDuration.Value.ToInt();
-                    objSavedSettings.DisableDriverRank = objPda.DisableDriverRank;// chkDisableRank.Checked;
-                    objSavedSettings.DisablePanicButton = objPda.DisablePanicButton;// chkDisablePanic.Checked;
-                    objSavedSettings.DisableFareMeterOnAccJob = objPda.DisableFareMeterOnAccJob;// chkDisableMeterAccJob.Checked;
-
-
-                    objSavedSettings.NavigationApp = objPda.NavigationApp;// navigationApp.ToInt();
-                    objSavedSettings.MessageStayOnScreen = objPda.MessageStayOnScreen;// chkMessageStay.Checked;
-                    objSavedSettings.ShowCompletedJob = objPda.ShowCompletedJob;// chkShowCompletedJobs.Checked;
-                    objSavedSettings.ShowCustomerMobileNo = objPda.ShowCustomerMobileNo;// chkShowCustomerMobileNo.Checked;
-                    objSavedSettings.ShowNavigation = objPda.ShowNavigation;// chkShowNavigation.Checked;
-                    objSavedSettings.ShowPlots = objPda.ShowPlots;// chkShowPlots.Checked;
-
-
-                    objSavedSettings.FareMeterType = objPda.FareMeterType;// txtFareMessage.Text.Trim();
-                    objSavedSettings.BiddingType = objPda.BiddingType;// txtBiddingMessage.Text.Trim();
-
-                    objSavedSettings.JobTimeOutInterval = objPda.JobTimeOutInterval;// numJobTimeout.Value.ToInt();
-                    objSavedSettings.NotifyOnZoneChange = objPda.NotifyOnZoneChange;// chkShowSoundOnZoneChange.Checked;
-
-                    objSavedSettings.HasCompanyCars = objPda.HasCompanyCars;// chkEnableCompanyCars.Checked;
-                    objSavedSettings.LogoutOnRejectJob = objPda.LogoutOnRejectJob;// chkEnableLogoutOnReject.Checked;
-                    objSavedSettings.IgnoreArriveAction = objPda.IgnoreArriveAction;// chkIgnoreArriveAction.Checked;
-                    objSavedSettings.GPSInterval = objPda.GPSInterval;// 3;
-                    objSavedSettings.HidePickAndDestination = objPda.HidePickAndDestination;// chkHidePickupAndDest.Checked;
-
-
-
-
-
-
-                    if (objSavedSettings.HidePickAndDestination.ToBool())
-                    {
-                        if (objPda.OldPdaVersion.ToDecimal() == 1)
-                            objSavedSettings.OldPdaVersion = 2;
-                        if (objPda.OldPdaVersion.ToDecimal() == 2)
-                            objSavedSettings.OldPdaVersion = 3;
-                        if (objPda.OldPdaVersion.ToDecimal() == 0)
-                            objSavedSettings.OldPdaVersion = 0;
-
-                    }
-                    else
-                        objSavedSettings.OldPdaVersion = 0;
-
-                    objSavedSettings.LogoutOnOverShift = objPda.LogoutOnOverShift;// chkShiftOverLogout.Checked;
-                    objSavedSettings.NotifyOnJobLate = objPda.NotifyOnJobLate;// chkShowAlertOnJobLater.Checked;
-                    objSavedSettings.EnableAutoRotateScreen = objPda.EnableAutoRotateScreen;// chkEnableAutoRotate.Checked;
-                    objSavedSettings.OptionalFareMeter = objPda.OptionalFareMeter;// chkEnableOptionalMeter.Checked;
-                    objSavedSettings.DisableChangeJobPlots = objPda.DisableChangeJobPlots;// chkDisableChangeJobPlot.Checked;
-                    objSavedSettings.DisableOnBreak = objPda.DisableOnBreak;// chkDisableOnBreak.Checked;
-                    objSavedSettings.DisableBase = objPda.DisableBase;// chkDisableBase.Checked;
-
-                    objSavedSettings.DisableRejectJob = objPda.DisableRejectJob;// chkDisableRejectJob.Checked;
-                    objSavedSettings.DisableChangeDestination = objPda.DisableChangeDestination;// chkDisableChangeDest.Checked;
-
-
-
-                    objSavedSettings.DisableFareOnAccJob = objPda.DisableFareOnAccJob;// chkDisableFareOnAccJob.Checked;
-                    objSavedSettings.DisableSTC = objPda.DisableSTC;// chkDisableSTC.Checked;
-                    objSavedSettings.DisableSetAlarm = objPda.DisableSetAlarm;// chkDisableAlarm.Checked;
-                    objSavedSettings.DisableNoPickup = objPda.DisableNoPickup;// chkDisableNoPickup.Checked;
-                    objSavedSettings.ShowJobAsAlert = objPda.ShowJobAsAlert;// chkShowJobAsAlert.Checked;
-                    objSavedSettings.ShowSpecReqOnFront = objPda.ShowSpecReqOnFront;// chkShowSpecReq.Checked;
+                    objSavedSettings.EnableFareMeterWaitingCharges = objPda.EnableFareMeterWaitingCharges;
+                    objSavedSettings.EnableRecoverJob = objPda.EnableRecoverJob;
+                    objSavedSettings.EnableCallCustomer = objPda.EnableCallCustomer;
+                    objSavedSettings.EnableBidding = objPda.EnableBidding;
+                    objSavedSettings.EnableAutoRotateScreen = objPda.EnableAutoRotateScreen;
+                    objSavedSettings.EnableFareMeter = objPda.EnableFareMeter;
+                    objSavedSettings.EnableFlagDown = objPda.EnableFlagDown;
+                    objSavedSettings.EnableJ15J30Jobs = objPda.EnableJ15J30Jobs;
+                    objSavedSettings.EnableLogoutAuthorization = objPda.EnableLogoutAuthorization;
+                    objSavedSettings.DisableChangeJobPlots = objPda.DisableChangeJobPlots;
+                    objSavedSettings.BreakTime = objPda.BreakTime;
+                    objSavedSettings.DisableDriverRank = objPda.DisableDriverRank;
+                    objSavedSettings.DisablePanicButton = objPda.DisablePanicButton;
+                    objSavedSettings.DisableFareMeterOnAccJob = objPda.DisableFareMeterOnAccJob;
+                    objSavedSettings.NavigationApp = objPda.NavigationApp;
+                    objSavedSettings.MessageStayOnScreen = objPda.MessageStayOnScreen;
+                    objSavedSettings.ShowCompletedJob = objPda.ShowCompletedJob;
+                    objSavedSettings.ShowCustomerMobileNo = objPda.ShowCustomerMobileNo;
+                    objSavedSettings.ShowPlots = objPda.ShowPlots;
+                    objSavedSettings.JobTimeOutInterval = objPda.JobTimeOutInterval;
+                    objSavedSettings.NotifyOnZoneChange = objPda.NotifyOnZoneChange;
+                    objSavedSettings.HasCompanyCars = objPda.HasCompanyCars;
+                    objSavedSettings.IgnoreArriveAction = objPda.IgnoreArriveAction;
+                    //objSavedSettings.HidePickAndDestination = objPda.HidePickAndDestination;
+                    objSavedSettings.NotifyOnJobLate = objPda.NotifyOnJobLate;
+                    objSavedSettings.OptionalFareMeter = objPda.OptionalFareMeter;
+                    objSavedSettings.DisableOnBreak = objPda.DisableOnBreak;
+                    objSavedSettings.DisableBase = objPda.DisableBase;
+                    objSavedSettings.DisableRejectJob = objPda.DisableRejectJob;
+                    objSavedSettings.DisableChangeDestination = objPda.DisableChangeDestination;
+                    objSavedSettings.DisableFareOnAccJob = objPda.DisableFareOnAccJob;
+                    objSavedSettings.DisableSTC = objPda.DisableSTC;
+                    objSavedSettings.DisableNoPickup = objPda.DisableNoPickup;
+                    objSavedSettings.ShowSpecReqOnFront = objPda.ShowSpecReqOnFront;
                     objSavedSettings.EnableFareMeterVoice = objPda.EnableFareMeterVoice.ToBool();
+                    objSavedSettings.EnableManualFares = objPda.EnableManualFares;
+                    objSavedSettings.BiddingType = biddingMessage;
+                    objSavedSettings.FareMeterType = FareMessage;
+                    objSavedSettings.SysPolicyId = 1;
 
-                    objSavedSettings.EnablePriceBidding = objPda.EnablePriceBidding;// chkEnablePriceBidding.Checked;
-                    objSavedSettings.EnableManualFares = objPda.EnableManualFares;// chkEnableManualFares.Checked;
-                    objSavedSettings.EnableOptionalManualFares = objPda.EnableOptionalManualFares;// chkEnableOptionalManualFares.Checked;
-                    objSavedSettings.SysPolicyId = 1;//objPda.SysPolicyId;
 
+                    //if (objSavedSettings.HidePickAndDestination.ToBool())
+                    //{
+                    //    if (objPda.OldPdaVersion.ToDecimal() == 1)
+                    //        objSavedSettings.OldPdaVersion = 2;
+                    //    if (objPda.OldPdaVersion.ToDecimal() == 2)
+                    //        objSavedSettings.OldPdaVersion = 3;
+                    //    if (objPda.OldPdaVersion.ToDecimal() == 0)
+                    //        objSavedSettings.OldPdaVersion = 0;
 
+                    //}
+                    //else
+                    //    objSavedSettings.OldPdaVersion = 0;
+                    
 
                     if (objSavedSettings.Id == 0)
                     {
                         db.Gen_SysPolicy_PDASettings.InsertOnSubmit(objSavedSettings);
 
                     }
-
+                    
                     db.SubmitChanges();
+                    var query = @"
+UPDATE Gen_SysPolicy_PDASettings
+SET
+    ShowDestinationAfterPOB = " + (obj.ShowDestinationAfterPOB==true ? "1" : "0");
+
+                    db.ExecuteQuery<int>(query);
 
                 }
 
@@ -20931,27 +20763,25 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
         }
 
 
-        public void updateBulkSettingNotifyOnPDA(string contents)
+        public void updateBulkSettingNotifyOnPDA(string contents, int driverid)
         {
             try
             {
-                if (!string.IsNullOrEmpty(contents))
+                if (!string.IsNullOrEmpty(contents) && driverid>0)
                 {
-                    var objDriverList = new TaxiDataContext().ExecuteQuery<int>("Select DriverId from Fleet_DriverQueueList where Status=1").ToList();
+                    var objDriverList = new TaxiDataContext().ExecuteQuery<int>("Select DriverId from Fleet_DriverQueueList where Status=1 where driverid="+ driverid).ToList();
 
-                    new System.Threading.Thread(delegate ()
-                    {
+                  
                         try
                         {
-                            foreach (var item in objDriverList)
-                            {
-                                int driverId = item;
+                          
+                               
                                 try
                                 {
                                     HubProcessor.Instance.listofJobs.Add(new clsPDA
                                     {
 
-                                        DriverId = driverId,
+                                        DriverId = driverid,
                                         JobId = 0,
                                         MessageDateTime = DateTime.Now.AddSeconds(-50),
                                         JobMessage = contents.ToStr(),
@@ -20965,25 +20795,23 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                 }
                                 //
                                 //
-                                SocketIO.SendToSocket(driverId.ToStr(), contents.ToStr(), "updateSetting");
+                                SocketIO.SendToSocket(driverid.ToStr(), contents.ToStr(), "updateSetting");
 
                                 try
                                 {
-                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverbtnUpdateSetting1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",contents:" + contents + Environment.NewLine);
+                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverbtnUpdateSetting1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverid + ",contents:" + contents + Environment.NewLine);
                                 }
                                 catch
                                 {
                                 }
-                            }
+                            
                         }
                         catch
                         {
 
                         }
 
-                    }).Start();
 
-                    System.Threading.Thread.Sleep(2000);
                 }
             }
             catch
@@ -21090,6 +20918,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                                                 DriverNo = g.Key.DriverNo,
                                                 CurrentPdaVersion = g.FirstOrDefault().b.CurrentPdaVersion
                                             };
+              
                     //var PDASettings = General.GetObject<Gen_SysPolicy_PDASetting>(c => c.Id > 0);
                     //var PDALoggedinDriversList = (from a in db.GetTable<Fleet_DriverQueueList>()
                     //            where a.Status != null && a.Status == true && a.Fleet_Driver.HasPDA == true
