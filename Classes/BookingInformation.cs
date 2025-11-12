@@ -112,6 +112,7 @@ namespace SignalRHub
 
 
         public int Noofhours { get; set; }
+        public string PaymentType { get; set; }
 
         public ViaAddresses[] Via
         {
