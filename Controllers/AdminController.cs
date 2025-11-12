@@ -20769,7 +20769,7 @@ SET
             {
                 if (!string.IsNullOrEmpty(contents) && driverid>0)
                 {
-                    var objDriverList = new TaxiDataContext().ExecuteQuery<int>("Select DriverId from Fleet_DriverQueueList where Status=1 where driverid="+ driverid).ToList();
+                    //var objDriverList = new TaxiDataContext().ExecuteQuery<int>("Select DriverId from Fleet_DriverQueueList where Status=1 where driverid="+ driverid).ToList();
 
                   
                         try
