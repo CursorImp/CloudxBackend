@@ -1783,6 +1783,7 @@ namespace SignalRHub.WebApiClasses
         public string currency;
         public RouteCoordinates RouteCoordinates;
         public int Noofhours { get; set; }
+        public int? PaymentTypeId { get; set; }
         public int FareCalculationSetting { get; set; }
        
 

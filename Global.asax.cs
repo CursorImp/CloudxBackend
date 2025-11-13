@@ -693,11 +693,12 @@ namespace SignalRHub
                              new AppSetting { SetKey = "HideAccountName", SetVal = "0", description = "HideAccountName"  },
                              new AppSetting { SetKey = "ShowMsgToAllController", SetVal = "false", description = "ShowMsgToAllController"  },
                              new AppSetting { SetKey = "EnableInbox", SetVal = "false", description = "EnableInbox"  },
-                             new AppSetting { SetKey = "EnableIsActiveVehicleType", SetVal = "true", description = "Enable Is Active on vehicle type"  },
+                             new AppSetting { SetKey = "EnableIsActiveVehicleType", SetVal = "false", description = "Enable Is Active on vehicle type"  },
                              new AppSetting { SetKey = "EnableTrackEscort", SetVal = "true", description = "Enable Track Escort" },
                              new AppSetting { SetKey = "ClickSendApiKey", SetVal = "", description = "ClickSendApiKey"  },
                              new AppSetting { SetKey = "ClickSendUserName", SetVal = "", description = "ClickSendUserName"  },
                              new AppSetting { SetKey = "ClickSendCompanyName", SetVal = "CabTreasure", description = "ClickSendCompanyName"  },
+                             new AppSetting { SetKey = "ApplyCreditCardExtraSurcharge", SetVal = "false", description = "ApplyCreditCardExtraSurcharge"  },
 
                         };
 

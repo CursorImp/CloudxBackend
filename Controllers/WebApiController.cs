@@ -4411,6 +4411,12 @@ namespace SignalRHub.Controllers
 
                         info.Duration = obj.routeInfo.Duration;
                         info.Noofhours = obj.routeInfo.Noofhours;
+                        string paymentType = "cash";
+                        if (obj.routeInfo.PaymentTypeId.ToInt() > 0)
+                        {
+                            paymentType = db.Gen_PaymentTypes.Where(x => x.Id == obj.routeInfo.PaymentTypeId).Select(c => c.PaymentType).FirstOrDefault().ToStr();
+                        }
+                        info.PaymentType = paymentType.Trim();
 
                         if (info.MapType == 1)
                             info.MapKey = db.ExecuteQuery<string>("select APIKey from mapkeys where maptype='google'").FirstOrDefault().ToStr().Trim();

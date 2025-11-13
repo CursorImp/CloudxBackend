@@ -67,6 +67,7 @@ namespace SignalRHub
        public string MeterVoice;
        public string Courier;
        public string DisableJobAuth;
+       public string OptionalFareMeter;
 
 
 
@@ -82,6 +83,7 @@ namespace SignalRHub
 
 
         public string showDestAfterPob;
+        public string EnableDriverConnect;
 
         public string enableCallOffice = "0";
         public string DriverPay;
@@ -115,5 +117,19 @@ namespace SignalRHub
         public string ShowBidList = "";
         public string HideAccountName = "";
 
+        public string EnablePriceBidding = "";
+        public string EnableOptionalManualFares = "";
+        public string EnableAutoRotateScreen = "";
+        public string EnableCourierSignature = "";
+        public string LogoutOnRejectJob = "";
+        public string DisableSetAlarm = "";
+        public string DisableChangeDestination = "";
+        public string ShowJobAsAlert = "";
+
+        public string ShowSpecReqOnFront = "";
+
+        public string OldPdaVersion = "";
+
+        public string NotifyOnJobLate = "";
     }
 }
