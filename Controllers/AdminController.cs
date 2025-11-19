@@ -27321,8 +27321,9 @@ SET
                     list = (from a in db.Bookings
                             join b in db.Gen_PaymentTypes on a.PaymentTypeId equals b.Id
                             join c in db.Gen_Companies on a.CompanyId equals c.Id into table2
-                            join v in db.Fleet_VehicleTypes on a.VehicleTypeId equals v.Id
                             from c in table2.DefaultIfEmpty()
+                            join v in db.Fleet_VehicleTypes on a.VehicleTypeId equals v.Id
+                            
                             where a.BookingStatusId == Enums.BOOKINGSTATUS.WAITING_WEBBOOKING
                             && (a.BookingTypeId == Enums.BOOKING_TYPES.ONLINE || a.BookingTypeId == Enums.BOOKING_TYPES.WEB || a.BookingTypeId == 11)
 
