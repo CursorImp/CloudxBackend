@@ -560,7 +560,17 @@ namespace SignalRHub.Controllers
 
 
 
-
+                int totalCount =(from a in db.Bookings
+                                    join b in db.Gen_PaymentTypes on a.PaymentTypeId equals b.Id
+                                    join c in db.Gen_Companies on a.CompanyId equals c.Id into table2
+                                    join v in db.Fleet_VehicleTypes on a.VehicleTypeId equals v.Id
+                                    from c in table2.DefaultIfEmpty()
+                                    where a.BookingStatusId == Enums.BOOKINGSTATUS.WAITING_WEBBOOKING
+                                       && (a.BookingTypeId == Enums.BOOKING_TYPES.ONLINE
+                                        || a.BookingTypeId == Enums.BOOKING_TYPES.WEB
+                                        || a.BookingTypeId == 11)
+                                    select a
+                                ).Count();
 
 
                 List<clsBookingscount> objCnt = null;
@@ -584,7 +594,8 @@ namespace SignalRHub.Controllers
                     data.objBookingCount.totalCancelled = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.CANCELLED).FirstOrDefault().DefaultIfEmpty().count;
                     data.objBookingCount.totalNoPickup = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.NOPICKUP).FirstOrDefault().DefaultIfEmpty().count; ;
                     data.objBookingCount.totalCompleted = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.DISPATCHED).FirstOrDefault().DefaultIfEmpty().count;
-                    data.objBookingCount.totalOnline = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.WAITING_WEBBOOKING).FirstOrDefault().DefaultIfEmpty().count;
+                    //data.objBookingCount.totalOnline = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.WAITING_WEBBOOKING).FirstOrDefault().DefaultIfEmpty().count;
+                    data.objBookingCount.totalOnline = totalCount;
                     var data1 = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, 0, "", 1).ToList();
                     data.objBookingCount.totalInCompleted = data1.Where(a =>
                         a.PickupDate.HasValue &&
@@ -606,7 +617,7 @@ namespace SignalRHub.Controllers
                 }
 
             }
-            catch
+            catch (Exception ex)
             {
 
 
@@ -4451,7 +4462,7 @@ namespace SignalRHub.Controllers
                         //GETALLFARESFROMDISPATCHNEW
 
 
-                        var url = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GETALLFARESFROMDISPATCHNEW";
+                        var url = "http://localhost:1720/Home/GETALLFARESFROMDISPATCHNEW"; //"https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GETALLFARESFROMDISPATCHNEW";
                         var requestData = new
                         {
 
