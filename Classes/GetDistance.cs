@@ -1,13 +1,14 @@
+using DotNetCoords;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
+using System.Data.Linq;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Web;
 using System.Xml;
 using System.Xml.Linq;
-using System.Linq;
-using System.Data.Linq;
-using System.Collections.Generic;
-using DotNetCoords;
-using System.IO;
 using System.Xml.Serialization;
 using Taxi_Model;
 using Utils;
@@ -878,6 +879,13 @@ public static class GetDistance
                     .Where(p => p.Distance <= radiusInMiles)
                     .Distinct()
                     .ToList();
+
+                foreach (var item in responseModel.Result)
+                {
+                    string address = item.Formatted_address.Trim();
+                    RemoveUK(ref address);
+                    item.Formatted_address = address.Trim();
+                }
             }
         }
         catch (WebException webEx)
@@ -903,7 +911,15 @@ public static class GetDistance
         return responseModel;
     }
 
+    private static string RemoveUK(ref string address)
+    {
+        if (address.ToUpper().EndsWith(", UK"))
+        {
+            address = address.Remove(address.ToUpper().LastIndexOf(", UK"));
+        }
 
+        return address;
+    }
     #endregion
 }
 
