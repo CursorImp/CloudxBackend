@@ -4446,7 +4446,7 @@ namespace SignalRHub.Controllers
                         //GETALLFARESFROMDISPATCHNEW
 
 
-                        var url = "http://localhost:1720/Home/GETALLFARESFROMDISPATCHNEW"; //"https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GETALLFARESFROMDISPATCHNEW";
+                        var url = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GETALLFARESFROMDISPATCHNEW";
                         var requestData = new
                         {
 
