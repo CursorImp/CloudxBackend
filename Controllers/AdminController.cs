@@ -27666,7 +27666,7 @@ SET
                             StrBld.Append("<hr style='border: none; border-top: 1px solid #d4e0ee; margin: 20px 0;'>");
 
                             // Total Fare
-                            StrBld.Append("<p style='border: 1px solid #d4e0ee;background-color: #f3f6fa;font-size: 16px; font-weight: bold; margin: 20px 0;display: flex;align-items: center;height:40px;padding:0 3px'>Total Fare: <span style='color: #008000;padding: 0 3px;'>£ " + obj2.FareRate + "</span > Payment Type: <span style='color: #008000;padding: 0 3px;'>" + obj2.Gen_PaymentType.PaymentType + ". </span></p>");
+                            StrBld.Append("<p style='border: 1px solid #d4e0ee;background-color: #f3f6fa;font-size: 16px; font-weight: bold; margin: 20px 0;display: flex;align-items: center;height:40px;padding:0 3px'>Total Fare: <span style='color: #008000;padding: 0 3px;'>£ " + obj2.TotalCharges + "</span > Payment Type: <span style='color: #008000;padding: 0 3px;'>" + obj2.Gen_PaymentType.PaymentType + ". </span></p>");
 
                             // Note
                             StrBld.Append("<p style='font-style: arial;font-bold;font-weight:bold;font-size:16px; margin: 20px 0; padding: 10px; border-top: 1px solid #eee;'>Note: The price is an estimate and does not include any extra costs such as additional vias, waiting times, airport drop-off, parking charges, congestion charges and ULEZ.</p>");
@@ -27750,7 +27750,7 @@ SET
                             // Fares
                             StrBld.Append("<tr>");
                             StrBld.Append("<td style='padding: 8px; border: 1px solid #d4e0ee; font-weight: bold;'>Fares</td>");
-                            StrBld.Append("<td style='padding: 8px; border: 1px solid #d4e0ee;'>£" + obj2.FareRate + "</td>");
+                            StrBld.Append("<td style='padding: 8px; border: 1px solid #d4e0ee;'>£" + obj2.TotalCharges + "</td>");
                             StrBld.Append("</tr>");
 
                             StrBld.Append("</table>");
