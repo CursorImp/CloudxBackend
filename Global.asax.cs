@@ -117,6 +117,7 @@ namespace SignalRHub
         public static string ClickSendApiKey = "";
         public static string ClickSendCompanyName = "CabTreasure";
         public static string HideAccountName = "0";
+        public static string EnableDropOffAction = "";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -699,6 +700,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "ClickSendUserName", SetVal = "", description = "ClickSendUserName"  },
                              new AppSetting { SetKey = "ClickSendCompanyName", SetVal = "CabTreasure", description = "ClickSendCompanyName"  },
                              new AppSetting { SetKey = "ApplyCreditCardExtraSurcharge", SetVal = "false", description = "ApplyCreditCardExtraSurcharge"  },
+                             new AppSetting { SetKey = "EnableDropOffAction", SetVal = "", description = "EnableDropOffAction"  },
 
                         };
 
@@ -1636,6 +1638,10 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("ClickSendCompanyName")))
                 {
                     ClickSendCompanyName = GetAppSetting<string>("ClickSendCompanyName").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableDropOffAction")))
+                {
+                    EnableDropOffAction = GetAppSetting<string>("EnableDropOffAction").ToStr();
                 }
 
             }
