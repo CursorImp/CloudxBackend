@@ -6,3 +6,8 @@
 5/5/2025 7:47:10 PMObject reference not set to an instance of an object.
 5/5/2025 7:49:33 PMObject reference not set to an instance of an object.
 5/5/2025 7:59:15 PMObject reference not set to an instance of an object.
+9/12/2025 11:08:50 PMA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The wait operation timed out.)
+9/13/2025 10:12:50 PMA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The wait operation timed out.)
+10/2/2025 8:03:32 PMException has been thrown by the target of an invocation.
+10/9/2025 7:34:54 PMException has been thrown by the target of an invocation.
+10/23/2025 11:06:54 PMA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The network location cannot be reached. For information about network troubleshooting, see Windows Help.)

@@ -1,0 +1,1 @@
+21/11/2025 4:56:36 pm,exception:A transport-level error has occurred when receiving results from the server. (provider: TCP Provider, error: 0 - The network connection was aborted by the local system.)

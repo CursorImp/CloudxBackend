@@ -24780,6 +24780,7 @@ SET
                 }
 
                 DriverAppController controller = new DriverAppController();
+                model.IsMoto = true;
                 var stripeAPIResponse = controller.CreateTerminalPaymentIntentKP(JsonConvert.SerializeObject(model));
                 response.Data = stripeAPIResponse.Data;
             }
