@@ -6917,6 +6917,7 @@ namespace SignalRHub
                     int SubcompanyId = 1;
                     if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
                     paymentGateway = General.GetKoNectConfigDetails(SubcompanyId);
+                    bool? IsMoto = input.IsMoto != null ? input.IsMoto : false; 
                     if (objBooking != null && paymentGateway != null)
                     {
                         if (!string.IsNullOrEmpty(input.serialnumber) && input.serialnumber.ToLower().Contains("terminal"))
@@ -6931,7 +6932,7 @@ namespace SignalRHub
                             }
                         }
 
-                        resp = CreateTerminalPaymentIntentKonnectPay(paymentGateway, objBooking, Fare, input.serialnumber);
+                        resp = CreateTerminalPaymentIntentKonnectPay(paymentGateway, objBooking, Fare, input.serialnumber,IsMoto.ToBool());
 
                     }
                     else
@@ -6959,7 +6960,7 @@ namespace SignalRHub
 
             return resp;
         }
-        private StripeAPIResponse CreateTerminalPaymentIntentKonnectPay(Classes.KonnectPay.PaymentConfig obj, Booking objBooking, decimal Fare, string terminalDetails)
+        private StripeAPIResponse CreateTerminalPaymentIntentKonnectPay(Classes.KonnectPay.PaymentConfig obj, Booking objBooking, decimal Fare, string terminalDetails,bool IsMoto)
         {
             StripeAPIResponse response = new StripeAPIResponse();
             string DefaultCurrency = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrency"];
@@ -7020,6 +7021,15 @@ namespace SignalRHub
                 SpDTO.defaultClientId = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr();
                 SpDTO.location = DefaultClientLocation;
                 var DataObj = Newtonsoft.Json.JsonConvert.SerializeObject(SpDTO);
+                string URL = "";
+                if (IsMoto == true)
+                {
+                    URL = "/v1/terminal/CreatePaymentIntent/Moto";
+                }
+                else
+                {
+                    URL = "/v1/terminal/CreatePaymentIntent";
+                }
                 string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
                 using (var client = new HttpClient())
                 {
@@ -7027,7 +7037,8 @@ namespace SignalRHub
                     client.BaseAddress = new Uri(StripeAPIBaseURL);
                     client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
                     var content = new StringContent(DataObj, Encoding.UTF8, "application/json");
-                    var postTask = client.PostAsync(StripeAPIBaseURL + "/v1/terminal/CreatePaymentIntent/Moto", content).Result;
+
+                    var postTask = client.PostAsync(StripeAPIBaseURL + URL, content).Result;
                     string PayResp = postTask.Content.ReadAsStringAsync().Result;
                     resp = new JavaScriptSerializer().Deserialize<PaymentIntentResponse>(PayResp);
                 }

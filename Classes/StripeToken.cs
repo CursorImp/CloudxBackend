@@ -272,6 +272,7 @@ namespace SignalRHub.Classes.KonnectSupplier
         public string email { get; set; }
         public string mobile { get; set; }
         public string serialnumber { get; set; }
+        public bool? IsMoto { get; set; }
     }
     public class CheckPaymentStatus
     {
