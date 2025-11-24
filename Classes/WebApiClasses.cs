@@ -654,6 +654,8 @@ namespace SignalRHub.WebApiClasses
         public Fleet_Driver Driver { get;  set; }
         public Gen_Company Company { get;  set; }
         public bool? AllocatedDriver { get; set; }
+        public int? VehicleTypeIdReturn { get;  set; }
+        public int? DriverIdReturn { get;  set; }
     }
 
     public class Booking_DriverCommsiion
@@ -1771,6 +1773,7 @@ namespace SignalRHub.WebApiClasses
         public List<AddressInfo> viaAddresses { get; set; }
 
         public int VehicleTypeId { get; set; }
+        public int? ReturnVehicleTypeId { get; set; }
         public DateTime? PickupDateTime { get; set; }
         public DateTime? returnPickupDateTime { get; set; }
         public int? CompanyId { get; set; }
@@ -1792,6 +1795,7 @@ namespace SignalRHub.WebApiClasses
         public int? JourneyTypeId { get; set; }
         public int? SubCompanyId { get; set; }
         public int DriverId { get;  set; }
+        public int? ReturnDriverId { get;  set; }
     }
     public class FareSettings
     {
@@ -1825,6 +1829,7 @@ namespace SignalRHub.WebApiClasses
         public object fareModel;
 
         public Fleet_Driver Driver;
+        public Fleet_Driver ReturnDriver;
     }
 
 

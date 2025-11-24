@@ -79,6 +79,11 @@ namespace SignalRHub
             get;
             set;
         }
+         public string ReturnVehicle
+        {
+            get;
+            set;
+        }
 
 
 
@@ -120,7 +125,7 @@ namespace SignalRHub
             set;
 
         }
-
+        public int? ReturnVehicleTypeId { get;  set; }
     }
 
     public class ViaAddresses

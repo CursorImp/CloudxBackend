@@ -1307,6 +1307,46 @@ namespace SignalRHub.Controllers
         }
 
 
+        //[System.Web.Http.HttpGet]
+        //[System.Web.Http.HttpPost]
+        //[System.Web.Http.Route("GetAvailableDriversDropdown")]
+        //public JsonResult GetAvailableDriversDropdown(WebApiClasses.RequestWebApi obj)
+        //{
+        //    //
+
+        //    ResponseWebApi response = new ResponseWebApi();
+
+        //    using (TaxiDataContext db = new TaxiDataContext())
+        //    {
+
+
+        //        var list = (from a in db.Fleet_DriverQueueLists
+        //                    where a.DriverId != null && a.Fleet_Driver.IsActive == true && (obj.AllocateAnyDriver == true
+        //                    || (a.Status == true && (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK))
+        //                    )
+
+        //                    orderby a.QueueDateTime
+        //                    select new
+        //                    {
+        //                        Id = a.DriverId,
+        //                        DriverName = (a.Fleet_Driver.DriverNo + " - " + a.Fleet_Driver.DriverName + " [" + a.Fleet_Driver.Fleet_VehicleType.VehicleType + "]")
+        //                        //         ,
+        //                        //   a.IsManualLogin
+        //                         ,
+        //                        a.Fleet_Driver.SubcompanyId
+        //                        ,
+        //                        a.Fleet_Driver.VehicleTypeId
+        //                    }).Distinct().ToList();
+
+        //        response.Data = list;
+
+        //    }
+
+
+        //    return Json(response, JsonRequestBehavior.AllowGet);
+
+        //}
+
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("GetAvailableDriversDropdown")]
@@ -1320,25 +1360,67 @@ namespace SignalRHub.Controllers
             {
 
 
-                var list = (from a in db.Fleet_DriverQueueLists
-                            where a.DriverId != null && a.Fleet_Driver.IsActive == true && (obj.AllocateAnyDriver == true
-                            || (a.Status == true && (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK))
-                            )
+                List<object> list;
 
+                if (obj.AllocateAnyDriver == true)
+                {
+                    // Case 1: Load all active drivers
+                    list = db.Fleet_Drivers
+                        .Where(d => d.IsActive == true)
+                        .Select(d => new
+                        {
+                            Id = d.Id,
+                            DriverName = d.DriverNo + " - " + d.DriverName +
+                                         " [" + d.Fleet_VehicleType.VehicleType + "]",
+                            d.SubcompanyId,
+                            d.VehicleTypeId
+                        })
+                        .ToList<object>();
+                }
+                else
+                {
+                    // Case 2: Load from queue list with conditions
+                    list = (from a in db.Fleet_DriverQueueLists
+                            where a.Fleet_Driver.IsActive == true
+                               && a.DriverId != null
+                               && a.Status == true
+                               && (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
+                                   || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK)
                             orderby a.QueueDateTime
                             select new
                             {
                                 Id = a.DriverId,
-                                DriverName = (a.Fleet_Driver.DriverNo + " - " + a.Fleet_Driver.DriverName + " [" + a.Fleet_Driver.Fleet_VehicleType.VehicleType + "]")
-                                //         ,
-                                //   a.IsManualLogin
-                                 ,
-                                a.Fleet_Driver.SubcompanyId
-                                ,
+                                DriverName = a.Fleet_Driver.DriverNo + " - " + a.Fleet_Driver.DriverName +
+                                             " [" + a.Fleet_Driver.Fleet_VehicleType.VehicleType + "]",
+                                a.Fleet_Driver.SubcompanyId,
                                 a.Fleet_Driver.VehicleTypeId
-                            }).Distinct().ToList();
+                            })
+                            .Distinct()
+                            .ToList<object>();
+                }
+
 
                 response.Data = list;
+
+                //var list = (from a in db.Fleet_DriverQueueLists
+                //            where a.DriverId != null && a.Fleet_Driver.IsActive == true && (obj.AllocateAnyDriver == true
+                //            || (a.Status == true && (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK))
+                //            )
+
+                //            orderby a.QueueDateTime
+                //            select new
+                //            {
+                //                Id = a.DriverId,
+                //                DriverName = (a.Fleet_Driver.DriverNo + " - " + a.Fleet_Driver.DriverName + " [" + a.Fleet_Driver.Fleet_VehicleType.VehicleType + "]")
+                //                //         ,
+                //                //   a.IsManualLogin
+                //                 ,
+                //                a.Fleet_Driver.SubcompanyId
+                //                ,
+                //                a.Fleet_Driver.VehicleTypeId
+                //            }).Distinct().ToList();
+
+                //response.Data = list;
 
             }
 
@@ -1346,7 +1428,6 @@ namespace SignalRHub.Controllers
             return Json(response, JsonRequestBehavior.AllowGet);
 
         }
-
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -1582,6 +1663,19 @@ namespace SignalRHub.Controllers
 
 
                     var obj2 = db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id);
+                    try
+                    {
+
+                        var master = db.Bookings.FirstOrDefault(x => x.MasterJobId == obj2.Id);
+                        string query = "SELECT DriverId, VehicleTypeId FROM Booking WHERE ID =" + master.Id;
+                        var data = db.ExecuteQuery<BookingInfo>(query).FirstOrDefault();
+                        obj.bookingInfo.DriverIdReturn = data.DriverId;
+                        obj.bookingInfo.VehicleTypeIdReturn = data.VehicleTypeId;
+                    }
+                    catch
+                    {
+
+                    }
 
                     if (obj?.bookingInfo?.DriverId > 0)
                     {
@@ -2554,6 +2648,26 @@ namespace SignalRHub.Controllers
                             var master = db.Bookings.FirstOrDefault(x => x.MasterJobId == objMaster.Current.Id);
                             if (master != null)
                             {
+
+                                try
+                                {
+                                    var EnableOtherReturnFields = db.ExecuteQuery<string>("Select SetVal From AppSettings where setkey='EnableOtherReturnFields'").FirstOrDefault().ToStr();
+
+                                    if (EnableOtherReturnFields == "true")
+                                    {
+                                        string query2 = "Update booking set DriverId=NULLIF({0},0), VehicleTypeId=NULLIF({1},0) where Id={2}";
+                                        db.ExecuteCommand(query2, obj.bookingInfo.DriverIdReturn > 0 ? obj.bookingInfo.DriverIdReturn : 0, obj.bookingInfo.VehicleTypeIdReturn > 0 ? obj.bookingInfo.VehicleTypeIdReturn : 0, master.Id);
+                                    }
+
+
+                                }
+                                catch
+                                {
+
+                                }
+
+
+
                                 string query1 = "delete from Booking_ViaLocations where BookingId={0}";
                                 db.ExecuteCommand(query1, master.Id);
                                 foreach (var item in obj.bookingInfo.Booking_ViaLocations)
@@ -4212,6 +4326,37 @@ namespace SignalRHub.Controllers
                                 route.Driver = driver;
                             }
                         }
+
+                         if (obj.routeInfo.ReturnDriverId > 0)
+                        {
+                            var tempDriver = db.Fleet_Drivers
+                                .Where(x => x.Id == obj.routeInfo.ReturnDriverId)
+                                .Select(x => new
+                                {
+                                    x.Id,
+                                    x.DriverTypeId,
+                                    x.DriverCommissionPerBooking,
+                                    x.DriverMonthlyRent
+                                })
+                                .FirstOrDefault();
+
+                            if (tempDriver != null)
+                            {
+                                // Manually create detached Fleet_Driver
+                                var driver = new Fleet_Driver
+                                {
+                                    Id = tempDriver.Id,
+                                    DriverTypeId = tempDriver.DriverTypeId,
+                                    DriverCommissionPerBooking = tempDriver.DriverCommissionPerBooking,
+                                    DriverMonthlyRent = tempDriver.DriverMonthlyRent
+                                };
+
+                                route.ReturnDriver = driver;
+                            }
+                        }
+
+
+
                         response.Data = route;
                     }
                     catch (Exception ex)
@@ -4377,6 +4522,18 @@ namespace SignalRHub.Controllers
                         {
                             info.VehicleTypeId = obj.routeInfo.VehicleTypeId.ToInt();
                         }
+                        try
+                        {
+                            info.ReturnVehicleTypeId = -1;
+                            info.ReturnVehicle = db.Fleet_VehicleTypes.Where(c => c.Id == obj.routeInfo.ReturnVehicleTypeId).Select(c => c.VehicleType).FirstOrDefault().ToStr();
+                        }
+                        catch
+                        {
+                            info.ReturnVehicleTypeId = obj.routeInfo.ReturnVehicleTypeId.ToInt();
+                        }
+
+
+
                         //  info.Via = booking.Via;
                         //
 
