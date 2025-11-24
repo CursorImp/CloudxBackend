@@ -868,7 +868,7 @@ public static class GetDistance
                     .Select(p => new SignalRHub.Result
                     {
                         Name = p.displayName?.text,
-                        Formatted_address = p.formattedAddress,
+                        Formatted_address = CombineAddress(p.displayName?.text, p.formattedAddress),
                         Rating = p.rating.ToStr(),
                         Place_id = p.id,
                         Distance = new LatLng(coords.Value.Latitude, coords.Value.Longitude)
@@ -920,6 +920,18 @@ public static class GetDistance
 
         return address;
     }
+
+    private static string CombineAddress(string name, string formatted)
+    {
+        name = name?.Trim();
+        formatted = formatted?.Trim();
+
+        if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(formatted))
+            return $"{name}, {formatted}";
+
+        return name ?? formatted ?? "";
+    }
+
     #endregion
 }
 

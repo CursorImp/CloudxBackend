@@ -17391,6 +17391,10 @@ namespace SignalRHub
 
                                             FareMeterSettings fareJsonArr = new FareMeterSettings(true);
                                             fareJsonArr.EnableViaAction = "2";
+                                            if (!string.IsNullOrEmpty(Global.EnableDropOffAction.ToStr()) && Global.EnableDropOffAction.ToStr() != "")
+                                            {
+                                                fareJsonArr.EnableDropOffAction = Global.EnableDropOffAction.ToStr();
+                                            }
                                             //if ((values[7].ToDecimal() >= 102.63m && values[7].ToDecimal() < 120))
                                             //    fareJsonArr.EnableViaAction = "3";
 
@@ -17402,6 +17406,10 @@ namespace SignalRHub
                                         {
                                             FareMeterSettings fareJsonArr = new FareMeterSettings(true);
                                             fareJsonArr.EnableViaAction = Global.EnableViaAction.ToStr();
+                                            if (!string.IsNullOrEmpty(Global.EnableDropOffAction.ToStr()) && Global.EnableDropOffAction.ToStr() != "")
+                                            {
+                                                fareJsonArr.EnableDropOffAction = Global.EnableDropOffAction.ToStr();
+                                            }
                                             //if ((values[7].ToDecimal() >= 102.63m && values[7].ToDecimal() < 120))
                                             //    fareJsonArr.EnableViaAction = "3";
 
