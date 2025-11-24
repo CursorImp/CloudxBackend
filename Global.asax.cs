@@ -28,8 +28,8 @@ using System.Xml;
 using Taxi_BLL;
 using Taxi_Model;
 using Utils;
-//using Vonage;
-//using Vonage.Request;
+using Vonage;
+using Vonage.Request;
 using DSSMS = SMSGateway.DinstarSMSGateway;
 using HMSMS = SMSGateway.HypermediaGateway;
 
@@ -56,7 +56,7 @@ namespace SignalRHub
         public static HMSMS.SmsGateway HMSMS_smsgateway = null;
         public static DSSMS.SmsGateway DSSMS_smsgateway = null;
         public static SignalRHub.Classes.TaxiLocalSettings TLSMS_smsgateway = null;
-        //public static VonageClient vonageClient = null;
+        public static VonageClient vonageClient = null;
 
 
         private static System.Timers.Timer callerIDTimer = null;
@@ -2839,33 +2839,33 @@ namespace SignalRHub
                     //ClickSend_SendingSms(number, message, "iTaxi");
                     ClickSend_SendingSms(number, message, ClickSendCompanyName);
                 }
-                //else if (SelectedGateway == GatewayType.VonagSMSGateWay)
-                //{
-                //    var credentials = Credentials.FromApiKeyAndSecret(
-                //                VonageApiKey,
-                //                VonageApiSecret
-                //                );
+                else if (SelectedGateway == GatewayType.VonagSMSGateWay)
+                {
+                    var credentials = Credentials.FromApiKeyAndSecret(
+                                VonageApiKey,
+                                VonageApiSecret
+                                );
 
-                //    vonageClient = new VonageClient(credentials);
-                //    if (vonageClient != null)
-                //    {
-                //        if (number.StartsWith("07"))
-                //        {
-                //            number = "+44" + number.Substring(1); // remove leading 0 and prefix with 44
-                //        }
-                //        var request = new Vonage.Messaging.SendSmsRequest()
-                //        {
-                //            To = number,
-                //            From = VonageSenderName,
-                //            Text = message
-                //        };
+                    vonageClient = new VonageClient(credentials);
+                    if (vonageClient != null)
+                    {
+                        if (number.StartsWith("07"))
+                        {
+                            number = "+44" + number.Substring(1); // remove leading 0 and prefix with 44
+                        }
+                        var request = new Vonage.Messaging.SendSmsRequest()
+                        {
+                            To = number,
+                            From = VonageSenderName,
+                            Text = message
+                        };
 
-                //        // Block and wait for the async call to complete
-                //        var response = vonageClient.SmsClient.SendAnSmsAsync(request).GetAwaiter().GetResult();
+                        // Block and wait for the async call to complete
+                        var response = vonageClient.SmsClient.SendAnSmsAsync(request).GetAwaiter().GetResult();
 
 
-                //    }
-                //}
+                    }
+                }
                 else
                 {
                     DSSMS_smsgateway.Send(number, message);
