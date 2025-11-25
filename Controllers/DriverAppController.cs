@@ -5516,7 +5516,7 @@ namespace SignalRHub
                                     }
                                     else if (!string.IsNullOrEmpty(objBooking.CustomerCreditCardDetails) && objBooking.CustomerCreditCardDetails.ToStr().Trim().StartsWith("pi_") && !objBooking.CustomerCreditCardDetails.ToStr().Trim().Contains("secret_"))
                                     {
-                                       // Gen_SysPolicy_PaymentDetail obj2 = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                                        // Gen_SysPolicy_PaymentDetail obj2 = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
                                         obj = General.GetKoNectConfigDetails(SubcompanyId);
                                         IsAuthorize = true;
                                         makePaymentResponse.Gateways.Add(new { GatewayName = "konnectpay" });
@@ -5590,7 +5590,7 @@ namespace SignalRHub
                                         }
 
                                     }
-                                  
+
                                     else
                                     {
                                         if (objBooking.CustomerCreditCardDetails.ToStr().Trim().StartsWith("pi_") && objBooking.CustomerCreditCardDetails.ToStr().Trim().Contains("secret_"))
@@ -6079,7 +6079,11 @@ namespace SignalRHub
 
                             }
 
-
+                            var vehicleStartRate = db.Fleet_VehicleTypes.Where(x => x.Id == objBooking.VehicleTypeId).Select(x => x.StartRate).FirstOrDefault().ToDecimal();
+                            if (price < vehicleStartRate)
+                            {
+                                price = vehicleStartRate;
+                            }
 
                             List<BookingSummary> listofsummary = new List<BookingSummary>();
                             listofsummary.Add(new BookingSummary { fieldname = "Fares", isedit = EditFares.ToBool(), isvisible = objPaymentColumns.ShowFares.ToBool(), label = "Fares", value = price, DisableChangePayment = "1" });
@@ -6917,7 +6921,7 @@ namespace SignalRHub
                     int SubcompanyId = 1;
                     if (objBooking != null && objBooking?.SubcompanyId != null && objBooking?.SubcompanyId > 0) { SubcompanyId = Convert.ToInt32(objBooking.SubcompanyId); }
                     paymentGateway = General.GetKoNectConfigDetails(SubcompanyId);
-                    bool? IsMoto = input.IsMoto != null ? input.IsMoto : false; 
+                    bool? IsMoto = input.IsMoto != null ? input.IsMoto : false;
                     if (objBooking != null && paymentGateway != null)
                     {
                         if (!string.IsNullOrEmpty(input.serialnumber) && input.serialnumber.ToLower().Contains("terminal"))
@@ -6932,7 +6936,7 @@ namespace SignalRHub
                             }
                         }
 
-                        resp = CreateTerminalPaymentIntentKonnectPay(paymentGateway, objBooking, Fare, input.serialnumber,IsMoto.ToBool());
+                        resp = CreateTerminalPaymentIntentKonnectPay(paymentGateway, objBooking, Fare, input.serialnumber, IsMoto.ToBool());
 
                     }
                     else
@@ -6960,7 +6964,7 @@ namespace SignalRHub
 
             return resp;
         }
-        private StripeAPIResponse CreateTerminalPaymentIntentKonnectPay(Classes.KonnectPay.PaymentConfig obj, Booking objBooking, decimal Fare, string terminalDetails,bool IsMoto)
+        private StripeAPIResponse CreateTerminalPaymentIntentKonnectPay(Classes.KonnectPay.PaymentConfig obj, Booking objBooking, decimal Fare, string terminalDetails, bool IsMoto)
         {
             StripeAPIResponse response = new StripeAPIResponse();
             string DefaultCurrency = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrency"];
@@ -8186,7 +8190,7 @@ namespace SignalRHub
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
-        [System.Web.Http.Route("requestupcomingjoblist")] 
+        [System.Web.Http.Route("requestupcomingjoblist")]
         public ResponseData requestupcomingjoblist(string mesg)
         {
             try
@@ -17659,9 +17663,19 @@ namespace SignalRHub
                         }
                     }
 
-
+                    var IsFareSetToMinimum = false;
                     using (TaxiDataContext db = new TaxiDataContext())
                     {
+                        var _bookingData = db.Bookings.FirstOrDefault(a => a.Id == objAction.JobId.ToLong());
+                        if (Global.EnableVehicleMinimumFare == "true")
+                        {
+                            var vehicleStartRate = db.Fleet_VehicleTypes.Where(x => x.Id == _bookingData.VehicleTypeId).Select(x => x.StartRate).FirstOrDefault().ToDecimal();
+                            if (objAction.Fares < vehicleStartRate)
+                            {
+                                objAction.Fares = vehicleStartRate;
+                                IsFareSetToMinimum = true;
+                            }
+                        }
                         if (objAction.IsMeter.ToStr().Trim() == "1" || (objAction.DropOffFareList != null && objAction.DropOffFareList.Count > 0))
                         {
                             int waitingTime = 0;
@@ -17689,7 +17703,7 @@ namespace SignalRHub
 
                         string transId = objAction.TransId.ToStr().Trim();
 
-                        var _bookingData = db.Bookings.FirstOrDefault(a => a.Id == objAction.JobId.ToLong());
+
 
                         if (transId.Length > 0)
                         {
@@ -17800,9 +17814,14 @@ namespace SignalRHub
                         }
 
                     }
-
-                    rrr = "true";
-
+                    if (IsFareSetToMinimum)
+                    {
+                        rrr = "success:" + "{ \"totalFares\" :\"" + (objAction.Fares.ToDecimal() + objAction.ParkingCharges.ToDecimal() + objAction.WaitingCharges.ToDecimal() + objAction.ExtraDropCharges.ToDecimal() + objAction.Tip.ToDecimal() + objAction.BookingFee.ToDecimal()) + "\",\"totalMiles\" :\"" + Math.Round(objAction.Miles.ToDecimal(), 1) + "\" }";
+                    }
+                    else
+                    {
+                        rrr = "true";
+                    }
                     General.BroadCastMessage("**action>>" + objAction.JobId.ToStr() + ">>" + objAction.DrvId.ToStr() + ">>" + objAction.JStatus.ToInt());
 
 
@@ -19200,7 +19219,8 @@ namespace SignalRHub
                                 {
                                     db.ExecuteQuery<int>("update booking_viaLocations set iscurrentstop=1, ClearedDateTime=getdate() where bookingid=" + jobId + " and vialocvalue='" + via + "'");
                                 }
-                                catch {
+                                catch
+                                {
                                 }
                                 db.stp_BookingLog(jobId, "DRIVER", "Via (DROP OFF) : " + via);
                             }
