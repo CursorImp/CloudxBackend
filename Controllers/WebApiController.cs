@@ -1808,7 +1808,7 @@ namespace SignalRHub.Controllers
                     {
                         obj.bookingInfo.DeadMileage = obj2.DeadMileage;
                     }
-                    else 
+                    else
                     {
                         obj.bookingInfo.DeadMileage = 0;
                     }
@@ -2480,17 +2480,19 @@ namespace SignalRHub.Controllers
                         if (objMaster.Current.AttributeValues.ToStr().Trim() == "''" || objMaster.Current.AttributeValues.ToStr().Trim() == ", ,")
                             objMaster.Current.AttributeValues = null;
 
-                        if (obj.bookingInfo.LeadTime > 0)
+                        if (Global.EnableManualLeadTime == "true")
                         {
-                            objMaster.Current.AutoDespatchTime = objMaster.Current.PickupDateTime.Value.AddMinutes(-obj.bookingInfo.LeadTime.ToInt()).ToDateTime();
-                            objMaster.Current.DeadMileage = obj.bookingInfo.LeadTime;
+                            if (obj.bookingInfo.LeadTime > 0)
+                            {
+                                objMaster.Current.AutoDespatchTime = objMaster.Current.PickupDateTime.Value.AddMinutes(-obj.bookingInfo.LeadTime.ToInt()).ToDateTime();
+                                objMaster.Current.DeadMileage = obj.bookingInfo.LeadTime;
+                            }
+                            else
+                            {
+                                objMaster.Current.AutoDespatchTime = null;
+                                objMaster.Current.DeadMileage = 0;
+                            }
                         }
-                        else 
-                        {
-                            objMaster.Current.AutoDespatchTime = null;
-                            objMaster.Current.DeadMileage = 0;
-                        }
-
                         objMaster.ReturnCustomerPrice = objMaster.Current.ServiceCharges.ToDecimal();
                         objMaster.Save();
                         try
@@ -3799,15 +3801,17 @@ namespace SignalRHub.Controllers
 
                         if (obj.addressInfo.zoneId.ToInt() > 0)
                         {
-                            var ZoneInfo  = db.Gen_Zones.Where(c => c.Id == obj.addressInfo.zoneId).Select(c =>  new { ZoneName = c.ZoneName , JobDueTime = c.JobDueTime }).FirstOrDefault();
+                            var ZoneInfo = db.Gen_Zones.Where(c => c.Id == obj.addressInfo.zoneId).Select(c => new { ZoneName = c.ZoneName, JobDueTime = c.JobDueTime }).FirstOrDefault();
                             obj.addressInfo.zoneName = ZoneInfo.ZoneName;
-
-                            if (ZoneInfo.JobDueTime != null)
+                            if (Global.EnableManualLeadTime == "true")
                             {
-                                int hour = ZoneInfo.JobDueTime.Value.Hour;
-                                int min = ZoneInfo.JobDueTime.Value.Minute;
+                                if (ZoneInfo.JobDueTime != null)
+                                {
+                                    int hour = ZoneInfo.JobDueTime.Value.Hour;
+                                    int min = ZoneInfo.JobDueTime.Value.Minute;
 
-                                obj.addressInfo.JobDueTime = ((hour * 60) + min);
+                                    obj.addressInfo.JobDueTime = ((hour * 60) + min);
+                                }
                             }
                         }
 

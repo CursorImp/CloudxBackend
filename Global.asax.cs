@@ -121,6 +121,7 @@ namespace SignalRHub
         public static string EnableVehicleMinimumFare = "false";
         public static string CancellationFee = "0";
         public static string CancellationFeeType = "1"; //1- Amount, 2- Percentage
+        public static string EnableManualLeadTime = "false";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -707,6 +708,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableVehicleMinimumFare", SetVal = "false", description = "EnableVehicleMinimumFare"  },
                              new AppSetting { SetKey = "CancellationFee", SetVal = "0", description = "CancellationFee"  },
                              new AppSetting { SetKey = "CancellationFeeType", SetVal = "1", description = "CancellationFeeType"  },
+                             new AppSetting { SetKey = "EnableManualLeadTime", SetVal = "false", description = "EnableManualLeadTime"  },
 
                         };
 
@@ -1660,6 +1662,10 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("CancellationFeeType")))
                 {
                     CancellationFeeType = GetAppSetting<string>("CancellationFeeType").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableManualLeadTime")))
+                {
+                    EnableManualLeadTime = GetAppSetting<string>("EnableManualLeadTime").ToStr();
                 }
 
             }
