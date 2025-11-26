@@ -1804,7 +1804,14 @@ namespace SignalRHub.Controllers
                     {
                         obj.bookingInfo.RecordingUrl = callerData.RecordingUrl;
                     }
-
+                    if (obj2.DeadMileage > 0)
+                    {
+                        obj.bookingInfo.DeadMileage = obj2.DeadMileage;
+                    }
+                    else 
+                    {
+                        obj.bookingInfo.DeadMileage = 0;
+                    }
                     response.Data = obj.bookingInfo;
 
 
@@ -2473,6 +2480,16 @@ namespace SignalRHub.Controllers
                         if (objMaster.Current.AttributeValues.ToStr().Trim() == "''" || objMaster.Current.AttributeValues.ToStr().Trim() == ", ,")
                             objMaster.Current.AttributeValues = null;
 
+                        if (obj.bookingInfo.LeadTime > 0)
+                        {
+                            objMaster.Current.AutoDespatchTime = objMaster.Current.PickupDateTime.Value.AddMinutes(-obj.bookingInfo.LeadTime.ToInt()).ToDateTime();
+                            objMaster.Current.DeadMileage = obj.bookingInfo.LeadTime;
+                        }
+                        else 
+                        {
+                            objMaster.Current.AutoDespatchTime = null;
+                            objMaster.Current.DeadMileage = 0;
+                        }
 
                         objMaster.ReturnCustomerPrice = objMaster.Current.ServiceCharges.ToDecimal();
                         objMaster.Save();
@@ -3782,8 +3799,16 @@ namespace SignalRHub.Controllers
 
                         if (obj.addressInfo.zoneId.ToInt() > 0)
                         {
-                            obj.addressInfo.zoneName = db.Gen_Zones.Where(c => c.Id == obj.addressInfo.zoneId).Select(c => c.ZoneName).FirstOrDefault();
+                            var ZoneInfo  = db.Gen_Zones.Where(c => c.Id == obj.addressInfo.zoneId).Select(c =>  new { ZoneName = c.ZoneName , JobDueTime = c.JobDueTime }).FirstOrDefault();
+                            obj.addressInfo.zoneName = ZoneInfo.ZoneName;
 
+                            if (ZoneInfo.JobDueTime != null)
+                            {
+                                int hour = ZoneInfo.JobDueTime.Value.Hour;
+                                int min = ZoneInfo.JobDueTime.Value.Minute;
+
+                                obj.addressInfo.JobDueTime = ((hour * 60) + min);
+                            }
                         }
 
                         //if (obj.addressInfo.AddressType.ToInt() == 1 && latitude != null && latitude != 0)
