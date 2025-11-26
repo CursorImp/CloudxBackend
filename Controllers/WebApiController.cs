@@ -2140,6 +2140,8 @@ namespace SignalRHub.Controllers
                             try
                             {
 
+                                if (item.Name == "CustomerCreditCardDetails")
+                                    continue;
 
                                 if (item.Name == "AddBy")
                                     continue;
