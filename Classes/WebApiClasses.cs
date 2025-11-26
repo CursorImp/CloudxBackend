@@ -432,6 +432,7 @@ namespace SignalRHub.WebApiClasses
         {
 
         }
+        public int LeadTime { get; set; }
         public string PickupZoneName { get; set; }
         public string DestinationZoneName { get; set; }
         public string ReturnSpecialRequirements { get; set; }
@@ -1756,7 +1757,8 @@ namespace SignalRHub.WebApiClasses
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
         public string zoneName { get; set; }
-
+        public int JobDueTime { get; set; }
+        public int IsPickup { get; set; }
     }
 
     public class ExcludedFleetDriver
