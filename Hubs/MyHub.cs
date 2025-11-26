@@ -1,34 +1,32 @@
-﻿using Microsoft.AspNet.SignalR;
+﻿using DotNetCoords;
+using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
+using Newtonsoft;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
+using System.Data.Linq.Mapping;
+using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Net;
-using Utils;
-
+using System.Net.Http;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
+using System.Timers;
+using System.Web;
+using System.Web.Script.Serialization;
+using System.Xml;
 using Taxi_BLL;
 using Taxi_Model;
-using System.Text.RegularExpressions;
-using System.IO;
-using Newtonsoft;
-using System.Diagnostics;
-using DotNetCoords;
-using System.Web.Script.Serialization;
-
-using System.Collections;
-using System.Globalization;
-using System.Web;
-using System.Threading.Tasks;
-using System.Configuration;
-using System.Data.Linq.Mapping;
-
-using System.Timers;
-using System.Xml;
+using Utils;
 
 
 
@@ -39,9 +37,9 @@ namespace SignalRHub
     {
         public DispatchHub()
         {
-           Global.LoadDataList();
+            Global.LoadDataList();
             //
-          
+
         }
 
         private HubProcessor Instance
@@ -54,7 +52,7 @@ namespace SignalRHub
 
 
 
-      
+
 
         #region "Hub Inherited Methods"
         public override Task OnConnected()
@@ -62,7 +60,7 @@ namespace SignalRHub
             try
             {
                 Instance.Connect(Context);
-            //    File.AppendAllText(AppContext.BaseDirectory + "\\hublog_OnConnected.txt", DateTime.Now.ToStr() + ": " + "onConnect() -- Query String : SignalRClientsType = " + Context.QueryString["SignalRClientsType"] + " , SignalRUserType = " + Context.QueryString["SignalRUserType"] + " , SignalRClientDomainId = " + Context.QueryString["SignalRClientDomainId"] + "  ||  ConnectionID = " + Context.ConnectionId + " ~~ Total Connections = " + Instance.Connections.Count + Environment.NewLine);
+                //    File.AppendAllText(AppContext.BaseDirectory + "\\hublog_OnConnected.txt", DateTime.Now.ToStr() + ": " + "onConnect() -- Query String : SignalRClientsType = " + Context.QueryString["SignalRClientsType"] + " , SignalRUserType = " + Context.QueryString["SignalRUserType"] + " , SignalRClientDomainId = " + Context.QueryString["SignalRClientDomainId"] + "  ||  ConnectionID = " + Context.ConnectionId + " ~~ Total Connections = " + Instance.Connections.Count + Environment.NewLine);
             }
             catch (Exception ex)
             {
@@ -104,7 +102,7 @@ namespace SignalRHub
                 Instance.Disconnect(Context);
 
 
-             //   File.AppendAllText(AppContext.BaseDirectory + "\\hublog_OnDisconnected.txt", DateTime.Now.ToStr() + "," + "onDisconnect() -- Total Desktop Connections : " + Instance.ReturnDesktopConnections().Count + ", Mobile Connections : " + Instance.ReturnDriverConnections().Count + " ~~ Total Connections = " + Instance.Connections.Count + Environment.NewLine);
+                //   File.AppendAllText(AppContext.BaseDirectory + "\\hublog_OnDisconnected.txt", DateTime.Now.ToStr() + "," + "onDisconnect() -- Total Desktop Connections : " + Instance.ReturnDesktopConnections().Count + ", Mobile Connections : " + Instance.ReturnDriverConnections().Count + " ~~ Total Connections = " + Instance.Connections.Count + Environment.NewLine);
 
                 /// File.AppendAllText(AppContext.BaseDirectory + "\\hublog_DesktopDisconnected.txt", DateTime.Now.ToStr() + ": userttype : " + s + "," + "onDisconnect() -- Connection ID: " + Context.ConnectionId + " ~~ Desktop Connection : " + Instance.ReturnDesktopConnections().Count + ", Mobile Connections : " + Instance.ReturnDriverConnections().Count + " Total Connections = " + Instance.Connections.Count + Environment.NewLine);
 
@@ -132,7 +130,7 @@ namespace SignalRHub
         {
             if (from.ToLower() == "pda")
             {
-              //  // //   //
+                //  // //   //
                 Clients.All.addMessageOnDesktop(from, message);
             }
             else
@@ -146,7 +144,7 @@ namespace SignalRHub
 
 
         string physicalPath = AppContext.BaseDirectory;
-     
+
 
         int retryDriverLocTimeout = 1;
         DateTime? lastSaveDriverLocationTimeout = null;
@@ -156,7 +154,7 @@ namespace SignalRHub
 
 
 
-      
+
 
         private enum FORM_MODE
         {
@@ -165,7 +163,7 @@ namespace SignalRHub
             RESULTS
         }
 
-    
+
         protected internal string m_szPaREQ;
         protected internal string m_szTermURL;
         protected internal string m_szACSURL;
@@ -208,9 +206,6 @@ namespace SignalRHub
         int InsuranceDays = 0;
         int MOT2Days = 0;
         int LicenseDays = 0;
-     
-       
-      
 
 
 
@@ -219,7 +214,10 @@ namespace SignalRHub
 
 
 
-      
+
+
+
+
 
 
 
@@ -236,7 +234,7 @@ namespace SignalRHub
             }
         }
 
-    
+
         private void RestartProgram()
         {
             try
@@ -265,12 +263,12 @@ namespace SignalRHub
             }
         }
 
-    
 
 
-      
 
-    
+
+
+
 
         public string ReConnectCallerID(string message)
         {
@@ -292,9 +290,9 @@ namespace SignalRHub
 
 
 
-     
 
-       
+
+
 
         public void MessageToPDA(string message)
         {
@@ -443,7 +441,7 @@ namespace SignalRHub
                     }
 
                     General.BroadCastMessage(data);
-                  
+
 
 
                     if (message.ToStr().Trim().Contains("=syncdrivers"))
@@ -492,12 +490,12 @@ namespace SignalRHub
                 //}
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 try
                 {
 
-                    File.AppendAllText(AppContext.BaseDirectory + "\\MessageToPDA_catch.txt", DateTime.Now.ToStr() + ": Message :" + message + " :  Total Connections = " + Instance.ReturnDesktopConnections().Count + ",exception:"+ex.Message+ Environment.NewLine);
+                    File.AppendAllText(AppContext.BaseDirectory + "\\MessageToPDA_catch.txt", DateTime.Now.ToStr() + ": Message :" + message + " :  Total Connections = " + Instance.ReturnDesktopConnections().Count + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch (Exception ex2)
                 {
@@ -571,7 +569,7 @@ namespace SignalRHub
 
                         try
                         {
-                            
+
 
                             if (objBooking != null && objBooking.BookingTypeId.ToInt() == 11)
 
@@ -648,7 +646,7 @@ namespace SignalRHub
                                     {
 
                                     }
-                                    
+
 
 
                                 }
@@ -699,11 +697,11 @@ namespace SignalRHub
                             long jobId = values[1].ToLong();
                             // Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == values[1].ToLong());
                             var objBooking = db.Bookings.Where(c => c.Id == jobId)
-                               .Select(args => new { args.Id, args.BookingNo, args.DriverId, args.BookingStatusId,args.CustomerName,args.FromAddress,args.ToAddress,args.PickupDateTime }).FirstOrDefault();
+                               .Select(args => new { args.Id, args.BookingNo, args.DriverId, args.BookingStatusId, args.CustomerName, args.FromAddress, args.ToAddress, args.PickupDateTime, args.BookingTypeId, args.PaymentTypeId, args.CustomerCreditCardDetails, args.Gen_SubCompany, args.CompanyCreditCardDetails, args.FareRate }).FirstOrDefault();
 
                             if (objBooking != null)
                             {
-                           
+
                                 response = "true";
 
                                 long bookingId = objBooking.Id;
@@ -716,10 +714,92 @@ namespace SignalRHub
                                         cancelledBy = values[2].ToStr();
 
 
-                                   
 
-                                        db.stp_CancelBooking(bookingId, "Job is cancelled by Customer (From " + cancelledBy + ")", "Customer");
-                                   
+
+                                    db.stp_CancelBooking(bookingId, "Job is cancelled by Customer (From " + cancelledBy + ")", "Customer");
+                                    decimal cancellationfee = 0;
+                                    if (!string.IsNullOrEmpty(Global.CancellationFee))
+                                    {
+                                        try
+                                        {
+                                        cancellationfee = Global.CancellationFee.ToDecimal();
+                                        }
+                                        catch {
+                                        }
+                                    }
+                                    if (cancellationfee > 0 && objBooking.PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.CREDIT_CARD && objBooking.CustomerCreditCardDetails.ToStr().Trim().Length > 0 &&
+                                         (objBooking.BookingStatusId == Enums.BOOKINGSTATUS.ONROUTE || objBooking.BookingStatusId == Enums.BOOKINGSTATUS.ARRIVED))
+                                    {
+                                        //var result = General.GetAppSettings();
+                                        //var Parameter = Newtonsoft.Json.JsonConvert.DeserializeObject<Classes.ParameterValues>(result);
+                                        //double amount = Convert.ToDouble(Parameter.CancellationFee);
+                                        double amount = Convert.ToDouble(cancellationfee);
+                                        if (Global.CancellationFeeType == "2")
+                                        {
+                                            amount = Convert.ToDouble(objBooking.FareRate.ToDecimal() * (cancellationfee/100));
+                                        }
+
+                                        if (amount > 0)
+                                        {
+                                            string DefaultCurrency = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrency"];
+                                            string DefaultClientLocation = System.Configuration.ConfigurationManager.AppSettings["DefaultClientLocation"];
+                                            string DefaultCurrencySign = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrencySign"];
+
+                                            Classes.KonnectSupplier.PaymentCaptureResponse resp = new Classes.KonnectSupplier.PaymentCaptureResponse();
+
+                                            Classes.KonnectSupplier.PaymentCaptureDto st = new Classes.KonnectSupplier.PaymentCaptureDto();
+                                            Gen_SysPolicy_PaymentDetail GatwayObj = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+
+                                            //
+
+
+
+                                            st.bookingId = objBooking.Id;
+                                            st.description = objBooking?.Gen_SubCompany?.CompanyName + " | " + objBooking?.BookingNo.ToStr() + " | " + "Fares : " + amount + " " + DefaultCurrency;
+                                            st.bookingRef = objBooking?.BookingNo.ToStr();
+                                            st.countryId = GatwayObj.ApplicationId.ToInt();
+                                            st.connectedAccountId = GatwayObj.PaypalID.ToStr();
+                                            st.applicationFee = 0;
+                                            st.otherCharges = 0;
+                                            st.amount = Convert.ToInt64(amount * 100);
+                                            st.displayAmount = amount.ToDecimal();
+                                            st.currency = DefaultCurrency;
+                                            st.defaultClientId = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr();
+                                            st.location = DefaultClientLocation;
+                                            st.companyName = objBooking?.Gen_SubCompany?.CompanyName ?? "";
+                                            st.paymentIntentId = objBooking.CustomerCreditCardDetails.ToStr();
+                                            st.status = objBooking.CompanyCreditCardDetails;
+                                            var DataObj = Newtonsoft.Json.JsonConvert.SerializeObject(st);
+                                            string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
+                                            using (var client = new HttpClient())
+                                            {
+                                                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                                                client.BaseAddress = new Uri(StripeAPIBaseURL);
+                                                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                                                var content = new StringContent(DataObj, Encoding.UTF8, "application/json");
+                                                var postTask = client.PostAsync(StripeAPIBaseURL + "/v1/CapturePayment/IncrementAuthorization", content).Result;
+                                                string PayResp = postTask.Content.ReadAsStringAsync().Result;
+                                                resp = new JavaScriptSerializer().Deserialize<Classes.KonnectSupplier.PaymentCaptureResponse>(PayResp);
+                                                if (resp != null && resp.isSuccess)
+                                                {
+                                                    string msg = "Canceled fee charged  " + DefaultCurrencySign + string.Format("{0:f2}", amount) + " | TRANSACTION - " + resp.paymentId.ToStr() + " | " + string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
+                                                    db.stp_BookingLog(objBooking.Id.ToLong(), "System", msg);
+                                                }
+                                                try
+                                                {
+                                                    File.AppendAllText(AppContext.BaseDirectory + "\\CancelledBookingCustomerAppKP.txt", DateTime.Now.ToStr() + ": canceled fee chared DTO :" + new JavaScriptSerializer().Serialize(st) + ": resp :" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                                                }
+                                                catch
+                                                {
+
+                                                }
+
+
+                                            }
+
+                                        }
+
+                                    }
 
 
 
@@ -747,7 +827,7 @@ namespace SignalRHub
                                         }
                                     }
                                 }
-                                catch 
+                                catch
                                 {
 
                                 }
@@ -769,7 +849,7 @@ namespace SignalRHub
 
 
 
-          
+
 
 
 
@@ -809,7 +889,7 @@ namespace SignalRHub
                                 {
                                     db.stp_RegisteringApp(deviceInfo, UDID, code.ToInt(), mobileNo);
 
-                                    companyName = db.Gen_SubCompanies.Select(a=>a.CompanyName).FirstOrDefault().ToStr();
+                                    companyName = db.Gen_SubCompanies.Select(a => a.CompanyName).FirstOrDefault().ToStr();
                                 }
 
                                 AddSMS(mobileNo, "Your " + companyName + " App Verification code is :" + code, Enums.SMSACCOUNT_TYPE.MODEMSMS);
@@ -918,7 +998,7 @@ namespace SignalRHub
 
 
                 }
-             
+
 
 
                 else if (message.StartsWith("request authorize user details app code="))
@@ -940,14 +1020,14 @@ namespace SignalRHub
 
                         if (response == "true")
                         {
-                            string mobileno= values[2].ToStr().Trim();
+                            string mobileno = values[2].ToStr().Trim();
 
-                            int Id=  db.Customers.FirstOrDefault(c => c.MobileNo != null && c.MobileNo == mobileno).DefaultIfEmpty().Id;
+                            int Id = db.Customers.FirstOrDefault(c => c.MobileNo != null && c.MobileNo == mobileno).DefaultIfEmpty().Id;
 
 
                             CustomerBO objCustomer = new CustomerBO();
-                            if(Id==0)
-                            objCustomer.New();
+                            if (Id == 0)
+                                objCustomer.New();
                             else
                             {
                                 objCustomer.GetByPrimaryKey(Id);
@@ -1031,7 +1111,7 @@ namespace SignalRHub
 
 
 
-                   
+
                 }
 
 
@@ -1077,7 +1157,7 @@ namespace SignalRHub
                 if (message.StartsWith("request ivrconfirmbooking>>"))
                 {
 
-                   
+
 
                     bool IsSerialized = false;
                     IVRNotificationClient objIVR = Newtonsoft.Json.JsonConvert.DeserializeObject<IVRNotificationClient>(values[1]);
@@ -1092,14 +1172,14 @@ namespace SignalRHub
 
                         DateTime dtX;
 
-                        
+
 
                         if (DateTime.TryParseExact(objnotify.PickUpDateTime, "dd/M/yyyy HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out dtX))
                         {
                             long jobId = objnotify.BookingId;
                             if (dtX < DateTime.Now.AddHours(3))
                             {
-                                
+
 
                                 clsBookingsData objBooking = null;
                                 using (TaxiDataContext db = new TaxiDataContext())
@@ -1109,7 +1189,7 @@ namespace SignalRHub
 
                                         objBooking = db.ExecuteQuery<clsBookingsData>("exec stp_GetIVRBookingsData {0}", jobId).FirstOrDefault();
 
-                                        
+
                                     }
 
                                     if (objBooking != null)
@@ -1138,7 +1218,7 @@ namespace SignalRHub
 
                     }
 
-                    if(IsSerialized==false)
+                    if (IsSerialized == false)
                         General.BroadCastMessage("**internalmessage>>ivrnotification>>" + values[1].ToStr());
 
 
@@ -1146,13 +1226,13 @@ namespace SignalRHub
 
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\log_messageivrException.txt", DateTime.Now.ToStr() + " : " + message +   ", exception:"+ex.Message+ Environment.NewLine);
+                    File.AppendAllText(physicalPath + "\\log_messageivrException.txt", DateTime.Now.ToStr() + " : " + message + ", exception:" + ex.Message + Environment.NewLine);
 
                     General.BroadCastMessage("**internalmessage>>ivrnotification>>" + values[1].ToStr());
                 }
@@ -1575,17 +1655,17 @@ namespace SignalRHub
                         pda.isRingback = Global.enableRingBack;
                         pda.EnableUpcomingJob = Global.EnableUpcomingJob;
                         pda.SyncBookingHistory = "1";
-                   //     pda.EnableWaitingAfterArrive = "1";
+                        //     pda.EnableWaitingAfterArrive = "1";
                         // new 598
                         pda.isDriverConnectEnabled = ((obj.EnableDriverConnect.ToBool() ? "1" : "0"));
 
-             //           pda.EnablePickLocation = "1";
-              //          pda.EnableExtrasOnFixedFare = "1,0,1";
-             //           pda.ExtrasOnSTC = "1";
-                      
+                        //           pda.EnablePickLocation = "1";
+                        //          pda.EnableExtrasOnFixedFare = "1,0,1";
+                        //           pda.ExtrasOnSTC = "1";
 
 
-                      
+
+
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
@@ -2615,8 +2695,8 @@ namespace SignalRHub
                                                     MessageTypeId = 12,
                                                     MessageDateTime = DateTime.Now.AddSeconds(-45)
 
-                                                        //
-                                                    }
+                                                    //
+                                                }
                                                 );
 
                                             s.AppendLine("delete from Fleet_Driver_OfflineJobs where driverid=" + offlineMessageList.DriverId.ToInt() + " and offlinemessage like 'update settings%';");
@@ -3839,23 +3919,23 @@ namespace SignalRHub
                                             //}
 
 
-                                            General.BroadCastMessage("**onbid allocate>>" + objcls.JobId + ">>" + objcls.DriverId + ">>"+ objcls.DriverNo.ToStr()+" "+ ">>"+ objcls.JobMessage);
+                                            General.BroadCastMessage("**onbid allocate>>" + objcls.JobId + ">>" + objcls.DriverId + ">>" + objcls.DriverNo.ToStr() + " " + ">>" + objcls.JobMessage);
                                         }
 
-                                       
+
                                     }
                                     catch (Exception ex)
                                     {
-                                       
+
                                     }
                                 }
                             }
-                           
+
 
                             if (AvailCnter > 0)
                             {
 
-                              
+
                                 try
                                 {
                                     //Send message to PDA
@@ -3864,7 +3944,7 @@ namespace SignalRHub
                                     ClsNotification not = new ClsNotification();
                                     if (objcls.JobMessage.ToStr().StartsWith("failed:"))
                                     {
-                                       
+
                                         not.HasError = true;
                                         not.Message = objcls.JobMessage.ToStr().Replace("failed:", "").Trim();
 
@@ -3877,7 +3957,7 @@ namespace SignalRHub
 
                                     Clients.Caller.notification(new JavaScriptSerializer().Serialize(not));
 
-                                  
+
 
 
                                     try
@@ -3888,11 +3968,11 @@ namespace SignalRHub
                                     {
 
                                     }
-                                   
+
                                 }
                                 catch
                                 {
-                                    
+
                                 }
                             }
                             else
@@ -4018,7 +4098,7 @@ namespace SignalRHub
                                 if (objcls.MessageTypeId == eMessageTypes.BIDALERT)
                                 {
 
-                                    if(objcls.DriverId==122)
+                                    if (objcls.DriverId == 122)
                                     {
 
                                     }
@@ -4435,7 +4515,7 @@ namespace SignalRHub
 
                                     try
                                     {
-                                     
+
                                         File.AppendAllText(physicalPath + "\\" + "exception_updatezone.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + "," + ex.Message + Environment.NewLine);
                                     }
                                     catch
@@ -5798,7 +5878,7 @@ namespace SignalRHub
             }
         }
 
-  
+
 
         public void requestPlotsBidding(string mesg)
         {
@@ -6095,7 +6175,7 @@ namespace SignalRHub
                             File.AppendAllText(physicalPath + "\\exception_plotsBidding.txt", DateTime.Now.ToStr() + ": " + ex.Message + Environment.NewLine);
 
 
-                            
+
 
                         }
                         catch
@@ -6116,7 +6196,7 @@ namespace SignalRHub
             }
         }
 
-   
+
 
 
         public void requestPlotsBiddingDetails(string mesg)
@@ -6305,7 +6385,7 @@ namespace SignalRHub
                         else
                         {
 
-                            if(db.Gen_SysPolicy_PaymentDetails.Where(c=>c.PaymentGatewayId==9).Count()>0)
+                            if (db.Gen_SysPolicy_PaymentDetails.Where(c => c.PaymentGatewayId == 9).Count() > 0)
                                 resp = "true";
                             //else
                             //resp = "false:Your Card is not Registered";
@@ -6508,7 +6588,7 @@ namespace SignalRHub
                 string respo = "true";
                 if (valCnt >= 7)
                 {
-                    
+
 
                     if (jobStatusId == Enums.BOOKINGSTATUS.ONROUTE)
                     {
@@ -6547,7 +6627,7 @@ namespace SignalRHub
                                     }
                                     else
                                     {
-                                     
+
                                         db.stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), Instance.objPolicy.SinBinTimer.ToInt());
                                     }
                                 }
@@ -6567,7 +6647,7 @@ namespace SignalRHub
                             }
                             else
                             {
-                                
+
                                 db.stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), Instance.objPolicy.SinBinTimer.ToInt());
                             }
 
@@ -6589,7 +6669,7 @@ namespace SignalRHub
                     {
                         if (jobStatusId != Enums.BOOKINGSTATUS.ONROUTE && jobStatusId != Enums.BOOKINGSTATUS.ARRIVED && jobStatusId != Enums.BOOKINGSTATUS.STC)
                         {
-                           
+
                             (new TaxiDataContext()).stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), Instance.objPolicy.SinBinTimer.ToInt());
 
                         }
@@ -6740,7 +6820,7 @@ namespace SignalRHub
 
                                 if (respo == "true")
                                 {
-                                 
+
                                     (new TaxiDataContext()).stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), Instance.objPolicy.SinBinTimer.ToInt());
 
                                     DispatchJobSMS(values[1].ToLong(), jobStatusId);
@@ -6809,7 +6889,8 @@ namespace SignalRHub
 
                                                 long jobId = values[1].ToLong();
 
-                                                var objBooker = db.Bookings.Select(args => new {
+                                                var objBooker = db.Bookings.Select(args => new
+                                                {
                                                     args.Id,
                                                     args.JourneyTypeId,
                                                     args.FromAddress,
@@ -6878,7 +6959,7 @@ namespace SignalRHub
 
                                                 if (dropOffZoneId != 0)
                                                 {
-                                                    isfound =General.FindPoint(Convert.ToDouble(objAction.Latitude), Convert.ToDouble(objAction.Longitude), db.Gen_Zone_PolyVertices.Where(c => c.ZoneId == dropOffZoneId).ToList());
+                                                    isfound = General.FindPoint(Convert.ToDouble(objAction.Latitude), Convert.ToDouble(objAction.Longitude), db.Gen_Zone_PolyVertices.Where(c => c.ZoneId == dropOffZoneId).ToList());
 
                                                     if (isfound)
                                                     {
@@ -6962,7 +7043,7 @@ namespace SignalRHub
 
                             if (respo == "true")
                             {
-                                
+
                                 (new TaxiDataContext()).stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), Instance.objPolicy.SinBinTimer.ToInt());
                             }
 
@@ -7035,7 +7116,7 @@ namespace SignalRHub
                         {
 
                         }
-                       
+
                         (new TaxiDataContext()).stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), Instance.objPolicy.SinBinTimer.ToInt());
                     }
 
@@ -7521,7 +7602,7 @@ namespace SignalRHub
                                             // propertyValue = "http://tradrv.co.uk/drv.aspx?ref=" + objBooking.BookingNo.ToStr() + ":" + linkId;
                                             if (tag.TagMemberValue.ToStr().Trim().ToLower() == "<trackdrv>")
                                             {
-                                                string encrypt = Cryptography.Encrypt(objBooking.BookingNo.ToStr() + ":" + linkId + ":" + Cryptography.Decrypt(ConfigurationManager.AppSettings["ConnectionString"], "tcloudX@@!",true).ToStr() + ":" + objBooking.Id, "tcloudX@@!", true);
+                                                string encrypt = Cryptography.Encrypt(objBooking.BookingNo.ToStr() + ":" + linkId + ":" + Cryptography.Decrypt(ConfigurationManager.AppSettings["ConnectionString"], "tcloudX@@!", true).ToStr() + ":" + objBooking.Id, "tcloudX@@!", true);
 
 
                                                 propertyValue = "http://tradrv.co.uk/tck.aspx?q=" + encrypt;
@@ -7902,7 +7983,7 @@ namespace SignalRHub
                                         var obj = Global.listofMeter.FirstOrDefault(c => c.VehicleTypeId == vehicleTypeId).DefaultIfEmpty();
 
                                         FareMeterSettings fareJsonArr = null;
-                                      
+
                                         if (Instance.objPolicy.PDANewWeekMessageByDay.ToStr().StartsWith("{"))
                                             fareJsonArr = new JavaScriptSerializer().Deserialize<FareMeterSettings>(Instance.objPolicy.PDANewWeekMessageByDay.ToStr());
                                         else
@@ -7926,7 +8007,7 @@ namespace SignalRHub
 
                                         if (jobTariff == null)
                                             jobTariff = new List<FareEx>();
-                                  
+
                                         fareJsonArr.meterTarrif = new List<MeterTarrif>();
                                         decimal roundJourneyMile = Instance.objPolicy.RoundJourneyMiles.ToDecimal();
 
@@ -8080,7 +8161,7 @@ namespace SignalRHub
                     //{
 
                     //}
-                  
+
 
                     (new TaxiDataContext()).stp_UpdateJob(values[1].ToLong(), values[2].ToInt(), values[3].ToInt(), values[4].ToInt(), Instance.objPolicy.SinBinTimer.ToInt());
 
@@ -8197,7 +8278,7 @@ namespace SignalRHub
                 dataValue = dataValue.Trim();
 
                 string[] values = dataValue.Split(new char[] { '=' });
-             
+
                 string rrr = "false";
                 string respAccount = "";
 
@@ -8214,7 +8295,7 @@ namespace SignalRHub
                           || (objAction.ChangePlot == 1 && Global.enableChangePlotUpdateDestination == "1"))
                         && objAction.Latitude != null && objAction.Latitude > 0)
                     {
-                        string dropOff =General.GetLocationName(objAction.Latitude, objAction.Longitude);
+                        string dropOff = General.GetLocationName(objAction.Latitude, objAction.Longitude);
 
 
                         objAction.Dropoff = dropOff;
@@ -8231,7 +8312,7 @@ namespace SignalRHub
                     {
                         if (objAction.IsMeter.ToStr().Trim() == "1")
                         {
-                          
+
 
 
 
@@ -8239,7 +8320,7 @@ namespace SignalRHub
                                                                      , objAction.JobId.ToStr().ToLong(), objAction.DrvId.ToInt(), objAction.JStatus.ToInt(), objAction.DStatus.ToInt()
                                  , objAction.Dropoff.ToStr(), objAction.Miles, objAction.Fares.ToDecimal(), waitingTime, objAction.WaitingCharges, objAction.ParkingCharges.ToDecimal()
                                  , objAction.ExtraDropCharges.ToDecimal(), objAction.BookingFee.ToDecimal(), objAction.ExtrasDetail.ToStr());
-                            
+
 
 
                         }
@@ -8251,9 +8332,9 @@ namespace SignalRHub
 
                             try
                             {
-                              
 
-                             
+
+
 
                                 if (waitingTime > 0)
                                 {
@@ -8480,7 +8561,7 @@ namespace SignalRHub
 
                         string transId = objAction.TransId.ToStr().Trim();
 
-                       
+
 
                         if (transId.Length > 0)
                         {
@@ -8640,7 +8721,7 @@ namespace SignalRHub
 
                     File.AppendAllText(physicalPath + "\\requestclearjob_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
 
-                   
+
                 }
                 catch
                 {
@@ -8653,7 +8734,7 @@ namespace SignalRHub
 
 
 
-       
+
 
 
 
@@ -9030,7 +9111,7 @@ namespace SignalRHub
                 else
                     Clients.Caller.fojJobRejected(IsAvalable);
 
-              
+
 
                 int jobstatusId = values[3].ToInt();
 
@@ -9094,7 +9175,7 @@ namespace SignalRHub
                         (c.CurrentPdaVersion < 19m || c.CurrentPdaVersion == 19.9m)) > 0)
                     {
                         new TaxiDataContext().stp_UpdateJobStatus(values[1].ToLong(), Enums.BOOKINGSTATUS.ONROUTE);
-                       
+
                         (new TaxiDataContext()).stp_UpdateJob(jobId, driverId, Enums.BOOKINGSTATUS.ONROUTE, Enums.Driver_WORKINGSTATUS.ONROUTE, Instance.objPolicy.SinBinTimer.ToInt());
                     }
 
@@ -9261,7 +9342,7 @@ namespace SignalRHub
                         //if (vehicleTypeId == null)
                         //    vehicleTypeId = 0;
 
-                         InitializeMeterList();
+                        InitializeMeterList();
                         bool enableFareMeter = Global.listofMeter.FirstOrDefault(c => c.VehicleTypeId == vehicleTypeId).DefaultIfEmpty().HasMeter.ToBool();
                         enableFareMeter = false;
                         if (enableFareMeter && Global.listofMeter != null && Global.listofMeter.Count > 0)
@@ -9633,7 +9714,7 @@ namespace SignalRHub
 
 
 
-                string[] arr = Instance.listOfZone.OrderBy(c=>c.OrderNo).Select(args => args.Id + "," + args.Area).ToArray<string>();
+                string[] arr = Instance.listOfZone.OrderBy(c => c.OrderNo).Select(args => args.Id + "," + args.Area).ToArray<string>();
 
                 //send message back to PDA
                 Clients.Caller.changePlot(string.Join(">>", arr));
@@ -9920,7 +10001,7 @@ namespace SignalRHub
 
                                 try
                                 {
-                                     query = "select max(Parking) from Gen_SysPolicy_SurchargeRates where syspolicyid is not null and (ApplicableFromDateTime<='" + string.Format("{0:yyyy/MM/dd HH:mm:ss}", pickupDateAndTime) + "' and ApplicableToDateTime>='" + string.Format("{0:yyyy/MM/dd HH:mm:ss}", pickupDateAndTime) + "')  and      zoneid in(" + pickupPlotId.ToStr() + "," + DropOffZoneId.ToStr() + ") and enablesurcharge=1";
+                                    query = "select max(Parking) from Gen_SysPolicy_SurchargeRates where syspolicyid is not null and (ApplicableFromDateTime<='" + string.Format("{0:yyyy/MM/dd HH:mm:ss}", pickupDateAndTime) + "' and ApplicableToDateTime>='" + string.Format("{0:yyyy/MM/dd HH:mm:ss}", pickupDateAndTime) + "')  and      zoneid in(" + pickupPlotId.ToStr() + "," + DropOffZoneId.ToStr() + ") and enablesurcharge=1";
 
 
                                     surchargeParking = db.ExecuteQuery<decimal?>(query).FirstOrDefault();
@@ -9928,12 +10009,12 @@ namespace SignalRHub
 
 
                                 }
-                                catch(Exception ex)
+                                catch (Exception ex)
                                 {
 
                                     try
                                     {
-                                        File.AppendAllText(physicalPath + "\\" + "requestSelectAsDirectedquery_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + query +",exce[tion:"+ex.Message+ Environment.NewLine);
+                                        File.AppendAllText(physicalPath + "\\" + "requestSelectAsDirectedquery_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + query + ",exce[tion:" + ex.Message + Environment.NewLine);
 
                                     }
                                     catch
@@ -9942,7 +10023,7 @@ namespace SignalRHub
                                     }
 
                                 }
-                              
+
 
 
                                 if (surchargeParking != null)
@@ -10096,7 +10177,7 @@ namespace SignalRHub
         }
 
 
-        private string GetDriverPay(int driverId, Fleet_Driver objDriver,string version="")
+        private string GetDriverPay(int driverId, Fleet_Driver objDriver, string version = "")
         {
             ClsDriverPay objAction = new ClsDriverPay();
             //     objAction.ShowCCButton = true;
@@ -10244,9 +10325,9 @@ namespace SignalRHub
                     {
 
                     }
-                   
-                    
-                    
+
+
+
                     //
 
                     CardStreamSettings cardStreamSettings = new CardStreamSettings();
@@ -10259,7 +10340,7 @@ namespace SignalRHub
                     cardStreamSettings.currencyCode = 826;
                     cardStreamSettings.amount = amount;//amount.multiply(BigDecimal.valueOf(100)).toBigInteger().toString(); // VISA
                     cardStreamSettings.orderRef = statementNo + "|" + driverNo;
-                   
+
                     cardStreamSettings.customerName = driverName; // VISA
                     cardStreamSettings.customerEmail = driverEmail;
                     cardStreamSettings.customerPhone = driverMobileNo;
@@ -10294,15 +10375,15 @@ namespace SignalRHub
 
                         }
                     }
-                  
-                   
+
+
                     cardStreamSettings.countryCode = 826;
-                   
+
                     cardStreamSettings.FetchString = "LDgm7JF0nesl9KEa1jx+BNRagY6UIfNloltpoonCJBjQttzWsI2LnHCaFxLhLRHzK6IQHhrVOpokMFPugWHPyOYpvcSIvEuMKoJEzQvDZEKN/3ThUdzfhfryTuuG9PqMxZe9nQ7ITZD14TvZgDgRW+zwKwKwMEXZ";
                     cardStreamSettings.TableType = "Driver";
                     cardStreamSettings.StatementId = statementId;
                     cardStreamSettings.driverId = driverId;
-                     response = new JavaScriptSerializer().Serialize(cardStreamSettings);
+                    response = new JavaScriptSerializer().Serialize(cardStreamSettings);
 
                 }
 
@@ -10347,7 +10428,7 @@ namespace SignalRHub
                 cardStreamSettings.TableType = "Driver";
                 cardStreamSettings.StatementId = statementId;
                 cardStreamSettings.driverId = driverId;
-                 response = new JavaScriptSerializer().Serialize(cardStreamSettings);
+                response = new JavaScriptSerializer().Serialize(cardStreamSettings);
 
             }
 
@@ -10375,7 +10456,7 @@ namespace SignalRHub
 
                 ClsDriverPay objAction = new JavaScriptSerializer().Deserialize<ClsDriverPay>(json);
                 //
-               
+
                 string response = string.Empty;
 
 
@@ -10401,7 +10482,7 @@ namespace SignalRHub
                     var objDriver = db.Fleet_Drivers.FirstOrDefault(c => c.Id == driverId);
                     objDriver.RentLimit = 0.00m;
 
-                    response = GetDriverPay(driverId, objDriver,objAction.ver.ToStr());
+                    response = GetDriverPay(driverId, objDriver, objAction.ver.ToStr());
 
                     if (response.Length > 0)
                     {
@@ -12946,12 +13027,12 @@ namespace SignalRHub
 
                 string res = new JavaScriptSerializer().Serialize(objAction);
 
-               
+
                 response = res;
 
                 //send message back to PDA
                 Clients.Caller.meterType(response);
-               
+
                 GC.Collect();
             }
             catch (Exception ex)
@@ -13053,7 +13134,7 @@ namespace SignalRHub
                 //   .Select(args => args.Id + "," + args.Area).ToArray<string>();
 
 
-                string[] arr = Instance.listOfZone.OrderBy(c=>c.Area)
+                string[] arr = Instance.listOfZone.OrderBy(c => c.Area)
 
                    .Select(args => args.Id + "," + args.Area).ToArray<string>();
 
@@ -13759,7 +13840,7 @@ namespace SignalRHub
             }
         }
 
-     
+
 
         private void GetZone(string address, ref int? ZoneId, ref string zoneName)
         {
@@ -13862,7 +13943,7 @@ namespace SignalRHub
 
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    
+
                     db.stp_UpdateJob(jobId, driverId, Enums.BOOKINGSTATUS.CANCELLED, Enums.Driver_WORKINGSTATUS.AVAILABLE, Instance.objPolicy.SinBinTimer.ToInt());
                 }
 
@@ -13885,7 +13966,7 @@ namespace SignalRHub
                         MessageDateTime = DateTime.Now.AddSeconds(-30),
                         JobMessage = "Cancelled Job>>" + jobId + ">>Job is cancelled by Customer",
                         MessageTypeId = 2,
-                         Id=recordId
+                        Id = recordId
                     });
                 }
                 catch
@@ -13919,7 +14000,7 @@ namespace SignalRHub
                     {
 
                     }
-                    SocketIO.SendToSocket(driverId.ToStr(), "Cancelled Job >> " + jobId + " >> Job is cancelled by Customer", "forceRecoverJob",recordId);
+                    SocketIO.SendToSocket(driverId.ToStr(), "Cancelled Job >> " + jobId + " >> Job is cancelled by Customer", "forceRecoverJob", recordId);
 
                 }
 
@@ -13947,7 +14028,7 @@ namespace SignalRHub
             string recordId = Guid.NewGuid().ToString();
             try
             {
-              
+
                 Instance.listofJobs.Add(new clsPDA
                 {
                     DriverId = driverId,
@@ -13955,7 +14036,7 @@ namespace SignalRHub
                     MessageDateTime = DateTime.Now.AddSeconds(-30),
                     JobMessage = "Cancelled Foj Job>>" + jobId,
                     MessageTypeId = 2,
-                     Id=recordId
+                    Id = recordId
                 });
 
 
@@ -14005,13 +14086,13 @@ namespace SignalRHub
             try
             {
 
-                SocketIO.SendToSocket(driverId.ToStr(), "Cancelled Foj Job>>" + jobId, "forceRecoverJob",recordId);
+                SocketIO.SendToSocket(driverId.ToStr(), "Cancelled Foj Job>>" + jobId, "forceRecoverJob", recordId);
 
                 File.AppendAllText(physicalPath + "\\ReCallFOJBookingFromPDA.txt", DateTime.Now.ToStr() + " ,jobid:" + jobId + ", driverid:" + driverId + Environment.NewLine);
             }
             catch
             {
-               
+
 
             }
 
@@ -14171,26 +14252,26 @@ namespace SignalRHub
                 else if (obj.PaymentGatewayId.ToInt() == 6)
                 {
 
-                    
-                        rtn = General.ProcessJudoPayment(obj, objCard);
+
+                    rtn = General.ProcessJudoPayment(obj, objCard);
 
 
 
 
-                        try
-                        {
+                    try
+                    {
 
 
-                            File.AppendAllText(physicalPath + "\\processjudoreceipt.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + rtn.ToStr() + Environment.NewLine);
-                        }
-                        catch
-                        {
+                        File.AppendAllText(physicalPath + "\\processjudoreceipt.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + rtn.ToStr() + Environment.NewLine);
+                    }
+                    catch
+                    {
 
 
-                        }
+                    }
 
-                  
-              
+
+
 
 
 
@@ -14490,7 +14571,7 @@ namespace SignalRHub
             }
         }
 
-   
+
         public static string GetPostCodeMatchWithBase(string value, bool isBase)
         {
             string postCode = "";
@@ -14980,25 +15061,25 @@ namespace SignalRHub
         #region AutoDispatch
 
 
-     
 
 
 
-       
 
 
-     
 
-    
+
+
+
+
 
 
         #endregion
 
 
-    
+
 
         #region SMS    
-     
+
 
 
         public string RestartSMSService(string message)
@@ -15035,7 +15116,7 @@ namespace SignalRHub
 
         public void requestBidding(string msg)
         {
-           // byte[] inputBuffer = Encoding.UTF8.GetBytes(msg);
+            // byte[] inputBuffer = Encoding.UTF8.GetBytes(msg);
 
             string dataValue = msg;
             dataValue = dataValue.Trim();
@@ -15103,8 +15184,8 @@ namespace SignalRHub
                     if (objBid != null && objBid.Status == "8")
                     {
                         //
-                       //
-                       //
+                        //
+                        //
                         arr = (from a in new TaxiDataContext().ExecuteQuery<stp_getbiddingSTCjobsResult>("exec stp_getbiddingSTCjobs {0}", driverId)
 
                                select new
@@ -15126,7 +15207,7 @@ namespace SignalRHub
                                 })
 
 
-                          
+
                              .Select(args => new
                              {
                                  args.Key.zoneid,
@@ -15164,7 +15245,7 @@ namespace SignalRHub
 
                         //        + Environment.NewLine);
                         //}
-//
+                        //
                     }
                     else
                     {
@@ -15204,7 +15285,7 @@ namespace SignalRHub
 
 
                         arr = (from a in new TaxiDataContext().ExecuteQuery<stp_getbiddingAvailablejobsResult>("exec stp_getbiddingjobs {0}", driverId)
-                               .Where(c=> c.zonename != "")
+                               .Where(c => c.zonename != "")
 
                                select new
 

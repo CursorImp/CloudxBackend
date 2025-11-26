@@ -119,6 +119,8 @@ namespace SignalRHub
         public static string HideAccountName = "0";
         public static string EnableDropOffAction = "";
         public static string EnableVehicleMinimumFare = "false";
+        public static string CancellationFee = "0";
+        public static string CancellationFeeType = "1"; //1- Amount, 2- Percentage
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -703,6 +705,8 @@ namespace SignalRHub
                              new AppSetting { SetKey = "ApplyCreditCardExtraSurcharge", SetVal = "false", description = "ApplyCreditCardExtraSurcharge"  },
                              new AppSetting { SetKey = "EnableDropOffAction", SetVal = "", description = "EnableDropOffAction"  },
                              new AppSetting { SetKey = "EnableVehicleMinimumFare", SetVal = "false", description = "EnableVehicleMinimumFare"  },
+                             new AppSetting { SetKey = "CancellationFee", SetVal = "0", description = "CancellationFee"  },
+                             new AppSetting { SetKey = "CancellationFeeType", SetVal = "1", description = "CancellationFeeType"  },
 
                         };
 
@@ -1648,6 +1652,14 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableVehicleMinimumFare")))
                 {
                     EnableVehicleMinimumFare = GetAppSetting<string>("EnableVehicleMinimumFare").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("CancellationFee")))
+                {
+                    CancellationFee = GetAppSetting<string>("CancellationFee").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("CancellationFeeType")))
+                {
+                    CancellationFeeType = GetAppSetting<string>("CancellationFeeType").ToStr();
                 }
 
             }
