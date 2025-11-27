@@ -657,6 +657,9 @@ namespace SignalRHub.WebApiClasses
         public Fleet_Driver Driver { get;  set; }
         public Gen_Company Company { get;  set; }
         public bool? AllocatedDriver { get; set; }
+        public int? VehicleTypeIdReturn { get;  set; }
+        public int? DriverIdReturn { get;  set; }
+        public bool? IsHideJobFromDrivers { get;  set; }
     }
 
     public class Booking_DriverCommsiion
@@ -1775,6 +1778,7 @@ namespace SignalRHub.WebApiClasses
         public List<AddressInfo> viaAddresses { get; set; }
 
         public int VehicleTypeId { get; set; }
+        public int? ReturnVehicleTypeId { get; set; }
         public DateTime? PickupDateTime { get; set; }
         public DateTime? returnPickupDateTime { get; set; }
         public int? CompanyId { get; set; }
@@ -1796,6 +1800,7 @@ namespace SignalRHub.WebApiClasses
         public int? JourneyTypeId { get; set; }
         public int? SubCompanyId { get; set; }
         public int DriverId { get;  set; }
+        public int? ReturnDriverId { get;  set; }
     }
     public class FareSettings
     {
@@ -1829,6 +1834,7 @@ namespace SignalRHub.WebApiClasses
         public object fareModel;
 
         public Fleet_Driver Driver;
+        public Fleet_Driver ReturnDriver;
     }
 
 
@@ -1878,6 +1884,7 @@ namespace SignalRHub.WebApiClasses
         private string _ToPostCode;
 
         private System.Nullable<decimal> _Fare;
+        private System.Nullable<bool> _IsHideJobFromDrivers;
 
         private string _PaymentMethod;
 
@@ -1962,6 +1969,21 @@ namespace SignalRHub.WebApiClasses
                 if ((this._Token != value))
                 {
                     this._Token = value;
+                }
+            }
+        }
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_IsHideJobFromDrivers", DbType = "BIT")]
+        public bool? IsHideJobFromDrivers
+        {
+            get
+            {
+                return this._IsHideJobFromDrivers;
+            }
+            set
+            {
+                if ((this._IsHideJobFromDrivers != value))
+                {
+                    this._IsHideJobFromDrivers = value;
                 }
             }
         }

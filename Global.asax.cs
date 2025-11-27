@@ -709,6 +709,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "CancellationFee", SetVal = "0", description = "CancellationFee"  },
                              new AppSetting { SetKey = "CancellationFeeType", SetVal = "1", description = "CancellationFeeType"  },
                              new AppSetting { SetKey = "EnableManualLeadTime", SetVal = "false", description = "EnableManualLeadTime"  },
+                             new AppSetting { SetKey = "EnableHideJobFromDriver", SetVal = "false", description = "Enable Hide Job From Driver"  },
 
                         };
 
