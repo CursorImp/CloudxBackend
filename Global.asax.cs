@@ -703,6 +703,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "ApplyCreditCardExtraSurcharge", SetVal = "false", description = "ApplyCreditCardExtraSurcharge"  },
                              new AppSetting { SetKey = "EnableDropOffAction", SetVal = "", description = "EnableDropOffAction"  },
                              new AppSetting { SetKey = "EnableVehicleMinimumFare", SetVal = "false", description = "EnableVehicleMinimumFare"  },
+                             new AppSetting { SetKey = "EnableHideJobFromDriver", SetVal = "false", description = "Enable Hide Job From Driver"  },
 
                         };
 

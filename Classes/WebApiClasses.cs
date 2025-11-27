@@ -657,6 +657,7 @@ namespace SignalRHub.WebApiClasses
         public bool? AllocatedDriver { get; set; }
         public int? VehicleTypeIdReturn { get;  set; }
         public int? DriverIdReturn { get;  set; }
+        public bool? IsHideJobFromDrivers { get;  set; }
     }
 
     public class Booking_DriverCommsiion
@@ -1881,6 +1882,7 @@ namespace SignalRHub.WebApiClasses
         private string _ToPostCode;
 
         private System.Nullable<decimal> _Fare;
+        private System.Nullable<bool> _IsHideJobFromDrivers;
 
         private string _PaymentMethod;
 
@@ -1965,6 +1967,21 @@ namespace SignalRHub.WebApiClasses
                 if ((this._Token != value))
                 {
                     this._Token = value;
+                }
+            }
+        }
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_IsHideJobFromDrivers", DbType = "BIT")]
+        public bool? IsHideJobFromDrivers
+        {
+            get
+            {
+                return this._IsHideJobFromDrivers;
+            }
+            set
+            {
+                if ((this._IsHideJobFromDrivers != value))
+                {
+                    this._IsHideJobFromDrivers = value;
                 }
             }
         }

@@ -6766,6 +6766,57 @@ namespace SignalRHub.Controllers
 
         }
 
+         [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("UpdateHideJobStatus")]
+        public JsonResult UpdateHideJobStatus(WebApiClasses.RequestWebApi obj)
+        {
+            //
+
+
+
+
+            ResponseWebApi response = new ResponseWebApi();
+            try
+            {
+
+                //
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateBookingStatus.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                }
+                catch
+                {
+
+                }
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    // Assuming obj.bookingInfo.Id has the Job/Booking ID
+                    // and obj.bookingInfo.IsHideJobFromDrivers has the value (0 or 1)
+
+                    long bookingId = obj.bookingInfo.Id;
+                    bool? hideJob = obj.bookingInfo.IsHideJobFromDrivers;
+
+                    // Inline SQL
+                    string query = $"UPDATE booking SET IsHideJobFromDrivers = {(hideJob==true ? 1 : 0)} WHERE Id = {bookingId}";
+                  
+                    db.ExecuteCommand(query); // Execute the inline query
+                    db.stp_BookingLog(bookingId, obj.UserName.ToStr().Trim().Length > 0 ? obj.UserName.ToStr() : "controller", hideJob == true ? "Hide Job from driver" : "Show Job to Driver");
+                }
+                response.Data = obj.bookingInfo.Id;
+                CallGetDashboardData();
+                
+            }
+            catch (Exception ex)
+            {
+               
+            }
+
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+
+        }
+
 
 
         [System.Web.Http.HttpGet]
