@@ -1996,11 +1996,37 @@ namespace SignalRHub.Controllers
                 bool IsAddMode = false;
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
+                    int journeyTypeId = 0;
+                    long? AdvanceBookingId = null;
+                    DateTime? startDate = obj.bookingInfo.PickupDateTime;
+                    DateTime? endDateTime = obj.bookingInfo.PickupDateTime;
+                    List<string> Days = null;
+                    int weeks = 0;
                     try
                     {
-                        if (!string.IsNullOrEmpty(obj.bookingInfo.CustomerMobileNo) || !string.IsNullOrEmpty(obj.bookingInfo.CustomerPhoneNo))
+                 
+
+                        if (obj.bookingInfo.AdvanceBookingId != null && obj.bookingInfo.AdvanceBookingId != 0 && obj.bookingInfo.ExtendMulti == true)
                         {
-                            var blacklistedCustomer = db.Customers.Where(x => x.BlackList == true && (x.MobileNo == obj.bookingInfo.CustomerMobileNo || x.TelephoneNo == obj.bookingInfo.CustomerMobileNo || x.MobileNo == obj.bookingInfo.CustomerPhoneNo || x.TelephoneNo == obj.bookingInfo.CustomerPhoneNo)).Select(x => x.Id).FirstOrDefault().ToInt();
+                            journeyTypeId = obj.bookingInfo.JourneyTypeId.ToInt();
+                            var multi = obj.bookingInfo.objMulti;
+                            startDate = obj.bookingInfo.objMulti.StartDate; 
+                            endDateTime = obj.bookingInfo.objMulti.EndDate;
+                            string Query = "SELECT * FROM  BOOKING WHERE AdvanceBookingId = {0} and journeytypeid = {1}";
+
+                            var data = db.ExecuteQuery<BookingInfo>(Query, obj.bookingInfo.AdvanceBookingId,obj.bookingInfo.JourneyTypeId).FirstOrDefault();
+
+                            obj.bookingInfo = data;
+                            obj.bookingInfo.JourneyTypeId = journeyTypeId;
+                            obj.bookingInfo.objMulti = multi;
+                            obj.bookingInfo.ExtendMulti = true;
+                            obj.bookingInfo.Id = 0;
+                            obj.bookingInfo.BookingStatusId = 1;
+                        }
+
+                        if (!string.IsNullOrEmpty(obj.bookingInfo.CustomerMobileNo))
+                        {
+                            var blacklistedCustomer = db.Customers.Where(x => x.BlackList == true && (x.MobileNo == obj.bookingInfo.CustomerMobileNo || x.TelephoneNo == obj.bookingInfo.CustomerMobileNo)).Select(x => x.Id).FirstOrDefault().ToInt();
                             if (blacklistedCustomer > 0)
                             {
                                 response.HasError = true;
@@ -2012,11 +2038,7 @@ namespace SignalRHub.Controllers
                     catch
                     {
                     }
-                    long? AdvanceBookingId = null;
-                    DateTime? startDate = obj.bookingInfo.PickupDateTime;
-                    DateTime? endDateTime = obj.bookingInfo.PickupDateTime;
-                    List<string> Days = null;
-                    int weeks = 0;
+                    
                     //
                     if (obj.bookingInfo.objMulti != null)
                     {
@@ -2033,23 +2055,48 @@ namespace SignalRHub.Controllers
 
 
                         AdvanceBookingBO objAdvBO = new AdvanceBookingBO();
+                        if (obj.bookingInfo.AdvanceBookingId != null && obj.bookingInfo.AdvanceBookingId != 0 && obj.bookingInfo.ExtendMulti == true)
+                        {
+                            objAdvBO.GetByPrimaryKey(obj.bookingInfo.AdvanceBookingId);
+
+                            objAdvBO.Edit();
+
+                            objAdvBO.Current.EditOn = DateTime.Now;
+                            objAdvBO.Current.CustomerName = obj.bookingInfo.CustomerName.ToStr();
+                            objAdvBO.Current.CustomerTelephoneNo = obj.bookingInfo.CustomerPhoneNo.ToStr();
+                            objAdvBO.Current.CustomerMobileNo = obj.bookingInfo.CustomerMobileNo.ToStr();
+                            objAdvBO.Current.CustomerEmail = obj.bookingInfo.CustomerEmail.ToStr();
+                            objAdvBO.Current.FromAddress = obj.bookingInfo.FromAddress.ToStr();
+                            objAdvBO.Current.ToAddress = obj.bookingInfo.ToAddress.ToStr();
+                            objAdvBO.Current.PickupDateTime = endDateTime;
+
+                            objAdvBO.Save();
+
+                            AdvanceBookingId = obj.bookingInfo.AdvanceBookingId;
+                        }
                         //if (savedAdvanceBookingId == 0)
                         //{
 
+                        else
+                        {
+                            objAdvBO.New();
+                            objAdvBO.Current.AdvanceBookingNo = obj.bookingInfo.SubcompanyId.ToInt().ToStr();
+                            objAdvBO.Current.CustomerName = obj.bookingInfo.CustomerName.ToStr();
+                            objAdvBO.Current.CustomerTelephoneNo = obj.bookingInfo.CustomerPhoneNo.ToStr();
+                            objAdvBO.Current.CustomerMobileNo = obj.bookingInfo.CustomerMobileNo.ToStr();
+                            objAdvBO.Current.CustomerEmail = obj.bookingInfo.CustomerEmail.ToStr();
+                            objAdvBO.Current.FromAddress = obj.bookingInfo.FromAddress.ToStr();
+                            objAdvBO.Current.ToAddress = obj.bookingInfo.ToAddress.ToStr();
 
-                        objAdvBO.New();
-                        objAdvBO.Current.AdvanceBookingNo = obj.bookingInfo.SubcompanyId.ToInt().ToStr();
-                        objAdvBO.Current.CustomerName = obj.bookingInfo.CustomerName.ToStr();
-                        objAdvBO.Current.CustomerTelephoneNo = obj.bookingInfo.CustomerPhoneNo.ToStr();
-                        objAdvBO.Current.CustomerMobileNo = obj.bookingInfo.CustomerMobileNo.ToStr();
-                        objAdvBO.Current.CustomerEmail = obj.bookingInfo.CustomerEmail.ToStr();
-                        objAdvBO.Current.FromAddress = obj.bookingInfo.FromAddress.ToStr();
-                        objAdvBO.Current.ToAddress = obj.bookingInfo.ToAddress.ToStr();
 
 
+                            objAdvBO.Current.AddOn = DateTime.Now;
+                            objAdvBO.Current.PickupDateTime = endDateTime;
 
-                        objAdvBO.Current.AddOn = DateTime.Now;
+                            objAdvBO.Save();
 
+                            AdvanceBookingId = objAdvBO.Current.Id;
+                        }
                         //  objAdvBO.Current.AddLog = AppVars.LoginObj.UserName.ToStr();
                         //   objAdvBO.Current.AddBy = AppVars.LoginObj.LuserId.ToIntorNull();
                         //  }
@@ -2067,11 +2114,7 @@ namespace SignalRHub.Controllers
 
                         //}
 
-                        objAdvBO.Current.PickupDateTime = endDateTime;
 
-                        objAdvBO.Save();
-
-                        AdvanceBookingId = objAdvBO.Current.Id;
 
                     }
                     //

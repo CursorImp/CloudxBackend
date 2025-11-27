@@ -432,6 +432,8 @@ namespace SignalRHub.WebApiClasses
         {
 
         }
+
+        public bool ExtendMulti { get; set; }
         public int LeadTime { get; set; }
         public string PickupZoneName { get; set; }
         public string DestinationZoneName { get; set; }
