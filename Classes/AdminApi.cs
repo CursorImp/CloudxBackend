@@ -1007,6 +1007,11 @@ namespace SignalRHub.Classes
         public int? AppBooking { get; set; }
         public decimal? InstantBookNow { get; set; }
         public decimal? InstantBookLater { get; set; }
+        public int? Authorizeafterminutes { get; set; }
+        public decimal? Minpriceforholdbooking { get; set; }
+        public string AuthEmail { get; set; }
+        public int? AutoCancelLateJobs { get; set; }
+        public decimal? CancellationFee { get; set; }
     }
 
     public class stp_GetDriverEarningResult_Template3

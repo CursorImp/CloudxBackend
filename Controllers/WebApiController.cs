@@ -579,7 +579,7 @@ namespace SignalRHub.Controllers
                     data.objBookingCount.totalCancelled = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.CANCELLED).FirstOrDefault().DefaultIfEmpty().count;
                     data.objBookingCount.totalNoPickup = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.NOPICKUP).FirstOrDefault().DefaultIfEmpty().count; ;
                     data.objBookingCount.totalCompleted = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.DISPATCHED).FirstOrDefault().DefaultIfEmpty().count;
-                    data.objBookingCount.totalOnline = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.WAITING_WEBBOOKING).FirstOrDefault().DefaultIfEmpty().count;                    
+                    data.objBookingCount.totalOnline = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.WAITING_WEBBOOKING).FirstOrDefault().DefaultIfEmpty().count;
                     var data1 = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, 0, "", 1).ToList();
                     data.objBookingCount.totalInCompleted = data1.Where(a =>
                         a.PickupDate.HasValue &&
@@ -1902,7 +1902,7 @@ namespace SignalRHub.Controllers
                     {
                         obj.bookingInfo.DeadMileage = obj2.DeadMileage;
                     }
-                    else 
+                    else
                     {
                         obj.bookingInfo.DeadMileage = 0;
                     }
@@ -2234,6 +2234,8 @@ namespace SignalRHub.Controllers
                             try
                             {
 
+                                if (item.Name == "CustomerCreditCardDetails")
+                                    continue;
 
                                 if (item.Name == "AddBy")
                                     continue;
@@ -2574,17 +2576,19 @@ namespace SignalRHub.Controllers
                         if (objMaster.Current.AttributeValues.ToStr().Trim() == "''" || objMaster.Current.AttributeValues.ToStr().Trim() == ", ,")
                             objMaster.Current.AttributeValues = null;
 
-                        if (obj.bookingInfo.LeadTime > 0)
+                        if (Global.EnableManualLeadTime == "true")
                         {
-                            objMaster.Current.AutoDespatchTime = objMaster.Current.PickupDateTime.Value.AddMinutes(-obj.bookingInfo.LeadTime.ToInt()).ToDateTime();
-                            objMaster.Current.DeadMileage = obj.bookingInfo.LeadTime;
+                            if (obj.bookingInfo.LeadTime > 0)
+                            {
+                                objMaster.Current.AutoDespatchTime = objMaster.Current.PickupDateTime.Value.AddMinutes(-obj.bookingInfo.LeadTime.ToInt()).ToDateTime();
+                                objMaster.Current.DeadMileage = obj.bookingInfo.LeadTime;
+                            }
+                            else
+                            {
+                                objMaster.Current.AutoDespatchTime = null;
+                                objMaster.Current.DeadMileage = 0;
+                            }
                         }
-                        else 
-                        {
-                            objMaster.Current.AutoDespatchTime = null;
-                            objMaster.Current.DeadMileage = 0;
-                        }
-
                         objMaster.ReturnCustomerPrice = objMaster.Current.ServiceCharges.ToDecimal();
                         objMaster.Save();
                         try
@@ -3913,15 +3917,17 @@ namespace SignalRHub.Controllers
 
                         if (obj.addressInfo.zoneId.ToInt() > 0)
                         {
-                            var ZoneInfo  = db.Gen_Zones.Where(c => c.Id == obj.addressInfo.zoneId).Select(c =>  new { ZoneName = c.ZoneName , JobDueTime = c.JobDueTime }).FirstOrDefault();
+                            var ZoneInfo = db.Gen_Zones.Where(c => c.Id == obj.addressInfo.zoneId).Select(c => new { ZoneName = c.ZoneName, JobDueTime = c.JobDueTime }).FirstOrDefault();
                             obj.addressInfo.zoneName = ZoneInfo.ZoneName;
-
-                            if (ZoneInfo.JobDueTime != null)
+                            if (Global.EnableManualLeadTime == "true")
                             {
-                                int hour = ZoneInfo.JobDueTime.Value.Hour;
-                                int min = ZoneInfo.JobDueTime.Value.Minute;
+                                if (ZoneInfo.JobDueTime != null)
+                                {
+                                    int hour = ZoneInfo.JobDueTime.Value.Hour;
+                                    int min = ZoneInfo.JobDueTime.Value.Minute;
 
-                                obj.addressInfo.JobDueTime = ((hour * 60) + min);
+                                    obj.addressInfo.JobDueTime = ((hour * 60) + min);
+                                }
                             }
                         }
 
@@ -6551,7 +6557,7 @@ namespace SignalRHub.Controllers
 
 
 
-                
+
 
             }
             catch (Exception ex)
@@ -10594,11 +10600,12 @@ namespace SignalRHub.Controllers
                                 {
                                     db.ExecuteQuery<int>("exec stp_UpdateJob {0},{1},{2},{3},{4},{5}", jobId, driverId, JobStatusId.ToIntorNull(), DriverStatusId.ToIntorNull(), -1, true);
                                 }
-                                catch {
+                                catch
+                                {
                                     db.stp_UpdateJob(jobId, driverId, JobStatusId.ToIntorNull(), DriverStatusId.ToIntorNull(), -1);
                                 }
-                                
-                                
+
+
                             }
 
 
@@ -10650,6 +10657,92 @@ namespace SignalRHub.Controllers
 
                             //    UpdateNoPickupAndCancelledCountFromDb();
                             //}
+
+
+                            try
+                            {
+                                if (JobStatusId == Enums.BOOKINGSTATUS.NOPICKUP)
+                                {
+                                    decimal cancellationfee = 0;
+                                    if (!string.IsNullOrEmpty(Global.CancellationFee))
+                                    {
+                                        try
+                                        {
+                                            cancellationfee = Global.CancellationFee.ToDecimal();
+                                        }
+                                        catch
+                                        {
+                                        }
+                                    }
+                                    if (cancellationfee > 0)
+                                    {
+                                        var objBooking = db.Bookings.Where(c => c.Id == jobId)
+                                           .Select(args => new { args.Id, args.BookingNo, args.DriverId, args.BookingStatusId, args.CustomerName, args.FromAddress, args.ToAddress, args.PickupDateTime, args.PaymentTypeId, args.CustomerCreditCardDetails, args.Gen_SubCompany, args.CompanyCreditCardDetails, args.FareRate }).FirstOrDefault();
+
+                                        if (objBooking != null)
+                                        {
+                                            if (objBooking.PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.CREDIT_CARD && objBooking.CustomerCreditCardDetails.ToStr().Trim().Length > 0)
+                                            {
+                                                double amount = Convert.ToDouble(cancellationfee);
+                                                if (Global.CancellationFeeType == "2")
+                                                {
+                                                    amount = Convert.ToDouble(objBooking.FareRate.ToDecimal() * (cancellationfee / 100));
+                                                }
+
+                                                if (amount > 0)
+                                                {
+                                                    string DefaultCurrency = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrency"];
+                                                    string DefaultClientLocation = System.Configuration.ConfigurationManager.AppSettings["DefaultClientLocation"];
+                                                    string DefaultCurrencySign = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrencySign"];
+
+                                                    Classes.KonnectSupplier.PaymentCaptureResponse resp = new Classes.KonnectSupplier.PaymentCaptureResponse();
+
+                                                    Classes.KonnectSupplier.PaymentCaptureDto st = new Classes.KonnectSupplier.PaymentCaptureDto();
+                                                    Gen_SysPolicy_PaymentDetail GatwayObj = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+                                                    st.bookingId = objBooking.Id;
+                                                    st.description = objBooking?.Gen_SubCompany?.CompanyName + " | " + objBooking?.BookingNo.ToStr() + " | " + "Fares : " + amount + " " + DefaultCurrency;
+                                                    st.bookingRef = objBooking?.BookingNo.ToStr();
+                                                    st.countryId = GatwayObj.ApplicationId.ToInt();
+                                                    st.connectedAccountId = GatwayObj.PaypalID.ToStr();
+                                                    st.applicationFee = 0;
+                                                    st.otherCharges = 0;
+                                                    st.amount = Convert.ToInt64(amount * 100);
+                                                    st.displayAmount = amount.ToDecimal();
+                                                    st.currency = DefaultCurrency;
+                                                    st.defaultClientId = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr();
+                                                    st.location = DefaultClientLocation;
+                                                    st.companyName = objBooking?.Gen_SubCompany?.CompanyName ?? "";
+                                                    st.paymentIntentId = objBooking.CustomerCreditCardDetails.ToStr();
+                                                    st.status = objBooking.CompanyCreditCardDetails;
+                                                    var DataObj = Newtonsoft.Json.JsonConvert.SerializeObject(st);
+                                                    string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
+                                                    using (var client = new HttpClient())
+                                                    {
+                                                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                                                        client.BaseAddress = new Uri(StripeAPIBaseURL);
+                                                        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                                                        var content = new StringContent(DataObj, Encoding.UTF8, "application/json");
+                                                        var postTask = client.PostAsync(StripeAPIBaseURL + "/v1/CapturePayment/IncrementAuthorization", content).Result;
+                                                        string PayResp = postTask.Content.ReadAsStringAsync().Result;
+                                                        resp = new JavaScriptSerializer().Deserialize<Classes.KonnectSupplier.PaymentCaptureResponse>(PayResp);
+                                                        if (resp != null && resp.isSuccess)
+                                                        {
+                                                            string msg = "NoPickup fee charged  " + DefaultCurrencySign + string.Format("{0:f2}", amount) + " | TRANSACTION - " + resp.paymentId.ToStr() + " | " + string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
+                                                            db.stp_BookingLog(objBooking.Id.ToLong(), "System", msg);
+                                                        }
+                                                    }
+
+                                                }
+
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                            }
+
                         }
                         else
                         {
