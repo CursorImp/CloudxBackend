@@ -122,6 +122,7 @@ namespace SignalRHub
         public static string CancellationFee = "0";
         public static string CancellationFeeType = "1"; //1- Amount, 2- Percentage
         public static string EnableManualLeadTime = "false";
+        public static string ShowAllocatedInFutureList = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -711,6 +712,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableManualLeadTime", SetVal = "false", description = "EnableManualLeadTime"  },
                              new AppSetting { SetKey = "EnableHideJobFromDriver", SetVal = "false", description = "Enable Hide Job From Driver"  },
                              new AppSetting { SetKey = "EnableExtendMultiBooking", SetVal = "false", description = "Enable Extend Multi Booking"  },
+                             new AppSetting { SetKey = "ShowAllocatedInFutureList", SetVal = "0", description = "ShowAllocatedInFutureList"  },
 
                         };
 
@@ -1668,6 +1670,10 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableManualLeadTime")))
                 {
                     EnableManualLeadTime = GetAppSetting<string>("EnableManualLeadTime").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("ShowAllocatedInFutureList")))
+                {
+                    ShowAllocatedInFutureList = GetAppSetting<string>("ShowAllocatedInFutureList").ToStr();
                 }
 
             }

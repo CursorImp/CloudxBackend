@@ -7865,10 +7865,24 @@ namespace SignalRHub
 
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    db.CommandTimeout = 5;
-                    var bookings = db.Bookings.Where(c => c.DriverId == driverId && c.BookingStatusId == Enums.BOOKINGSTATUS.PENDING_START)
-                        .OrderBy(c => c.PickupDateTime).ToList();
+                    DateTime pickupstart = DateTime.Now.AddDays(-3);
+                    DateTime pickupend = DateTime.Now.AddDays(29).ToDate();
 
+                    db.CommandTimeout = 5;
+                    var bookings = new List<Booking>();
+                    if (Global.ShowAllocatedInFutureList == "1")
+                    {
+                        bookings = db.Bookings.Where(c => c.DriverId == driverId &&
+                       (c.BookingStatusId == Enums.BOOKINGSTATUS.PENDING_START
+                       || (c.DriverId != null && c.BookingStatusId == Enums.BOOKINGSTATUS.WAITING && c.IsConfirmedDriver != null
+                       && c.IsConfirmedDriver == true && (c.PickupDateTime > pickupstart && c.PickupDateTime < pickupend))))
+                            .OrderBy(c => c.PickupDateTime).ToList();
+                    }
+                    else
+                    {
+                        bookings = db.Bookings.Where(c => c.DriverId == driverId && c.BookingStatusId == Enums.BOOKINGSTATUS.PENDING_START)
+                            .OrderBy(c => c.PickupDateTime).ToList();
+                    }
 
                     StringBuilder s = new StringBuilder();
                     foreach (var objBooking in bookings)
@@ -16639,94 +16653,95 @@ namespace SignalRHub
 
                                 if (objBooking != null)
                                 {
-                                        decimal cancellationfee = 0;
-                                        if (!string.IsNullOrEmpty(Global.CancellationFee))
+                                    decimal cancellationfee = 0;
+                                    if (!string.IsNullOrEmpty(Global.CancellationFee))
+                                    {
+                                        try
                                         {
-                                            try
-                                            {
-                                                cancellationfee = Global.CancellationFee.ToDecimal();
-                                            }
-                                            catch
-                                            {
-                                            }
+                                            cancellationfee = Global.CancellationFee.ToDecimal();
                                         }
-                                        if (cancellationfee > 0 && objBooking.PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.CREDIT_CARD && objBooking.CustomerCreditCardDetails.ToStr().Trim().Length > 0 && jobStatusId.ToInt() == Enums.BOOKINGSTATUS.NOPICKUP)
+                                        catch
                                         {
-                                            //var result = General.GetAppSettings();
-                                            //var Parameter = Newtonsoft.Json.JsonConvert.DeserializeObject<Classes.ParameterValues>(result);
-                                            //double amount = Convert.ToDouble(Parameter.CancellationFee);
-                                            double amount = Convert.ToDouble(cancellationfee);
-                                            if (Global.CancellationFeeType == "2")
+                                        }
+                                    }
+                                    if (cancellationfee > 0 && objBooking.PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.CREDIT_CARD && objBooking.CustomerCreditCardDetails.ToStr().Trim().Length > 0 && jobStatusId.ToInt() == Enums.BOOKINGSTATUS.NOPICKUP)
+                                    {
+                                        //var result = General.GetAppSettings();
+                                        //var Parameter = Newtonsoft.Json.JsonConvert.DeserializeObject<Classes.ParameterValues>(result);
+                                        //double amount = Convert.ToDouble(Parameter.CancellationFee);
+                                        double amount = Convert.ToDouble(cancellationfee);
+                                        if (Global.CancellationFeeType == "2")
+                                        {
+                                            amount = Convert.ToDouble(objBooking.FareRate.ToDecimal() * (cancellationfee / 100));
+                                        }
+
+                                        if (amount > 0)
+                                        {
+                                            string DefaultCurrency = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrency"];
+                                            string DefaultClientLocation = System.Configuration.ConfigurationManager.AppSettings["DefaultClientLocation"];
+                                            string DefaultCurrencySign = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrencySign"];
+
+                                            Classes.KonnectSupplier.PaymentCaptureResponse resp = new Classes.KonnectSupplier.PaymentCaptureResponse();
+
+                                            Classes.KonnectSupplier.PaymentCaptureDto st = new Classes.KonnectSupplier.PaymentCaptureDto();
+                                            Gen_SysPolicy_PaymentDetail GatwayObj = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
+
+                                            //
+
+
+
+                                            st.bookingId = objBooking.Id;
+                                            st.description = objBooking?.Gen_SubCompany?.CompanyName + " | " + objBooking?.BookingNo.ToStr() + " | " + "Fares : " + amount + " " + DefaultCurrency;
+                                            st.bookingRef = objBooking?.BookingNo.ToStr();
+                                            st.countryId = GatwayObj.ApplicationId.ToInt();
+                                            st.connectedAccountId = GatwayObj.PaypalID.ToStr();
+                                            st.applicationFee = 0;
+                                            st.otherCharges = 0;
+                                            st.amount = Convert.ToInt64(amount * 100);
+                                            st.displayAmount = amount.ToDecimal();
+                                            st.currency = DefaultCurrency;
+                                            st.defaultClientId = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr();
+                                            st.location = DefaultClientLocation;
+                                            st.companyName = objBooking?.Gen_SubCompany?.CompanyName ?? "";
+                                            st.paymentIntentId = objBooking.CustomerCreditCardDetails.ToStr();
+                                            st.status = objBooking.CompanyCreditCardDetails;
+                                            var DataObj = Newtonsoft.Json.JsonConvert.SerializeObject(st);
+                                            string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
+                                            using (var client = new HttpClient())
                                             {
-                                                amount = Convert.ToDouble(objBooking.FareRate.ToDecimal() * (cancellationfee / 100));
-                                            }
-
-                                            if (amount > 0)
-                                            {
-                                                string DefaultCurrency = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrency"];
-                                                string DefaultClientLocation = System.Configuration.ConfigurationManager.AppSettings["DefaultClientLocation"];
-                                                string DefaultCurrencySign = System.Configuration.ConfigurationManager.AppSettings["DefaultCurrencySign"];
-
-                                                Classes.KonnectSupplier.PaymentCaptureResponse resp = new Classes.KonnectSupplier.PaymentCaptureResponse();
-
-                                                Classes.KonnectSupplier.PaymentCaptureDto st = new Classes.KonnectSupplier.PaymentCaptureDto();
-                                                Gen_SysPolicy_PaymentDetail GatwayObj = General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
-
-                                                //
-
-
-
-                                                st.bookingId = objBooking.Id;
-                                                st.description = objBooking?.Gen_SubCompany?.CompanyName + " | " + objBooking?.BookingNo.ToStr() + " | " + "Fares : " + amount + " " + DefaultCurrency;
-                                                st.bookingRef = objBooking?.BookingNo.ToStr();
-                                                st.countryId = GatwayObj.ApplicationId.ToInt();
-                                                st.connectedAccountId = GatwayObj.PaypalID.ToStr();
-                                                st.applicationFee = 0;
-                                                st.otherCharges = 0;
-                                                st.amount = Convert.ToInt64(amount * 100);
-                                                st.displayAmount = amount.ToDecimal();
-                                                st.currency = DefaultCurrency;
-                                                st.defaultClientId = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr();
-                                                st.location = DefaultClientLocation;
-                                                st.companyName = objBooking?.Gen_SubCompany?.CompanyName ?? "";
-                                                st.paymentIntentId = objBooking.CustomerCreditCardDetails.ToStr();
-                                                st.status = objBooking.CompanyCreditCardDetails;
-                                                var DataObj = Newtonsoft.Json.JsonConvert.SerializeObject(st);
-                                                string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
-                                                using (var client = new HttpClient())
+                                                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                                                client.BaseAddress = new Uri(StripeAPIBaseURL);
+                                                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                                                var content = new StringContent(DataObj, Encoding.UTF8, "application/json");
+                                                var postTask = client.PostAsync(StripeAPIBaseURL + "/v1/CapturePayment/IncrementAuthorization", content).Result;
+                                                string PayResp = postTask.Content.ReadAsStringAsync().Result;
+                                                resp = new JavaScriptSerializer().Deserialize<Classes.KonnectSupplier.PaymentCaptureResponse>(PayResp);
+                                                if (resp != null && resp.isSuccess)
                                                 {
-                                                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                                                    client.BaseAddress = new Uri(StripeAPIBaseURL);
-                                                    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-                                                    var content = new StringContent(DataObj, Encoding.UTF8, "application/json");
-                                                    var postTask = client.PostAsync(StripeAPIBaseURL + "/v1/CapturePayment/IncrementAuthorization", content).Result;
-                                                    string PayResp = postTask.Content.ReadAsStringAsync().Result;
-                                                    resp = new JavaScriptSerializer().Deserialize<Classes.KonnectSupplier.PaymentCaptureResponse>(PayResp);
-                                                    if (resp != null && resp.isSuccess)
-                                                    {
-                                                        string msg = "NoPickup fee charged  " + DefaultCurrencySign + string.Format("{0:f2}", amount) + " | TRANSACTION - " + resp.paymentId.ToStr() + " | " + string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
-                                                        db.stp_BookingLog(objBooking.Id.ToLong(), "System", msg);
-                                                    }
-                                                    try
-                                                    {
-                                                        File.AppendAllText(AppContext.BaseDirectory + "\\NoShowByDriverFee.txt", DateTime.Now.ToStr() + ": canceled fee chared DTO :" + new JavaScriptSerializer().Serialize(st) + ": resp :" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
-                                                    }
-                                                    catch
-                                                    {
-
-                                                    }
-
+                                                    string msg = "NoPickup fee charged  " + DefaultCurrencySign + string.Format("{0:f2}", amount) + " | TRANSACTION - " + resp.paymentId.ToStr() + " | " + string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
+                                                    db.stp_BookingLog(objBooking.Id.ToLong(), "System", msg);
+                                                }
+                                                try
+                                                {
+                                                    File.AppendAllText(AppContext.BaseDirectory + "\\NoShowByDriverFee.txt", DateTime.Now.ToStr() + ": canceled fee chared DTO :" + new JavaScriptSerializer().Serialize(st) + ": resp :" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                                                }
+                                                catch
+                                                {
 
                                                 }
 
+
                                             }
 
                                         }
+
+                                    }
 
                                 }
                             }
                         }
-                        catch {
+                        catch
+                        {
                         }
                     }
                 }
