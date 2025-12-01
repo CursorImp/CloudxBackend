@@ -1756,6 +1756,17 @@ namespace SignalRHub
                                 else
                                     Msg = "Job is Allocated  to Driver (" + objBooking.Fleet_Driver.DriverNo.ToStr() + ")";
 
+                                try
+                                {
+                                    if (Global.ShowAllocatedInFutureList == "1")
+                                    {
+                                        General.requestPDA("request pda=" + objBooking.Fleet_Driver.Id + "=" + 0 + "=" + "Message>>" + "You have received a Future Jobs" + ">>" + String.Format("{0:MM/dd/yyyy HH:mm:ss}", DateTime.Now) + "=4");
+                                    }
+                                }
+                                catch
+                                {
+                                }
+
 
                             }
                             else if (driverId == null && !string.IsNullOrEmpty(oldDriverNo))
@@ -2108,7 +2119,8 @@ namespace SignalRHub
                             }
                         }
                     }
-                    catch {
+                    catch
+                    {
                     }
 
 
@@ -6522,7 +6534,7 @@ namespace SignalRHub
         }
         public static PaymentConfig GetKoNectConfigDetails(int? SubCompany)
         {
-            try { File.AppendAllText(AppContext.BaseDirectory + "\\GetKoNectConfigDetails.txt", DateTime.Now.ToStr() + " SubCompany" + SubCompany + Environment.NewLine);} catch{ }
+            try { File.AppendAllText(AppContext.BaseDirectory + "\\GetKoNectConfigDetails.txt", DateTime.Now.ToStr() + " SubCompany" + SubCompany + Environment.NewLine); } catch { }
             PaymentConfig resp = null;
             try
             {
@@ -6540,9 +6552,9 @@ namespace SignalRHub
 
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                try { File.AppendAllText(AppContext.BaseDirectory + "\\GetKoNectConfigDetails_escep.txt", DateTime.Now.ToStr() + " exception" + ex.Message + Environment.NewLine); } catch{}
+                try { File.AppendAllText(AppContext.BaseDirectory + "\\GetKoNectConfigDetails_escep.txt", DateTime.Now.ToStr() + " exception" + ex.Message + Environment.NewLine); } catch { }
             }
 
 

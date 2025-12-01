@@ -2098,17 +2098,17 @@ namespace SignalRHub.Controllers
                     int weeks = 0;
                     try
                     {
-                 
+
 
                         if (obj.bookingInfo.AdvanceBookingId != null && obj.bookingInfo.AdvanceBookingId != 0 && obj.bookingInfo.ExtendMulti == true)
                         {
                             journeyTypeId = obj.bookingInfo.JourneyTypeId.ToInt();
                             var multi = obj.bookingInfo.objMulti;
-                            startDate = obj.bookingInfo.objMulti.StartDate; 
+                            startDate = obj.bookingInfo.objMulti.StartDate;
                             endDateTime = obj.bookingInfo.objMulti.EndDate;
                             string Query = "SELECT * FROM  BOOKING WHERE AdvanceBookingId = {0} and journeytypeid = {1}";
 
-                            var data = db.ExecuteQuery<BookingInfo>(Query, obj.bookingInfo.AdvanceBookingId,obj.bookingInfo.JourneyTypeId).FirstOrDefault();
+                            var data = db.ExecuteQuery<BookingInfo>(Query, obj.bookingInfo.AdvanceBookingId, obj.bookingInfo.JourneyTypeId).FirstOrDefault();
 
                             obj.bookingInfo = data;
                             obj.bookingInfo.JourneyTypeId = journeyTypeId;
@@ -2132,7 +2132,7 @@ namespace SignalRHub.Controllers
                     catch
                     {
                     }
-                    
+
                     //
                     if (obj.bookingInfo.objMulti != null)
                     {
@@ -2504,6 +2504,17 @@ namespace SignalRHub.Controllers
                         //    }
 
                         //}
+
+                        try
+                        {
+                            if (IsAddMode == true && Global.ShowAllocatedInFutureList == "1" && objMaster.Current.DriverId.ToInt() > 0)
+                            {
+                                General.requestPDA("request pda=" + objMaster.Current.DriverId + "=" + 0 + "=" + "Message>>" + "You have received a Future Jobs" + ">>" + String.Format("{0:MM/dd/yyyy HH:mm:ss}", DateTime.Now) + "=4");
+                            }
+                        }
+                        catch
+                        {
+                        }
 
                         if (objMaster.Current.Id > 0 && obj.editbookingInfo != null)
                         {
@@ -4401,7 +4412,7 @@ namespace SignalRHub.Controllers
                             }
                         }
 
-                         if (obj.routeInfo.ReturnDriverId > 0)
+                        if (obj.routeInfo.ReturnDriverId > 0)
                         {
                             var tempDriver = db.Fleet_Drivers
                                 .Where(x => x.Id == obj.routeInfo.ReturnDriverId)
@@ -6815,7 +6826,7 @@ namespace SignalRHub.Controllers
 
         }
 
-         [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("UpdateHideJobStatus")]
         public JsonResult UpdateHideJobStatus(WebApiClasses.RequestWebApi obj)
@@ -6847,18 +6858,18 @@ namespace SignalRHub.Controllers
                     bool? hideJob = obj.bookingInfo.IsHideJobFromDrivers;
 
                     // Inline SQL
-                    string query = $"UPDATE booking SET IsHideJobFromDrivers = {(hideJob==true ? 1 : 0)} WHERE Id = {bookingId}";
-                  
+                    string query = $"UPDATE booking SET IsHideJobFromDrivers = {(hideJob == true ? 1 : 0)} WHERE Id = {bookingId}";
+
                     db.ExecuteCommand(query); // Execute the inline query
                     db.stp_BookingLog(bookingId, obj.UserName.ToStr().Trim().Length > 0 ? obj.UserName.ToStr() : "controller", hideJob == true ? "Hide Job from driver" : "Show Job to Driver");
                 }
                 response.Data = obj.bookingInfo.Id;
                 CallGetDashboardData();
-                
+
             }
             catch (Exception ex)
             {
-               
+
             }
 
 
