@@ -25,6 +25,7 @@ using static SignalRHub.DriverAppController;
 using System.Threading.Tasks;
 using CabTreasureWebApi.Models.HereForwardGeocode;
 using System.Collections;
+using System.Security.Cryptography;
 
 namespace SignalRHub.Controllers
 {
@@ -61,6 +62,15 @@ namespace SignalRHub.Controllers
         [System.Web.Http.Route("UpdateEscort")]
         public JsonResult UpdateEscort(WebApiClasses.RequestWebApi obj)
         {
+            try
+            {
+                General.WriteLog("UpdateEscort", "json: " + new JavaScriptSerializer().Serialize(obj));
+            }
+            catch
+            {
+
+            }
+
             ResponseWebApi response = new ResponseWebApi();
 
             try
@@ -87,6 +97,8 @@ namespace SignalRHub.Controllers
             {
                 response.HasError = true;
                 response.Message = ex.Message;
+
+                General.WriteLog("UpdateEscort", "Exception: " + ex.Message);
             }
 
             return Json(response, JsonRequestBehavior.AllowGet);
@@ -102,8 +114,8 @@ namespace SignalRHub.Controllers
         {
             try
             {
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\LoginUser.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
-
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\LoginUser.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("LoginUser", "json: " + new JavaScriptSerializer().Serialize(obj));
             }
             catch
             {
@@ -322,7 +334,8 @@ namespace SignalRHub.Controllers
             {
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\LoginUser.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\LoginUser.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("LoginUser", "Exception: " + ex.Message);
 
                 }
                 catch
@@ -499,7 +512,9 @@ namespace SignalRHub.Controllers
                 data.objDriverCount.totalWaiting = data.listofdrivers.Count(c => c.driverworkstatusid == Enums.Driver_WORKINGSTATUS.AVAILABLE || c.driverworkstatusid == Enums.Driver_WORKINGSTATUS.ONBREAK || c.driverworkstatusid == Enums.Driver_WORKINGSTATUS.FOJ || c.driverworkstatusid == Enums.Driver_WORKINGSTATUS.SINBIN);
             }
             catch
-            { }
+            {
+
+            }
 
             return data;
         }
@@ -601,7 +616,7 @@ namespace SignalRHub.Controllers
                 }
 
             }
-            catch (Exception ex)
+            catch
             {
 
 
@@ -620,7 +635,8 @@ namespace SignalRHub.Controllers
 
             try
             {
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetDashboardData.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetDashboardData.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("GetDashboardData", "json: " + new JavaScriptSerializer().Serialize(obj));
 
             }
             catch
@@ -747,8 +763,8 @@ namespace SignalRHub.Controllers
 
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetDashboardData_exception.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
-
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetDashboardData_exception.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetDashboardData_exception", "json: " + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -789,8 +805,8 @@ namespace SignalRHub.Controllers
 
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetZonesList.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
-
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetZonesList.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                    General.WriteLog("GetZonesList", "json: " + new JavaScriptSerializer().Serialize(response.Data));
                 }
                 catch
                 {
@@ -863,8 +879,8 @@ namespace SignalRHub.Controllers
 
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetZonesList_exception.txt", DateTime.Now + ",exception:" + ex.Message + Environment.NewLine);
-
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetZonesList_exception.txt", DateTime.Now + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetZonesList_exception", "Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -906,8 +922,8 @@ namespace SignalRHub.Controllers
 
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetMapReport.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
-
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetMapReport.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                    General.WriteLog("GetMapReport", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch
                 {
@@ -1011,8 +1027,8 @@ namespace SignalRHub.Controllers
 
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetMapReport_exception.txt", DateTime.Now + ",exception:" + ex.Message + Environment.NewLine);
-
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetMapReport_exception.txt", DateTime.Now + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetMapReport_exception", "Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -1556,8 +1572,8 @@ namespace SignalRHub.Controllers
             try
             {
 
-
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverDetailsForDeduction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("GetDriverDetailsForDeduction", "json: " + new JavaScriptSerializer().Serialize(obj));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverDetailsForDeduction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
             }
             catch
             {
@@ -1606,7 +1622,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverDetailsForDeduction_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverDetailsForDeduction_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetDriverDetailsForDeduction_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ",Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -1627,7 +1644,8 @@ namespace SignalRHub.Controllers
             {
 
 
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("GetBookingDetails", "json: " + new JavaScriptSerializer().Serialize(obj));
             }
             catch
             {
@@ -1920,7 +1938,9 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+
+                    General.WriteLog("GetBookingDetails_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ",Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -2080,7 +2100,8 @@ namespace SignalRHub.Controllers
                 //
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("SaveBooking", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch
                 {
@@ -2098,17 +2119,17 @@ namespace SignalRHub.Controllers
                     int weeks = 0;
                     try
                     {
-                 
+
 
                         if (obj.bookingInfo.AdvanceBookingId != null && obj.bookingInfo.AdvanceBookingId != 0 && obj.bookingInfo.ExtendMulti == true)
                         {
                             journeyTypeId = obj.bookingInfo.JourneyTypeId.ToInt();
                             var multi = obj.bookingInfo.objMulti;
-                            startDate = obj.bookingInfo.objMulti.StartDate; 
+                            startDate = obj.bookingInfo.objMulti.StartDate;
                             endDateTime = obj.bookingInfo.objMulti.EndDate;
                             string Query = "SELECT * FROM  BOOKING WHERE AdvanceBookingId = {0} and journeytypeid = {1}";
 
-                            var data = db.ExecuteQuery<BookingInfo>(Query, obj.bookingInfo.AdvanceBookingId,obj.bookingInfo.JourneyTypeId).FirstOrDefault();
+                            var data = db.ExecuteQuery<BookingInfo>(Query, obj.bookingInfo.AdvanceBookingId, obj.bookingInfo.JourneyTypeId).FirstOrDefault();
 
                             obj.bookingInfo = data;
                             obj.bookingInfo.JourneyTypeId = journeyTypeId;
@@ -2132,7 +2153,7 @@ namespace SignalRHub.Controllers
                     catch
                     {
                     }
-                    
+
                     //
                     if (obj.bookingInfo.objMulti != null)
                     {
@@ -2459,7 +2480,8 @@ namespace SignalRHub.Controllers
                         {
                             try
                             {
-                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveBooking_viaexception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",error:" + ex.Message + Environment.NewLine);
+                                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveBooking_viaexception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",error:" + ex.Message + Environment.NewLine);
+                                General.WriteLog("SaveBooking_viaexception", "Exception: " + ex.Message);
                             }
                             catch
                             {
@@ -2509,7 +2531,8 @@ namespace SignalRHub.Controllers
                         {
                             try
                             {
-                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "EditBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",old pickup:" + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime) + ",new pickup:" + string.Format("{0:dd/MM/yyyy HH:mm}", obj.bookingInfo.PickupDateTime) + Environment.NewLine);
+                                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "EditBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",old pickup:" + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime) + ",new pickup:" + string.Format("{0:dd/MM/yyyy HH:mm}", obj.bookingInfo.PickupDateTime) + Environment.NewLine);
+                                General.WriteLog("EditBooking", "old pickup: " + obj.editbookingInfo.PickupDateTime + ",new pickup:" + obj.bookingInfo.PickupDateTime);
                             }
                             catch
                             {
@@ -2605,7 +2628,8 @@ namespace SignalRHub.Controllers
                             {
                                 try
                                 {
-                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "EditBookingLog_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine + ",Exception:" + ex.Message + Environment.NewLine);
+                                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "EditBookingLog_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine + ",Exception:" + ex.Message + Environment.NewLine);
+                                    General.WriteLog("EditBookingLog_exception", "json: " + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                                 }
                                 catch
                                 {
@@ -3123,15 +3147,15 @@ namespace SignalRHub.Controllers
                     if (objMaster.Errors.Count == 0)
                     {
                         response.Message = ex.Message;
-                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
-
+                        //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                        General.WriteLog("SaveBooking_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + "Exception: " + ex.Message);
 
                     }
                     else
                     {
                         response.Message = objMaster.ShowErrors();
-                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveBooking_validation.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
-
+                        //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveBooking_validation.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                        General.WriteLog("SaveBooking_validation", "json: " + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message);
                     }
                 }
                 catch
@@ -3171,7 +3195,8 @@ namespace SignalRHub.Controllers
 
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendBidMessage.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverids:" + driverIds.Count() + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendBidMessage.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverids:" + driverIds.Count() + Environment.NewLine);
+                    General.WriteLog("SendBidMessage", "driverids:" + driverIds.Count());
                 }
                 catch
                 {
@@ -3221,7 +3246,8 @@ namespace SignalRHub.Controllers
 
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CancelBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CancelBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("CancelBooking", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch
                 {
@@ -3421,7 +3447,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CancelBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CancelBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("CancelBooking_exception", "json: " + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -3456,7 +3483,8 @@ namespace SignalRHub.Controllers
                 //
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("DispatchBooking", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch
                 {
@@ -3471,7 +3499,16 @@ namespace SignalRHub.Controllers
                     var pickupDateTime = db.Bookings.Where(c => c.Id == obj.bookingInfo.Id).Select(x => x.PickupDateTime).FirstOrDefault();
                     if (pickupDateTime != null && pickupDateTime?.Date != DateTime.Now.Date && obj.bookingInfo.BookingTypeId.ToInt() != 4 && obj.bookingInfo.BookingTypeId.ToInt() != 3)
                     {
-                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_warning.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",pickup date" + pickupDateTime?.Date.ToStr() + "bookingid: " + obj.bookingInfo.Id.ToStr() + " type: " + obj.bookingInfo.BookingTypeId.ToStr() + Environment.NewLine);
+                        //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_warning.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",pickup date" + pickupDateTime?.Date.ToStr() + "bookingid: " + obj.bookingInfo.Id.ToStr() + " type: " + obj.bookingInfo.BookingTypeId.ToStr() + Environment.NewLine);
+                        try
+                        {
+                            General.WriteLog("DispatchBooking_warning", "pickup date" + pickupDateTime?.Date.ToStr() + "bookingid: " + obj.bookingInfo.Id.ToStr() + " type: " + obj.bookingInfo.BookingTypeId.ToStr());
+                        }
+
+                        catch
+                        {
+                        }
+
                         response.HasError = true;
                         response.Message = "Only today bookings can be dispatch.";
                     }
@@ -3534,7 +3571,7 @@ namespace SignalRHub.Controllers
                                                 msg = "Job is already dispatched to other driver.";
                                                 try
                                                 {
-                                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
                                                 }
                                                 catch
                                                 {
@@ -3558,7 +3595,8 @@ namespace SignalRHub.Controllers
                                                 {
 
 
-                                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                                    General.WriteLog("DispatchBooking_alreadyacceptedthisdriver", "jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt());
                                                 }
                                                 catch
                                                 {
@@ -3575,7 +3613,8 @@ namespace SignalRHub.Controllers
                                                 {
 
 
-                                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedotherdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedotherdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                                    General.WriteLog("DispatchBooking_alreadyacceptedotherdriver", "jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt());
                                                 }
                                                 catch
                                                 {
@@ -3622,7 +3661,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("DispatchBooking_exception", "json: " + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -3891,7 +3931,8 @@ namespace SignalRHub.Controllers
             //
             try
             {
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAddressDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + obj.addressInfo.Address.ToStr().ToUpper().Trim() + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAddressDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + obj.addressInfo.Address.ToStr().ToUpper().Trim() + Environment.NewLine);
+                General.WriteLog("GetAddressDetails", "json: " + obj.addressInfo.Address.ToStr().ToUpper().Trim());
             }
             catch
             {
@@ -4029,7 +4070,8 @@ namespace SignalRHub.Controllers
                             {
                                 try
                                 {
-                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAddressDetails_exceptionnearestdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + ",exception:" + ex.Message + Environment.NewLine);
+                                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAddressDetails_exceptionnearestdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + ",exception:" + ex.Message + Environment.NewLine);
+                                    General.WriteLog("GetAddressDetails_exceptionnearestdriver", "json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + ", Exception: " + ex.Message);
                                 }
                                 catch
                                 {
@@ -4048,7 +4090,8 @@ namespace SignalRHub.Controllers
                 }
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAddressDetails_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAddressDetails_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + Environment.NewLine);
+                    General.WriteLog("GetAddressDetails_response", "json:" + new JavaScriptSerializer().Serialize(obj.addressInfo));
                 }
                 catch
                 {
@@ -4401,7 +4444,7 @@ namespace SignalRHub.Controllers
                             }
                         }
 
-                         if (obj.routeInfo.ReturnDriverId > 0)
+                        if (obj.routeInfo.ReturnDriverId > 0)
                         {
                             var tempDriver = db.Fleet_Drivers
                                 .Where(x => x.Id == obj.routeInfo.ReturnDriverId)
@@ -4492,7 +4535,8 @@ namespace SignalRHub.Controllers
                         response.HasError = true;
                         response.Message = ex.Message;
 
-                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "MoveDriver_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                        //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "MoveDriver_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);                        
+                        General.WriteLog("MoveDriver_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                     }
                     catch
                     {
@@ -4516,7 +4560,8 @@ namespace SignalRHub.Controllers
             {
 
 
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFares.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFares.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("CalculateFares", "json: " + new JavaScriptSerializer().Serialize(obj));
             }
             catch
             {
@@ -4707,7 +4752,8 @@ namespace SignalRHub.Controllers
                         {
 
 
-                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GETALLFARESFROMDISPATCHNEW.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(result) + Environment.NewLine);
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GETALLFARESFROMDISPATCHNEW.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(result) + Environment.NewLine);
+                            General.WriteLog("GETALLFARESFROMDISPATCHNEW", "json: " + new JavaScriptSerializer().Serialize(result));
                         }
                         catch
                         {
@@ -4781,7 +4827,8 @@ namespace SignalRHub.Controllers
                         {
 
 
-                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFares_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFares_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                            General.WriteLog("CalculateFares_response", "json: " + new JavaScriptSerializer().Serialize(response.Data));
                         }
                         catch
                         {
@@ -4905,7 +4952,8 @@ namespace SignalRHub.Controllers
                 }
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetCongestionCharges.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(result) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetCongestionCharges.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(result) + Environment.NewLine);
+                    General.WriteLog("GetCongestionCharges", "json: " + new JavaScriptSerializer().Serialize(result));
                 }
                 catch
                 {
@@ -5615,7 +5663,8 @@ namespace SignalRHub.Controllers
 
                         try
                         {
-                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "getaddressdata1_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + ex.Message + Environment.NewLine);
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "getaddressdata1_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + ex.Message + Environment.NewLine);
+                            General.WriteLog("getaddressdata1_exception", "Exception: " + ex.Message);
                         }
                         catch
                         {
@@ -5690,7 +5739,8 @@ namespace SignalRHub.Controllers
             {
 
 
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFares.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFares.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("CalculateFares", "json: " + new JavaScriptSerializer().Serialize(obj));
             }
             catch
             {
@@ -5816,7 +5866,8 @@ namespace SignalRHub.Controllers
                         {
 
 
-                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GETALLFARESFROMDISPATCHNEW_request.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(requestData) + Environment.NewLine);
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GETALLFARESFROMDISPATCHNEW_request.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(requestData) + Environment.NewLine);
+                            General.WriteLog("GETALLFARESFROMDISPATCHNEW_request", "json: " + new JavaScriptSerializer().Serialize(requestData));
                         }
                         catch
                         {
@@ -5835,7 +5886,8 @@ namespace SignalRHub.Controllers
                         {
 
 
-                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GETALLFARESFROMDISPATCHNEW.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(result) + Environment.NewLine);
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GETALLFARESFROMDISPATCHNEW.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(result) + Environment.NewLine);
+                            General.WriteLog("GETALLFARESFROMDISPATCHNEW", "json: " + new JavaScriptSerializer().Serialize(result));
                         }
                         catch
                         {
@@ -5934,7 +5986,8 @@ namespace SignalRHub.Controllers
                         {
 
 
-                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFares_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFares_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                            General.WriteLog("CalculateFares_response", "json: " + new JavaScriptSerializer().Serialize(response.Data));
                         }
                         catch
                         {
@@ -5987,7 +6040,8 @@ namespace SignalRHub.Controllers
             {
 
 
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFaresByFixedHours.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFaresByFixedHours.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("CalculateFaresByFixedHours", "json: " + new JavaScriptSerializer().Serialize(obj));
             }
             catch
             {
@@ -6035,7 +6089,8 @@ namespace SignalRHub.Controllers
                         response.Data = res;
                         try
                         {
-                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFaresByFixedHours_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFaresByFixedHours_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                            General.WriteLog("CalculateFaresByFixedHours_response", "json: " + new JavaScriptSerializer().Serialize(response.Data));
                         }
                         catch
                         {
@@ -6074,7 +6129,8 @@ namespace SignalRHub.Controllers
             {
 
 
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFaresByFixedHours.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFaresByFixedHours.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("CalculateFaresByFixedHours", "json: " + new JavaScriptSerializer().Serialize(obj));
             }
             catch
             {
@@ -6171,8 +6227,9 @@ namespace SignalRHub.Controllers
                         try
                         {
                             // Optionally log the response data to a file
-                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFaresByFixedHours_response.txt",
-                                DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CalculateFaresByFixedHours_response.txt",
+                            //DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(response.Data) + Environment.NewLine);
+                            General.WriteLog("CalculateFaresByFixedHours_response", "json: " + new JavaScriptSerializer().Serialize(response.Data));
                         }
                         catch
                         {
@@ -6633,7 +6690,8 @@ namespace SignalRHub.Controllers
                 //
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateBookingStatus.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateBookingStatus.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("UpdateBookingStatus", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch
                 {
@@ -6802,7 +6860,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("DispatchBooking_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -6815,7 +6874,7 @@ namespace SignalRHub.Controllers
 
         }
 
-         [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("UpdateHideJobStatus")]
         public JsonResult UpdateHideJobStatus(WebApiClasses.RequestWebApi obj)
@@ -6832,7 +6891,8 @@ namespace SignalRHub.Controllers
                 //
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateBookingStatus.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateBookingStatus.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("UpdateBookingStatus", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch
                 {
@@ -6847,18 +6907,18 @@ namespace SignalRHub.Controllers
                     bool? hideJob = obj.bookingInfo.IsHideJobFromDrivers;
 
                     // Inline SQL
-                    string query = $"UPDATE booking SET IsHideJobFromDrivers = {(hideJob==true ? 1 : 0)} WHERE Id = {bookingId}";
-                  
+                    string query = $"UPDATE booking SET IsHideJobFromDrivers = {(hideJob == true ? 1 : 0)} WHERE Id = {bookingId}";
+
                     db.ExecuteCommand(query); // Execute the inline query
                     db.stp_BookingLog(bookingId, obj.UserName.ToStr().Trim().Length > 0 ? obj.UserName.ToStr() : "controller", hideJob == true ? "Hide Job from driver" : "Show Job to Driver");
                 }
                 response.Data = obj.bookingInfo.Id;
                 CallGetDashboardData();
-                
+
             }
             catch (Exception ex)
             {
-               
+
             }
 
 
@@ -6885,7 +6945,8 @@ namespace SignalRHub.Controllers
                 //
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "LogoutDriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "LogoutDriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("LogoutDriver", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch
                 {
@@ -6930,7 +6991,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("DispatchBooking_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -6961,7 +7023,8 @@ namespace SignalRHub.Controllers
                 //
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetShiftJobs.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetShiftJobs.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("GetShiftJobs", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch
                 {
@@ -7014,7 +7077,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetShiftJobs_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetShiftJobs_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetShiftJobs_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -7041,7 +7105,8 @@ namespace SignalRHub.Controllers
                 //
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetCallHistory.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetCallHistory.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("GetCallHistory", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch
                 {
@@ -7107,7 +7172,8 @@ namespace SignalRHub.Controllers
                 {
                     response.HasError = true;
                     response.Message = ex.Message;
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetCallHistory_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetCallHistory_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetCallHistory_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -7259,7 +7325,8 @@ namespace SignalRHub.Controllers
                 //
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAdvancedSearch.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAdvancedSearch.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("GetAdvancedSearch", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch
                 {
@@ -7404,7 +7471,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAdvancedSearch_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAdvancedSearch_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetAdvancedSearch_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -7508,7 +7576,8 @@ namespace SignalRHub.Controllers
 
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateAdvanceBooking.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateAdvanceBooking.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("UpdateAdvanceBooking", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch
                 {
@@ -7740,15 +7809,15 @@ namespace SignalRHub.Controllers
                     if (objMaster.Errors.Count == 0)
                     {
                         response.Message = ex.Message;
-                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateAdvanceBooking_exception.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
-
+                        //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateAdvanceBooking_exception.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                        General.WriteLog("UpdateAdvanceBooking_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
 
                     }
                     else
                     {
                         response.Message = objMaster.ShowErrors();
-                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateAdvanceBooking_validation.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
-
+                        //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateAdvanceBooking_validation.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                        General.WriteLog("UpdateAdvanceBooking_validation", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                     }
                 }
                 catch
@@ -8073,8 +8142,8 @@ namespace SignalRHub.Controllers
             try
             {
 
-
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateAutoDispatchAction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("UpdateAutoDispatchAction", "json: " + new JavaScriptSerializer().Serialize(obj));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateAutoDispatchAction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
             }
             catch
             {
@@ -8141,7 +8210,8 @@ namespace SignalRHub.Controllers
                         try
                         {
 
-                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateAutoDispatchAction_exception1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateAutoDispatchAction_exception1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                            General.WriteLog("UpdateAutoDispatchAction_exception1", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                         }
                         catch
                         {
@@ -8172,7 +8242,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateAutoDispatchAction_exception2.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateAutoDispatchAction_exception2.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("UpdateAutoDispatchAction_exception2", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -8260,7 +8331,8 @@ namespace SignalRHub.Controllers
         {
             try
             {
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAdvanceBookingDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAdvanceBookingDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("GetAdvanceBookingDetails", "json: " + new JavaScriptSerializer().Serialize(obj));
             }
             catch
             {
@@ -8348,7 +8420,8 @@ namespace SignalRHub.Controllers
             //
             try
             {
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAdvanceBookingDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAdvanceBookingDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("GetAdvanceBookingDetails", "json: " + new JavaScriptSerializer().Serialize(obj));
             }
             catch
             {
@@ -8602,7 +8675,8 @@ namespace SignalRHub.Controllers
             //
             try
             {
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CancelAdvanceBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CancelAdvanceBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("CancelAdvanceBooking", "json: " + new JavaScriptSerializer().Serialize(obj));
             }
             catch
             {
@@ -8666,8 +8740,10 @@ namespace SignalRHub.Controllers
         {
             try
             {
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CancelBulkAdvanceBooking.txt",
-                    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "CancelBulkAdvanceBooking.txt",
+                //DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+
+                General.WriteLog("CancelBulkAdvanceBooking", "json: " + new JavaScriptSerializer().Serialize(obj));
             }
             catch { }
 
@@ -8737,7 +8813,8 @@ namespace SignalRHub.Controllers
                 //
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAuditTrial.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAuditTrial.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("GetAuditTrial", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch
                 {
@@ -8839,7 +8916,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetShiftJobs_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetShiftJobs_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetShiftJobs_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -9001,7 +9079,8 @@ namespace SignalRHub.Controllers
                 //
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverToolTip.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(objX) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverToolTip.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(objX) + Environment.NewLine);
+                    General.WriteLog("GetDriverToolTip", "json: " + new JavaScriptSerializer().Serialize(objX));
                 }
                 catch
                 {
@@ -9273,7 +9352,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverToolTip_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(objX) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverToolTip_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(objX) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetDriverToolTip_exception", "json:" + new JavaScriptSerializer().Serialize(objX) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -9398,9 +9478,8 @@ namespace SignalRHub.Controllers
 
             try
             {
-
-
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingConfirmationDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("GetBookingConfirmationDetails", "json: " + new JavaScriptSerializer().Serialize(obj));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingConfirmationDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
             }
             catch
             {
@@ -9491,7 +9570,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingConfirmationDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetBookingConfirmationDetails_exception", "json:" + new JavaScriptSerializer().Serialize(obj) +  ", Exception: " + ex.Message);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingConfirmationDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -9512,9 +9592,8 @@ namespace SignalRHub.Controllers
 
             try
             {
-
-
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingDetailsForSMS.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("GetBookingDetailsForSMS", "json: " + new JavaScriptSerializer().Serialize(obj));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingDetailsForSMS.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
             }
             catch
             {
@@ -9555,7 +9634,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingConfirmationDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetBookingConfirmationDetails_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingConfirmationDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -9580,8 +9660,8 @@ namespace SignalRHub.Controllers
             try
             {
 
-
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendConfirmationEmail.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("SendConfirmationEmail", "json: " + new JavaScriptSerializer().Serialize(obj));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendConfirmationEmail.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
             }
             catch
             {
@@ -10043,7 +10123,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendConfirmationEmail_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("SendConfirmationEmail_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendConfirmationEmail_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -10165,8 +10246,8 @@ namespace SignalRHub.Controllers
             try
             {
 
-
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingHistory.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("GetBookingHistory", "json: " + new JavaScriptSerializer().Serialize(obj));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingHistory.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
             }
             catch
             {
@@ -10264,7 +10345,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingHistory_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetBookingHistory_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingHistory_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -10290,8 +10372,8 @@ namespace SignalRHub.Controllers
             try
             {
 
-
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateBookingAction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("UpdateBookingAction", "json: " + new JavaScriptSerializer().Serialize(obj));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateBookingAction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
             }
             catch
             {
@@ -10386,7 +10468,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateBookingAction_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("UpdateBookingAction_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "UpdateBookingAction_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -10533,8 +10616,8 @@ namespace SignalRHub.Controllers
             try
             {
 
-
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AuthAction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("AuthAction", "json: " + new JavaScriptSerializer().Serialize(obj));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AuthAction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
             }
             catch
             {
@@ -10803,7 +10886,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AuthAction_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("AuthAction_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AuthAction_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -11295,8 +11379,9 @@ namespace SignalRHub.Controllers
 
             try
             {
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetNearestDrivers.txt",
-                    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + obj.addressInfo.Address.ToStr().ToUpper().Trim() + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetNearestDrivers.txt",
+                //DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + obj.addressInfo.Address.ToStr().ToUpper().Trim() + Environment.NewLine);
+                General.WriteLog("GetNearestDrivers", "json: " + obj.addressInfo.Address.ToStr().ToUpper().Trim());
             }
             catch { }
 
@@ -11404,9 +11489,10 @@ namespace SignalRHub.Controllers
                         {
                             try
                             {
-                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetNearestDrivers_exception.txt",
-                                    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) +
-                                    ",exception:" + ex.Message + Environment.NewLine);
+                                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetNearestDrivers_exception.txt",
+                                //    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) +
+                                //    ",exception:" + ex.Message + Environment.NewLine);
+                                General.WriteLog("GetNearestDrivers_exception", "json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + ", Exception: " + ex.Message);
                             }
                             catch { }
                         }
@@ -11417,8 +11503,9 @@ namespace SignalRHub.Controllers
 
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetNearestDrivers_response.txt",
-                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetNearestDrivers_response.txt",
+                    //    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + Environment.NewLine);
+                    General.WriteLog("GetNearestDrivers_response", "json: " + new JavaScriptSerializer().Serialize(obj.addressInfo));
                 }
                 catch { }
             }
@@ -11682,7 +11769,8 @@ namespace SignalRHub.Controllers
             ResponseWebApi response = new ResponseWebApi();
             try
             {
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\UpdateQuotationBookingStatus.txt", DateTime.Now + ",json: " + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("UpdateQuotationBookingStatus", "json: " + new JavaScriptSerializer().Serialize(obj));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\UpdateQuotationBookingStatus.txt", DateTime.Now + ",json: " + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
             }
             catch
             {
@@ -11715,7 +11803,8 @@ namespace SignalRHub.Controllers
             {
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\UpdateQuotationBookingStatus_Exception.txt", DateTime.Now + ",json: " + ex.Message + Environment.NewLine);
+                    General.WriteLog("UpdateQuotationBookingStatus_Exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\UpdateQuotationBookingStatus_Exception.txt", DateTime.Now + ",json: " + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -11737,8 +11826,8 @@ namespace SignalRHub.Controllers
             try
             {
 
-
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetOnlineAddressData.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + obj.addressInfo.Address.ToStr().ToUpper().Trim() + Environment.NewLine);
+                General.WriteLog("GetOnlineAddressData", "json: " + new JavaScriptSerializer().Serialize(obj.addressInfo.Address.ToStr().ToUpper().Trim()));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetOnlineAddressData.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + obj.addressInfo.Address.ToStr().ToUpper().Trim() + Environment.NewLine);
             }
             catch
             {
@@ -11783,7 +11872,8 @@ namespace SignalRHub.Controllers
                 }
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetOnlineAddressData.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + Environment.NewLine);
+                    General.WriteLog("GetOnlineAddressData", "json: " + new JavaScriptSerializer().Serialize(obj.addressInfo));
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetOnlineAddressData.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + Environment.NewLine);
                 }
                 catch
                 {
@@ -11805,7 +11895,8 @@ namespace SignalRHub.Controllers
         {
             try
             {
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendSMSJobDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("SendSMSJobDetails", "json: " + new JavaScriptSerializer().Serialize(obj));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendSMSJobDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
             }
             catch
             {
@@ -11822,7 +11913,8 @@ namespace SignalRHub.Controllers
                 {
                     response.HasError = true;
                     response.Message = ex.Message;
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendSMSJobDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendSMSJobDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("SendSMSJobDetails_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -11849,7 +11941,8 @@ namespace SignalRHub.Controllers
                 //
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchAllocatedPreBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("DispatchAllocatedPreBooking", "json: " + new JavaScriptSerializer().Serialize(obj));
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchAllocatedPreBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
                 }
                 catch
                 {
@@ -11876,8 +11969,8 @@ namespace SignalRHub.Controllers
                                     try
                                     {
 
-
-                                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                        General.WriteLog("DispatchBooking_alreadyacceptedthisdriver", "jobid: " + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt());
+                                        //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
                                     }
                                     catch
                                     {
@@ -11893,8 +11986,8 @@ namespace SignalRHub.Controllers
                                     try
                                     {
 
-
-                                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedotherdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                        General.WriteLog("DispatchBooking_alreadyacceptedotherdriver", "jobid: " + obj.bookingInfo.Id + ", driverid: " + obj.bookingInfo.DriverId.ToInt());
+                                        //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedotherdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
                                     }
                                     catch
                                     {
@@ -11942,7 +12035,8 @@ namespace SignalRHub.Controllers
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchAllocatedPreBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("DispatchAllocatedPreBooking_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchAllocatedPreBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -11963,11 +12057,12 @@ namespace SignalRHub.Controllers
             try
             {
                 // Log incoming request
-                System.IO.File.AppendAllText(
-                    AppContext.BaseDirectory + "\\GetAllMessages.txt",
-                    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
-                    ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine
-                );
+                //System.IO.File.AppendAllText(
+                //    AppContext.BaseDirectory + "\\GetAllMessages.txt",
+                //    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
+                //    ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine
+                //);
+                General.WriteLog("GetAllMessages", "json: " + new JavaScriptSerializer().Serialize(obj));
             }
             catch
             {
@@ -12034,12 +12129,13 @@ namespace SignalRHub.Controllers
 
                 try
                 {
-                    System.IO.File.AppendAllText(
-                        AppContext.BaseDirectory + "\\GetAllMessages_exception.txt",
-                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
-                        ",json:" + new JavaScriptSerializer().Serialize(obj) +
-                        ",exception:" + ex.Message + Environment.NewLine
-                    );
+                    //System.IO.File.AppendAllText(
+                    //    AppContext.BaseDirectory + "\\GetAllMessages_exception.txt",
+                    //    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
+                    //    ",json:" + new JavaScriptSerializer().Serialize(obj) +
+                    //    ",exception:" + ex.Message + Environment.NewLine
+                    //);
+                    General.WriteLog("GetAllMessages_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -12059,11 +12155,12 @@ namespace SignalRHub.Controllers
             try
             {
                 // Log incoming request
-                System.IO.File.AppendAllText(
-                    AppContext.BaseDirectory + "\\GetAllMessages.txt",
-                    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
-                    ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine
-                );
+                //System.IO.File.AppendAllText(
+                //    AppContext.BaseDirectory + "\\GetAllMessages.txt",
+                //    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
+                //    ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine
+                //);
+                General.WriteLog("GetAllMessages", "json: " + new JavaScriptSerializer().Serialize(obj));
             }
             catch
             {
@@ -12104,12 +12201,13 @@ namespace SignalRHub.Controllers
 
                 try
                 {
-                    System.IO.File.AppendAllText(
-                        AppContext.BaseDirectory + "\\GetAllMessages_exception.txt",
-                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
-                        ",json:" + new JavaScriptSerializer().Serialize(obj) +
-                        ",exception:" + ex.Message + Environment.NewLine
-                    );
+                    //System.IO.File.AppendAllText(
+                    //    AppContext.BaseDirectory + "\\GetAllMessages_exception.txt",
+                    //    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
+                    //    ",json:" + new JavaScriptSerializer().Serialize(obj) +
+                    //    ",exception:" + ex.Message + Environment.NewLine
+                    //);
+                    General.WriteLog("GetAllMessages_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch
                 {
@@ -12133,11 +12231,12 @@ namespace SignalRHub.Controllers
                 // Optional logging
                 try
                 {
-                    System.IO.File.AppendAllText(
-                        AppContext.BaseDirectory + "\\GetAllControllerMessages.txt",
-                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
-                        ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine
-                    );
+                    //System.IO.File.AppendAllText(
+                    //    AppContext.BaseDirectory + "\\GetAllControllerMessages.txt",
+                    //    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
+                    //    ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine
+                    //);
+                    General.WriteLog("GetAllControllerMessages", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
                 catch { }
 
@@ -12196,12 +12295,13 @@ namespace SignalRHub.Controllers
 
                 try
                 {
-                    System.IO.File.AppendAllText(
-                        AppContext.BaseDirectory + "\\GetAllControllerMessages_exception.txt",
-                        DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
-                        ",json:" + new JavaScriptSerializer().Serialize(obj) +
-                        ",exception:" + ex.Message + Environment.NewLine
-                    );
+                    //System.IO.File.AppendAllText(
+                    //    AppContext.BaseDirectory + "\\GetAllControllerMessages_exception.txt",
+                    //    DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") +
+                    //    ",json:" + new JavaScriptSerializer().Serialize(obj) +
+                    //    ",exception:" + ex.Message + Environment.NewLine
+                    //);
+                    General.WriteLog("GetAllControllerMessages_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                 }
                 catch { }
             }
