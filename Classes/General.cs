@@ -6560,5 +6560,39 @@ namespace SignalRHub
 
             return resp;
         }
+        public static void WriteLog(string fileName, string content)
+        {
+            try
+            {
+                // Base directory (jahan app run ho rahi hai)
+                var basePath = AppContext.BaseDirectory;
+
+                // Main logs folder
+                string logsFolder = Path.Combine(basePath, "Logs");
+
+                // Create Logs folder if not exists
+                if (!Directory.Exists(logsFolder))
+                    Directory.CreateDirectory(logsFolder);
+
+                // Date-wise folder name: 01-Dec-2025
+                string dateFolder = DateTime.Now.ToString("dd-MMM-yyyy");
+
+                // Full date-wise folder path
+                string datePath = Path.Combine(logsFolder, dateFolder);
+
+                // Create date folder if not exists
+                if (!Directory.Exists(datePath))
+                    Directory.CreateDirectory(datePath);
+
+                // File path inside date folder
+                string filePath = Path.Combine(datePath, fileName + ".txt");
+
+                // Append text
+                File.AppendAllText(filePath, $"{DateTime.Now}: {content}{Environment.NewLine}");
+            }
+            catch
+            {
+            }
+        }
     }
 }

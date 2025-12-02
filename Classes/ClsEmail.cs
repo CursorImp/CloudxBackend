@@ -79,34 +79,34 @@ namespace SignalRHub.Classes
                 if (objSubCompany != null && objSubCompany.SmtpHost.ToStr().Trim().Length > 0)
                 {
 
-                    smptHost = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.SmtpInvoiceHost : objSubCompany.SmtpHost.ToStr().Trim();
-                    port = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.SmtpInvoicePort.ToInt() : objSubCompany.SmtpPort.ToInt();
-                    userName = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.SmtpInvoiceUserName.ToStr().Trim() : objSubCompany.SmtpUserName.ToStr().Trim();
-                    pwd = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.SmtpInvoicePassword.ToStr().Trim() : objSubCompany.SmtpPassword.ToStr().Trim();
-                    emailcc = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.AccountEmailCC.ToStr().Trim() : objSubCompany.EmailCC.ToStr().Trim();
-                    enableSSL = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.SmtpInvoiceSSL.ToBool() : objSubCompany.SmtpHasSSL.ToBool();
-                    companyName = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.CompanyName.ToStr().Trim() : objSubCompany.CompanyName.ToStr().Trim();
+                    //smptHost = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.SmtpInvoiceHost : objSubCompany.SmtpHost.ToStr().Trim();
+                    //port = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.SmtpInvoicePort.ToInt() : objSubCompany.SmtpPort.ToInt();
+                    //userName = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.SmtpInvoiceUserName.ToStr().Trim() : objSubCompany.SmtpUserName.ToStr().Trim();
+                    //pwd = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.SmtpInvoicePassword.ToStr().Trim() : objSubCompany.SmtpPassword.ToStr().Trim();
+                    //emailcc = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.AccountEmailCC.ToStr().Trim() : objSubCompany.EmailCC.ToStr().Trim();
+                    //enableSSL = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.SmtpInvoiceSSL.ToBool() : objSubCompany.SmtpHasSSL.ToBool();
+                    //companyName = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.CompanyName.ToStr().Trim() : objSubCompany.CompanyName.ToStr().Trim();
+
+                    smptHost = objSubCompany.SmtpHost.ToStr().Trim();
+                    port = objSubCompany.SmtpPort.ToInt();
+                    userName = objSubCompany.SmtpUserName.ToStr().Trim();
+                    pwd = objSubCompany.SmtpPassword.ToStr().Trim();
+                    emailcc = objSubCompany.EmailCC.ToStr().Trim();
+                    enableSSL = objSubCompany.SmtpHasSSL.ToBool();
+                    companyName = objSubCompany.CompanyName.ToStr().Trim();
+                    FromEmail = userName;
 
 
-                    //port = objSubCompany.SmtpPort.ToInt();
-                    //userName = objSubCompany.SmtpUserName.ToStr().Trim();
-                    //pwd = objSubCompany.SmtpPassword.ToStr().Trim();
-                    //emailcc = objSubCompany.EmailCC.ToStr().Trim();
-                    //enableSSL = objSubCompany.SmtpHasSSL.ToBool();
-                    //companyName = objSubCompany.CompanyName.ToStr().Trim();
-                    //FromEmail = userName;
+                    if (subject.ToLower().Contains("invoice") && objSubCompany.IsTpCompany.ToBool() && objSubCompany.UseDifferentEmailForInvoices.ToBool())
+                    {
 
-
-                    //if (subject.ToLower().Contains("invoice") && objSubCompany.IsTpCompany.ToBool() && objSubCompany.UseDifferentEmailForInvoices.ToBool())
-                    //{
-
-                    //    smptHost = objSubCompany.SmtpInvoiceHost.ToStr().Trim();
-                    //    port = objSubCompany.SmtpInvoicePort.ToInt();
-                    //    userName = objSubCompany.SmtpInvoiceUserName.ToStr().Trim();
-                    //    pwd = objSubCompany.SmtpInvoicePassword.ToStr().Trim();
-                    //    enableSSL = objSubCompany.SmtpInvoiceSSL.ToBool();
-                    //    //FromEmail = userName;
-                    //}
+                        smptHost = objSubCompany.SmtpInvoiceHost.ToStr().Trim();
+                        port = objSubCompany.SmtpInvoicePort.ToInt();
+                        userName = objSubCompany.SmtpInvoiceUserName.ToStr().Trim();
+                        pwd = objSubCompany.SmtpInvoicePassword.ToStr().Trim();
+                        enableSSL = objSubCompany.SmtpInvoiceSSL.ToBool();
+                        FromEmail = userName;
+                    }
 
 
                 }
