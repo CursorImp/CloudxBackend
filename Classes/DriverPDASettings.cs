@@ -131,5 +131,6 @@ namespace SignalRHub
         public string OldPdaVersion = "";
 
         public string NotifyOnJobLate = "";
+        public string EnableCustomPayment = "";
     }
 }

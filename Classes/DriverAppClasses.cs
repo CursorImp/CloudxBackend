@@ -165,6 +165,13 @@ namespace SignalRHub
         public String selectedGateway { get; set; }
         public decimal Fare { get; set; }
     }
+    public class UpdateCustomPaymentRequestModel
+    {
+        public string JobId { get; set; }
+        public string driverId { get; set; }
+        public string version { get; set; }
+        public List<MakePaymentCustomList> customList { get; set; }
+    }
     public class MakePaymentResponseViewModel
     {
         public int ResponseType { get; set; }
@@ -175,6 +182,17 @@ namespace SignalRHub
         public string KonnectAccId { get; set; }
         public List<dynamic> Gateways { get; set; }
         public string isKonnectPayEnable { get; set; }
+        public List<MakePaymentCustomList> customList { get; set; }
+    }
+
+    public class MakePaymentCustomList
+    {
+        public string label { get; set; }
+        public string value { get; set; }
+        public string fieldname { get; set; }
+        public string ismultiline { get; set; }
+        public bool isvisible { get; set; }
+        public bool isedit { get; set; }
     }
 
     public class ClsPlotDriverDetails

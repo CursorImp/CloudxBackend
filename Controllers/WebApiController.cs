@@ -2527,6 +2527,17 @@ namespace SignalRHub.Controllers
 
                         //}
 
+                        try
+                        {
+                            if (IsAddMode == true && Global.ShowAllocatedInFutureList == "1" && objMaster.Current.DriverId.ToInt() > 0)
+                            {
+                                General.requestPDA("request pda=" + objMaster.Current.DriverId + "=" + 0 + "=" + "Message>>" + "You have received a Future Jobs" + ">>" + String.Format("{0:MM/dd/yyyy HH:mm:ss}", DateTime.Now) + "=4");
+                            }
+                        }
+                        catch
+                        {
+                        }
+
                         if (objMaster.Current.Id > 0 && obj.editbookingInfo != null)
                         {
                             try
