@@ -25,7 +25,6 @@ using static SignalRHub.DriverAppController;
 using System.Threading.Tasks;
 using CabTreasureWebApi.Models.HereForwardGeocode;
 using System.Collections;
-using System.Security.Cryptography;
 
 namespace SignalRHub.Controllers
 {
@@ -3583,6 +3582,7 @@ namespace SignalRHub.Controllers
                                                 try
                                                 {
                                                     //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
+                                                    General.WriteLog("DispatchBooking", "jobid: " + obj.bookingInfo.Id + ", driverid: " + obj.bookingInfo.DriverId.ToInt() );
                                                 }
                                                 catch
                                                 {
