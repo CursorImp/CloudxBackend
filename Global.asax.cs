@@ -124,6 +124,7 @@ namespace SignalRHub
         public static string EnableManualLeadTime = "false";
         public static string ShowAllocatedInFutureList = "0";
         public static string EnableCustomPayment = "0";
+        public static string EnableSoundAdjustment = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -715,6 +716,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableExtendMultiBooking", SetVal = "false", description = "Enable Extend Multi Booking"  },
                              new AppSetting { SetKey = "ShowAllocatedInFutureList", SetVal = "0", description = "ShowAllocatedInFutureList"  },
                              new AppSetting { SetKey = "EnableCustomPayment", SetVal = "0", description = "EnableCustomPayment"  },
+                             new AppSetting { SetKey = "EnableSoundAdjustment", SetVal = "0", description = "EnableSoundAdjustment"  },
 
                         };
 
@@ -1680,6 +1682,10 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableCustomPayment")))
                 {
                     EnableCustomPayment = GetAppSetting<string>("EnableCustomPayment").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableSoundAdjustment")))
+                {
+                    EnableSoundAdjustment = GetAppSetting<string>("EnableSoundAdjustment").ToStr();
                 }
 
             }

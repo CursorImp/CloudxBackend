@@ -11585,6 +11585,7 @@ namespace SignalRHub
                         pda.ShowBidList = Global.ShowBidList;
                         pda.HideAccountName = Global.HideAccountName;
                         pda.EnableCustomPayment = Global.EnableCustomPayment;
+                        pda.EnableSoundAdjustment = Global.EnableSoundAdjustment;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
