@@ -5279,7 +5279,7 @@ namespace SignalRHub
                         customList.Add(new MakePaymentCustomList
                         {
                             label = "AuthCode",
-                            value = "",
+                            value = "PAID",
                             fieldname = "AuthCode",
                             ismultiline = "1",
                             isvisible = true,
