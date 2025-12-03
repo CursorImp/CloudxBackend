@@ -10053,7 +10053,7 @@ namespace SignalRHub.Controllers
                             defaultclientid = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr(),
                             sourceType = "dispatch-cloudx"
                         };
-
+                        objSubCompany.UseDifferentEmailForInvoices = false;
 
                         List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
                         SignalRHub.Classes.ClsEmail.Send(obja.subject, obja.messageBody, obja.fromEmail, obja.toEmail, attachments, objSubCompany, "");
