@@ -10265,7 +10265,7 @@ namespace SignalRHub.Controllers
             List<Attachment> attachments = new List<Attachment>();
             attachments.Add(pdfAttachment);
             ClsEmail Email = new ClsEmail();
-            ClsEmail.Send(EmailSubject, body, from, ToEmail, attachments, objSubcompany, "");
+            ClsEmail.Send(EmailSubject, body, from, ToEmail, attachments, objSubcompany,"", obj.isInvoiceOrStatement);
             try
             {
                 using (TaxiDataContext db = new TaxiDataContext())

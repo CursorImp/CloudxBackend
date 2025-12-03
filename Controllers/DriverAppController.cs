@@ -5311,14 +5311,15 @@ namespace SignalRHub
                 try
                 {
 
-                    var paymentType = db.Bookings.Where(x => x.Id == input.jobId.ToLong()).Select(x => x.Gen_PaymentType.PaymentType).FirstOrDefault().ToStr().ToLower();
-                    if (paymentType == "credit card(device)")
+                    //var paymentType = db.Bookings.Where(x => x.Id == input.jobId.ToLong()).Select(x => x.Gen_PaymentType.PaymentType).FirstOrDefault().ToStr().ToLower();
+                    //if (paymentType == "credit card(device)")
+                    if (Global.EnableCustomPayment == "1")
                     {
                         var customList = new List<MakePaymentCustomList>();
                         customList.Add(new MakePaymentCustomList
                         {
                             label = "AuthCode",
-                            value = "",
+                            value = "PAID",
                             fieldname = "AuthCode",
                             ismultiline = "1",
                             isvisible = true,
@@ -11664,6 +11665,7 @@ namespace SignalRHub
                         pda.ShowBidList = Global.ShowBidList;
                         pda.HideAccountName = Global.HideAccountName;
                         pda.EnableCustomPayment = Global.EnableCustomPayment;
+                        pda.EnableSoundAdjustment = Global.EnableSoundAdjustment;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
