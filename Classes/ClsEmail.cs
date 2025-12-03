@@ -17,7 +17,7 @@ namespace SignalRHub.Classes
         public static List<Attachment> Attachments = new List<Attachment>();
 
         public static string attachFile;
-        public static void Send(string subject, string Emailmessage, string FromEmail, string ToEmail, List<Attachment> attachments, Gen_SubCompany objSubCompany, string attachmentFile)
+        public static void Send(string subject, string Emailmessage, string FromEmail, string ToEmail, List<Attachment> attachments, Gen_SubCompany objSubCompany, string attachmentFile, string isInvoiceOrStatement="false")
         {
             //byte[] pdfBytes = File.ReadAllBytes(file.ContentLength);
             // byte[] pdfBytes = new byte[file.ContentLength];
@@ -31,11 +31,11 @@ namespace SignalRHub.Classes
             Attachments = attachments;
             attachFile = attachmentFile;
 
-            Send(subject, Emailmessage, FromEmail, ToEmail, objSubCompany);
+            Send(subject, Emailmessage, FromEmail, ToEmail, objSubCompany, isInvoiceOrStatement);
 
         }
 
-        public static void Send(string subject, string Emailmessage, string FromEmail, string ToEmail, Gen_SubCompany objSubCompany)
+        public static void Send(string subject, string Emailmessage, string FromEmail, string ToEmail, Gen_SubCompany objSubCompany, string isInvoiceOrStatement = "false")
         {
 
 
@@ -97,7 +97,7 @@ namespace SignalRHub.Classes
                     FromEmail = userName;
 
 
-                    if (subject.ToLower().Contains("invoice") && objSubCompany.IsTpCompany.ToBool() && objSubCompany.UseDifferentEmailForInvoices.ToBool())
+                    if (isInvoiceOrStatement=="true" && objSubCompany.IsTpCompany.ToBool() && objSubCompany.UseDifferentEmailForInvoices.ToBool())
                     {
 
                         smptHost = objSubCompany.SmtpInvoiceHost.ToStr().Trim();
@@ -134,7 +134,16 @@ namespace SignalRHub.Classes
                         }
                         else
                         {
-                            FromEmail = objSubCompany.UseDifferentEmailForInvoices == true ? objSubCompany.SmtpInvoiceUserName : objSubCompany.EmailAddress;
+                            if (isInvoiceOrStatement == "true" && objSubCompany.IsTpCompany.ToBool() && objSubCompany.UseDifferentEmailForInvoices.ToBool())
+                            {
+                                FromEmail =  objSubCompany.SmtpInvoiceUserName ;
+                            }
+                            else
+                            {
+                                FromEmail = objSubCompany.EmailAddress;
+
+                            }
+
                             //FromEmail = userName;
                         }
                     }
