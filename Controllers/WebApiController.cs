@@ -4332,7 +4332,7 @@ namespace SignalRHub.Controllers
 
                             foreach (var item in obj.routeInfo.viaAddresses)
                             {
-                                var coord = db.stp_getCoordinatesByAddress(item.Address, General.GetPostCodeMatch(item.Address)).FirstOrDefault();
+                                var coord = db.stp_getCoordinatesByAddress(item.Address.ToStr().Trim(), General.GetPostCodeMatch(item.Address.ToStr().Trim())).FirstOrDefault();
                                 vias += coord.Latitude + "," + coord.Longtiude + "|";
                             }
                             vias = vias.Remove(vias.Length - 1, 1);
@@ -4598,7 +4598,8 @@ namespace SignalRHub.Controllers
                         //
                         //
                         BookingInformation info = new BookingInformation();
-                        info.FromAddress = obj.routeInfo.pickupAddress.Address.ToStr();
+                        info.FromAddress = obj.routeInfo.pickupAddress.Address.ToStr().Trim();
+
 
                         //var objCoor = db.stp_getCoordinatesByAddress(booking.FromAddress.ToStr().ToUpper(), GetPostCodeMatch(booking.FromAddress.ToStr().ToUpper())).FirstOrDefault();
 
@@ -4631,7 +4632,7 @@ namespace SignalRHub.Controllers
                         }
 
                         info.MapType = HubProcessor.Instance.objPolicy.MapType.ToInt();
-                        info.ToAddress = obj.routeInfo.destinationAddress.Address.ToStr();
+                        info.ToAddress = obj.routeInfo.destinationAddress.Address.ToStr().Trim();
                         info.FromType = obj.routeInfo.pickupAddress.locTypeId == 1 ? "airport" : "address";
                         info.ToType = obj.routeInfo.destinationAddress.locTypeId == 1 ? "airport" : "address";
                         info.CompanyId = obj.routeInfo.CompanyId.ToInt();
@@ -4683,7 +4684,7 @@ namespace SignalRHub.Controllers
                         if (obj.routeInfo.viaAddresses != null)
                         {
 
-                            info.Via = (from a in obj.routeInfo.viaAddresses select new ViaAddresses { Viaaddress = a.Address, Viatype = "address" }).ToArray();
+                            info.Via = (from a in obj.routeInfo.viaAddresses select new ViaAddresses { Viaaddress = a.Address.ToStr().Trim(), Viatype = "address" }).ToArray();
 
                         }
                         //  info.Via = booking.Via;
@@ -5292,7 +5293,7 @@ namespace SignalRHub.Controllers
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
 
-                    string searchValue = obj.addressInfo.searchText.ToStr().ToUpper();
+                    string searchValue = obj.addressInfo.searchText.ToStr().Trim().ToUpper();
                     try
                     {
 
