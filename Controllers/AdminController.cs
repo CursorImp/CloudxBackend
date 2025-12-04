@@ -14639,6 +14639,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     objdriver.Current.CarInsuranceRent = obj.fleetDriver.CarInsuranceRent.ToDecimal(); //numCarInsuranceRent.Value
 
                     objdriver.Current.LicenseExpiryDate = obj.fleetDriver.LicenseExpiryDate.ToDateTimeorNull();
+                    objdriver.Current.LastEndDate = obj.fleetDriver.LastEndDate.ToDateTimeorNull();
                     objdriver.Current.MaxCommission = obj.fleetDriver.MaxCommission.ToDecimal();
 
                     objdriver.Current.NICNo = obj.fleetDriver.NICNo.ToStr();
