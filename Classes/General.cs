@@ -3483,11 +3483,13 @@ namespace SignalRHub
                                         MessageTypeId = values[4].ToInt()
                                     });
 
-                                    File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + " FIXED: " + ex.Message + Environment.NewLine);
+                                    //File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + " FIXED: " + ex.Message + Environment.NewLine);
+                                    General.WriteLog("exception_servertoclient", "FIXED:" + ex.Message);
                                 }
                                 catch (Exception ex2)
                                 {
-                                    File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + " NOTFIXED: " + ex2.Message + Environment.NewLine);
+                                    //File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + " NOTFIXED: " + ex2.Message + Environment.NewLine);
+                                    General.WriteLog("exception_servertoclient", "NOTFIXED:" + ex2.Message);
                                 }
                             }
                         }
@@ -3577,14 +3579,15 @@ namespace SignalRHub
                                     MessageTypeId = values[4].ToInt(),
                                     DriverNo = values[5].ToStr()
                                 });
-
-                                File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + " FIXED: " + ex.Message + Environment.NewLine);
+                                General.WriteLog("exception_servertoclient", "FIXED:" + ex.Message);
+                                //File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + " FIXED: " + ex.Message + Environment.NewLine);
                             }
                             catch (Exception ex2)
                             {
                                 try
                                 {
-                                    File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + " NOTFIXED: " + ex2.Message + Environment.NewLine);
+                                    General.WriteLog("exception_servertoclient", "NOTFIXED:" + ex2.Message);
+                                    //File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + " NOTFIXED: " + ex2.Message + Environment.NewLine);
                                 }
                                 catch
                                 {
@@ -3623,12 +3626,13 @@ namespace SignalRHub
                                     JobMessage = values[3].ToStr().Trim(),
                                     MessageTypeId = values[4].ToInt()
                                 });
-
-                                File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + "force clear job FIXED: " + ex.Message + Environment.NewLine);
+                                General.WriteLog("exception_servertoclient", "force clear job FIXED:" + ex.Message);
+                                //File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + "force clear job FIXED: " + ex.Message + Environment.NewLine);
                             }
                             catch (Exception ex2)
                             {
-                                File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + "force clear job NOTFIXED: " + ex2.Message + Environment.NewLine);
+                                //File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + "force clear job NOTFIXED: " + ex2.Message + Environment.NewLine);
+                                General.WriteLog("exception_servertoclient", "force clear job NOTFIXED:" + ex2.Message);
                             }
                         }
 
@@ -3668,12 +3672,13 @@ namespace SignalRHub
                                     MessageTypeId = values[4].ToInt()
                                 });
 
-
-                                File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + "recover job FIXED: " + ex.Message + Environment.NewLine);
+                                General.WriteLog("exception_servertoclient", "recover job FIXED:" + ex.Message);
+                                //File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + "recover job FIXED: " + ex.Message + Environment.NewLine);
                             }
                             catch (Exception ex2)
                             {
-                                File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + "recover job NOTFIXED: " + ex2.Message + Environment.NewLine);
+                                General.WriteLog("exception_servertoclient", "recover job NOTFIXED:" + ex2.Message);
+                                //File.AppendAllText(physicalPath + "\\exception_servertoclient.txt", DateTime.Now.ToStr() + "recover job NOTFIXED: " + ex2.Message + Environment.NewLine);
                             }
                         }
 
@@ -5402,8 +5407,8 @@ namespace SignalRHub
                         {
 
 
-                            File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetLocationName.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ": Lat" + latitude + ",lng:" + longitude + ",location:" + locationName + ",formatted:" + formattedAddress.ToStr() + Environment.NewLine);
-
+                            //File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetLocationName.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ": Lat" + latitude + ",lng:" + longitude + ",location:" + locationName + ",formatted:" + formattedAddress.ToStr() + Environment.NewLine);
+                            General.WriteLog("GetLocationName", "Lat" + latitude + ",lng:" + longitude + ",location:" + locationName + ",formatted:" + formattedAddress.ToStr());
 
 
                         }
@@ -5426,7 +5431,8 @@ namespace SignalRHub
                         try
                         {
 
-                            File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetLocationName_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ":" + ex.Message + Environment.NewLine);
+                            //File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetLocationName_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ":" + ex.Message + Environment.NewLine);
+                            General.WriteLog("GetLocationName_exception", "exception:" + ex.Message);
                         }
                         catch
                         {
@@ -5681,7 +5687,8 @@ namespace SignalRHub
                 {
                     try
                     {
-                        File.AppendAllText(AppContext.BaseDirectory + "\\sp_savebid_exception.txt", DateTime.Now.ToStr() + ": ,exception" + ":" + ex.Message.ToStr() + " , request:" + jobId + "," + driverId + "," + bidRate + "," + bidStatusId + "," + driverNo + "," + message + Environment.NewLine);
+                        General.WriteLog("sp_savebid_exception", "exception:" + ex.Message +" , request:" + jobId + "," + driverId + "," + bidRate + "," + bidStatusId + "," + driverNo + "," + message);
+                        //File.AppendAllText(AppContext.BaseDirectory + "\\sp_savebid_exception.txt", DateTime.Now.ToStr() + ": ,exception" + ":" + ex.Message.ToStr() + " , request:" + jobId + "," + driverId + "," + bidRate + "," + bidStatusId + "," + driverNo + "," + message + Environment.NewLine);
                     }
                     catch
                     {

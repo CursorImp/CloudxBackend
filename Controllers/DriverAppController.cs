@@ -3,6 +3,7 @@ using SignalRHub.Classes;
 using SignalRHub.Classes.KonnectSupplier;
 using SMSGateway;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
@@ -71,7 +72,8 @@ namespace SignalRHub
             try
             {
 
-                File.AppendAllText(physicalPath + "\\" + "requestshuttlefuturejoblist.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", json: " + mesg.ToString() + Environment.NewLine);
+                //File.AppendAllText(physicalPath + "\\" + "requestshuttlefuturejoblist.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", json: " + mesg.ToString() + Environment.NewLine);
+                General.WriteLog("requestshuttlefuturejoblist", "json: " + mesg.ToString());
             }
             catch
             {
@@ -178,7 +180,8 @@ namespace SignalRHub
                     try
                     {
 
-                        File.AppendAllText(physicalPath + "\\" + "requestshuttlefuturejoblist_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",response:" + response + Environment.NewLine);
+                        //File.AppendAllText(physicalPath + "\\" + "requestshuttlefuturejoblist_response.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",response:" + response + Environment.NewLine);
+                        General.WriteLog("requestshuttlefuturejoblist_response", "response:" + response);
                     }
                     catch
                     {
@@ -223,7 +226,8 @@ namespace SignalRHub
                 //
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\tripOfferAction.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\tripOfferAction.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    General.WriteLog("tripOfferAction", "msg: " + mesg);
                 }
                 catch
                 {
@@ -277,7 +281,8 @@ namespace SignalRHub
 
                             try
                             {
-                                File.AppendAllText(physicalPath + "\\tripOfferAction_prebookings.txt", DateTime.Now + " : msg" + mesg + ",jobid:" + item + Environment.NewLine);
+                                //File.AppendAllText(physicalPath + "\\tripOfferAction_prebookings.txt", DateTime.Now + " : msg" + mesg + ",jobid:" + item + Environment.NewLine);
+                                General.WriteLog("tripOfferAction_prebookings", "msg: " + mesg + ", jobid:" + item);
                             }
                             catch
                             {
@@ -315,8 +320,8 @@ namespace SignalRHub
                     res.Message = "exceptionoccurred";
 
 
-                    File.AppendAllText(physicalPath + "\\tripOfferAction_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
-
+                    //File.AppendAllText(physicalPath + "\\tripOfferAction_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("tripOfferAction_exception", "datavalue=" + mesg + ", exception:" + ex.Message);
 
                 }
                 catch
@@ -347,7 +352,8 @@ namespace SignalRHub
                 //
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\preShuttleStart.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\preShuttleStart.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    General.WriteLog("preShuttleStart", "msg: " + mesg);
                 }
                 catch
                 {
@@ -410,9 +416,8 @@ namespace SignalRHub
                     res.Message = "exceptionoccurred";
 
 
-                    File.AppendAllText(physicalPath + "\\tripOfferAction_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
-
-
+                    //File.AppendAllText(physicalPath + "\\tripOfferAction_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("tripOfferAction_exception", "datavalue=" + mesg + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -439,7 +444,8 @@ namespace SignalRHub
                 try
                 {
 
-                    File.AppendAllText(physicalPath + "\\requestBookingStatus.txt", DateTime.Now.ToStr() + " mesg:" + mesg + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestBookingStatus.txt", DateTime.Now.ToStr() + " mesg:" + mesg + Environment.NewLine);
+                    General.WriteLog("requestBookingStatus", "mesg: " + mesg);
                 }
                 catch
                 {
@@ -485,7 +491,8 @@ namespace SignalRHub
                     try
                     {
 
-                        File.AppendAllText(physicalPath + "\\requestBookingStatusresponse.txt", DateTime.Now.ToStr() + " request:" + mesg + Environment.NewLine + " response:" + res.Data + Environment.NewLine);
+                        //File.AppendAllText(physicalPath + "\\requestBookingStatusresponse.txt", DateTime.Now.ToStr() + " request:" + mesg + Environment.NewLine + " response:" + res.Data + Environment.NewLine);
+                        General.WriteLog("requestBookingStatusresponse", "request: " + mesg + Environment.NewLine + " response:" + res.Data);
                     }
                     catch
                     {
@@ -518,7 +525,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\requestTripAction.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestTripAction.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    General.WriteLog("requestTripAction", "msg: " + mesg);
                 }
                 catch
                 {
@@ -602,8 +610,8 @@ namespace SignalRHub
                     res.Message = "exceptionoccurred";
 
 
-                    File.AppendAllText(physicalPath + "\\requestTripAction_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
-
+                    //File.AppendAllText(physicalPath + "\\requestTripAction_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestTripAction_exception", "datavalue=" + mesg + ", exception:" + ex.Message);
 
                 }
                 catch
@@ -628,8 +636,8 @@ namespace SignalRHub
             try
             {
                 //
-                File.AppendAllText(AppContext.BaseDirectory + "\\VerifyAuthCode.txt", DateTime.Now.ToStr() + " request" + authcode + Environment.NewLine);
-
+                //File.AppendAllText(AppContext.BaseDirectory + "\\VerifyAuthCode.txt", DateTime.Now.ToStr() + " request" + authcode + Environment.NewLine);
+                General.WriteLog("VerifyAuthCode", "request: " + authcode);
             }
             catch
             {
@@ -695,8 +703,8 @@ namespace SignalRHub
                 try
                 {
 
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestDriverSettings_exception.txt", DateTime.Now.ToStr() + " request" + message + ",exception:" + ex.Message + Environment.NewLine);
-
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestDriverSettings_exception.txt", DateTime.Now.ToStr() + " request" + message + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestDriverSettings_exception", "request" + message + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -762,8 +770,8 @@ namespace SignalRHub
                 try
                 {
                     if (forceRefresh)
-                        File.AppendAllText(physicalPath + "\\loaddatalist.txt", DateTime.Now.ToStr() + "," + "forcerefresh :" + forceRefresh.ToStr() + Environment.NewLine);
-
+                        //File.AppendAllText(physicalPath + "\\loaddatalist.txt", DateTime.Now.ToStr() + "," + "forcerefresh :" + forceRefresh.ToStr() + Environment.NewLine);
+                        General.WriteLog("loaddatalist", "forcerefresh: " + forceRefresh.ToStr());
                 }
                 catch
                 {
@@ -774,7 +782,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\loaddatalist_exception.txt", DateTime.Now.ToStr() + "," + "forcerefresh :" + forceRefresh.ToStr() + " , exception : " + ex.Message.ToStr() + Environment.NewLine);
+                    General.WriteLog("loaddatalist_exception", "forcerefresh" + forceRefresh.ToStr() + ", exception:" + ex.Message);
+                    //File.AppendAllText(physicalPath + "\\loaddatalist_exception.txt", DateTime.Now.ToStr() + "," + "forcerefresh :" + forceRefresh.ToStr() + " , exception : " + ex.Message.ToStr() + Environment.NewLine);
                     //
 
                 }
@@ -866,7 +875,8 @@ namespace SignalRHub
 
                     try
                     {
-                        File.AppendAllText(physicalPath + "\\" + "forcereconnectsocket.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + json.Data.ToStr() + Environment.NewLine);
+                        //File.AppendAllText(physicalPath + "\\" + "forcereconnectsocket.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + json.Data.ToStr() + Environment.NewLine);
+                        General.WriteLog("forcereconnectsocket", "json: " + json.Data.ToStr());
                     }
                     catch
                     {
@@ -901,7 +911,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\" + "SendLocationDataApi_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\" + "SendLocationDataApi_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("SendLocationDataApi_exception", "json:" + request + ", exception:" + ex.Message);
                 }
                 catch
                 { }
@@ -934,7 +945,8 @@ namespace SignalRHub
                         HubProcessor.Instance.listofJobs.RemoveAll(C => C.Id == json.Id && C.DriverId == json.driverId.ToInt());
 
 
-                        File.AppendAllText(physicalPath + "\\" + "SendacknowledgementIDFound.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request + Environment.NewLine);
+                        //File.AppendAllText(physicalPath + "\\" + "SendacknowledgementIDFound.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request + Environment.NewLine);
+                        General.WriteLog("SendacknowledgementIDFound", "json:" + request);
                     }
                     catch
                     {
@@ -976,7 +988,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\" + "OnConnect.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\" + "OnConnect.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request + Environment.NewLine);
+                    General.WriteLog("OnConnect", "json:" + request);
                 }
                 catch
                 {
@@ -1175,7 +1188,8 @@ namespace SignalRHub
 
                             try
                             {
-                                File.AppendAllText(physicalPath + "\\" + "OnConnect_onbiddespatch.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request + Environment.NewLine);
+                                //File.AppendAllText(physicalPath + "\\" + "OnConnect_onbiddespatch.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request + Environment.NewLine);
+                                General.WriteLog("OnConnect_onbiddespatch", "json:" + request);
                             }
                             catch
                             {
@@ -1288,8 +1302,9 @@ namespace SignalRHub
 
                                     try
                                     {
-                                        File.AppendAllText(physicalPath + "\\OnConnect_Onbiddespatchmethodsuccess.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + ",driverid:" + objcls.DriverId +
-                                            ",message:" + objcls.JobMessage + Environment.NewLine);
+                                        //File.AppendAllText(physicalPath + "\\OnConnect_Onbiddespatchmethodsuccess.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + ",driverid:" + objcls.DriverId +
+                                        //    ",message:" + objcls.JobMessage + Environment.NewLine);
+                                        General.WriteLog("OnConnect_Onbiddespatchmethodsuccess", "jobid=" + objcls.JobId + ",driverid:" + objcls.DriverId + " ,message:" + objcls.JobMessage);
                                     }
                                     catch
                                     {
@@ -1370,7 +1385,8 @@ namespace SignalRHub
 
                             try
                             {
-                                File.AppendAllText(physicalPath + "\\" + "OnConnect_stcallocated.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request + Environment.NewLine);
+                                //File.AppendAllText(physicalPath + "\\" + "OnConnect_stcallocated.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request + Environment.NewLine);
+                                General.WriteLog("OnConnect_stcallocated", "json:" + request);
                             }
                             catch
                             {
@@ -1564,7 +1580,8 @@ namespace SignalRHub
 
                                 try
                                 {
-                                    File.AppendAllText(physicalPath + "\\" + "Tripdispatch_onconnect.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + objcls.JobMessage.ToStr().ToString() + Environment.NewLine);
+                                    //File.AppendAllText(physicalPath + "\\" + "Tripdispatch_onconnect.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + objcls.JobMessage.ToStr().ToString() + Environment.NewLine);
+                                    General.WriteLog("Tripdispatch_onconnect", "json:" + objcls.JobMessage.ToStr().ToString());
                                 }
                                 catch
                                 {
@@ -1606,7 +1623,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\" + "OnConnect_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request.ToStr() + ",exception:" + ex.Message.ToStr() + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\" + "OnConnect_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + request.ToStr() + ",exception:" + ex.Message.ToStr() + Environment.NewLine);
+                    General.WriteLog("OnConnect_exception", "json:" + request.ToStr() + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -1624,7 +1642,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\" + "SendDatamethodcalledSocket.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(req) + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\" + "SendDatamethodcalledSocket.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(req) + Environment.NewLine);
+                    General.WriteLog("SendDatamethodcalledSocket", "json:" + new JavaScriptSerializer().Serialize(req));
                 }
                 catch
                 {
@@ -1747,7 +1766,8 @@ namespace SignalRHub
 
                                     try
                                     {
-                                        File.AppendAllText(AppContext.BaseDirectory + "\\AddSTCReminder_step1.txt", DateTime.Now.ToStr() + ": jobid:" + jobId + ",driverid:" + driverId + Environment.NewLine);
+                                        //File.AppendAllText(AppContext.BaseDirectory + "\\AddSTCReminder_step1.txt", DateTime.Now.ToStr() + ": jobid:" + jobId + ",driverid:" + driverId + Environment.NewLine);
+                                        General.WriteLog("AddSTCReminder_step1", "jobid:" + jobId + ",driverid:" + driverId);
                                     }
                                     catch
                                     {
@@ -2032,8 +2052,8 @@ namespace SignalRHub
 
                                                     try
                                                     {
-
-                                                        File.AppendAllText(physicalPath + "\\" + "callautostc.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                                                        General.WriteLog("callautostc", "message: " + mesg);
+                                                        //File.AppendAllText(physicalPath + "\\" + "callautostc.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
                                                     }
                                                     catch
                                                     {
@@ -2047,8 +2067,8 @@ namespace SignalRHub
                                             {
                                                 try
                                                 {
-
-                                                    File.AppendAllText(physicalPath + "\\" + "stcreminder_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + "," + ex.Message + Environment.NewLine);
+                                                    General.WriteLog("stcreminder_exception", "message:" + mesg + ", exception:" + ex.Message);
+                                                    //File.AppendAllText(physicalPath + "\\" + "stcreminder_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + "," + ex.Message + Environment.NewLine);
                                                 }
                                                 catch
                                                 {
@@ -2098,8 +2118,8 @@ namespace SignalRHub
 
                                 try
                                 {
-
-                                    File.AppendAllText(physicalPath + "\\" + "exception_updatezone.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + "," + ex.Message + Environment.NewLine);
+                                    General.WriteLog("exception_updatezone", "message:" + mesg + ", exception:" + ex.Message);
+                                    //File.AppendAllText(physicalPath + "\\" + "exception_updatezone.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + "," + ex.Message + Environment.NewLine);
                                 }
                                 catch
                                 {
@@ -2155,7 +2175,8 @@ namespace SignalRHub
                     try
                     {
                         if (req.PlotBidding.ToStr().Length > 0)
-                            File.AppendAllText(physicalPath + "\\" + "sendlocationdata_reqplotbidding.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + req.PlotBidding.ToStr() + ",response:" + data.Data + Environment.NewLine);
+                            General.WriteLog("sendlocationdata_reqplotbidding", "message: " + req.PlotBidding.ToStr() + ", response:" + data.Data);
+                        //File.AppendAllText(physicalPath + "\\" + "sendlocationdata_reqplotbidding.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + req.PlotBidding.ToStr() + ",response:" + data.Data + Environment.NewLine);
                     }
                     catch
                     {
@@ -2193,7 +2214,7 @@ namespace SignalRHub
                             try
                             {
 
-
+                                General.WriteLog("LATLNGjobapi", "DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr());
                                 //  File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGjobapi.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
                                 Instance.listofJobs.Remove(objcls);
                             }
@@ -2212,7 +2233,8 @@ namespace SignalRHub
                             {
                                 try
                                 {
-                                    File.AppendAllText(physicalPath + "\\onbiddespatchlatlongALREADYJOB.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + ",driverid:" + objcls.DriverId + Environment.NewLine);
+
+                                    //File.AppendAllText(physicalPath + "\\onbiddespatchlatlongALREADYJOB.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + ",driverid:" + objcls.DriverId + Environment.NewLine);
                                 }
                                 catch
                                 {
@@ -2243,7 +2265,8 @@ namespace SignalRHub
                                         {
                                             try
                                             {
-                                                File.AppendAllText(physicalPath + "\\onbiddespatch_drivernotavailable.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + Environment.NewLine);
+                                                General.WriteLog("onbiddespatch_drivernotavailable", "jobid=" + objcls.JobId);
+                                                //File.AppendAllText(physicalPath + "\\onbiddespatch_drivernotavailable.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + Environment.NewLine);
                                             }
                                             catch
                                             {
@@ -2258,7 +2281,8 @@ namespace SignalRHub
 
                                         try
                                         {
-                                            File.AppendAllText(physicalPath + "\\onbiddespatchALREADYJOB_catch.txt", DateTime.Now + ":" + ex.Message + ",jobid=" + objcls.JobId + Environment.NewLine);
+                                            General.WriteLog("onbiddespatchALREADYJOB_catch", "jobid=" + objcls.JobId + ", exception:" + ex.Message);
+                                            //File.AppendAllText(physicalPath + "\\onbiddespatchALREADYJOB_catch.txt", DateTime.Now + ":" + ex.Message + ",jobid=" + objcls.JobId + Environment.NewLine);
                                         }
                                         catch
                                         {
@@ -2284,7 +2308,8 @@ namespace SignalRHub
                                         {
                                             try
                                             {
-                                                File.AppendAllText(physicalPath + "\\onbiddespatch_jobnotavailable.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + Environment.NewLine);
+                                                //File.AppendAllText(physicalPath + "\\onbiddespatch_jobnotavailable.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + Environment.NewLine);
+                                                General.WriteLog("onbiddespatch_jobnotavailable", "jobid=" + objcls.JobId);
                                             }
                                             catch
                                             {
@@ -2298,7 +2323,8 @@ namespace SignalRHub
                                         AvailCnter = 1;
                                         try
                                         {
-                                            File.AppendAllText(physicalPath + "\\onbiddespatch_jobnotavailable_exception.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + Environment.NewLine);
+                                            General.WriteLog("onbiddespatch_jobnotavailable_exception", "jobid=" + objcls.JobId + ", exception:" + ex.Message);
+                                            //File.AppendAllText(physicalPath + "\\onbiddespatch_jobnotavailable_exception.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + Environment.NewLine);
                                         }
                                         catch
                                         {
@@ -2423,8 +2449,9 @@ namespace SignalRHub
 
                                     try
                                     {
-                                        File.AppendAllText(physicalPath + "\\Onbiddespatchlatlongmethod.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + ",driverid:" + objcls.DriverId +
-                                            ",message:" + objcls.JobMessage + Environment.NewLine);
+                                        //File.AppendAllText(physicalPath + "\\Onbiddespatchlatlongmethod.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + ",driverid:" + objcls.DriverId +
+                                        //    ",message:" + objcls.JobMessage + Environment.NewLine);
+                                        General.WriteLog("Onbiddespatchlatlongmethod", "jobid=" + objcls.JobId + ",driverid:" + objcls.DriverId + ",message:" + objcls.JobMessage);
                                     }
                                     catch
                                     {
@@ -2444,15 +2471,16 @@ namespace SignalRHub
 
                                     }
                                 }
-                                catch
+                                catch (Exception ex)
                                 {
                                     try
                                     {
 
                                         try
                                         {
-                                            File.AppendAllText(physicalPath + "\\OnbiddespatchmethodLatLong_exceptionSuccess.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + ",driverid:" + objcls.DriverId +
-                                                ",message:" + objcls.JobMessage + Environment.NewLine);
+                                            //File.AppendAllText(physicalPath + "\\OnbiddespatchmethodLatLong_exceptionSuccess.txt", DateTime.Now + ":" + ",jobid=" + objcls.JobId + ",driverid:" + objcls.DriverId +
+                                            //    ",message:" + objcls.JobMessage + Environment.NewLine);
+                                            General.WriteLog("OnbiddespatchmethodLatLong_exceptionSuccess", "jobid=" + objcls.JobId + ",driverid:" + objcls.DriverId + ",message:" + objcls.JobMessage + ", exception:" + ex.Message);
                                         }
                                         catch
                                         {
@@ -2514,7 +2542,8 @@ namespace SignalRHub
 
                                     try
                                     {
-                                        File.AppendAllText(physicalPath + "\\DriverAlreadyHavedifferentjob.txt", DateTime.Now + ":" + ",jobid=" + jobId + Environment.NewLine);
+                                        //File.AppendAllText(physicalPath + "\\DriverAlreadyHavedifferentjob.txt", DateTime.Now + ":" + ",jobid=" + jobId + Environment.NewLine);
+                                        General.WriteLog("DriverAlreadyHavedifferentjob", "jobid=" + jobId);
                                     }
                                     catch
                                     {
@@ -2542,7 +2571,8 @@ namespace SignalRHub
                             {
                                 Instance.listofJobs.Remove(objcls);
 
-                                File.AppendAllText(AppContext.BaseDirectory + "\\sendbidalertfromsocket.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
+                                //File.AppendAllText(AppContext.BaseDirectory + "\\sendbidalertfromsocket.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
+                                General.WriteLog("sendbidalertfromsocket", " DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr());
                             }
                             catch
                             {
@@ -2558,7 +2588,8 @@ namespace SignalRHub
 
                             try
                             {
-                                File.AppendAllText(physicalPath + "\\" + "Tripdispatch.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + objcls.JobMessage.ToStr().ToString() + Environment.NewLine);
+                                //File.AppendAllText(physicalPath + "\\" + "Tripdispatch.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + objcls.JobMessage.ToStr().ToString() + Environment.NewLine);
+                                General.WriteLog("Tripdispatch", "json:" + objcls.JobMessage.ToStr().ToString());
                             }
                             catch
                             {
@@ -2577,8 +2608,8 @@ namespace SignalRHub
                             try
                             {
 
-
-                                File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGrecoverjob.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
+                                General.WriteLog("LATLNGrecoverjob", "DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr());
+                                //File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGrecoverjob.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
 
                             }
                             catch
@@ -2607,8 +2638,8 @@ namespace SignalRHub
                             try
                             {
 
-
-                                File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGupdatejob.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
+                                General.WriteLog("LATLNGupdatejob", "DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr());
+                                //File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGupdatejob.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
 
                             }
                             catch
@@ -2668,8 +2699,8 @@ namespace SignalRHub
                             try
                             {
 
-
-                                File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGauthorisation.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
+                                General.WriteLog("LATLNGauthorisation", "DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr());
+                                //File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGauthorisation.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
 
                             }
                             catch
@@ -2733,8 +2764,8 @@ namespace SignalRHub
                             try
                             {
 
-
-                                File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGclearjob.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
+                                General.WriteLog("LATLNGclearjob", "DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr());
+                                //File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGclearjob.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
 
                             }
                             catch
@@ -2773,8 +2804,8 @@ namespace SignalRHub
                             try
                             {
 
-
-                                File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGmessage.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
+                                General.WriteLog("LATLNGmessage", "DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr());
+                                //File.AppendAllText(AppContext.BaseDirectory + "\\LATLNGmessage.txt", DateTime.Now + ", DriverId :" + driverId + ",job :" + objcls.JobMessage.ToStr() + Environment.NewLine);
 
                             }
                             catch
@@ -3318,8 +3349,8 @@ namespace SignalRHub
                         {
                             try
                             {
-
-                                File.AppendAllText(physicalPath + "\\Logs\\OfflineFareMeter\\" + objAction.JobID.ToStr() + ".txt", "logon:" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", miles:" + objAction.Miles + ", fares:" + objAction.Fares + ",waitingtime:" + objAction.WaitingTime.ToInt() + ",speed:" + objAction.Speed.ToStr() + ",lat lng:" + objAction.lg.ToStr() + "," + objAction.lt.ToStr() + Environment.NewLine);
+                                General.WriteLog("OfflineFareMeter_" + objAction.JobID.ToStr(), "miles:" + objAction.Miles + ", fares:" + objAction.Fares + ",waitingtime:" + objAction.WaitingTime.ToInt() + ",speed:" + objAction.Speed.ToStr() + ",lat lng:" + objAction.lg.ToStr() + "," + objAction.lt.ToStr());
+                                //File.AppendAllText(physicalPath + "\\Logs\\OfflineFareMeter\\" + objAction.JobID.ToStr() + ".txt", "logon:" + DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", miles:" + objAction.Miles + ", fares:" + objAction.Fares + ",waitingtime:" + objAction.WaitingTime.ToInt() + ",speed:" + objAction.Speed.ToStr() + ",lat lng:" + objAction.lg.ToStr() + "," + objAction.lt.ToStr() + Environment.NewLine);
                             }
                             catch
                             {
@@ -3335,8 +3366,8 @@ namespace SignalRHub
                     try
                     {
 
-                        File.AppendAllText(physicalPath + "\\" + "exception_faremeter.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", data:" + faremeterstring + ":" + ex.Message + Environment.NewLine);
-
+                        //File.AppendAllText(physicalPath + "\\" + "exception_faremeter.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", data:" + faremeterstring + ":" + ex.Message + Environment.NewLine);
+                        General.WriteLog("exception_faremeter", "data:" + faremeterstring + ", exception:" + ex.Message);
                     }
                     catch
                     {
@@ -3357,7 +3388,8 @@ namespace SignalRHub
                 try
                 {
                     //  Clients.Caller.exceptionOccured(ex.Message);
-                    File.AppendAllText(physicalPath + "\\" + "exception_senddatasocket.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", latlong: " + req.LatLong.ToStr() + ",plotbidding:" + req.PlotBidding.ToStr() + "," + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\" + "exception_senddatasocket.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", latlong: " + req.LatLong.ToStr() + ",plotbidding:" + req.PlotBidding.ToStr() + "," + ex.Message + Environment.NewLine);
+                    General.WriteLog("exception_senddatasocket", "latlong: " + req.LatLong.ToStr() + ",plotbidding:" + req.PlotBidding.ToStr() + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -3609,8 +3641,8 @@ namespace SignalRHub
                 try
                 {
 
-                    File.AppendAllText(physicalPath + "\\log_getdriverpay.txt", DateTime.Now.ToStr() + " , url=" + objAction.url + Environment.NewLine);
-
+                    //File.AppendAllText(physicalPath + "\\log_getdriverpay.txt", DateTime.Now.ToStr() + " , url=" + objAction.url + Environment.NewLine);
+                    General.WriteLog("log_getdriverpay", "url=" + objAction.url);
                 }
 
                 catch
@@ -3804,8 +3836,8 @@ namespace SignalRHub
 
                         try
                         {
-
-                            File.AppendAllText(physicalPath + "\\" + "googleLocation.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ": Lat" + latitude + ",lng:" + longitude + ",location:" + locationName + Environment.NewLine);
+                            General.WriteLog("googleLocation", "Lat" + latitude + ",lng:" + longitude + ",location:" + locationName);
+                            //File.AppendAllText(physicalPath + "\\" + "googleLocation.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ": Lat" + latitude + ",lng:" + longitude + ",location:" + locationName + Environment.NewLine);
                         }
                         catch
                         {
@@ -3819,8 +3851,8 @@ namespace SignalRHub
                     {
                         try
                         {
-
-                            File.AppendAllText(physicalPath + "\\" + "exception_google.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ":" + ex.Message + Environment.NewLine);
+                            General.WriteLog("exception_google", "exception:" + ex.Message);
+                            //File.AppendAllText(physicalPath + "\\" + "exception_google.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ":" + ex.Message + Environment.NewLine);
                         }
                         catch
                         {
@@ -4343,8 +4375,8 @@ namespace SignalRHub
                             {
                                 try
                                 {
-
-                                    File.AppendAllText(physicalPath + "\\log_trackdriver.txt", DateTime.Now.ToStr() + " : " + ex.Message + Environment.NewLine + Environment.NewLine);
+                                    General.WriteLog("log_trackdriver", " exception:" + ex.Message);
+                                    //File.AppendAllText(physicalPath + "\\log_trackdriver.txt", DateTime.Now.ToStr() + " : " + ex.Message + Environment.NewLine + Environment.NewLine);
 
                                 }
                                 catch
@@ -4447,8 +4479,8 @@ namespace SignalRHub
             {
                 try
                 {
-
-                    File.AppendAllText(physicalPath + "\\log_trackdriver.txt", DateTime.Now.ToStr() + " : " + ex.Message + Environment.NewLine);
+                    General.WriteLog("log_trackdriver", " exception:" + ex.Message);
+                    //File.AppendAllText(physicalPath + "\\log_trackdriver.txt", DateTime.Now.ToStr() + " : " + ex.Message + Environment.NewLine);
 
                 }
                 catch
@@ -4589,8 +4621,8 @@ namespace SignalRHub
             {
                 try
                 {
-
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestSTCAPI.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                    General.WriteLog("requestSTCAPI", "request: " + mesg);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestSTCAPI.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
                 }
                 catch
                 {
@@ -4766,8 +4798,8 @@ namespace SignalRHub
                                     resp.IsSuccess = false;
                                     try
                                     {
-
-                                        File.AppendAllText(AppContext.BaseDirectory + "//restrictionlog.txt", DateTime.Now + ": datavalue=" + dataValue + ",(stcjob)distance to : " + pickup + ",distance:" + distance + Environment.NewLine);
+                                        General.WriteLog("restrictionlog", "datavalue=" + dataValue + ",(stcjob)distance to : " + pickup + ",distance:" + distance);
+                                        //File.AppendAllText(AppContext.BaseDirectory + "//restrictionlog.txt", DateTime.Now + ": datavalue=" + dataValue + ",(stcjob)distance to : " + pickup + ",distance:" + distance + Environment.NewLine);
                                     }
                                     catch
                                     {
@@ -4820,7 +4852,8 @@ namespace SignalRHub
                                         {
                                             //
                                             //
-                                            File.AppendAllText(AppContext.BaseDirectory + "\\autostcsavelog_exception.txt", DateTime.Now.ToStr() + ": request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                                            //File.AppendAllText(AppContext.BaseDirectory + "\\autostcsavelog_exception.txt", DateTime.Now.ToStr() + ": request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                                            General.WriteLog("autostcsavelog_exception", "request:" + mesg + ", exception:" + ex.Message);
                                         }
                                         catch
                                         {
@@ -4864,7 +4897,8 @@ namespace SignalRHub
                 try
                 {
                     obj.Message = ex.Message;
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestSTCAPI_exception.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestSTCAPI_exception.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestSTCAPI_exception", "request:" + mesg + ", exception:" + ex.Message);
                     resp.IsSuccess = false;
                     resp.Message = ex.Message;
                 }
@@ -4900,7 +4934,8 @@ namespace SignalRHub
                 try
                 {
                     //
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestarrivewaiting.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                    General.WriteLog("requestarrivewaiting", "request: " + mesg);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestarrivewaiting.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
                 }
                 catch
                 {
@@ -4942,7 +4977,8 @@ namespace SignalRHub
                         {
 
                             pickupDate = DateTime.Now;
-                            File.AppendAllText(AppContext.BaseDirectory + "\\" + "exception_formatpickupdatetime_startarrivewaiting.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + "," + ex.Message + ", pickup : " + objAction.PickupDateTime.ToStr().Trim() + Environment.NewLine);
+                            General.WriteLog("exception_formatpickupdatetime_startarrivewaiting", "message: " + mesg + "," + ex.Message + ", pickup : " + objAction.PickupDateTime.ToStr().Trim() + ", exception:" + ex.Message);
+                            //File.AppendAllText(AppContext.BaseDirectory + "\\" + "exception_formatpickupdatetime_startarrivewaiting.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + "," + ex.Message + ", pickup : " + objAction.PickupDateTime.ToStr().Trim() + Environment.NewLine);
                         }
                         catch
                         {
@@ -4975,7 +5011,8 @@ namespace SignalRHub
                 try
                 {
                     objAction.Message = ex.Message;
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_exception2.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_exception2.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestarrive_exception2", "request:" + mesg + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -5044,8 +5081,8 @@ namespace SignalRHub
 
                 try
                 {
-
-                    File.AppendAllText(physicalPath + "\\requestDriverPDASettingUpdate.txt", DateTime.Now.ToStr() + "request:" + new JavaScriptSerializer().Serialize(mesg) + Environment.NewLine);
+                    General.WriteLog("requestDriverPDASettingUpdate", "request:" + new JavaScriptSerializer().Serialize(mesg));
+                    //File.AppendAllText(physicalPath + "\\requestDriverPDASettingUpdate.txt", DateTime.Now.ToStr() + "request:" + new JavaScriptSerializer().Serialize(mesg) + Environment.NewLine);
                 }
                 catch
                 {
@@ -5060,7 +5097,8 @@ namespace SignalRHub
                     res.IsSuccess = false;
                     res.Message = ex.Message;
                     //   Clients.Caller.callOffice("failed:Invalid Data");
-                    File.AppendAllText(physicalPath + "\\requestDriverPDASettingUpdate_exception.txt", DateTime.Now.ToStr() + "request:" + new JavaScriptSerializer().Serialize(mesg) + " ,exception : " + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestDriverPDASettingUpdate_exception.txt", DateTime.Now.ToStr() + "request:" + new JavaScriptSerializer().Serialize(mesg) + " ,exception : " + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestDriverPDASettingUpdate_exception", "request:" + new JavaScriptSerializer().Serialize(mesg) + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -5128,8 +5166,8 @@ namespace SignalRHub
 
                         try
                         {
-
-                            File.AppendAllText(physicalPath + "\\requestcalloffice_yestech.txt", DateTime.Now.ToStr() + "request:" + mesg + ", response" + response + " datavalue" + dataValue + Environment.NewLine);
+                            General.WriteLog("requestcalloffice_yestech", "request: " + mesg + ", response" + response + " datavalue" + dataValue);
+                            //File.AppendAllText(physicalPath + "\\requestcalloffice_yestech.txt", DateTime.Now.ToStr() + "request:" + mesg + ", response" + response + " datavalue" + dataValue + Environment.NewLine);
                         }
                         catch
                         {
@@ -5182,8 +5220,8 @@ namespace SignalRHub
 
                             try
                             {
-
-                                File.AppendAllText(physicalPath + "\\requestcalloffice_emerald.txt", DateTime.Now.ToStr() + "request:" + mesg + Environment.NewLine + ", response" + response + Environment.NewLine + " datavalue" + dataValue + Environment.NewLine);
+                                General.WriteLog("requestcalloffice_emerald", "request: " + mesg + Environment.NewLine + ", response" + response + Environment.NewLine + " datavalue" + dataValue);
+                                //File.AppendAllText(physicalPath + "\\requestcalloffice_emerald.txt", DateTime.Now.ToStr() + "request:" + mesg + Environment.NewLine + ", response" + response + Environment.NewLine + " datavalue" + dataValue + Environment.NewLine);
                             }
                             catch
                             {
@@ -5195,8 +5233,8 @@ namespace SignalRHub
                         {
                             try
                             {
-
-                                File.AppendAllText(physicalPath + "\\requestcallofficetest_exception.txt", DateTime.Now.ToStr() + "request:" + mesg + Environment.NewLine + ", response" + ex.Message + Environment.NewLine + " datavalue" + dataValue + Environment.NewLine);
+                                General.WriteLog("requestcallofficetest_exception", "request:" + mesg + Environment.NewLine + ", response" + ex.Message + Environment.NewLine + " datavalue" + dataValue + ", exception:" + ex.Message);
+                                //File.AppendAllText(physicalPath + "\\requestcallofficetest_exception.txt", DateTime.Now.ToStr() + "request:" + mesg + Environment.NewLine + ", response" + ex.Message + Environment.NewLine + " datavalue" + dataValue + Environment.NewLine);
                             }
                             catch
                             {
@@ -5219,7 +5257,8 @@ namespace SignalRHub
                     res.IsSuccess = false;
                     res.Message = ex.Message;
                     //   Clients.Caller.callOffice("failed:Invalid Data");
-                    File.AppendAllText(physicalPath + "\\requestcalloffice.txt", DateTime.Now.ToStr() + "request:" + mesg + ", response" + response + " ,exception : " + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestcalloffice.txt", DateTime.Now.ToStr() + "request:" + mesg + ", response" + response + " ,exception : " + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestcallofficetest_exception", "request:" + mesg + ", response" + response + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -5245,7 +5284,8 @@ namespace SignalRHub
             ResponseData res = new ResponseData();
             try
             {
-                File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePaymentNew.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                General.WriteLog("requestMakePaymentNew", "message: " + mesg);
+                //File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePaymentNew.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
             }
             catch
             {
@@ -5437,7 +5477,8 @@ namespace SignalRHub
                                     var objBookingPayment = General.GetObject<Booking_Payment>(c => c.BookingId == jobId && c.AuthCode != null && c.AuthCode != "");
                                     try
                                     {
-                                        File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + " , Booking obj:" + new JavaScriptSerializer().Serialize(objBooking) + Environment.NewLine);
+                                        //File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + " , Booking obj:" + new JavaScriptSerializer().Serialize(objBooking) + Environment.NewLine);
+                                        General.WriteLog("requestMakePayment_KonenctPay", "Booking obj:" + new JavaScriptSerializer().Serialize(objBooking));
                                     }
                                     catch
                                     {
@@ -5463,7 +5504,8 @@ namespace SignalRHub
                                             makePaymentResponse.ResponseType = (int)ResponseType.Direct;
                                             try
                                             {
-                                                File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",card is registered for Booking  : " + mesg + " booking-details:" + new JavaScriptSerializer().Serialize(objBooking) + Environment.NewLine);
+                                                //File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",card is registered for Booking  : " + mesg + " booking-details:" + new JavaScriptSerializer().Serialize(objBooking) + Environment.NewLine);
+                                                General.WriteLog("requestMakePayment_KonenctPay", "card is registered for Booking  : " + mesg + " booking-details:" + new JavaScriptSerializer().Serialize(objBooking));
                                             }
                                             catch
                                             {
@@ -5518,7 +5560,8 @@ namespace SignalRHub
                                                 }
                                                 try
                                                 {
-                                                    File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",KonnectPay Response : " + response + " returnObj:" + new JavaScriptSerializer().Serialize(makePaymentResponse) + Environment.NewLine);
+                                                    //File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",KonnectPay Response : " + response + " returnObj:" + new JavaScriptSerializer().Serialize(makePaymentResponse) + Environment.NewLine);
+                                                    General.WriteLog("requestMakePayment_KonenctPay", "KonnectPay Response : " + response + " returnObj:" + new JavaScriptSerializer().Serialize(makePaymentResponse));
                                                 }
                                                 catch
                                                 {
@@ -5537,7 +5580,8 @@ namespace SignalRHub
                                             makePaymentResponse.ResponseType = (int)ResponseType.Direct;
                                             try
                                             {
-                                                File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", Booking is Authorize for : " + mesg + " KP-Config:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                                                //File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", Booking is Authorize for : " + mesg + " KP-Config:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                                                General.WriteLog("requestMakePayment_KonenctPay", "Booking is Authorize for : " + mesg + " KP-Config:" + new JavaScriptSerializer().Serialize(obj));
                                             }
                                             catch
                                             {
@@ -5594,7 +5638,8 @@ namespace SignalRHub
                                                 }
                                                 try
                                                 {
-                                                    File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",KonnectPay Response : " + response + Environment.NewLine);
+                                                    General.WriteLog("requestMakePayment_KonenctPay", "KonnectPay Response : " + response);
+                                                    //File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestMakePayment_KonenctPay.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",KonnectPay Response : " + response + Environment.NewLine);
                                                 }
                                                 catch
                                                 {
@@ -5668,7 +5713,8 @@ namespace SignalRHub
                     ///
                     try
                     {
-                        File.AppendAllText(AppContext.BaseDirectory + "\\requestMakePayment_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                        //File.AppendAllText(AppContext.BaseDirectory + "\\requestMakePayment_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                        General.WriteLog("requestMakePayment_exception", "exception:" + ex.Message);
                     }
                     catch
                     {
@@ -5689,7 +5735,8 @@ namespace SignalRHub
             ResponseData res = new ResponseData();
             try
             {
-                File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestUpdateCustomPayment.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                //File.AppendAllText(AppContext.BaseDirectory + "\\" + "requestUpdateCustomPayment.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                General.WriteLog("requestUpdateCustomPayment", "message: " + mesg);
             }
             catch
             {
@@ -5722,7 +5769,8 @@ namespace SignalRHub
 
                     try
                     {
-                        File.AppendAllText(AppContext.BaseDirectory + "\\requestUpdateCustomPayment.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                        //File.AppendAllText(AppContext.BaseDirectory + "\\requestUpdateCustomPayment.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                        General.WriteLog("requestUpdateCustomPayment", "exception:" + ex.Message);
                     }
                     catch
                     {
@@ -5756,8 +5804,8 @@ namespace SignalRHub
                     try
                     {
 
-
-                        File.AppendAllText(physicalPath + "\\processjudoreceipt.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + rtn.ToStr() + Environment.NewLine);
+                        General.WriteLog("processjudoreceipt", "request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + rtn.ToStr());
+                        //File.AppendAllText(physicalPath + "\\processjudoreceipt.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + rtn.ToStr() + Environment.NewLine);
                     }
                     catch
                     {
@@ -5785,8 +5833,8 @@ namespace SignalRHub
 
 
 
-
-                            File.AppendAllText(physicalPath + "\\Transactions\\" + objCard.BookingId + ".txt", rtn.Replace("success:", "").Trim() + ":" + Math.Round(objCard.Total.ToDecimal(), 2));
+                            General.WriteLog("Transactions_" + objCard.BookingId, rtn.Replace("success:", "").Trim() + ":" + Math.Round(objCard.Total.ToDecimal(), 2));
+                            //File.AppendAllText(physicalPath + "\\Transactions\\" + objCard.BookingId + ".txt", rtn.Replace("success:", "").Trim() + ":" + Math.Round(objCard.Total.ToDecimal(), 2));
 
 
                         }
@@ -5807,8 +5855,8 @@ namespace SignalRHub
                         try
                         {
 
-
-                            File.AppendAllText(physicalPath + "\\stripe.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + rtn.ToStr() + Environment.NewLine);
+                            General.WriteLog("stripe", "request: " + objCard.BookingId.ToStr() + ", token:" + objCard.TokenDetails.ToStr() + ", response:" + rtn.ToStr());
+                            //File.AppendAllText(physicalPath + "\\stripe.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + rtn.ToStr() + Environment.NewLine);
                         }
                         catch
                         {
@@ -5826,8 +5874,8 @@ namespace SignalRHub
                             try
                             {
 
-
-                                File.AppendAllText(physicalPath + "\\stripe_pmintent.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + rtn.ToStr() + Environment.NewLine);
+                                General.WriteLog("stripe_pmintent", "request: " + objCard.BookingId.ToStr() + ", token:" + objCard.TokenDetails.ToStr() + ", response:" + rtn.ToStr());
+                                //File.AppendAllText(physicalPath + "\\stripe_pmintent.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + rtn.ToStr() + Environment.NewLine);
                             }
                             catch
                             {
@@ -5881,8 +5929,8 @@ namespace SignalRHub
                                     try
                                     {
 
-
-                                        File.AppendAllText(physicalPath + "\\stripepayment_intent.txt", DateTime.Now.ToStr() + ", URL :" + url + Environment.NewLine + ": json:" + dataString + Environment.NewLine + "bookingno:" + objCard.BookingNo.ToStr() + Environment.NewLine + ",response:" + result.ToStr() + Environment.NewLine);
+                                        General.WriteLog("stripepayment_intent", "URL :" + url + Environment.NewLine + ": json: " + dataString + Environment.NewLine + " bookingno: " + objCard.BookingNo.ToStr() + Environment.NewLine + ", response:" + result.ToStr());
+                                        //File.AppendAllText(physicalPath + "\\stripepayment_intent.txt", DateTime.Now.ToStr() + ", URL :" + url + Environment.NewLine + ": json:" + dataString + Environment.NewLine + "bookingno:" + objCard.BookingNo.ToStr() + Environment.NewLine + ",response:" + result.ToStr() + Environment.NewLine);
                                     }
                                     catch
                                     {
@@ -5903,9 +5951,8 @@ namespace SignalRHub
 
                                 try
                                 {
-
-
-                                    File.AppendAllText(physicalPath + "\\stripe_pmintentexception.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + rtn.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
+                                    General.WriteLog("stripe_pmintentexception", "request" + objCard.BookingId.ToStr() + ", token:" + objCard.TokenDetails.ToStr() + ", response:" + rtn.ToStr() + ", exception:" + ex.Message);
+                                    //File.AppendAllText(physicalPath + "\\stripe_pmintentexception.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + rtn.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
                                 }
                                 catch
                                 {
@@ -5923,8 +5970,8 @@ namespace SignalRHub
                             try
                             {
 
-
-                                File.AppendAllText(physicalPath + "\\stripepayment_directpayment.txt", DateTime.Now.ToStr() + ": json" + json + Environment.NewLine + "bookingno:" + objCard.BookingNo.ToStr() + Environment.NewLine + Environment.NewLine);
+                                General.WriteLog("stripepayment_directpayment", "json" + json + Environment.NewLine + "bookingno:" + objCard.BookingNo.ToStr());
+                                //File.AppendAllText(physicalPath + "\\stripepayment_directpayment.txt", DateTime.Now.ToStr() + ": json" + json + Environment.NewLine + "bookingno:" + objCard.BookingNo.ToStr() + Environment.NewLine + Environment.NewLine);
                             }
                             catch
                             {
@@ -5993,8 +6040,8 @@ namespace SignalRHub
                             try
                             {
 
-
-                                File.AppendAllText(physicalPath + "\\stripepayment.txt", DateTime.Now.ToStr() + ": json" + json + "bookingno:" + objCard.BookingNo.ToStr() + ",response:" + response.ToStr() + Environment.NewLine);
+                                General.WriteLog("stripepayment", "json" + json + "bookingno:" + objCard.BookingNo.ToStr() + ",response:" + response.ToStr());
+                                //File.AppendAllText(physicalPath + "\\stripepayment.txt", DateTime.Now.ToStr() + ": json" + json + "bookingno:" + objCard.BookingNo.ToStr() + ",response:" + response.ToStr() + Environment.NewLine);
                             }
                             catch
                             {
@@ -6010,8 +6057,8 @@ namespace SignalRHub
                         try
                         {
 
-
-                            File.AppendAllText(physicalPath + "\\stripepayment_exception.txt", DateTime.Now.ToStr() + ": token=" + json + "  ,bookingno:" + objCard.BookingNo.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
+                            General.WriteLog("stripepayment_exception", "token=" + json + "  ,bookingno:" + objCard.BookingNo.ToStr() + ", exception:" + ex.Message);
+                            //File.AppendAllText(physicalPath + "\\stripepayment_exception.txt", DateTime.Now.ToStr() + ": token=" + json + "  ,bookingno:" + objCard.BookingNo.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
                         }
                         catch
                         {
@@ -6044,8 +6091,8 @@ namespace SignalRHub
 
                 try
                 {
-
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestPaymentDetailSummary.txt", DateTime.Now.ToStr() + ": request :" + mesg + Environment.NewLine);
+                    General.WriteLog("requestPaymentDetailSummary", "request: " + mesg);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestPaymentDetailSummary.txt", DateTime.Now.ToStr() + ": request :" + mesg + Environment.NewLine);
                 }
                 catch (Exception ex)
                 {
@@ -6360,7 +6407,8 @@ namespace SignalRHub
 
             try
             {
-                File.AppendAllText(AppContext.BaseDirectory + "\\GetCardDetailsKP.txt", DateTime.Now.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(CCDetail) + Environment.NewLine);
+                //File.AppendAllText(AppContext.BaseDirectory + "\\GetCardDetailsKP.txt", DateTime.Now.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(CCDetail) + Environment.NewLine);
+                General.WriteLog("GetCardDetailsKP", "response:" + new JavaScriptSerializer().Serialize(CCDetail));
             }
             catch
             {
@@ -6384,7 +6432,8 @@ namespace SignalRHub
 
                     try
                     {
-                        File.AppendAllText(physicalPath + "\\MakePaymentCardTokenKonnectPay.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",payment dto:" + new JavaScriptSerializer().Serialize(objCard) + ",gatway obj:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                        General.WriteLog("MakePaymentCardTokenKonnectPay", "request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",payment dto:" + new JavaScriptSerializer().Serialize(objCard) + ",gatway obj:" + new JavaScriptSerializer().Serialize(obj));
+                        //File.AppendAllText(physicalPath + "\\MakePaymentCardTokenKonnectPay.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",payment dto:" + new JavaScriptSerializer().Serialize(objCard) + ",gatway obj:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
                     }
                     catch { }
 
@@ -6463,7 +6512,8 @@ namespace SignalRHub
 
                     try
                     {
-                        File.AppendAllText(physicalPath + "\\MakePaymentCardTokenKonnectPay.txt", DateTime.Now.ToStr() + ":  json:" + new JavaScriptSerializer().Serialize(st) + Environment.NewLine + "bookingno:" + objCard.BookingNo.ToStr() + Environment.NewLine + ",response:" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                        General.WriteLog("MakePaymentCardTokenKonnectPay", "json:" + new JavaScriptSerializer().Serialize(st) + Environment.NewLine + "bookingno:" + objCard.BookingNo.ToStr() + Environment.NewLine + ",response:" + new JavaScriptSerializer().Serialize(resp));
+                        //File.AppendAllText(physicalPath + "\\MakePaymentCardTokenKonnectPay.txt", DateTime.Now.ToStr() + ":  json:" + new JavaScriptSerializer().Serialize(st) + Environment.NewLine + "bookingno:" + objCard.BookingNo.ToStr() + Environment.NewLine + ",response:" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
                     }
                     catch
                     {
@@ -6480,7 +6530,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\stripeKP_Authpayment_exception.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\stripeKP_Authpayment_exception.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("stripeKP_Authpayment_exception", "request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -6513,7 +6564,9 @@ namespace SignalRHub
 
                     try
                     {
-                        File.AppendAllText(physicalPath + "\\stripeKP_Authpayment.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",payment dto:" + new JavaScriptSerializer().Serialize(objCard) + ",gatway obj:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                        //File.AppendAllText(physicalPath + "\\stripeKP_Authpayment.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",payment dto:" + new JavaScriptSerializer().Serialize(objCard) + ",gatway obj:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                        General.WriteLog("stripeKP_Authpayment", "request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",payment dto:" + new JavaScriptSerializer().Serialize(objCard) + ",gatway obj:" + new JavaScriptSerializer().Serialize(obj));
+
                     }
                     catch { }
 
@@ -6566,7 +6619,8 @@ namespace SignalRHub
 
                     try
                     {
-                        File.AppendAllText(physicalPath + "\\stripeKP_Authpayment.txt", DateTime.Now.ToStr() + Environment.NewLine + ":API(CapturePayment/IncrementAuthorization)  json:" + new JavaScriptSerializer().Serialize(st) + Environment.NewLine + "bookingno:" + objCard.BookingNo.ToStr() + Environment.NewLine + ",response:" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                        General.WriteLog("stripeKP_Authpayment", "API(CapturePayment/IncrementAuthorization)  json:" + new JavaScriptSerializer().Serialize(st) + Environment.NewLine + "bookingno:" + objCard.BookingNo.ToStr() + Environment.NewLine + ",response:" + new JavaScriptSerializer().Serialize(resp));
+                        //File.AppendAllText(physicalPath + "\\stripeKP_Authpayment.txt", DateTime.Now.ToStr() + Environment.NewLine + ":API(CapturePayment/IncrementAuthorization)  json:" + new JavaScriptSerializer().Serialize(st) + Environment.NewLine + "bookingno:" + objCard.BookingNo.ToStr() + Environment.NewLine + ",response:" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
                     }
                     catch
                     {
@@ -6583,7 +6637,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\stripeKP_Authpayment_exception.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\stripeKP_Authpayment_exception.txt", DateTime.Now.ToStr() + ": request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("stripeKP_Authpayment_exception", "request" + objCard.BookingId.ToStr() + ",token:" + objCard.TokenDetails.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -6680,7 +6735,8 @@ namespace SignalRHub
 
                     try
                     {
-                        File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetKonnectPayGatewayDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", json: " + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                        //File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetKonnectPayGatewayDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", json: " + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                        General.WriteLog("GetKonnectPayGatewayDetails", "json: " + new JavaScriptSerializer().Serialize(resp));
                     }
                     catch
                     {
@@ -6690,7 +6746,8 @@ namespace SignalRHub
             }
             catch (Exception ex)
             {
-                File.AppendAllText(AppContext.BaseDirectory + "\\GetKonnectPayGatwayDetails_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                //File.AppendAllText(AppContext.BaseDirectory + "\\GetKonnectPayGatwayDetails_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                General.WriteLog("GetKonnectPayGatwayDetails_exception", "exception:" + ex.Message);
             }
             return resp;
         }
@@ -6726,7 +6783,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(AppContext.BaseDirectory + "\\GetClientLocationId_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\GetClientLocationId_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetClientLocationId_exception", "exception:" + ex.Message);
                 }
                 catch
                 {
@@ -6750,7 +6808,8 @@ namespace SignalRHub
             Classes.KonnectPay.PaymentConfig paymentGateway = null;
             try
             {
-                File.AppendAllText(physicalPath + "\\CreatePaymentLinkKonnectPay.txt", DateTime.Now.ToStr() + ": request" + mesg.ToStr());
+                //File.AppendAllText(physicalPath + "\\CreatePaymentLinkKonnectPay.txt", DateTime.Now.ToStr() + ": request" + mesg.ToStr());
+                General.WriteLog("CreatePaymentLinkKonnectPay", "request: " + mesg);
             }
             catch { }
             try
@@ -6806,7 +6865,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(AppContext.BaseDirectory + "\\CreatePaymentLinkKonnectPay_exception.txt", DateTime.Now.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\CreatePaymentLinkKonnectPay_exception.txt", DateTime.Now.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("CreatePaymentLinkKonnectPay_exception", "response:" + new JavaScriptSerializer().Serialize(resp) + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -6833,7 +6893,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\CreatePaymentLinkKonnectPay.txt", DateTime.Now.ToStr() + ": request" + objBooking.Id.ToStr());
+                    General.WriteLog("CreatePaymentLinkKonnectPay", "request: " + objBooking.Id.ToStr());
+                    //File.AppendAllText(physicalPath + "\\CreatePaymentLinkKonnectPay.txt", DateTime.Now.ToStr() + ": request" + objBooking.Id.ToStr());
                 }
                 catch
                 {
@@ -6917,7 +6978,8 @@ namespace SignalRHub
                 }
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\CreatePaymentLinkKonnectPay.txt", DateTime.Now.ToStr() + ": json" + new JavaScriptSerializer().Serialize(SpDTO) + "bookingno:" + objBooking.BookingNo.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\CreatePaymentLinkKonnectPay.txt", DateTime.Now.ToStr() + ": json" + new JavaScriptSerializer().Serialize(SpDTO) + "bookingno:" + objBooking.BookingNo.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                    General.WriteLog("CreatePaymentLinkKonnectPay", "json" + new JavaScriptSerializer().Serialize(SpDTO) + "bookingno:" + objBooking.BookingNo.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp));
                 }
                 catch
                 {
@@ -6934,8 +6996,8 @@ namespace SignalRHub
                 try
                 {
 
-
-                    File.AppendAllText(physicalPath + "\\CreatePaymentLinkKonnectPay_exception.txt", DateTime.Now.ToStr() + ": token=" + new JavaScriptSerializer().Serialize(json) + "  ,bookingno:" + objBooking.BookingNo.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("CreatePaymentLinkKonnectPay_exception", "token=" + new JavaScriptSerializer().Serialize(json) + "  ,bookingno:" + objBooking.BookingNo.ToStr() + ", exception:" + ex.Message);
+                    //File.AppendAllText(physicalPath + "\\CreatePaymentLinkKonnectPay_exception.txt", DateTime.Now.ToStr() + ": token=" + new JavaScriptSerializer().Serialize(json) + "  ,bookingno:" + objBooking.BookingNo.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -6965,7 +7027,8 @@ namespace SignalRHub
             Classes.KonnectPay.PaymentConfig paymentGateway = null;
             try
             {
-                File.AppendAllText(physicalPath + "\\CreateTerminalPaymentIntentKP.txt", DateTime.Now.ToStr() + ": request" + mesg.ToStr());
+                General.WriteLog("CreateTerminalPaymentIntentKP", "request: " + mesg);
+                //File.AppendAllText(physicalPath + "\\CreateTerminalPaymentIntentKP.txt", DateTime.Now.ToStr() + ": request" + mesg.ToStr());
             }
             catch { }
             try
@@ -7018,7 +7081,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(AppContext.BaseDirectory + "\\CreateTerminalPaymentIntentKP_exception.txt", DateTime.Now.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\CreateTerminalPaymentIntentKP_exception.txt", DateTime.Now.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("CreateTerminalPaymentIntentKP_exception", "response:" + new JavaScriptSerializer().Serialize(resp) + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -7043,7 +7107,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\CreateTerminalPaymentIntentKP.txt", DateTime.Now.ToStr() + ": request" + objBooking.Id.ToStr() + ",Payment settings :" + new JavaScriptSerializer().Serialize(obj) + ", terminal Details:" + terminalDetails);
+                    //File.AppendAllText(physicalPath + "\\CreateTerminalPaymentIntentKP.txt", DateTime.Now.ToStr() + ": request" + objBooking.Id.ToStr() + ",Payment settings :" + new JavaScriptSerializer().Serialize(obj) + ", terminal Details:" + terminalDetails);
+                    General.WriteLog("CreateTerminalPaymentIntentKP", "request" + objBooking.Id.ToStr() + ",Payment settings :" + new JavaScriptSerializer().Serialize(obj) + ", terminal Details:" + terminalDetails);
                 }
                 catch { }
                 if (!string.IsNullOrEmpty(objBooking?.CustomerCreditCardDetails) && objBooking.CustomerCreditCardDetails.ToStr().Trim().StartsWith("pi_"))
@@ -7136,7 +7201,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\CreateTerminalPaymentIntentKP.txt", DateTime.Now.ToStr() + ": json" + new JavaScriptSerializer().Serialize(SpDTO) + "bookingno:" + objBooking.BookingNo.ToStr() + ", response:" + new JavaScriptSerializer().Serialize(response) + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\CreateTerminalPaymentIntentKP.txt", DateTime.Now.ToStr() + ": json" + new JavaScriptSerializer().Serialize(SpDTO) + "bookingno:" + objBooking.BookingNo.ToStr() + ", response:" + new JavaScriptSerializer().Serialize(response) + Environment.NewLine);
+                    General.WriteLog("CreateTerminalPaymentIntentKP", "json: " + new JavaScriptSerializer().Serialize(SpDTO) + "bookingno:" + objBooking.BookingNo.ToStr() + ", response:" + new JavaScriptSerializer().Serialize(response));
                 }
                 catch { }
             }
@@ -7147,7 +7213,8 @@ namespace SignalRHub
                 response.Data = "";
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\CreateTerminalPaymentIntentKP_exception.txt", DateTime.Now.ToStr() + ": response =" + new JavaScriptSerializer().Serialize(response) + "  ,bookingno:" + objBooking.BookingNo.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\CreateTerminalPaymentIntentKP_exception.txt", DateTime.Now.ToStr() + ": response =" + new JavaScriptSerializer().Serialize(response) + "  ,bookingno:" + objBooking.BookingNo.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("CreateTerminalPaymentIntentKP_exception", "response =" + new JavaScriptSerializer().Serialize(response) + "  ,bookingno:" + objBooking.BookingNo.ToStr() + ", exception:" + ex.Message);
                 }
                 catch { }
             }
@@ -7172,7 +7239,8 @@ namespace SignalRHub
             string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
             try
             {
-                File.AppendAllText(physicalPath + "\\GetQRCode.txt", DateTime.Now.ToStr() + ": request" + mesg.ToStr());
+                General.WriteLog("GetQRCode", "request: " + mesg);
+                //File.AppendAllText(physicalPath + "\\GetQRCode.txt", DateTime.Now.ToStr() + ": request" + mesg.ToStr());
             }
             catch { }
             try
@@ -7227,7 +7295,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(AppContext.BaseDirectory + "\\GetQRCode_exception.txt", DateTime.Now.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\GetQRCode_exception.txt", DateTime.Now.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetQRCode_exception", "response:" + new JavaScriptSerializer().Serialize(resp) + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -7254,7 +7323,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\GetQRCode.txt", DateTime.Now.ToStr() + ": request" + objBooking.Id.ToStr());
+                    General.WriteLog("GetQRCode", "request: " + objBooking.Id.ToStr());
+                    //File.AppendAllText(physicalPath + "\\GetQRCode.txt", DateTime.Now.ToStr() + ": request" + objBooking.Id.ToStr());
                 }
                 catch
                 {
@@ -7344,7 +7414,8 @@ namespace SignalRHub
                 }
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\GetQRCode.txt", DateTime.Now.ToStr() + ": json" + new JavaScriptSerializer().Serialize(SpDTO) + "bookingno:" + objBooking.BookingNo.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\GetQRCode.txt", DateTime.Now.ToStr() + ": json" + new JavaScriptSerializer().Serialize(SpDTO) + "bookingno:" + objBooking.BookingNo.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                    General.WriteLog("GetQRCode", "json: " + new JavaScriptSerializer().Serialize(SpDTO) + "bookingno:" + objBooking.BookingNo.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp));
                 }
                 catch
                 {
@@ -7361,8 +7432,8 @@ namespace SignalRHub
                 try
                 {
 
-
-                    File.AppendAllText(physicalPath + "\\GetQRCode_exception.txt", DateTime.Now.ToStr() + ": token=" + new JavaScriptSerializer().Serialize(json) + "  ,bookingno:" + objBooking.BookingNo.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetQRCode_exception", "token=" + new JavaScriptSerializer().Serialize(json) + "  ,bookingno:" + objBooking.BookingNo.ToStr() + ", exception:" + ex.Message);
+                    //File.AppendAllText(physicalPath + "\\GetQRCode_exception.txt", DateTime.Now.ToStr() + ": token=" + new JavaScriptSerializer().Serialize(json) + "  ,bookingno:" + objBooking.BookingNo.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -7390,7 +7461,8 @@ namespace SignalRHub
             string json = string.Empty;
             try
             {
-                File.AppendAllText(physicalPath + "\\CheckPaymentStatus.txt", DateTime.Now.ToStr() + ": request" + mesg.ToStr());
+                General.WriteLog("CheckPaymentStatus", "request: " + mesg);
+                //File.AppendAllText(physicalPath + "\\CheckPaymentStatus.txt", DateTime.Now.ToStr() + ": request" + mesg.ToStr());
             }
             catch { }
             try
@@ -7447,7 +7519,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(AppContext.BaseDirectory + "\\CheckPaymentStatus_exception.txt", DateTime.Now.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("CheckPaymentStatus_exception", "response:" + new JavaScriptSerializer().Serialize(resp) + ", exception:" + ex.Message);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\CheckPaymentStatus_exception.txt", DateTime.Now.ToStr() + ",response:" + new JavaScriptSerializer().Serialize(resp) + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -9064,8 +9137,8 @@ namespace SignalRHub
                 try
                 {
                     bidDetails = (!string.IsNullOrEmpty(Global.EnableBidDetails) ? Global.EnableBidDetails.ToInt() : 0);
-                    File.AppendAllText(physicalPath + "\\requestPlotsBiddingApi.txt", DateTime.Now + ": datavalue=" + mesg + Environment.NewLine);
-
+                    //File.AppendAllText(physicalPath + "\\requestPlotsBiddingApi.txt", DateTime.Now + ": datavalue=" + mesg + Environment.NewLine);
+                    General.WriteLog("requestPlotsBiddingApi", "datavalue= " + mesg);
                 }
                 catch
                 {
@@ -9345,8 +9418,8 @@ namespace SignalRHub
                         {
                             try
                             {
-                                File.AppendAllText(physicalPath + "\\plotsBidding_response.txt", DateTime.Now.ToStr() + ": request:" + mesg + Environment.NewLine + "response:" + response + Environment.NewLine + Environment.NewLine);
-
+                                //File.AppendAllText(physicalPath + "\\plotsBidding_response.txt", DateTime.Now.ToStr() + ": request:" + mesg + Environment.NewLine + "response:" + response + Environment.NewLine + Environment.NewLine);
+                                General.WriteLog("plotsBidding_response", "request: " + mesg + Environment.NewLine + "response:" + response);
 
 
 
@@ -9362,7 +9435,8 @@ namespace SignalRHub
                     {
                         try
                         {
-                            File.AppendAllText(physicalPath + "\\requestPlotsBiddingByNearestPlotApi_exception.txt", DateTime.Now.ToStr() + ": " + ex.Message + Environment.NewLine);
+                            //File.AppendAllText(physicalPath + "\\requestPlotsBiddingByNearestPlotApi_exception.txt", DateTime.Now.ToStr() + ": " + ex.Message + Environment.NewLine);
+                            General.WriteLog("requestPlotsBiddingByNearestPlotApi_exception", "request: " + mesg + ", exception:" + ex.Message);
                         }
                         catch
                         {
@@ -9423,13 +9497,13 @@ namespace SignalRHub
 
 
             }
-            catch
+            catch (Exception ex)
             {
 
                 try
                 {
-                    File.AppendAllText(AppContext.BaseDirectory + "\\getcentroid_exception.txt", DateTime.Now + ": centerx=" + centerX.ToStr() + ",centery=" + centerY + ",accumulatedArea:" + accumulatedArea + Environment.NewLine);
-
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\getcentroid_exception.txt", DateTime.Now + ": centerx=" + centerX.ToStr() + ",centery=" + centerY + ",accumulatedArea:" + accumulatedArea + Environment.NewLine);
+                    General.WriteLog("getcentroid_exception", "centerx=" + centerX.ToStr() + ",centery=" + centerY + ",accumulatedArea:" + accumulatedArea + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -9452,7 +9526,8 @@ namespace SignalRHub
             try
             {
 
-                File.AppendAllText(AppContext.BaseDirectory + "\\requestupdateversion.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                //File.AppendAllText(AppContext.BaseDirectory + "\\requestupdateversion.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                General.WriteLog("requestupdateversion", "request: " + mesg);
 
             }
             catch
@@ -9507,8 +9582,8 @@ namespace SignalRHub
 
                 try
                 {
-
-                    File.AppendAllText(physicalPath + "\\" + "requestPlotsBiddingDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                    General.WriteLog("requestPlotsBiddingDetails", "message: " + mesg);
+                    //File.AppendAllText(physicalPath + "\\" + "requestPlotsBiddingDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
                 }
                 catch
                 {
@@ -9626,7 +9701,8 @@ namespace SignalRHub
                     res.IsSuccess = false;
                     res.Message = ex.Message;
 
-                    File.AppendAllText(physicalPath + "\\" + "requestPlotsBiddingDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + " ,exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestPlotsBiddingDetails_exception", "message:" + mesg + ", exception:" + ex.Message);
+                    //File.AppendAllText(physicalPath + "\\" + "requestPlotsBiddingDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + " ,exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -9646,8 +9722,8 @@ namespace SignalRHub
         {
             try
             {
-
-                File.AppendAllText(physicalPath + "\\" + "requestChangePaymentType.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                General.WriteLog("requestChangePaymentType", "message: " + mesg);
+                //File.AppendAllText(physicalPath + "\\" + "requestChangePaymentType.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
             }
             catch
             {
@@ -9748,8 +9824,8 @@ namespace SignalRHub
         {
             try
             {
-
-                File.AppendAllText(physicalPath + "\\" + "requestChangeDestination.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                General.WriteLog("requestChangeDestination", "message: " + mesg);
+                //File.AppendAllText(physicalPath + "\\" + "requestChangeDestination.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
             }
             catch
             {
@@ -9814,8 +9890,8 @@ namespace SignalRHub
         {
             try
             {
-
-                File.AppendAllText(physicalPath + "\\" + "requestconDriverBid.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                General.WriteLog("requestconDriverBid", "message: " + mesg);
+                //File.AppendAllText(physicalPath + "\\" + "requestconDriverBid.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
             }
             catch
             {
@@ -9954,8 +10030,8 @@ namespace SignalRHub
                                             distance = Math.Round(new DotNetCoords.LatLng(Convert.ToDouble(objBid.Latitude), Convert.ToDouble(objBid.Longitude)).DistanceMiles(new LatLng(Convert.ToDouble(coord.Latitude), Convert.ToDouble(coord.Longtiude))).ToDecimal(), 1);
                                             try
                                             {
-
-                                                File.AppendAllText(physicalPath + "\\" + "requestconDriverBid_AllowBidRadiusInMiles.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", distance: " + distance.ToStr() + "  ||  coord: " + coord.Latitude.ToStr() + "," + coord.Longtiude.ToStr() + Environment.NewLine);
+                                                General.WriteLog("requestconDriverBid_AllowBidRadiusInMiles", "distance: " + distance.ToStr() + " || coord: " + coord.Latitude.ToStr() + ", " + coord.Longtiude.ToStr());
+                                                //File.AppendAllText(physicalPath + "\\" + "requestconDriverBid_AllowBidRadiusInMiles.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", distance: " + distance.ToStr() + "  ||  coord: " + coord.Latitude.ToStr() + "," + coord.Longtiude.ToStr() + Environment.NewLine);
                                             }
                                             catch
                                             {
@@ -10461,8 +10537,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\requestdriverBid_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
-
+                    //File.AppendAllText(physicalPath + "\\requestdriverBid_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestdriverBid_exception", "exception:" + ex.Message);
                 }
                 catch
                 {
@@ -10527,7 +10603,8 @@ namespace SignalRHub
             ResponseData res = new ResponseData();
             try
             {
-                File.AppendAllText(physicalPath + "\\requestdriverJobBid.txt", DateTime.Now.ToStr() + " Request:" + mesg + Environment.NewLine);
+                //File.AppendAllText(physicalPath + "\\requestdriverJobBid.txt", DateTime.Now.ToStr() + " Request:" + mesg + Environment.NewLine);
+                General.WriteLog("requestdriverJobBid", "Request: " + mesg);
             }
             catch
             {
@@ -10764,7 +10841,8 @@ namespace SignalRHub
                 IsDriverBidding = false;
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\requestdriverjobbid_exception.txt", DateTime.Now.ToStr() + ":" + response + ":" + dataValue.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestdriverjobbid_exception.txt", DateTime.Now.ToStr() + ":" + response + ":" + dataValue.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestdriverjobbid_exception", "response:" + dataValue.ToStr() + ", exception:" + ex.Message);
                 }
                 catch (Exception ex2)
                 {
@@ -10787,7 +10865,8 @@ namespace SignalRHub
 
             try
             {
-                File.AppendAllText(physicalPath + "\\requestdriverjobbidresp.txt", DateTime.Now.ToStr() + ":" + response + ":" + dataValue.ToStr() + Environment.NewLine);
+                //File.AppendAllText(physicalPath + "\\requestdriverjobbidresp.txt", DateTime.Now.ToStr() + ":" + response + ":" + dataValue.ToStr() + Environment.NewLine);
+                General.WriteLog("requestdriverjobbidresp", "response: " + dataValue.ToStr());
             }
             catch (Exception ex)
             {
@@ -10814,7 +10893,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\requestdriverjobbidresponse.txt", DateTime.Now.ToStr() + ":" + response + ":" + dataValue.ToStr() + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestdriverjobbidresponse.txt", DateTime.Now.ToStr() + ":" + response + ":" + dataValue.ToStr() + Environment.NewLine);
+                    General.WriteLog("requestdriverjobbidresponse", "response: " + dataValue.ToStr());
                 }
                 catch (Exception ex)
                 {
@@ -11369,8 +11449,8 @@ namespace SignalRHub
             try
             {
 
-                File.AppendAllText(AppContext.BaseDirectory + "\\requestDriverSettings.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
-
+                //File.AppendAllText(AppContext.BaseDirectory + "\\requestDriverSettings.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                General.WriteLog("requestDriverSettings", "request: " + mesg);
             }
             catch
             {
@@ -11680,8 +11760,8 @@ namespace SignalRHub
 
                 try
                 {
-
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestDriverSettings_exception.txt", DateTime.Now.ToStr() + " request" + message + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestDriverSettings_exception", "request:" + message + ", exception:" + ex.Message);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestDriverSettings_exception.txt", DateTime.Now.ToStr() + " request" + message + ",exception:" + ex.Message + Environment.NewLine);
 
                 }
                 catch
@@ -11701,8 +11781,8 @@ namespace SignalRHub
             try
             {
 
-                File.AppendAllText(AppContext.BaseDirectory + "\\requestShiftLoginx.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
-
+                //File.AppendAllText(AppContext.BaseDirectory + "\\requestShiftLoginx.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                General.WriteLog("requestShiftLoginx", "request: " + mesg);
             }
             catch
             {
@@ -11798,7 +11878,8 @@ namespace SignalRHub
                                         {
                                             try
                                             {
-                                                File.AppendAllText(physicalPath + "\\RentlimitException.txt", DateTime.Now.ToStr() + ":" + ex.Message + Environment.NewLine);
+                                                //File.AppendAllText(physicalPath + "\\RentlimitException.txt", DateTime.Now.ToStr() + ":" + ex.Message + Environment.NewLine);
+                                                General.WriteLog("RentlimitException", "exception:" + ex.Message);
                                             }
                                             catch
                                             {
@@ -12355,7 +12436,8 @@ namespace SignalRHub
                                             }
                                             try
                                             {
-                                                File.AppendAllText(physicalPath + "\\" + "offlinemsgreceived.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + resp + ", jobIds: " + "" + ",driverId:" + 0 + Environment.NewLine);
+                                                General.WriteLog("offlinemsgreceived", "message: " + resp + ", jobIds: " + "" + ",driverId:" + 0);
+                                                //File.AppendAllText(physicalPath + "\\" + "offlinemsgreceived.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + resp + ", jobIds: " + "" + ",driverId:" + 0 + Environment.NewLine);
                                             }
                                             catch
                                             {
@@ -12367,7 +12449,8 @@ namespace SignalRHub
                                     {
                                         try
                                         {
-                                            File.AppendAllText(physicalPath + "\\" + "offlinemsgreceived_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + ", jobIds: " + "" + ",driverId:" + driverId + Environment.NewLine);
+                                            //File.AppendAllText(physicalPath + "\\" + "offlinemsgreceived_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + ", jobIds: " + "" + ",driverId:" + driverId + Environment.NewLine);
+                                            General.WriteLog("offlinemsgreceived_exception", "message:" + ex.Message + ", jobIds: " + "" + ",driverId:" + driverId);
                                         }
                                         catch
                                         {
@@ -12711,14 +12794,15 @@ namespace SignalRHub
 
                                             General.BroadCastMessage(data);
                                             General.CallGetDashboardData();
-                                            File.AppendAllText(physicalPath + "\\" + "controllerofflinejobreceived.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", jobIds: " + jobIds + ",driverId:" + driverId + Environment.NewLine);
-
+                                            //File.AppendAllText(physicalPath + "\\" + "controllerofflinejobreceived.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", jobIds: " + jobIds + ",driverId:" + driverId + Environment.NewLine);
+                                            General.WriteLog("controllerofflinejobreceived", "jobIds: " + jobIds + ", driverId: " + driverId);
                                         }
                                         catch (Exception ex)
                                         {
                                             try
                                             {
-                                                File.AppendAllText(physicalPath + "\\" + "controllerofflinejobreceived_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + ", jobIds: " + jobIds + ",driverId:" + driverId + Environment.NewLine);
+                                                //File.AppendAllText(physicalPath + "\\" + "controllerofflinejobreceived_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + ", jobIds: " + jobIds + ",driverId:" + driverId + Environment.NewLine);
+                                                General.WriteLog("controllerofflinejobreceived_exception", "message: " + ex.Message + "jobIds: " + jobIds + ",driverId:" + driverId);
                                             }
                                             catch
                                             {
@@ -12755,7 +12839,8 @@ namespace SignalRHub
                                 //res.Message = ex.Message;
 
 
-                                File.AppendAllText(physicalPath + "\\" + "offlinejobreceived_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + ", jobIds: " + "" + ",driverId:" + driverId + Environment.NewLine);
+                                General.WriteLog("offlinejobreceived_exception", "message: " + ex.Message + "jobIds: " + "" + ",driverId:" + driverId);
+                                //File.AppendAllText(physicalPath + "\\" + "offlinejobreceived_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + ", jobIds: " + "" + ",driverId:" + driverId + Environment.NewLine);
                             }
                             catch
                             {
@@ -12773,7 +12858,8 @@ namespace SignalRHub
 
                     try
                     {
-                        File.AppendAllText(physicalPath + "\\" + "requestshiftlogin_exception1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + ", data: " + new JavaScriptSerializer().Serialize(mesg) + Environment.NewLine);
+                        General.WriteLog("requestshiftlogin_exception1", "message: " + ex.Message + "data: " + new JavaScriptSerializer().Serialize(mesg));
+                        //File.AppendAllText(physicalPath + "\\" + "requestshiftlogin_exception1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + ", data: " + new JavaScriptSerializer().Serialize(mesg) + Environment.NewLine);
                     }
                     catch
                     {
@@ -12795,7 +12881,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\" + "requestshiftlogin_exception2.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + ", data: " + new JavaScriptSerializer().Serialize(mesg) + Environment.NewLine);
+                    General.WriteLog("requestshiftlogin_exception2", "message: " + ex.Message + "data: " + new JavaScriptSerializer().Serialize(mesg));
+                    //File.AppendAllText(physicalPath + "\\" + "requestshiftlogin_exception2.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + ", data: " + new JavaScriptSerializer().Serialize(mesg) + Environment.NewLine);
                 }
                 catch
                 {
@@ -12819,8 +12906,8 @@ namespace SignalRHub
             try
             {
 
-                File.AppendAllText(AppContext.BaseDirectory + "\\Login.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
-
+                //File.AppendAllText(AppContext.BaseDirectory + "\\Login.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                General.WriteLog("Login", "request: " + mesg);
             }
             catch
             {
@@ -12926,8 +13013,8 @@ namespace SignalRHub
                         try
                         {
 
-                            File.AppendAllText(AppContext.BaseDirectory + "\\Login2.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
-
+                            //File.AppendAllText(AppContext.BaseDirectory + "\\Login2.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                            General.WriteLog("Login2", "request: " + mesg);
                         }
                         catch
                         {
@@ -13023,8 +13110,8 @@ namespace SignalRHub
 
                 try
                 {
-
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestJobListAPI.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                    General.WriteLog("requestJobListAPI", "request: " + mesg);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestJobListAPI.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
                 }
                 catch
                 {
@@ -13169,8 +13256,8 @@ namespace SignalRHub
 
                             try
                             {
-
-                                File.AppendAllText(AppContext.BaseDirectory + "\\requestJobListsummary_response.txt", DateTime.Now.ToStr() + " request" + mesg + ",response:" + res.Data + Environment.NewLine);
+                                General.WriteLog("requestJobListsummary_response", "request: " + mesg + ", response:" + res.Data);
+                                //File.AppendAllText(AppContext.BaseDirectory + "\\requestJobListsummary_response.txt", DateTime.Now.ToStr() + " request" + mesg + ",response:" + res.Data + Environment.NewLine);
                             }
                             catch
                             {
@@ -13211,8 +13298,8 @@ namespace SignalRHub
 
                             try
                             {
-
-                                File.AppendAllText(AppContext.BaseDirectory + "\\requestJobList_response.txt", DateTime.Now.ToStr() + " request" + mesg + ",response:" + res.Data + Environment.NewLine);
+                                General.WriteLog("requestJobList_response", "request: " + mesg + ", response:" + res.Data);
+                                //File.AppendAllText(AppContext.BaseDirectory + "\\requestJobList_response.txt", DateTime.Now.ToStr() + " request" + mesg + ",response:" + res.Data + Environment.NewLine);
                             }
                             catch
                             {
@@ -13241,8 +13328,8 @@ namespace SignalRHub
             {
                 try
                 {
-
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestJobList_exception.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestJobList_exception", "request:" + mesg + ", exception:" + ex.Message);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestJobList_exception.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -13263,8 +13350,8 @@ namespace SignalRHub
 
             try
             {
-
-                File.AppendAllText(physicalPath + "\\requestDriverStatus.txt", DateTime.Now.ToStr() + " mesg:" + mesg + Environment.NewLine);
+                General.WriteLog("requestDriverStatus", "mesg: " + mesg);
+                //File.AppendAllText(physicalPath + "\\requestDriverStatus.txt", DateTime.Now.ToStr() + " mesg:" + mesg + Environment.NewLine);
             }
             catch
             {
@@ -13463,8 +13550,8 @@ namespace SignalRHub
 
             try
             {
-
-                File.AppendAllText(physicalPath + "\\panicAlert.txt", DateTime.Now.ToStr() + " mesg:" + mesg + Environment.NewLine);
+                General.WriteLog("panicAlert", "mesg: " + mesg);
+                //File.AppendAllText(physicalPath + "\\panicAlert.txt", DateTime.Now.ToStr() + " mesg:" + mesg + Environment.NewLine);
             }
             catch
             {
@@ -13639,7 +13726,8 @@ namespace SignalRHub
                     {
                         try
                         {
-                            File.AppendAllText(AppContext.BaseDirectory + "ringbacklog.txt", "datastring:" + message + "RESULT : " + resp + " on time :" + DateTime.Now.ToStr());
+                            General.WriteLog("ringbacklog", "datastring: " + message + " RESULT : " + resp);
+                            //File.AppendAllText(AppContext.BaseDirectory + "ringbacklog.txt", "datastring:" + message + "RESULT : " + resp + " on time :" + DateTime.Now.ToStr());
                         }
                         catch
                         {
@@ -13671,8 +13759,8 @@ namespace SignalRHub
 
                     try
                     {
-                        File.AppendAllText(AppContext.BaseDirectory + AppContext.BaseDirectory + "ringbacklog.txt", "datastring:" + message + "RESULT : RINGBACK No number found" + " on time :" + DateTime.Now.ToStr());
-
+                        //File.AppendAllText(AppContext.BaseDirectory + AppContext.BaseDirectory + "ringbacklog.txt", "datastring:" + message + "RESULT : RINGBACK No number found" + " on time :" + DateTime.Now.ToStr());
+                        General.WriteLog("ringbacklog", "datastring: " + message + " RESULT : RINGBACK No number found");
                     }
                     catch
                     {
@@ -13694,8 +13782,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(AppContext.BaseDirectory + "ringbacklog_exception.txt", "datastring:" + message + "RESULT : " + ex.Message + ",failed:RingBack Delivery Failed" + " on time :" + DateTime.Now.ToStr());
-
+                    //File.AppendAllText(AppContext.BaseDirectory + "ringbacklog_exception.txt", "datastring:" + message + "RESULT : " + ex.Message + ",failed:RingBack Delivery Failed" + " on time :" + DateTime.Now.ToStr());
+                    General.WriteLog("ringbacklog_exception", "datastring:" + message + ", RESULT:" + ex.Message + ", failed:RingBack Delivery Failed");
                 }
                 catch
                 {
@@ -13969,8 +14057,8 @@ namespace SignalRHub
             {
                 try
                 {
-
-                    File.AppendAllText(physicalPath + "\\joblate.txt", DateTime.Now.ToStr() + " request" + dataValue + Environment.NewLine);
+                    General.WriteLog("joblate", "request: " + dataValue);
+                    //File.AppendAllText(physicalPath + "\\joblate.txt", DateTime.Now.ToStr() + " request" + dataValue + Environment.NewLine);
                 }
                 catch
                 {
@@ -14017,7 +14105,8 @@ namespace SignalRHub
         {
             try
             {
-                File.AppendAllText(physicalPath + "\\requestMeterType.txt", DateTime.Now.ToStr() + " request: " + mesg + Environment.NewLine);
+                General.WriteLog("requestMeterType", "request: " + mesg);
+                //File.AppendAllText(physicalPath + "\\requestMeterType.txt", DateTime.Now.ToStr() + " request: " + mesg + Environment.NewLine);
             }
             catch
             {
@@ -14095,7 +14184,8 @@ namespace SignalRHub
 
             try
             {
-                File.AppendAllText(physicalPath + "\\requestFlagDown.txt", DateTime.Now.ToStr() + " mesg: " + mesg + Environment.NewLine);
+                //File.AppendAllText(physicalPath + "\\requestFlagDown.txt", DateTime.Now.ToStr() + " mesg: " + mesg + Environment.NewLine);
+                General.WriteLog("requestFlagDown", "mesg: " + mesg);
             }
             catch
             {
@@ -14126,8 +14216,8 @@ namespace SignalRHub
                         {
                             try
                             {
-
-                                File.AppendAllText(AppContext.BaseDirectory + "\\flagPickup.txt", DateTime.Now.ToStr() + ": msg :" + mesg + Environment.NewLine);
+                                General.WriteLog("flagPickup", "msg: " + mesg);
+                                //File.AppendAllText(AppContext.BaseDirectory + "\\flagPickup.txt", DateTime.Now.ToStr() + ": msg :" + mesg + Environment.NewLine);
                             }
                             catch (Exception ex)
                             {
@@ -14300,7 +14390,8 @@ namespace SignalRHub
 
                         try
                         {
-                            File.AppendAllText(physicalPath + "\\requestFlagDown.txt", DateTime.Now.ToStr() + " response: " + respo + Environment.NewLine);
+                            General.WriteLog("requestFlagDown", "response: " + respo);
+                            //File.AppendAllText(physicalPath + "\\requestFlagDown.txt", DateTime.Now.ToStr() + " response: " + respo + Environment.NewLine);
                         }
                         catch
                         {
@@ -14328,7 +14419,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\requestFlagDown_exception.txt", DateTime.Now.ToStr() + " mesg: " + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestFlagDown_exception", "mesg:" + mesg + ", exception:" + ex.Message);
+                    //File.AppendAllText(physicalPath + "\\requestFlagDown_exception.txt", DateTime.Now.ToStr() + " mesg: " + mesg + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 {
@@ -14355,8 +14447,8 @@ namespace SignalRHub
 
             try
             {
-                File.AppendAllText(physicalPath + "\\requestMakeSignatureapi.txt", DateTime.Now + " ," + ", message" + new JavaScriptSerializer().Serialize(mesg));
-
+                //File.AppendAllText(physicalPath + "\\requestMakeSignatureapi.txt", DateTime.Now + " ," + ", message" + new JavaScriptSerializer().Serialize(mesg));
+                General.WriteLog("requestMakeSignatureapi", "message: " + new JavaScriptSerializer().Serialize(mesg));
             }
             catch
             {
@@ -14501,8 +14593,8 @@ namespace SignalRHub
 
                         try
                         {
-                            File.AppendAllText(physicalPath + "\\exceptionelse_accountsignature.txt", DateTime.Now + " ," + ex.Message + ", message" + new JavaScriptSerializer().Serialize(mesg));
-
+                            //File.AppendAllText(physicalPath + "\\exceptionelse_accountsignature.txt", DateTime.Now + " ," + ex.Message + ", message" + new JavaScriptSerializer().Serialize(mesg));
+                            General.WriteLog("exceptionelse_accountsignature", "exception:" + ex.Message + "message" + new JavaScriptSerializer().Serialize(mesg));
                         }
                         catch
                         {
@@ -14525,8 +14617,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\exception_accountsignature.txt", DateTime.Now + " ," + ex.Message + ", message" + new JavaScriptSerializer().Serialize(mesg));
-
+                    //File.AppendAllText(physicalPath + "\\exception_accountsignature.txt", DateTime.Now + " ," + ex.Message + ", message" + new JavaScriptSerializer().Serialize(mesg));
+                    General.WriteLog("exception_accountsignature", "exception:" + ex.Message + "message" + new JavaScriptSerializer().Serialize(mesg));
                 }
                 catch
                 {
@@ -14625,8 +14717,8 @@ namespace SignalRHub
                 {
 
 
-
-                    File.AppendAllText(physicalPath + "\\requestaccountcharges.txt", DateTime.Now + " , response" + response + ", message" + mesg + " , EnabledAccountCharges=" + Global.enableAccountCharges + Environment.NewLine);
+                    General.WriteLog("requestaccountcharges", "response: " + response + ", message" + mesg + " , EnabledAccountCharges=" + Global.enableAccountCharges);
+                    //File.AppendAllText(physicalPath + "\\requestaccountcharges.txt", DateTime.Now + " , response" + response + ", message" + mesg + " , EnabledAccountCharges=" + Global.enableAccountCharges + Environment.NewLine);
 
 
                 }
@@ -14648,8 +14740,8 @@ namespace SignalRHub
                     res.Message = "nocharges";
 
 
-                    File.AppendAllText(physicalPath + "\\requestaccountcharges_exception.txt", DateTime.Now + " ," + ex.Message + ", message" + mesg);
-
+                    //File.AppendAllText(physicalPath + "\\requestaccountcharges_exception.txt", DateTime.Now + " ," + ex.Message + ", message" + mesg);
+                    General.WriteLog("requestaccountcharges_exception", "exception:" + ex.Message + ", message" + mesg);
 
                 }
                 catch
@@ -14856,8 +14948,8 @@ namespace SignalRHub
             {
 
 
-
-                File.AppendAllText(physicalPath + "\\requestNoPickup.txt", DateTime.Now + " , REQUEST" + mesg + Environment.NewLine);
+                General.WriteLog("requestNoPickup", "REQUEST: " + mesg);
+                //File.AppendAllText(physicalPath + "\\requestNoPickup.txt", DateTime.Now + " , REQUEST" + mesg + Environment.NewLine);
 
 
             }
@@ -14984,9 +15076,9 @@ namespace SignalRHub
                 try
                 {
 
+                    General.WriteLog("requestNoPickup_exception", "REQUEST:" + mesg + ", exception:" + ex.Message);
 
-
-                    File.AppendAllText(physicalPath + "\\requestNoPickup_exception.txt", DateTime.Now + " , REQUEST" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestNoPickup_exception.txt", DateTime.Now + " , REQUEST" + mesg + ",exception:" + ex.Message + Environment.NewLine);
 
 
                 }
@@ -15182,8 +15274,8 @@ namespace SignalRHub
                 try
                 {
 
-
-                    File.AppendAllText(physicalPath + "\\requestChangePlot.txt", DateTime.Now + Environment.NewLine);
+                    General.WriteLog("requestChangePlot", "REQUEST: " + mesg);
+                    //File.AppendAllText(physicalPath + "\\requestChangePlot.txt", DateTime.Now + Environment.NewLine);
                 }
                 catch
                 { }
@@ -15212,8 +15304,8 @@ namespace SignalRHub
                     res.IsSuccess = false;
                     res.Message = "exceptionoccurred";
 
-
-                    File.AppendAllText(physicalPath + "\\requestChangePlot_exception.txt", DateTime.Now + Environment.NewLine);
+                    General.WriteLog("requestChangePlot_exception", "REQUEST:" + mesg + ", exception:" + ex.Message);
+                    //File.AppendAllText(physicalPath + "\\requestChangePlot_exception.txt", DateTime.Now + Environment.NewLine);
                 }
                 catch
                 { }
@@ -15397,8 +15489,8 @@ namespace SignalRHub
 
                 try
                 {
-
-                    File.AppendAllText(physicalPath + "\\" + "requestSelectAsDirected.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                    General.WriteLog("requestSelectAsDirected", "message: " + mesg);
+                    //File.AppendAllText(physicalPath + "\\" + "requestSelectAsDirected.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
                 }
                 catch
                 {
@@ -15494,8 +15586,8 @@ namespace SignalRHub
 
 
                                     surchargeParking = db.ExecuteQuery<decimal?>(query).FirstOrDefault();
-                                    File.AppendAllText(physicalPath + "\\" + "requestSelectAsDirectedquery.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + query + Environment.NewLine);
-
+                                    //File.AppendAllText(physicalPath + "\\" + "requestSelectAsDirectedquery.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + query + Environment.NewLine);
+                                    General.WriteLog("requestSelectAsDirectedquery", "message: " + query);
 
                                 }
                                 catch (Exception ex)
@@ -15503,8 +15595,8 @@ namespace SignalRHub
 
                                     try
                                     {
-                                        File.AppendAllText(physicalPath + "\\" + "requestSelectAsDirectedquery_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + query + ",exce[tion:" + ex.Message + Environment.NewLine);
-
+                                        //File.AppendAllText(physicalPath + "\\" + "requestSelectAsDirectedquery_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + query + ",exce[tion:" + ex.Message + Environment.NewLine);
+                                        General.WriteLog("requestSelectAsDirectedquery_exception", "message:" + query + ", exception:" + ex.Message);
                                     }
                                     catch
                                     {
@@ -15597,8 +15689,8 @@ namespace SignalRHub
                             res.IsSuccess = true;
                             res.Message = "exceptionoccurred";
 
-                            File.AppendAllText(physicalPath + "\\requestselectasdirected_exceptionsurcharge.txt", DateTime.Now.ToStr() + " , datavalue=" + mesg + ",exception=" + ex.Message + Environment.NewLine);
-
+                            //File.AppendAllText(physicalPath + "\\requestselectasdirected_exceptionsurcharge.txt", DateTime.Now.ToStr() + " , datavalue=" + mesg + ",exception=" + ex.Message + Environment.NewLine);
+                            General.WriteLog("requestselectasdirected_exceptionsurcharge", "datavalue=" + mesg + ", exception:" + ex.Message);
                         }
 
                         catch
@@ -15637,8 +15729,8 @@ namespace SignalRHub
                     res.IsSuccess = false;
                     res.Message = "exceptionoccurred";
 
-                    File.AppendAllText(physicalPath + "\\requestselectasdirected_exception.txt", DateTime.Now.ToStr() + " , datavalue=" + mesg + ",exception=" + ex.Message + Environment.NewLine);
-
+                    //File.AppendAllText(physicalPath + "\\requestselectasdirected_exception.txt", DateTime.Now.ToStr() + " , datavalue=" + mesg + ",exception=" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestselectasdirected_exception", "datavalue=" + mesg + ", exception:" + ex.Message);
                 }
 
                 catch
@@ -15665,8 +15757,8 @@ namespace SignalRHub
                 try
                 {
 
-
-                    File.AppendAllText(physicalPath + "\\requestVehicles.txt", DateTime.Now + ",request:" + mesg + Environment.NewLine);
+                    General.WriteLog("requestVehicles", "request: " + mesg);
+                    //File.AppendAllText(physicalPath + "\\requestVehicles.txt", DateTime.Now + ",request:" + mesg + Environment.NewLine);
                 }
                 catch
                 { }
@@ -15736,8 +15828,8 @@ namespace SignalRHub
                 try
                 {
 
-
-                    File.AppendAllText(physicalPath + "\\requestAsDirected.txt", DateTime.Now + Environment.NewLine);
+                    General.WriteLog("requestAsDirected", "request: " + mesg);
+                    //File.AppendAllText(physicalPath + "\\requestAsDirected.txt", DateTime.Now + Environment.NewLine);
                 }
                 catch
                 { }
@@ -15772,7 +15864,8 @@ namespace SignalRHub
                     res.IsSuccess = false;
                     res.Message = "exceptionoccurred";
 
-                    File.AppendAllText(physicalPath + "\\requestAsDirected_exception.txt", DateTime.Now + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestAsDirected_exception", "datavalue=" + mesg + ", exception:" + ex.Message);
+                    //File.AppendAllText(physicalPath + "\\requestAsDirected_exception.txt", DateTime.Now + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
                 { }
@@ -15791,8 +15884,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestAcceptJobAdditional.txt", DateTime.Now.ToStr() + ",mesg=" + mesg + Environment.NewLine);
-
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestAcceptJobAdditional.txt", DateTime.Now.ToStr() + ",mesg=" + mesg + Environment.NewLine);
+                    General.WriteLog("requestAsDirected", "mesg= " + mesg);
                 }
                 catch
                 {
@@ -15910,8 +16003,8 @@ namespace SignalRHub
                     {
                         try
                         {
-                            File.AppendAllText(AppContext.BaseDirectory + "\\requestAcceptJobAdditional_exception.txt", DateTime.Now.ToStr() + ",mesg=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
-
+                            //File.AppendAllText(AppContext.BaseDirectory + "\\requestAcceptJobAdditional_exception.txt", DateTime.Now.ToStr() + ",mesg=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                            General.WriteLog("requestAcceptJobAdditional_exception", "mesg=" + mesg + ", exception:" + ex.Message);
                         }
                         catch
                         {
@@ -16009,8 +16102,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(AppContext.BaseDirectory + "\\GetETADistance_exception.txt", DateTime.Now.ToStr() + ",origin" + origin + ",destination:" + destination + ex.Message + Environment.NewLine);
-
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\GetETADistance_exception.txt", DateTime.Now.ToStr() + ",origin" + origin + ",destination:" + destination + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetETADistance_exception", "origin" + origin + ",destination:" + destination + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -16138,8 +16231,8 @@ namespace SignalRHub
 
                                         try
                                         {
-
-                                            File.AppendAllText(physicalPath + "\\actionbutton_otherjobinqueue.txt", DateTime.Now.ToStr() + " request" + dataValue + Environment.NewLine);
+                                            General.WriteLog("actionbutton_otherjobinqueue", "request: " + dataValue);
+                                            //File.AppendAllText(physicalPath + "\\actionbutton_otherjobinqueue.txt", DateTime.Now.ToStr() + " request" + dataValue + Environment.NewLine);
                                         }
                                         catch
                                         {
@@ -16151,8 +16244,8 @@ namespace SignalRHub
                                 {
                                     try
                                     {
-
-                                        File.AppendAllText(physicalPath + "\\actionbutton_otherjobinqueueexception.txt", DateTime.Now.ToStr() + " request" + dataValue + ",exception:" + ex.Message + Environment.NewLine);
+                                        General.WriteLog("actionbutton_otherjobinqueueexception", "request:" + dataValue + ", exception:" + ex.Message);
+                                        //File.AppendAllText(physicalPath + "\\actionbutton_otherjobinqueueexception.txt", DateTime.Now.ToStr() + " request" + dataValue + ",exception:" + ex.Message + Environment.NewLine);
                                     }
                                     catch
                                     {
@@ -16792,7 +16885,8 @@ namespace SignalRHub
                                                 }
                                                 try
                                                 {
-                                                    File.AppendAllText(AppContext.BaseDirectory + "\\NoShowByDriverFee.txt", DateTime.Now.ToStr() + ": canceled fee chared DTO :" + new JavaScriptSerializer().Serialize(st) + ": resp :" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                                                    //File.AppendAllText(AppContext.BaseDirectory + "\\NoShowByDriverFee.txt", DateTime.Now.ToStr() + ": canceled fee chared DTO :" + new JavaScriptSerializer().Serialize(st) + ": resp :" + new JavaScriptSerializer().Serialize(resp) + Environment.NewLine);
+                                                    General.WriteLog("NoShowByDriverFee", "canceled fee chared DTO : " + new JavaScriptSerializer().Serialize(st) + ": resp :" + new JavaScriptSerializer().Serialize(resp));
                                                 }
                                                 catch
                                                 {
@@ -16853,7 +16947,8 @@ namespace SignalRHub
                 try
                 {
                     //
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                    General.WriteLog("requestarrive", "request: " + mesg);
                 }
                 catch
                 {
@@ -17166,7 +17261,8 @@ namespace SignalRHub
                                         try
                                         {
                                             objAction.Message = ex.Message;
-                                            File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_airportexception.txt", DateTime.Now.ToStr() + " request" + mesg + ",query=" + query2 + "exception:" + ex.Message + Environment.NewLine);
+                                            //File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_airportexception.txt", DateTime.Now.ToStr() + " request" + mesg + ",query=" + query2 + "exception:" + ex.Message + Environment.NewLine);
+                                            General.WriteLog("requestarrive_airportexception", "request:" + mesg + ", query=" + query2 + ", exception:" + ex.Message);
                                         }
                                         catch
                                         {
@@ -17188,8 +17284,8 @@ namespace SignalRHub
 
                                             try
                                             {
-
-                                                File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_airportwaitingapplied.txt", DateTime.Now.ToStr() + " request" + mesg + ",query=" + query + Environment.NewLine);
+                                                General.WriteLog("requestarrive_airportwaitingapplied", "request: " + mesg + ",query=" + query);
+                                                //File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_airportwaitingapplied.txt", DateTime.Now.ToStr() + " request" + mesg + ",query=" + query + Environment.NewLine);
                                             }
                                             catch
                                             {
@@ -17223,7 +17319,8 @@ namespace SignalRHub
                                 try
                                 {
                                     objAction.Message = ex2.Message;
-                                    File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_innerexception.txt", DateTime.Now.ToStr() + " request" + mesg + ",query=" + query + "exception:" + ex2.Message + Environment.NewLine);
+                                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_innerexception.txt", DateTime.Now.ToStr() + " request" + mesg + ",query=" + query + "exception:" + ex2.Message + Environment.NewLine);
+                                    General.WriteLog("requestarrive_airportexception", "request:" + mesg + ", query=" + query + ", exception:" + ex2.Message);
                                 }
                                 catch
                                 {
@@ -17261,7 +17358,8 @@ namespace SignalRHub
                         try
                         {
                             objAction.Message = ex.Message;
-                            File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_exception1.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                            //File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_exception1.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                            General.WriteLog("requestarrive_exception1", "request:" + mesg + ", exception:" + ex.Message);
                         }
                         catch
                         {
@@ -17291,7 +17389,8 @@ namespace SignalRHub
                 try
                 {
                     objAction.Message = ex.Message;
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_exception2.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_exception2.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestarrive_exception2", "datavalue=" + mesg + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -17672,7 +17771,8 @@ namespace SignalRHub
                     {
                         try
                         {
-                            File.AppendAllText("exception_pobcollection.txt", DateTime.Now + ": datavalue=" + dataValue + ",exception" + ex.Message + Environment.NewLine);
+                            //File.AppendAllText("exception_pobcollection.txt", DateTime.Now + ": datavalue=" + dataValue + ",exception" + ex.Message + Environment.NewLine);
+                            General.WriteLog("exception_pobcollection", "datavalue=" + dataValue + ", exception:" + ex.Message);
 
                             if (HubProcessor.Instance.listofJobs.Count(c => c.DriverId == values[2].ToInt() && c.JobId == values[1].ToLong()) > 0)
                             {
@@ -17707,8 +17807,8 @@ namespace SignalRHub
                 {
                     try
                     {
-
-                        File.AppendAllText(physicalPath + "\\pobexception.txt", DateTime.Now.ToStr() + " request" + dataValue + ",exception:" + ex.Message + Environment.NewLine);
+                        General.WriteLog("pobexception", "request:" + dataValue + ", exception:" + ex.Message);
+                        //File.AppendAllText(physicalPath + "\\pobexception.txt", DateTime.Now.ToStr() + " request" + dataValue + ",exception:" + ex.Message + Environment.NewLine);
                     }
                     catch
                     {
@@ -17749,7 +17849,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\requestClearJob.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestClearJob.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    General.WriteLog("requestClearJob", "msg: " + mesg);
                 }
                 catch
                 {
@@ -17908,7 +18009,8 @@ namespace SignalRHub
 
                                         try
                                         {
-                                            File.AppendAllText(physicalPath + "\\requestClearJob_tipAmount.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                                            //File.AppendAllText(physicalPath + "\\requestClearJob_tipAmount.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                                            General.WriteLog("requestClearJob_tipAmount", "msg: " + mesg);
                                         }
                                         catch
                                         {
@@ -17928,7 +18030,8 @@ namespace SignalRHub
                                     {
                                         try
                                         {
-                                            File.AppendAllText(physicalPath + "\\requestClearJob_tipAmount_exception.txt", DateTime.Now + " : msg" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                                            //File.AppendAllText(physicalPath + "\\requestClearJob_tipAmount_exception.txt", DateTime.Now + " : msg" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                                            General.WriteLog("requestClearJob_tipAmount_exception", "msg:" + mesg + ", exception:" + ex.Message);
                                         }
                                         catch
                                         {
@@ -17958,7 +18061,8 @@ namespace SignalRHub
                                 try
                                 {
                                     //
-                                    File.AppendAllText(physicalPath + "\\paymentlog.txt", DateTime.Now + ": datavalue=" + dataValue + Environment.NewLine);
+                                    //File.AppendAllText(physicalPath + "\\paymentlog.txt", DateTime.Now + ": datavalue=" + dataValue + Environment.NewLine);
+                                    General.WriteLog("paymentlog", "datavalue=" + dataValue);
                                 }
                                 catch
                                 {
@@ -17970,8 +18074,8 @@ namespace SignalRHub
                             {
                                 try
                                 {
-
-                                    File.AppendAllText(physicalPath + "\\exception_paymentclear.txt", DateTime.Now + ": datavalue=" + dataValue + ",exception= " + ex.Message + Environment.NewLine);
+                                    General.WriteLog("exception_paymentclear", "datavalue=" + dataValue + ", exception:" + ex.Message);
+                                    //File.AppendAllText(physicalPath + "\\exception_paymentclear.txt", DateTime.Now + ": datavalue=" + dataValue + ",exception= " + ex.Message + Environment.NewLine);
                                 }
                                 catch
                                 {
@@ -17989,7 +18093,8 @@ namespace SignalRHub
                             db.ExecuteQuery<int>("update booking set paymenttypeid=1 where id=" + objAction.JobId.ToLong());
                             try
                             {
-                                File.AppendAllText(physicalPath + "\\requestClearJob.txt", DateTime.Now + " : msg" + mesg + " : change type to cash " + Environment.NewLine);
+                                //File.AppendAllText(physicalPath + "\\requestClearJob.txt", DateTime.Now + " : msg" + mesg + " : change type to cash " + Environment.NewLine);
+                                General.WriteLog("requestClearJob", "msg: " + mesg + " : change type to cash ");
                             }
                             catch
                             {
@@ -18100,7 +18205,8 @@ namespace SignalRHub
                     {
                         rrr = "false";
 
-                        File.AppendAllText(physicalPath + "\\log_manualfares.txt", DateTime.Now.ToStr() + ",DataValue:" + dataValue + ",exception:" + ex.Message);
+                        //File.AppendAllText(physicalPath + "\\log_manualfares.txt", DateTime.Now.ToStr() + ",DataValue:" + dataValue + ",exception:" + ex.Message);
+                        General.WriteLog("log_manualfares", "DataValue" + dataValue + ", exception:" + ex.Message);
                     }
 
                     ///Clients.Caller.manualFares(rrr);----------------------------------------------
@@ -18126,8 +18232,8 @@ namespace SignalRHub
                     res.Message = "exceptionoccurred";
 
 
-                    File.AppendAllText(physicalPath + "\\requestclearjob_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
-
+                    //File.AppendAllText(physicalPath + "\\requestclearjob_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestclearjob_exception", "datavalue=" + mesg + ", exception:" + ex.Message);
 
                 }
                 catch
@@ -18155,7 +18261,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\requestClearJob.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestClearJob.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    General.WriteLog("requestClearJob", "msg: " + mesg);
                 }
                 catch
                 {
@@ -18396,7 +18503,8 @@ namespace SignalRHub
                                 try
                                 {
                                     //
-                                    File.AppendAllText(physicalPath + "\\paymentlog.txt", DateTime.Now + ": datavalue=" + dataValue + Environment.NewLine);
+                                    //File.AppendAllText(physicalPath + "\\paymentlog.txt", DateTime.Now + ": datavalue=" + dataValue + Environment.NewLine);
+                                    General.WriteLog("paymentlog", "datavalue= " + dataValue);
                                 }
                                 catch
                                 {
@@ -18408,8 +18516,8 @@ namespace SignalRHub
                             {
                                 try
                                 {
-
-                                    File.AppendAllText(physicalPath + "\\exception_paymentclear.txt", DateTime.Now + ": datavalue=" + dataValue + ",exception= " + ex.Message + Environment.NewLine);
+                                    General.WriteLog("exception_paymentclear", "datavalue=" + dataValue + ", exception:" + ex.Message);
+                                    //File.AppendAllText(physicalPath + "\\exception_paymentclear.txt", DateTime.Now + ": datavalue=" + dataValue + ",exception= " + ex.Message + Environment.NewLine);
                                 }
                                 catch
                                 {
@@ -18515,7 +18623,8 @@ namespace SignalRHub
                     {
                         rrr = "false";
 
-                        File.AppendAllText(physicalPath + "\\log_manualfares.txt", DateTime.Now.ToStr() + ",DataValue:" + dataValue + ",exception:" + ex.Message);
+                        General.WriteLog("log_manualfares", "DataValue:" + dataValue + ", exception:" + ex.Message);
+                        //File.AppendAllText(physicalPath + "\\log_manualfares.txt", DateTime.Now.ToStr() + ",DataValue:" + dataValue + ",exception:" + ex.Message);
                     }
 
                     ///Clients.Caller.manualFares(rrr);----------------------------------------------
@@ -18541,7 +18650,9 @@ namespace SignalRHub
                     res.Message = "exceptionoccurred";
 
 
-                    File.AppendAllText(physicalPath + "\\requestclearjob_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestclearjob_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+
+                    General.WriteLog("requestclearjob_exception", "datavalue=" + mesg + ", exception:" + ex.Message);
 
 
                 }
@@ -18565,8 +18676,8 @@ namespace SignalRHub
         {
             try
             {
-
-                File.AppendAllText(physicalPath + "\\" + "requestbookingdetail.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                General.WriteLog("requestbookingdetail", "message: " + mesg);
+                //File.AppendAllText(physicalPath + "\\" + "requestbookingdetail.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
             }
             catch
             {
@@ -18858,7 +18969,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\requestbookingdetail_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestbookingdetail_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestbookingdetail_exception", " exception:" + ex.Message);
 
                 }
                 catch
@@ -18883,7 +18995,11 @@ namespace SignalRHub
             ResponseData res = new ResponseData();
 
             //Logging
-            try { File.AppendAllText(physicalPath + "\\" + "requestsendPaymentLink.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine); }
+            try
+            {
+                //File.AppendAllText(physicalPath + "\\" + "requestsendPaymentLink.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                General.WriteLog("requestsendPaymentLink", "message: " + mesg);
+            }
             catch { }
 
             try
@@ -18901,7 +19017,11 @@ namespace SignalRHub
             catch (Exception ex)
             {
                 //Logging
-                try { File.AppendAllText(physicalPath + "\\requestsendPaymentLink_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine); }
+                try
+                {
+                    //File.AppendAllText(physicalPath + "\\requestsendPaymentLink_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestsendPaymentLink_exception", "exception:" + ex.Message);
+                }
                 catch { }
 
                 res.Data = null;
@@ -18921,7 +19041,11 @@ namespace SignalRHub
             ResponseData res = new ResponseData();
 
             //Logging
-            try { File.AppendAllText(physicalPath + "\\" + "requestDriverPinLogin.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine); }
+            try
+            {
+                //File.AppendAllText(physicalPath + "\\" + "requestDriverPinLogin.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                General.WriteLog("requestDriverPinLogin", "message: " + mesg);
+            }
             catch { }
 
             try
@@ -18981,7 +19105,11 @@ namespace SignalRHub
             catch (Exception ex)
             {
                 //Logging
-                try { File.AppendAllText(physicalPath + "\\requestDriverPinLogin_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine); }
+                try
+                {
+                    //File.AppendAllText(physicalPath + "\\requestDriverPinLogin_exception.txt", DateTime.Now.ToStr() + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestDriverPinLogin_exception", "exception:" + ex.Message);
+                }
                 catch { }
 
                 res.Data = null;
@@ -19007,7 +19135,8 @@ namespace SignalRHub
 
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\requestDocuments.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestDocuments.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    General.WriteLog("requestDocuments", "msg: " + mesg);
                 }
                 catch
                 {
@@ -19092,7 +19221,8 @@ namespace SignalRHub
                     res.Message = ex.Message;
                     try
                     {
-                        File.AppendAllText(physicalPath + "\\requestDocuments_exception1.txt", DateTime.Now + " : msg" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                        //File.AppendAllText(physicalPath + "\\requestDocuments_exception1.txt", DateTime.Now + " : msg" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                        General.WriteLog("requestDocuments_exception1", "msg:" + mesg + ", exception:" + ex.Message);
                     }
                     catch
                     {
@@ -19109,7 +19239,8 @@ namespace SignalRHub
                 res.Message = ex.Message;
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\requestDocuments_exception2.txt", DateTime.Now + " : msg" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\requestDocuments_exception2.txt", DateTime.Now + " : msg" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestDocuments_exception2", "msg:" + mesg + ", exception:" + ex.Message);
                 }
                 catch
                 {
@@ -19139,8 +19270,8 @@ namespace SignalRHub
 
                 try
                 {
-
-                    File.AppendAllText(physicalPath + "\\requestManualFaresAdv.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                    General.WriteLog("requestManualFaresAdv", "msg: " + mesg);
+                    //File.AppendAllText(physicalPath + "\\requestManualFaresAdv.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
                 }
                 catch
                 {
@@ -19188,7 +19319,8 @@ namespace SignalRHub
                     {
                         rrr = "false";
 
-                        File.AppendAllText(physicalPath + "\\log_manualfares.txt", DateTime.Now.ToStr() + ",DataValue:" + dataValue + ",exception:" + ex.Message);
+                        General.WriteLog("log_manualfares", "DataValue:" + dataValue + ", exception:" + ex.Message);
+                        //File.AppendAllText(physicalPath + "\\log_manualfares.txt", DateTime.Now.ToStr() + ",DataValue:" + dataValue + ",exception:" + ex.Message);
                     }
 
                     ///Clients.Caller.manualFares(rrr);----------------------------------------------
@@ -19213,8 +19345,8 @@ namespace SignalRHub
                     res.IsSuccess = true;
                     res.Message = "exceptionoccurred";
 
-
-                    File.AppendAllText(physicalPath + "\\requestclearjob_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestclearjob_exception", "datavalue=" + mesg + ", exception:" + ex.Message);
+                    //File.AppendAllText(physicalPath + "\\requestclearjob_exception.txt", DateTime.Now + ": datavalue=" + mesg + ",exception:" + ex.Message + Environment.NewLine);
 
 
                 }
@@ -19236,8 +19368,8 @@ namespace SignalRHub
 
             try
             {
-
-                File.AppendAllText(physicalPath + "\\" + "requestPauseMeter.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", json: " + mesg.ToString() + Environment.NewLine);
+                General.WriteLog("requestPauseMeter", "json: " + mesg.ToString());
+                //File.AppendAllText(physicalPath + "\\" + "requestPauseMeter.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", json: " + mesg.ToString() + Environment.NewLine);
             }
             catch
             {
@@ -19338,7 +19470,8 @@ namespace SignalRHub
                 try
                 {
                     //
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestViaAction.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestViaAction.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                    General.WriteLog("requestViaAction", "request: " + mesg);
                 }
                 catch
                 {
@@ -19431,7 +19564,8 @@ namespace SignalRHub
                             res.IsSuccess = false;
                             res.Message = ex.Message;
                             objAction.Message = ex.Message;
-                            File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_exception1.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                            //File.AppendAllText(AppContext.BaseDirectory + "\\requestarrive_exception1.txt", DateTime.Now.ToStr() + " request" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                            General.WriteLog("requestarrive_exception1", "request: " + mesg + ", exception:" + ex.Message);
                         }
                         catch
                         {
@@ -19477,7 +19611,8 @@ namespace SignalRHub
         {
             try
             {
-                File.AppendAllText(physicalPath + "\\" + "requestViadetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                //File.AppendAllText(physicalPath + "\\" + "requestViadetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                General.WriteLog("requestViadetails", "message: " + mesg);
             }
             catch
             {
@@ -19499,7 +19634,8 @@ namespace SignalRHub
                     {
                         try
                         {
-                            File.AppendAllText(physicalPath + "\\" + "requestViadetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", jobId:" + jobId + ", via: " + via + Environment.NewLine);
+                            //File.AppendAllText(physicalPath + "\\" + "requestViadetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", jobId:" + jobId + ", via: " + via + Environment.NewLine);
+                            General.WriteLog("requestViadetails", "jobId:" + jobId + ", via: " + via);
                         }
                         catch
                         {
@@ -19514,7 +19650,8 @@ namespace SignalRHub
                             var obj = db.Booking_ViaLocations.FirstOrDefault(c => c.BookingId == jobId && c.ViaLocValue.Trim() == viaLocation);
                             try
                             {
-                                File.AppendAllText(physicalPath + "\\" + "requestViadetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + " ,viaLocation:" + viaLocation + ", obj: " + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                                //File.AppendAllText(physicalPath + "\\" + "requestViadetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + " ,viaLocation:" + viaLocation + ", obj: " + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                                General.WriteLog("requestViadetails", "viaLocation:" + viaLocation + ", obj: " + new JavaScriptSerializer().Serialize(obj));
                             }
                             catch
                             {
@@ -19540,7 +19677,8 @@ namespace SignalRHub
             {
                 try
                 {
-                    File.AppendAllText(physicalPath + "\\" + "requestViadetails_Exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\" + "requestViadetails_Exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestViadetails_Exception", "exception:" + ex.Message);
                 }
                 catch
                 {
@@ -19563,8 +19701,8 @@ namespace SignalRHub
             {
                 try
                 {
-
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestSearchAddress.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
+                    General.WriteLog("requestSearchAddress", "request: " + mesg);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestSearchAddress.txt", DateTime.Now.ToStr() + " request" + mesg + Environment.NewLine);
                 }
                 catch
                 {
@@ -19793,7 +19931,8 @@ namespace SignalRHub
                 try
                 {
 
-                    File.AppendAllText(AppContext.BaseDirectory + "\\requestSearchAddressResponse.txt", DateTime.Now.ToStr() + " Request" + mesg + Environment.NewLine + "Response:" + rtn + Environment.NewLine);
+                    //File.AppendAllText(AppContext.BaseDirectory + "\\requestSearchAddressResponse.txt", DateTime.Now.ToStr() + " Request" + mesg + Environment.NewLine + "Response:" + rtn + Environment.NewLine);
+                    General.WriteLog("requestSearchAddressResponse", "Request: " + mesg + Environment.NewLine + "Response:" + rtn);
                 }
                 catch
                 {
@@ -19831,8 +19970,8 @@ namespace SignalRHub
 
                 try
                 {
-
-                    File.AppendAllText(physicalPath + "\\" + "requestBidList.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
+                    General.WriteLog("requestBidList", "message: " + mesg);
+                    //File.AppendAllText(physicalPath + "\\" + "requestBidList.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + Environment.NewLine);
                 }
                 catch
                 {
@@ -19900,7 +20039,8 @@ namespace SignalRHub
                     res.IsSuccess = false;
                     res.Message = ex.Message;
 
-                    File.AppendAllText(physicalPath + "\\" + "requestBidList_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + " ,exception:" + ex.Message + Environment.NewLine);
+                    //File.AppendAllText(physicalPath + "\\" + "requestBidList_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", message: " + mesg + " ,exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("requestBidList_exception", "message: " + mesg + ", exception:" + ex.Message);
                 }
                 catch
                 {
