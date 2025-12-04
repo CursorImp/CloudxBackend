@@ -11870,9 +11870,56 @@ namespace SignalRHub.Controllers
                                 if (SearchPlaces.Result.Count > 0)
                                 {
                                     response.Data = SearchPlaces.Result;
-                                }
 
+                                    //  Run inserts in background thread
+                                    Task.Run(() =>
+                                    {
+                                        using (TaxiDataContext dbs = new TaxiDataContext())
+                                        {
+                                            foreach (var p in SearchPlaces.Result)
+                                            {
+                                                var formattedAddress = p.Formatted_address?.Trim();
+                                                var postcode = General.GetPostCodeMatch(formattedAddress);
+                                                double? lat = p.Geometry?.Location != null ? Convert.ToDouble(p.Geometry.Location.Lat) : (double?)null;
+                                                double? lng = p.Geometry?.Location != null ? Convert.ToDouble(p.Geometry.Location.Lng) : (double?)null;
+
+                                                bool exists = dbs.Gen_Locations.Any(x =>
+                                                    x.Address == formattedAddress ||
+                                                    x.FullLocationName == (p.Name + " " + formattedAddress) ||
+                                                    (x.Latitude == lat && x.Longitude == lng) ||
+                                                    (x.PostCode == postcode && x.LocationName == p.Name)
+                                                );
+
+                                                if (exists)
+                                                    continue;
+
+                                                var entity = new Gen_Location();
+
+                                                entity.LocationName = p.Name;
+                                                entity.Address = formattedAddress;
+                                                entity.PostCode = postcode;
+
+                                                if (lat != null && lng != null)
+                                                {
+                                                    entity.Latitude = lat;
+                                                    entity.Longitude = lng;
+                                                }
+
+                                                entity.FullLocationName = p.Name + " " + formattedAddress;
+                                                entity.AddOn = DateTime.Now;
+                                                entity.AddBy = obj.UserId;
+
+                                                dbs.Gen_Locations.InsertOnSubmit(entity);
+                                            }
+
+                                            dbs.SubmitChanges();
+                                        }
+                                    });
+
+                                 
+                                }
                             }
+
                         }
                         //
                     }
