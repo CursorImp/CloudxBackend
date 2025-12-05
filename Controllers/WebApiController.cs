@@ -771,7 +771,7 @@ namespace SignalRHub.Controllers
 
                     //
                     response.Data = data;
-
+                    General.WriteLog("GetDashboardData", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
 
 
