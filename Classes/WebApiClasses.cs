@@ -1511,6 +1511,7 @@ namespace SignalRHub.WebApiClasses
         public string MessageType { get; set; }
         public int? UserId { get;  set; }
         public string Type { get;  set; }
+        public int? SubcompanyId { get;  set; }
     }
     public class bookingFare
     {

@@ -25,6 +25,7 @@ using static SignalRHub.DriverAppController;
 using System.Threading.Tasks;
 using CabTreasureWebApi.Models.HereForwardGeocode;
 using System.Collections;
+using System.Reflection;
 
 namespace SignalRHub.Controllers
 {
@@ -139,13 +140,31 @@ namespace SignalRHub.Controllers
                     else
                     {
 
-                        var objUser = db.UM_Users.Where(c => c.IsActive == true && c.UserName.ToLower() == obj.UserName.ToLower().Trim() && c.Passwrd.ToLower() == obj.Password.ToLower().Trim())
-                             .Select(args => new { args.Id, args.SubcompanyId, args.ShowAllBookings, args.ShowAllDrivers, args.SecurityGroupId, args.Email, args.ShowBookingFilter }).FirstOrDefault();
+                        var objUser = (from u in db.UM_Users
+                                       join s in db.Gen_SubCompanies
+                                           on u.SubcompanyId equals s.Id into subComp
+                                       from sc in subComp.DefaultIfEmpty() // left join to handle null Subcompany
+                                       where u.IsActive == true
+                                             && u.UserName.ToLower() == obj.UserName.ToLower().Trim()
+                                             && u.Passwrd.ToLower() == obj.Password.ToLower().Trim()
+                                       select new
+                                       {
+                                           u.Id,
+                                           u.SubcompanyId,
+                                           u.ShowAllBookings,
+                                           u.ShowAllDrivers,
+                                           u.SecurityGroupId,
+                                           u.Email,
+                                           u.ShowBookingFilter,
+                                           SubcompanyAddress = sc != null ? sc.Address : null // pick address from subcompany
+                                       }).FirstOrDefault();
 
 
 
                         if (objUser != null)
                         {
+
+                            var SubcompanyCoord = db.stp_getCoordinatesByAddress(objUser.SubcompanyAddress, General.GetPostCodeMatch(objUser.SubcompanyAddress)).FirstOrDefault();
                             //List<SignalRHub.Classes.AppSetting> AppSettings = new List<SignalRHub.Classes.AppSetting>();
 
 
@@ -300,6 +319,8 @@ namespace SignalRHub.Controllers
                                 objUser.Email,
                                 SessionId = sessionId,
                                 objUser.Id,
+                                SubcompanyLat=SubcompanyCoord.Latitude,
+                                SubcompanyLong=SubcompanyCoord.Longtiude,
                                 objUser.SubcompanyId,
                                 BookingColumns = bookingcolumns,
                                 SysSettings = sysSettings,
@@ -3756,7 +3777,15 @@ namespace SignalRHub.Controllers
                 {
 
 
-                    response.Data = db.stp_GetLoginDriverPlotsUpdated().ToList();
+                    int subCompanyId = obj.SubcompanyId ?? 0;
+
+                    var plots = db.ExecuteQuery<stp_GetLoginDriverPlotsUpdatedResult>(
+                        "EXEC dbo.stp_GetLoginDriverPlotsUpdatedNew @SubCompanyId={0}",
+                        subCompanyId
+                    ).ToList();
+
+                    response.Data = plots;
+
 
 
 
@@ -11851,7 +11880,7 @@ namespace SignalRHub.Controllers
             try
             {
                 string postCode = obj.addressInfo.searchText.ToStr().ToUpper().Trim();
-                double radius = 2500;
+                double radius = 30;
                 PlaceSearchResponse SearchPlaces = new PlaceSearchResponse();
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
@@ -11870,7 +11899,10 @@ namespace SignalRHub.Controllers
                             {
                                 if (SearchPlaces.Result.Count > 0)
                                 {
-                                    response.Data = SearchPlaces.Result;
+                                    var orderedResults = SearchPlaces.Result
+                                       .OrderBy(r => r.Distance)
+                                       .ToList();
+                                    response.Data = orderedResults;
 
                                     //  Run inserts in background thread
                                     Task.Run(() =>
@@ -11881,8 +11913,8 @@ namespace SignalRHub.Controllers
                                             {
                                                 var formattedAddress = p.Formatted_address?.Trim();
                                                 var postcode = General.GetPostCodeMatch(formattedAddress);
-                                                double? lat = p.Geometry?.Location != null ? Convert.ToDouble(p.Geometry.Location.Lat) : (double?)null;
-                                                double? lng = p.Geometry?.Location != null ? Convert.ToDouble(p.Geometry.Location.Lng) : (double?)null;
+                                                double? lat = p.Latitude != null ? Convert.ToDouble(p.Latitude) : (double?)null;
+                                                double? lng = p.Longitude!= null ? Convert.ToDouble(p.Longitude) : (double?)null;
 
                                                 bool exists = dbs.Gen_Locations.Any(x =>
                                                     x.Address == formattedAddress ||
@@ -11917,7 +11949,7 @@ namespace SignalRHub.Controllers
                                         }
                                     });
 
-                                 
+
                                 }
                             }
 

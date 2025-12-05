@@ -817,7 +817,7 @@ public static class GetDistance
     public static SignalRHub.PlaceSearchResponse SearchPlaceGoogleAdv(string keyword, string location, double radiusInMiles, Coords? coords, string apiKey)
     {
         var url = "https://places.googleapis.com/v1/places:searchText";
-
+        double radiusInMeters = radiusInMiles * 1609.34;
         string jsonBody = $@"
     {{
         ""textQuery"": ""{keyword} {location}"",
@@ -827,7 +827,7 @@ public static class GetDistance
                     ""latitude"": {coords.Value.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture)},
                     ""longitude"": {coords.Value.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture)}
                 }},
-                ""radius"": {radiusInMiles}
+                ""radius"": {radiusInMeters}
             }}
         }}
     }}";
@@ -867,6 +867,8 @@ public static class GetDistance
                 responseModel.Result = jsonResponse.places
                     .Select(p => new SignalRHub.Result
                     {
+                        Latitude=p.location.latitude,
+                        Longitude=p.location.longitude,
                         Name = p.displayName?.text,
                         Formatted_address = CombineAddress(p.displayName?.text, p.formattedAddress),
                         Rating = p.rating.ToStr(),
