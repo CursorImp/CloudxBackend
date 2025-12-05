@@ -125,6 +125,7 @@ namespace SignalRHub
         public static string ShowAllocatedInFutureList = "0";
         public static string EnableCustomPayment = "0";
         public static string EnableSoundAdjustment = "0";
+        public static string NotAcceptedRetry = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -717,6 +718,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "ShowAllocatedInFutureList", SetVal = "0", description = "ShowAllocatedInFutureList"  },
                              new AppSetting { SetKey = "EnableCustomPayment", SetVal = "0", description = "EnableCustomPayment"  },
                              new AppSetting { SetKey = "EnableSoundAdjustment", SetVal = "0", description = "EnableSoundAdjustment"  },
+                             new AppSetting { SetKey = "NotAcceptedRetry", SetVal = "0", description = "NotAcceptedRetry"  },
 
                         };
 
@@ -1686,6 +1688,10 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableSoundAdjustment")))
                 {
                     EnableSoundAdjustment = GetAppSetting<string>("EnableSoundAdjustment").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("NotAcceptedRetry")))
+                {
+                    NotAcceptedRetry = GetAppSetting<string>("NotAcceptedRetry").ToStr();
                 }
 
             }
@@ -4004,8 +4010,23 @@ namespace SignalRHub
                                 if (((job.bookingstatusId == Enums.BOOKINGSTATUS.WAITING || job.bookingstatusId == Enums.BOOKINGSTATUS.BID) && job.DriverId != null) || job.bookingstatusId == Enums.BOOKINGSTATUS.NOSHOW || job.bookingstatusId == Enums.BOOKINGSTATUS.NOTACCEPTED || job.bookingstatusId == Enums.BOOKINGSTATUS.REJECTED)
                                 {
                                     int rejectRetry = Instance.objPolicy.NoResponseRetry.ToInt();
+                                    int notAcceptedRetry = Global.NotAcceptedRetry.ToInt();
+                                    if (job.bookingstatusId == Enums.BOOKINGSTATUS.NOTACCEPTED && notAcceptedRetry > 0)
+                                    {
+                                        int driverNotAcceptedCount = General.GetQueryable<Fleet_Driver_RejectJob>(c => c.BookingId == job.JobId && c.DriverId == job.DriverId && c.BookingStatusId == Enums.BOOKINGSTATUS.NOTACCEPTED).Count();
 
-                                    if (rejectRetry > 0)
+                                        if (driverNotAcceptedCount > notAcceptedRetry)
+                                        {
+                                            RejectedJobDriverId = job.DriverId;
+
+
+                                            if (RejectedJobDriverId != null)
+                                            {
+                                                listofJobAvailableDrvs.RemoveAll(c => c.DriverId == RejectedJobDriverId);
+                                            }
+                                        }
+                                    }
+                                    else if (rejectRetry > 0)
                                     {
 
                                         int driverRejectCount = General.GetQueryable<Fleet_Driver_RejectJob>(c => c.BookingId == job.JobId && c.DriverId == job.DriverId).Count();
