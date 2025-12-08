@@ -103,6 +103,7 @@ namespace SignalRHub
         public static string EnablaDriverDocuments = "";
         public static string AutoRecoverOnNoMoveInSec = "0";
         public static string EnableSubCompanyWiseKonnect = "false";
+        public static string EnableTodayBookingFilterUpTo2AM = "false";
         public static string AllowBidRadiusInMiles = "0";
         public static string SortPlotByNearestOnPda = "0";
         public static string EnableBidDetails = "0";
@@ -719,6 +720,9 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableCustomPayment", SetVal = "0", description = "EnableCustomPayment"  },
                              new AppSetting { SetKey = "EnableSoundAdjustment", SetVal = "0", description = "EnableSoundAdjustment"  },
                              new AppSetting { SetKey = "NotAcceptedRetry", SetVal = "0", description = "NotAcceptedRetry"  },
+                             new AppSetting { SetKey = "DriverEarningReportDaywise", SetVal = "false", description = "DriverEarningReportDaywise"  },
+                             new AppSetting { SetKey = "EnableTodayBookingFilterUpTo2AM", SetVal = "false", description = "Enable Today Booking Filter Up To 2AM"  },
+                             new AppSetting { SetKey = "EnableSpecialRequirement", SetVal = "false", description = "Enable Special Requirement"  },
 
                         };
 
@@ -1677,6 +1681,11 @@ namespace SignalRHub
                 {
                     EnableManualLeadTime = GetAppSetting<string>("EnableManualLeadTime").ToStr();
                 }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableTodayBookingFilterUpTo2AM")))
+                {
+                    EnableTodayBookingFilterUpTo2AM = GetAppSetting<string>("EnableTodayBookingFilterUpTo2AM").ToStr();
+                }
+
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("ShowAllocatedInFutureList")))
                 {
                     ShowAllocatedInFutureList = GetAppSetting<string>("ShowAllocatedInFutureList").ToStr();
