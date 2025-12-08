@@ -232,7 +232,7 @@ namespace SignalRHub.Controllers
                             sysSettings["EnableBidding"] = HubProcessor.Instance.objPolicy.EnableBidding;
                             sysSettings["AutoModeType"] = HubProcessor.Instance.objPolicy.AutoDespatchDriverCategoryPriority;
                             sysSettings["TransferBooking"] = IsAdmin;
-                            sysSettings["WaitAndReturnDiscountType"] = HubProcessor.Instance.objPolicy.WaitAndReturnDiscountType;
+                            sysSettings["WaitAndReturnDiscountType"] = HubProcessor.Instance.objPolicy.DiscountForWRJourneyPercent;
 
                             var EnableFilterSubCompanyId = "false";
                             try
