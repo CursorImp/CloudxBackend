@@ -560,20 +560,42 @@ namespace SignalRHub.Controllers
 
 
 
-
-
                 data.listofbookings = db.ExecuteQuery<stp_GetBookingsDataResult>("exec stp_getbookingsdata {0},{1},{2},{3}", recentDays, prebookingdays, subCompanyId, HubProcessor.Instance.objPolicy.DaysInTodayBooking.ToInt()).ToList();
                 //      data.listofdrivers = db.stp_GetDashboardDrivers(1).ToList();
 
 
-                data.listoftodaybookings = data.listofbookings.Where(a =>
-                (a.PickupDateTemp >= recentDays && a.PickupDateTemp.Value.Date <= dt.Value.AddDays(0))
+                if (Global.EnableTodayBookingFilterUpTo2AM == "true")
+                {
+                    DateTime recentDay = dt.Value.Date;
+                    DateTime endOfToday = dt.Value.Date.AddDays(1).AddHours(2); // today + 2 AM next day
+                    data.listoftodaybookings = data.listofbookings
+                        .Where(a =>
+                            a.PickupDateTemp >= recentDay && a.PickupDateTemp < endOfToday
                             &&
+                            (a.StatusId == Enums.BOOKINGSTATUS.WAITING ||
+                             a.StatusId == Enums.BOOKINGSTATUS.PENDING ||
+                             a.StatusId == Enums.BOOKINGSTATUS.NOTACCEPTED ||
+                             a.StatusId == Enums.BOOKINGSTATUS.REJECTED ||
+                             a.StatusId == Enums.BOOKINGSTATUS.NOSHOW ||
+                             a.StatusId == Enums.BOOKINGSTATUS.ONHOLD ||
+                             a.StatusId == Enums.BOOKINGSTATUS.BID ||
+                             a.StatusId == Enums.BOOKINGSTATUS.PENDING_START ||
+                             a.StatusId == Enums.BOOKINGSTATUS.FOJ)
+                        )
+                        .OrderBy(c => c.Lead)
+                        .ToList();
+                }
+                else
+                {
+                    data.listoftodaybookings = data.listofbookings.Where(a =>
+             (a.PickupDateTemp >= recentDays && a.PickupDateTemp.Value.Date <= dt.Value.AddDays(0))
+                         &&
 
-                            (a.StatusId == Enums.BOOKINGSTATUS.WAITING || a.StatusId == Enums.BOOKINGSTATUS.PENDING || a.StatusId == Enums.BOOKINGSTATUS.NOTACCEPTED || a.StatusId == Enums.BOOKINGSTATUS.REJECTED
-                               || a.StatusId == Enums.BOOKINGSTATUS.NOSHOW || a.StatusId == Enums.BOOKINGSTATUS.ONHOLD || a.StatusId == Enums.BOOKINGSTATUS.BID
-                                || a.StatusId == Enums.BOOKINGSTATUS.PENDING_START || a.StatusId == Enums.BOOKINGSTATUS.FOJ))
-                                .OrderBy(c => c.Lead).ToList();
+                         (a.StatusId == Enums.BOOKINGSTATUS.WAITING || a.StatusId == Enums.BOOKINGSTATUS.PENDING || a.StatusId == Enums.BOOKINGSTATUS.NOTACCEPTED || a.StatusId == Enums.BOOKINGSTATUS.REJECTED
+                            || a.StatusId == Enums.BOOKINGSTATUS.NOSHOW || a.StatusId == Enums.BOOKINGSTATUS.ONHOLD || a.StatusId == Enums.BOOKINGSTATUS.BID
+                             || a.StatusId == Enums.BOOKINGSTATUS.PENDING_START || a.StatusId == Enums.BOOKINGSTATUS.FOJ))
+                             .OrderBy(c => c.Lead).ToList();
+                }
 
 
 

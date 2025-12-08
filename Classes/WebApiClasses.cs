@@ -1913,6 +1913,7 @@ namespace SignalRHub.WebApiClasses
         private string _VehicleTextColor;
 
         private string _BackgroundColor1;
+        private string _SpecialReq;
 
         private string _TextColor1;
 
@@ -2001,6 +2002,21 @@ namespace SignalRHub.WebApiClasses
                 if ((this._RefNumber != value))
                 {
                     this._RefNumber = value;
+                }
+            }
+        }
+         [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_SpecialReq", DbType = "VarChar(max)")]
+        public string SpecialReq
+        {
+            get
+            {
+                return this._SpecialReq;
+            }
+            set
+            {
+                if ((this._SpecialReq != value))
+                {
+                    this._SpecialReq = value;
                 }
             }
         }
