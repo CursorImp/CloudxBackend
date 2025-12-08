@@ -1806,7 +1806,14 @@ namespace SignalRHub
 
                             //}
 
-
+                            try
+                            {
+                                string allocatedDriverQuery = $"Update Booking SET AllocatedDriver={(isConfirmedDriver ? "1" : "0")} WHERE Id={objBooking.Id}";
+                                db.ExecuteQuery<int>(allocatedDriverQuery);
+                            }
+                            catch
+                            {
+                            }
 
 
 

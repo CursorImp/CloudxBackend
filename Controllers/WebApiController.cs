@@ -25,6 +25,7 @@ using static SignalRHub.DriverAppController;
 using System.Threading.Tasks;
 using CabTreasureWebApi.Models.HereForwardGeocode;
 using System.Collections;
+using System.Reflection;
 
 namespace SignalRHub.Controllers
 {
@@ -139,13 +140,31 @@ namespace SignalRHub.Controllers
                     else
                     {
 
-                        var objUser = db.UM_Users.Where(c => c.IsActive == true && c.UserName.ToLower() == obj.UserName.ToLower().Trim() && c.Passwrd.ToLower() == obj.Password.ToLower().Trim())
-                             .Select(args => new { args.Id, args.SubcompanyId, args.ShowAllBookings, args.ShowAllDrivers, args.SecurityGroupId, args.Email, args.ShowBookingFilter }).FirstOrDefault();
+                        var objUser = (from u in db.UM_Users
+                                       join s in db.Gen_SubCompanies
+                                           on u.SubcompanyId equals s.Id into subComp
+                                       from sc in subComp.DefaultIfEmpty() // left join to handle null Subcompany
+                                       where u.IsActive == true
+                                             && u.UserName.ToLower() == obj.UserName.ToLower().Trim()
+                                             && u.Passwrd.ToLower() == obj.Password.ToLower().Trim()
+                                       select new
+                                       {
+                                           u.Id,
+                                           u.SubcompanyId,
+                                           u.ShowAllBookings,
+                                           u.ShowAllDrivers,
+                                           u.SecurityGroupId,
+                                           u.Email,
+                                           u.ShowBookingFilter,
+                                           SubcompanyAddress = sc != null ? sc.Address : null // pick address from subcompany
+                                       }).FirstOrDefault();
 
 
 
                         if (objUser != null)
                         {
+
+                            var SubcompanyCoord = db.stp_getCoordinatesByAddress(objUser.SubcompanyAddress, General.GetPostCodeMatch(objUser.SubcompanyAddress)).FirstOrDefault();
                             //List<SignalRHub.Classes.AppSetting> AppSettings = new List<SignalRHub.Classes.AppSetting>();
 
 
@@ -301,6 +320,8 @@ namespace SignalRHub.Controllers
                                 objUser.Email,
                                 SessionId = sessionId,
                                 objUser.Id,
+                                SubcompanyLat=SubcompanyCoord.Latitude,
+                                SubcompanyLong=SubcompanyCoord.Longtiude,
                                 objUser.SubcompanyId,
                                 BookingColumns = bookingcolumns,
                                 SysSettings = sysSettings,
@@ -540,20 +561,42 @@ namespace SignalRHub.Controllers
 
 
 
-
-
                 data.listofbookings = db.ExecuteQuery<stp_GetBookingsDataResult>("exec stp_getbookingsdata {0},{1},{2},{3}", recentDays, prebookingdays, subCompanyId, HubProcessor.Instance.objPolicy.DaysInTodayBooking.ToInt()).ToList();
                 //      data.listofdrivers = db.stp_GetDashboardDrivers(1).ToList();
 
 
-                data.listoftodaybookings = data.listofbookings.Where(a =>
-                (a.PickupDateTemp >= recentDays && a.PickupDateTemp.Value.Date <= dt.Value.AddDays(0))
+                if (Global.EnableTodayBookingFilterUpTo2AM == "true")
+                {
+                    DateTime recentDay = dt.Value.Date;
+                    DateTime endOfToday = dt.Value.Date.AddDays(1).AddHours(2); // today + 2 AM next day
+                    data.listoftodaybookings = data.listofbookings
+                        .Where(a =>
+                            a.PickupDateTemp >= recentDay && a.PickupDateTemp < endOfToday
                             &&
+                            (a.StatusId == Enums.BOOKINGSTATUS.WAITING ||
+                             a.StatusId == Enums.BOOKINGSTATUS.PENDING ||
+                             a.StatusId == Enums.BOOKINGSTATUS.NOTACCEPTED ||
+                             a.StatusId == Enums.BOOKINGSTATUS.REJECTED ||
+                             a.StatusId == Enums.BOOKINGSTATUS.NOSHOW ||
+                             a.StatusId == Enums.BOOKINGSTATUS.ONHOLD ||
+                             a.StatusId == Enums.BOOKINGSTATUS.BID ||
+                             a.StatusId == Enums.BOOKINGSTATUS.PENDING_START ||
+                             a.StatusId == Enums.BOOKINGSTATUS.FOJ)
+                        )
+                        .OrderBy(c => c.Lead)
+                        .ToList();
+                }
+                else
+                {
+                    data.listoftodaybookings = data.listofbookings.Where(a =>
+             (a.PickupDateTemp >= recentDays && a.PickupDateTemp.Value.Date <= dt.Value.AddDays(0))
+                         &&
 
-                            (a.StatusId == Enums.BOOKINGSTATUS.WAITING || a.StatusId == Enums.BOOKINGSTATUS.PENDING || a.StatusId == Enums.BOOKINGSTATUS.NOTACCEPTED || a.StatusId == Enums.BOOKINGSTATUS.REJECTED
-                               || a.StatusId == Enums.BOOKINGSTATUS.NOSHOW || a.StatusId == Enums.BOOKINGSTATUS.ONHOLD || a.StatusId == Enums.BOOKINGSTATUS.BID
-                                || a.StatusId == Enums.BOOKINGSTATUS.PENDING_START || a.StatusId == Enums.BOOKINGSTATUS.FOJ))
-                                .OrderBy(c => c.Lead).ToList();
+                         (a.StatusId == Enums.BOOKINGSTATUS.WAITING || a.StatusId == Enums.BOOKINGSTATUS.PENDING || a.StatusId == Enums.BOOKINGSTATUS.NOTACCEPTED || a.StatusId == Enums.BOOKINGSTATUS.REJECTED
+                            || a.StatusId == Enums.BOOKINGSTATUS.NOSHOW || a.StatusId == Enums.BOOKINGSTATUS.ONHOLD || a.StatusId == Enums.BOOKINGSTATUS.BID
+                             || a.StatusId == Enums.BOOKINGSTATUS.PENDING_START || a.StatusId == Enums.BOOKINGSTATUS.FOJ))
+                             .OrderBy(c => c.Lead).ToList();
+                }
 
 
 
@@ -751,7 +794,7 @@ namespace SignalRHub.Controllers
 
                     //
                     response.Data = data;
-
+                    General.WriteLog("GetDashboardData", "json: " + new JavaScriptSerializer().Serialize(obj));
                 }
 
 
@@ -3757,7 +3800,15 @@ namespace SignalRHub.Controllers
                 {
 
 
-                    response.Data = db.stp_GetLoginDriverPlotsUpdated().ToList();
+                    int subCompanyId = obj.SubcompanyId ?? 0;
+
+                    var plots = db.ExecuteQuery<stp_GetLoginDriverPlotsUpdatedResult>(
+                        "EXEC dbo.stp_GetLoginDriverPlotsUpdatedNew @SubCompanyId={0}",
+                        subCompanyId
+                    ).ToList();
+
+                    response.Data = plots;
+
 
 
 
@@ -4333,7 +4384,7 @@ namespace SignalRHub.Controllers
 
                             foreach (var item in obj.routeInfo.viaAddresses)
                             {
-                                var coord = db.stp_getCoordinatesByAddress(item.Address, General.GetPostCodeMatch(item.Address)).FirstOrDefault();
+                                var coord = db.stp_getCoordinatesByAddress(item.Address.ToStr().Trim(), General.GetPostCodeMatch(item.Address.ToStr().Trim())).FirstOrDefault();
                                 vias += coord.Latitude + "," + coord.Longtiude + "|";
                             }
                             vias = vias.Remove(vias.Length - 1, 1);
@@ -4599,7 +4650,8 @@ namespace SignalRHub.Controllers
                         //
                         //
                         BookingInformation info = new BookingInformation();
-                        info.FromAddress = obj.routeInfo.pickupAddress.Address.ToStr();
+                        info.FromAddress = obj.routeInfo.pickupAddress.Address.ToStr().Trim();
+
 
                         //var objCoor = db.stp_getCoordinatesByAddress(booking.FromAddress.ToStr().ToUpper(), GetPostCodeMatch(booking.FromAddress.ToStr().ToUpper())).FirstOrDefault();
 
@@ -4632,7 +4684,7 @@ namespace SignalRHub.Controllers
                         }
 
                         info.MapType = HubProcessor.Instance.objPolicy.MapType.ToInt();
-                        info.ToAddress = obj.routeInfo.destinationAddress.Address.ToStr();
+                        info.ToAddress = obj.routeInfo.destinationAddress.Address.ToStr().Trim();
                         info.FromType = obj.routeInfo.pickupAddress.locTypeId == 1 ? "airport" : "address";
                         info.ToType = obj.routeInfo.destinationAddress.locTypeId == 1 ? "airport" : "address";
                         info.CompanyId = obj.routeInfo.CompanyId.ToInt();
@@ -4684,7 +4736,7 @@ namespace SignalRHub.Controllers
                         if (obj.routeInfo.viaAddresses != null)
                         {
 
-                            info.Via = (from a in obj.routeInfo.viaAddresses select new ViaAddresses { Viaaddress = a.Address, Viatype = "address" }).ToArray();
+                            info.Via = (from a in obj.routeInfo.viaAddresses select new ViaAddresses { Viaaddress = a.Address.ToStr().Trim(), Viatype = "address" }).ToArray();
 
                         }
                         //  info.Via = booking.Via;
@@ -5293,7 +5345,7 @@ namespace SignalRHub.Controllers
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
 
-                    string searchValue = obj.addressInfo.searchText.ToStr().ToUpper();
+                    string searchValue = obj.addressInfo.searchText.ToStr().Trim().ToUpper();
                     try
                     {
 
@@ -11851,7 +11903,7 @@ namespace SignalRHub.Controllers
             try
             {
                 string postCode = obj.addressInfo.searchText.ToStr().ToUpper().Trim();
-                double radius = 2500;
+                double radius = 30;
                 PlaceSearchResponse SearchPlaces = new PlaceSearchResponse();
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
@@ -11870,10 +11922,60 @@ namespace SignalRHub.Controllers
                             {
                                 if (SearchPlaces.Result.Count > 0)
                                 {
-                                    response.Data = SearchPlaces.Result;
-                                }
+                                    var orderedResults = SearchPlaces.Result
+                                       .OrderBy(r => r.Distance)
+                                       .ToList();
+                                    response.Data = orderedResults;
 
+                                    //  Run inserts in background thread
+                                    //Task.Run(() =>
+                                    //{
+                                    //    using (TaxiDataContext dbs = new TaxiDataContext())
+                                    //    {
+                                    //        foreach (var p in SearchPlaces.Result)
+                                    //        {
+                                    //            var formattedAddress = p.Formatted_address?.Trim();
+                                    //            var postcode = General.GetPostCodeMatch(formattedAddress);
+                                    //            double? lat = p.Latitude != null ? Convert.ToDouble(p.Latitude) : (double?)null;
+                                    //            double? lng = p.Longitude!= null ? Convert.ToDouble(p.Longitude) : (double?)null;
+
+                                    //            bool exists = dbs.Gen_Locations.Any(x =>
+                                    //                x.Address == formattedAddress ||
+                                    //                x.FullLocationName == (p.Name + " " + formattedAddress) ||
+                                    //                (x.Latitude == lat && x.Longitude == lng) ||
+                                    //                (x.PostCode == postcode && x.LocationName == p.Name)
+                                    //            );
+
+                                    //            if (exists)
+                                    //                continue;
+
+                                    //            var entity = new Gen_Location();
+
+                                    //            entity.LocationName = p.Name;
+                                    //            entity.Address = formattedAddress;
+                                    //            entity.PostCode = postcode;
+
+                                    //            if (lat != null && lng != null)
+                                    //            {
+                                    //                entity.Latitude = lat;
+                                    //                entity.Longitude = lng;
+                                    //            }
+
+                                    //            entity.FullLocationName = p.Name + " " + formattedAddress;
+                                    //            entity.AddOn = DateTime.Now;
+                                    //            entity.AddBy = obj.UserId;
+
+                                    //            dbs.Gen_Locations.InsertOnSubmit(entity);
+                                    //        }
+
+                                    //        dbs.SubmitChanges();
+                                    //    }
+                                    //});
+
+
+                                }
                             }
+
                         }
                         //
                     }

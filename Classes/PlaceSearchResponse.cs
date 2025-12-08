@@ -102,6 +102,8 @@ namespace SignalRHub
         public string Place_id { get; set; }
         [XmlElement(ElementName = "scope")]
         public string Scope { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
         
         public double? Distance { get; set; }
     }
