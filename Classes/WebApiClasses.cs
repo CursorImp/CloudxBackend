@@ -2581,7 +2581,7 @@ namespace SignalRHub.WebApiClasses
         }
         public int? Pax { get; set; }
         public string BookingTypeName { get; set; }
-        public int Vias { get; set; }
+        public int? Vias { get; set; }
     }
 
 
