@@ -127,6 +127,29 @@ namespace SignalRHub.Controllers
             bool IsAdmin = false;
             try
             {
+                try
+                {
+                    if (!string.IsNullOrEmpty(Global.RestrictedIPs))
+                    {
+                        string userIP = HttpContext.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+                        if (string.IsNullOrEmpty(userIP) || userIP.ToLower() == "unknown")
+                        {
+                            userIP = HttpContext.Request.ServerVariables["REMOTE_ADDR"];
+                        }
+                        //string[] allowedIPs = { "105.161.224.178", "62.31.72.98", "39.51.58.90", "192.168.1.254", "172.16.100.28", "39.53.209.174", "39.51.49.217", "41.90.44.216", "62.30.74.5", "203.135.34.139", "119.73.120.193", "196.207.170.9", "41.90.36.126", "41.90.45.150", "139.135.52.58", "197.237.42.7", "175.107.222.233" };
+                        if (!Global.RestrictedIPs.Contains(userIP))
+                        {
+                            response.HasError = true;
+                            response.Message = "Access Denied.";
+
+                            return Json(response, JsonRequestBehavior.AllowGet);
+                        }
+                    }
+                }
+                catch {
+                }
+                
+
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
 

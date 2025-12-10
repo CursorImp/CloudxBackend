@@ -127,6 +127,7 @@ namespace SignalRHub
         public static string EnableCustomPayment = "0";
         public static string EnableSoundAdjustment = "0";
         public static string NotAcceptedRetry = "0";
+        public static string RestrictedIPs = "";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -723,6 +724,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "DriverEarningReportDaywise", SetVal = "false", description = "DriverEarningReportDaywise"  },
                              new AppSetting { SetKey = "EnableTodayBookingFilterUpTo2AM", SetVal = "false", description = "Enable Today Booking Filter Up To 2AM"  },
                              new AppSetting { SetKey = "EnableSpecialRequirement", SetVal = "false", description = "Enable Special Requirement"  },
+                             new AppSetting { SetKey = "RestrictedIPs", SetVal = "", description = "RestrictedIPs have IPs that are allowed to login"  },
 
                         };
 
@@ -1701,6 +1703,10 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("NotAcceptedRetry")))
                 {
                     NotAcceptedRetry = GetAppSetting<string>("NotAcceptedRetry").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("RestrictedIPs")))
+                {
+                    RestrictedIPs = GetAppSetting<string>("RestrictedIPs").ToStr();
                 }
 
             }
@@ -3176,92 +3182,150 @@ namespace SignalRHub
         #region AutoDispatch
         private async Task AutoDispatchActivityAsync(object source, System.Timers.ElapsedEventArgs e)
         {
+            if (!Instance.objPolicy.EnableAutoDespatch.ToBool())
+                return;
+
+            // BLOCK ALL OVERLAPS HERE
+            if (!await semaphoreSlim.WaitAsync(0))
+                return; // Already running, skip this tick
+
             try
             {
-                if (!IsPerformingAutoDespatchActivity)
+                if (IsPerformingAutoDespatchActivity)
+                    return;
+
+                IsPerformingAutoDespatchActivity = true;
+
+                File.AppendAllText(
+                    Path.Combine(physicalPath, "AutoDispatchActivityAsync_start.txt"),
+                    $"{DateTime.Now}: AutoDispatchActivityAsync_start{Environment.NewLine}"
+                );
+
+                using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    if (Instance.objPolicy.EnableAutoDespatch.ToBool())
+                    db.CommandTimeout = 5;
+
+                    var bookings = db.ExecuteQuery<stp_GetAutoDispatchBookingsResultEx>(
+                        "exec stp_GetAutoDispatchBookings"
+                    ).ToList();
+
+                    if (bookings.Count > 0)
                     {
-                        await semaphoreSlim.WaitAsync();
-                        await Task.Run(async () =>
-                        {
-                            try
-                            {
-                                File.AppendAllText(
-                                        Path.Combine(physicalPath, "AutoDispatchActivityAsync_start.txt"),
-                                        $"{DateTime.Now}: AutoDispatchActivityAsync_start"
-                                    );
-                                using (TaxiDataContext db = new TaxiDataContext())
-                                {
-                                    if (!IsPerformingAutoDespatchActivity)
-                                    {
-                                        db.CommandTimeout = 5;
-
-                                        var bookings = db.ExecuteQuery<stp_GetAutoDispatchBookingsResultEx>(
-                                            "exec stp_GetAutoDispatchBookings"
-                                        ).ToList();
-
-                                        if (bookings.Count > 0)
-                                        {
-                                            await PerformAutoDespatchActivityAsync(bookings);
-                                        }
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                try
-                                {
-                                    File.AppendAllText(
-                                        Path.Combine(physicalPath, "autodespatchcatchlog.txt"),
-                                        $"{DateTime.Now}: {ex.Message}{Environment.NewLine}"
-                                    );
-                                }
-                                catch { }
-                            }
-                            finally
-                            {
-                                //When the task is ready, release the semaphore. It is vital to ALWAYS release the semaphore when we are ready, or else we will end up with a Semaphore that is forever locked.
-                                //This is why it is important to do the Release within a try...finally clause; program execution may crash or take a different path, this way you are guaranteed execution
-                                semaphoreSlim.Release();
-                            }
-                        });
+                        await PerformAutoDespatchActivityAsync(bookings);
                     }
+                }
 
-                    if (Instance.objPolicy.EnableBidding.ToBool())
-                    {
-                        await Task.Run(async () =>
-                        {
-                            try
-                            {
-                                if (Instance.objPolicy.EnableBiddingForChauffers.ToBool())
-                                {
-                                    await CheckChaufferBiddingJobsAsync();
-
-                                    try
-                                    {
-                                        File.AppendAllText(
-                                            Path.Combine(AppContext.BaseDirectory, "CHECKCHAUFFERBIDDING.txt"),
-                                            $"{DateTime.Now}{Environment.NewLine}"
-                                        );
-                                    }
-                                    catch { }
-                                }
-                                else
-                                {
-                                    await CheckBiddingJobsAsync();
-                                }
-                            }
-                            catch { }
-                        });
-                    }
+                // Bidding runs only AFTER dispatch finishes
+                if (Instance.objPolicy.EnableBidding.ToBool())
+                {
+                    if (Instance.objPolicy.EnableBiddingForChauffers.ToBool())
+                        await CheckChaufferBiddingJobsAsync();
+                    else
+                        await CheckBiddingJobsAsync();
                 }
             }
             catch (Exception ex)
             {
-                // Log or handle error
+                File.AppendAllText(
+                    Path.Combine(physicalPath, "autodespatchcatchlog.txt"),
+                    $"{DateTime.Now}: {ex}{Environment.NewLine}"
+                );
+            }
+            finally
+            {
+                IsPerformingAutoDespatchActivity = false;
+                semaphoreSlim.Release();
             }
         }
+
+        //private async Task AutoDispatchActivityAsync(object source, System.Timers.ElapsedEventArgs e)
+        //{
+        //    try
+        //    {
+        //        if (!IsPerformingAutoDespatchActivity)
+        //        {
+        //            if (Instance.objPolicy.EnableAutoDespatch.ToBool())
+        //            {
+        //                await semaphoreSlim.WaitAsync();
+        //                await Task.Run(async () =>
+        //                {
+        //                    try
+        //                    {
+        //                        File.AppendAllText(
+        //                                Path.Combine(physicalPath, "AutoDispatchActivityAsync_start.txt"),
+        //                                $"{DateTime.Now}: AutoDispatchActivityAsync_start"
+        //                            );
+        //                        using (TaxiDataContext db = new TaxiDataContext())
+        //                        {
+        //                            if (!IsPerformingAutoDespatchActivity)
+        //                            {
+        //                                db.CommandTimeout = 5;
+
+        //                                var bookings = db.ExecuteQuery<stp_GetAutoDispatchBookingsResultEx>(
+        //                                    "exec stp_GetAutoDispatchBookings"
+        //                                ).ToList();
+
+        //                                if (bookings.Count > 0)
+        //                                {
+        //                                    await PerformAutoDespatchActivityAsync(bookings);
+        //                                }
+        //                            }
+        //                        }
+        //                    }
+        //                    catch (Exception ex)
+        //                    {
+        //                        try
+        //                        {
+        //                            File.AppendAllText(
+        //                                Path.Combine(physicalPath, "autodespatchcatchlog.txt"),
+        //                                $"{DateTime.Now}: {ex.Message}{Environment.NewLine}"
+        //                            );
+        //                        }
+        //                        catch { }
+        //                    }
+        //                    finally
+        //                    {
+        //                        //When the task is ready, release the semaphore. It is vital to ALWAYS release the semaphore when we are ready, or else we will end up with a Semaphore that is forever locked.
+        //                        //This is why it is important to do the Release within a try...finally clause; program execution may crash or take a different path, this way you are guaranteed execution
+        //                        semaphoreSlim.Release();
+        //                    }
+        //                });
+        //            }
+
+        //            if (Instance.objPolicy.EnableBidding.ToBool())
+        //            {
+        //                await Task.Run(async () =>
+        //                {
+        //                    try
+        //                    {
+        //                        if (Instance.objPolicy.EnableBiddingForChauffers.ToBool())
+        //                        {
+        //                            await CheckChaufferBiddingJobsAsync();
+
+        //                            try
+        //                            {
+        //                                File.AppendAllText(
+        //                                    Path.Combine(AppContext.BaseDirectory, "CHECKCHAUFFERBIDDING.txt"),
+        //                                    $"{DateTime.Now}{Environment.NewLine}"
+        //                                );
+        //                            }
+        //                            catch { }
+        //                        }
+        //                        else
+        //                        {
+        //                            await CheckBiddingJobsAsync();
+        //                        }
+        //                    }
+        //                    catch { }
+        //                });
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Log or handle error
+        //    }
+        //}
         private void AutoDispatchActivity(Object source, System.Timers.ElapsedEventArgs e)
         {
 
@@ -3519,30 +3583,45 @@ namespace SignalRHub
         }
 
 
-
-
         private async Task PerformAutoDespatchActivityAsync(List<stp_GetAutoDispatchBookingsResultEx> bookings)
         {
-            await Task.Run(() =>
+            try
             {
-                try
-                {
-                    PerformAutoDespatchActivity(bookings);
-                }
-                catch (Exception ex)
-                {
-                    try
-                    {
-                        File.AppendAllText("PerformAutoDespatchActivityAsync_Error.txt",
-                            $"{DateTime.Now}: {ex.Message}{Environment.NewLine}");
-                    }
-                    catch
-                    {
-                        // swallow logging exception
-                    }
-                }
-            });
+                await Task.Yield(); // keeps method async but same execution flow
+                PerformAutoDespatchActivity(bookings);
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(
+                    "PerformAutoDespatchActivityAsync_Error.txt",
+                    $"{DateTime.Now}: {ex}{Environment.NewLine}"
+                );
+            }
         }
+
+
+        //private async Task PerformAutoDespatchActivityAsync(List<stp_GetAutoDispatchBookingsResultEx> bookings)
+        //{
+        //    await Task.Run(() =>
+        //    {
+        //        try
+        //        {
+        //            PerformAutoDespatchActivity(bookings);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            try
+        //            {
+        //                File.AppendAllText("PerformAutoDespatchActivityAsync_Error.txt",
+        //                    $"{DateTime.Now}: {ex.Message}{Environment.NewLine}");
+        //            }
+        //            catch
+        //            {
+        //                // swallow logging exception
+        //            }
+        //        }
+        //    });
+        //}
         private void PerformAutoDespatchActivity(List<stp_GetAutoDispatchBookingsResultEx> bookings)
         {
 
@@ -3550,21 +3629,21 @@ namespace SignalRHub
             {
 
 
-                if (IsPerformingAutoDespatchActivity)
-                {
-                    try
-                    {
-                        File.AppendAllText("autodespatchlog.txt", DateTime.Now.ToStr() + ": performing autodespatch" + Environment.NewLine);
+                //if (IsPerformingAutoDespatchActivity)
+                //{
+                //    try
+                //    {
+                //        File.AppendAllText("autodespatchlog.txt", DateTime.Now.ToStr() + ": performing autodespatch" + Environment.NewLine);
 
-                    }
-                    catch
-                    {
+                //    }
+                //    catch
+                //    {
 
 
-                    }
+                //    }
 
-                    return;
-                }
+                //    return;
+                //}
                 try
                 {
                     File.AppendAllText("PerformingAutoDespatchActivity_true.txt", DateTime.Now.ToStr() + ": performing autodespatch" + Environment.NewLine);
@@ -3576,7 +3655,7 @@ namespace SignalRHub
 
                 }
 
-                IsPerformingAutoDespatchActivity = true;
+                //IsPerformingAutoDespatchActivity = true;
 
                 bool IsUpdated = false;
                 string AutoRefreshVar = string.Empty;
@@ -4282,7 +4361,7 @@ namespace SignalRHub
 
                                 // add price plot rule
 
-                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.AllocatedDriver.ToBool())
+                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
                                 {
                                     listofJobAvailableDrvs = listofJobAvailableDrvs.Where(x => x.DriverId == job.DriverId).ToList();
                                     if (listofJobAvailableDrvs.Count == 0)
@@ -4499,7 +4578,7 @@ namespace SignalRHub
 
                                 if (listofJobAvailableDrvs.Count == 0)
                                 {
-                                    if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.AllocatedDriver.ToBool())
+                                    if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
                                     {
                                         continue;
                                     }
@@ -4930,7 +5009,7 @@ namespace SignalRHub
                                         {
                                             // Put Bidding Sub Rule 3
 
-                                            if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.AllocatedDriver.ToBool())
+                                            if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
                                             {
                                                 continue;
                                             }
@@ -5745,7 +5824,7 @@ namespace SignalRHub
                                                     {
                                                         // Put Bidding Sub Rule 3
 
-                                                        if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.AllocatedDriver.ToBool())
+                                                        if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
                                                         {
                                                             continue;
                                                         }
@@ -6116,7 +6195,7 @@ namespace SignalRHub
                                             {
                                                 // Put Bidding Sub Rule 3
 
-                                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.AllocatedDriver.ToBool())
+                                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
                                                 {
                                                     continue;
                                                 }
@@ -7325,7 +7404,7 @@ namespace SignalRHub
 
                             foreach (var job in bookings)
                             {
-                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && job.AllocatedDriver.ToBool())
+                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
                                 {
                                     continue;
                                 }
@@ -7405,14 +7484,14 @@ namespace SignalRHub
                 }
 
 
-                IsPerformingAutoDespatchActivity = false;
+                //IsPerformingAutoDespatchActivity = false;
                 //
             }
 
             catch (Exception ex)
             {
 
-                IsPerformingAutoDespatchActivity = false;
+                //IsPerformingAutoDespatchActivity = false;
                 try
                 {
                     File.AppendAllText(AppContext.BaseDirectory + "\\PerformingAutoDespatchActivity_false.txt", DateTime.Now.ToStr() + ",exception:" + ex.Message + Environment.NewLine);
