@@ -669,7 +669,7 @@ namespace SignalRHub.Controllers
                     }
 
                     DriverPDASettings pda = new DriverPDASettings();
-                    var FleetPDA = db.Fleet_Driver_PDASettings.FirstOrDefault(x => x.DriverId == objMaster.Current.Id);
+                    var FleetPDA = db.Fleet_Driver_PDASettings.FirstOrDefault(x => x.DriverId == Id);
                     pda.Ip = HubProcessor.Instance.objPolicy.ListenerIP.ToStr();
                     pda.DrvId = obj.fleetDriver.Id.ToStr();
                     pda.DrvNo = obj.fleetDriver.DriverNo.ToStr();
