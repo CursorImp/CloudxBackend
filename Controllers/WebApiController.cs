@@ -11476,6 +11476,7 @@ namespace SignalRHub.Controllers
             {
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
+                    db.ObjectTrackingEnabled = false;
                     string searchValue = obj.addressInfo.Address.ToStr().ToUpper().Trim();
                     int loctypeId = Enums.LOCATION_TYPES.ADDRESS;
                     double? latitude = obj.addressInfo.Latitude;
@@ -11513,15 +11514,19 @@ namespace SignalRHub.Controllers
                             longitude = loc.Longtiude;
                         }
                     }
-
-                    // Assign zone info
-                    obj.addressInfo.zoneId = General.GetZoneId(searchValue);
+                    if (obj.addressInfo.zoneId.ToInt() == 0)
+                    {
+                        // Assign zone info
+                        obj.addressInfo.zoneId = General.GetZoneId(searchValue);
+                    }
                     if (obj.addressInfo.zoneId.ToInt() > 0)
                     {
-                        obj.addressInfo.zoneName = db.Gen_Zones
-                            .Where(c => c.Id == obj.addressInfo.zoneId)
-                            .Select(c => c.ZoneName)
-                            .FirstOrDefault();
+                        //obj.addressInfo.zoneName = db.Gen_Zones
+                        //    .Where(c => c.Id == obj.addressInfo.zoneId)
+                        //    .Select(c => c.ZoneName)
+                        //    .FirstOrDefault();
+                        obj.addressInfo.zoneName = db.ExecuteQuery<string>($"SELECT ZoneName FROM Gen_Zones WHERE Id = {obj.addressInfo.zoneId}").FirstOrDefault();
+
                     }
 
                     // Get nearest drivers (core logic)
@@ -11529,19 +11534,24 @@ namespace SignalRHub.Controllers
                     {
                         try
                         {
-                            var ListofAvailDrvs = (from a in db.GetTable<Fleet_DriverQueueList>()
-                                                   where a.Status == true && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
-                                                   join b in db.GetTable<Fleet_Driver_Location>() on a.DriverId equals b.DriverId
-                                                   join d in db.GetTable<Fleet_Driver>() on a.DriverId equals d.Id
-                                                   where b.Latitude != 0
-                                                   select new
-                                                   {
-                                                       a.DriverId,
-                                                       d.DriverNo,
-                                                       b.LocationName,
-                                                       b.Latitude,
-                                                       b.Longitude
-                                                   }).ToList();
+                            string sql = @"SELECT
+                                                a.DriverId,
+                                                d.DriverNo,
+                                                b.LocationName,
+                                                b.Latitude,
+                                                b.Longitude
+                                            FROM Fleet_DriverQueueList a
+                                            INNER JOIN Fleet_Driver_Location b 
+                                                ON a.DriverId = b.DriverId
+                                            INNER JOIN Fleet_Driver d 
+                                                ON a.DriverId = d.Id
+                                            WHERE 
+                                                a.Status = 1
+                                                AND a.DriverWorkStatusId = 1
+                                                AND b.Latitude <> 0";
+
+                            var ListofAvailDrvs = db.ExecuteQuery<NearestDriversDTO>(sql).ToList();
+
 
                             var nearestDrivers = ListofAvailDrvs
                                 .Select(args => new
@@ -11603,6 +11613,15 @@ namespace SignalRHub.Controllers
             }
 
             return new CustomJsonResult { Data = response };
+        }
+
+        public class NearestDriversDTO
+        {
+            public int DriverId { get; set; }
+            public string DriverNo { get; set; }
+            public string LocationName { get; set; }
+            public double Latitude { get; set; }
+            public double Longitude { get; set; }
         }
         //public JsonResult GetNearestDrivers(WebApiClasses.RequestWebApi obj)
         //{
