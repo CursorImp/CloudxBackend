@@ -725,6 +725,9 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableTodayBookingFilterUpTo2AM", SetVal = "false", description = "Enable Today Booking Filter Up To 2AM"  },
                              new AppSetting { SetKey = "EnableSpecialRequirement", SetVal = "false", description = "Enable Special Requirement"  },
                              new AppSetting { SetKey = "RestrictedIPs", SetVal = "", description = "RestrictedIPs have IPs that are allowed to login"  },
+                             new AppSetting { SetKey = "EnableOrdernoInAccountInvoice", SetVal = "false", description = "Enable Orderno In Account Invoice Report"  },
+                             new AppSetting { SetKey = "EnableBookedByInAccountInvoice", SetVal = "false", description = "Enable BookedBy In Account Invoice Report"  },
+                             new AppSetting { SetKey = "EnableIsClosedValidation", SetVal = "false", description = "Enable IsClosed Account Validation"  },
 
                         };
 

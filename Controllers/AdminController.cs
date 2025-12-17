@@ -27332,6 +27332,7 @@ SET
                             {
                                 Id = a.Id,
                                 VehicleTypeId=a.VehicleTypeId,
+                                CompanyId = a.CompanyId,
                                 BookingNo = a.BookingNo,
                                 BookingDate = a.BookingDate,
                                 //BookingDateString = a.BookingDate.HasValue ? "" : a.BookingDate.Value.ToString("dd-MMM-yyyy"),

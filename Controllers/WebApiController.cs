@@ -2102,6 +2102,7 @@ namespace SignalRHub.Controllers
                  {
                      Id = datarow.Field<int>("Id"),
                      CompanyName = datarow.Field<string>("CompanyName"),
+                     IsClosed = datarow.Field<bool>("isclosed"),
                      // HasVat = datarow.Field<bool>("HasVat")
                  });
 
