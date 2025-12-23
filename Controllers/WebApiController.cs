@@ -12475,8 +12475,8 @@ namespace SignalRHub.Controllers
             ResponseWebApi Apiresponse = new ResponseWebApi();
             try
             {
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "PlayCallRecordingYasteck.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", id:" + obj?.RecordingId + Environment.NewLine);
-                General.WriteLog("PlayCallRecordingYasteck", "json: " + new JavaScriptSerializer().Serialize(obj));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "PlayCallRecordingYasteck.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", id:" + obj?.RecordingId + Environment.NewLine);
+                General.WriteLog("PlayCallRecordingYasteck", "id:" + obj?.RecordingId);
             }
             catch
             {
@@ -12528,7 +12528,8 @@ namespace SignalRHub.Controllers
                         }
                         try
                         {
-                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "PlayCallRecordingYasteck.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", url:" + url + Environment.NewLine);
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "PlayCallRecordingYasteck.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", url:" + url + Environment.NewLine);
+                            General.WriteLog("PlayCallRecordingYasteck", "url: " + url);
                         }
                         catch
                         {
@@ -12542,7 +12543,8 @@ namespace SignalRHub.Controllers
             {
                 try
                 {
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "PlayCallRecordingYasteck.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", error:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "PlayCallRecordingYasteck.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", error:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("PlayCallRecordingYasteck", ", error:" + ex.Message);
                 }
                 catch
                 {
