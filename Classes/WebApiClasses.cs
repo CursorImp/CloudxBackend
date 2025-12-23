@@ -1455,6 +1455,7 @@ namespace SignalRHub.WebApiClasses
 
     public class RequestWebApi
     {
+        public int? RecordingId { get; set; }
         public List<int> AdvanceBookingIds { get; set; }
         public bool? AllocateAnyDriver { get; set; }
         public bool? HasReturnBooking { get; set; }
