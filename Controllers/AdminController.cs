@@ -14557,7 +14557,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         catch { }
                         // }
                     }
-                    else {
+                    else if (obj.PhotoAction == "remove") {
                         objdriver.Current.Fleet_Driver_Images[0].Photo = null;
                     }
                     if (Documents != null)

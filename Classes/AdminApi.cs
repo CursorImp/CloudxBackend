@@ -345,7 +345,7 @@ namespace SignalRHub.Classes
     public class AdminApi
     {
         public decimal? SubCompanyBookingFees { get; set; }
-
+        public string PhotoAction { get; set; }
         public int pageNumber { get; set; }
         public int pageSize { get; set; }
         public string searchTerm { get; set; }
