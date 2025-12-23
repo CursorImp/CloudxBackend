@@ -14561,9 +14561,9 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     {
                         try
                         {
-                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",DriverNo:" + obj.fleetDriver.DriverNo + Environment.NewLine + ", PhotoAction:" + obj.PhotoAction + Environment.NewLine);
+                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverPhotoAction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",DriverNo:" + obj.fleetDriver.DriverNo + Environment.NewLine + ", PhotoAction:" + obj.PhotoAction + Environment.NewLine);
                         }
-                        catch ()
+                        catch
                         {                            
                         }
                         objdriver.Current.Fleet_Driver_Images[0].Photo = null;
