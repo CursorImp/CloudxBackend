@@ -12484,7 +12484,133 @@ namespace SignalRHub.Controllers
             return new CustomJsonResult { Data = response };
         }
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("PlayCallRecordingYESTECH")]
+        public JsonResult PlayCallRecordingYESTECH(WebApiClasses.RequestWebApi obj)
+        {
+            ResponseWebApi Apiresponse = new ResponseWebApi();
+            try
+            {
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "PlayCallRecordingYasteck.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", id:" + obj?.RecordingId + Environment.NewLine);
+                General.WriteLog("PlayCallRecordingYasteck", "id:" + obj?.RecordingId);
+            }
+            catch
+            {
+            }
+            string url = "";
 
+            if (obj == null || obj?.RecordingId == 0)
+            {
+                Apiresponse.HasError = true;
+                return Json(Apiresponse, JsonRequestBehavior.AllowGet);
+            }
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var callLog = db.CallHistories.Where(e => e.Id == obj.RecordingId).FirstOrDefault();
+                    var voipConfig = db.CallerIdVOIP_Configurations.FirstOrDefault();
+                    if (callLog != null)
+                    {
+                        string CountryPhoneCode = "44";
+                        string CallerId = CountryPhoneCode + callLog.PhoneNumber.Substring(1, callLog.PhoneNumber.Length - 1);
+                        var UniqueID = callLog.CallDuration;
+
+                        string fileName = UniqueID + "_" + CallerId + ".wav";
+                        var callRecordingHost = voipConfig.Host;
+
+
+                        if (voipConfig.Host.Contains("vipvoipuk"))
+                        {
+                            //string callRefNo = obj.RecordingId.ToString();
+                            //TCS.Call.MakeCall c = new TCS.Call.MakeCall();
+                            string dirName = $"{callLog.AnsweredDateTime.Value.Year}-{callLog.AnsweredDateTime.Value.Month}/{callLog.AnsweredDateTime.Value.Day}";
+                            string savePath = Server.MapPath("~/CallRecordings/" + dirName);
+                            url = String.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, Url.Content("~/")) + "CallRecordings/" + dirName + "/" + UniqueID + ".wav";
+                            if (!Directory.Exists(savePath))
+                            {
+                                Directory.CreateDirectory(savePath);
+                            }
+                            var response = YESTECH_GetRecordingFile(savePath, "", "", UniqueID, callLog.AnsweredDateTime.Value, HubProcessor.Instance.objPolicy.CallRecordingToken.ToStr());
+                        }
+                        else if (voipConfig.Host.Contains("95.217.43.170"))
+                        {
+                            url = ("http://95.217.43.170/eurosoft/voip/recordings/" + voipConfig.UserName + "/" + fileName).Trim();
+                        }
+                        else
+                        {
+                            fileName = callLog.CallDuration + "_" + CallerId + ".wav";
+                            url = ($"https://recordings.emeraldtel.co.uk/" + voipConfig.UserName + "/inbound/" + fileName).Trim();
+                        }
+                        try
+                        {
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "PlayCallRecordingYasteck.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", url:" + url + Environment.NewLine);
+                            General.WriteLog("PlayCallRecordingYasteck", "url: " + url);
+                        }
+                        catch
+                        {
+                        }
+                        Apiresponse.Data = url;
+                        Apiresponse.HasError = false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "PlayCallRecordingYasteck.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", error:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("PlayCallRecordingYasteck", ", error:" + ex.Message);
+                }
+                catch
+                {
+                }
+            }
+            return Json(Apiresponse, JsonRequestBehavior.AllowGet);
+        }
+
+        public string YESTECH_GetRecordingFile(string FolderPath, string BaseURL, string ClientUserName, string UniqueID, DateTime bookingDate, string tokenNo)
+        {
+            try
+            {
+                string text = bookingDate.Month.ToString();
+                if (text.Length == 1)
+                {
+                    text = "0" + text;
+                }
+
+                string text2 = bookingDate.Day.ToString();
+                if (text2.Length == 1)
+                {
+                    text2 = "0" + text2;
+                }
+
+                string text3 = bookingDate.Year + "-" + text + "-" + text2;
+                string text4 = tokenNo.ToString() + "_" + text3 + "_" + UniqueID;
+                string[] array = text4.Split('_');
+                string text5 = array[2];
+                if (!Directory.Exists(FolderPath))
+                {
+                    Directory.CreateDirectory(FolderPath);
+                }
+
+                BaseURL = "http://callrecordingapi.com/WebGet/api/FileAPI/GetFile?file=";
+                string uriString = BaseURL.Trim() + text4;
+                string text6 = FolderPath + "\\" + UniqueID + ".wav";
+                using (WebClient webClient = new WebClient())
+                {
+                    webClient.DownloadFile(new Uri(uriString), text6);
+                }
+
+                return text6;
+            }
+            catch (Exception)
+            {
+            }
+
+            return string.Empty;
+        }
 
     }
 }
