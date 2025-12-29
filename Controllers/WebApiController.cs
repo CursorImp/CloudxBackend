@@ -1991,6 +1991,10 @@ namespace SignalRHub.Controllers
                     {
                         obj.bookingInfo.DeadMileage = 0;
                     }
+                    obj.bookingInfo.DisableDriverSMS = obj2.DisableDriverSMS;
+                    obj.bookingInfo.DisablePassengerSMS = obj2.DisablePassengerSMS;
+                    obj.bookingInfo.ExtraMile = obj2.ExtraMile;
+                    obj.bookingInfo.JourneyTimeInMins = obj2.JourneyTimeInMins;
                     response.Data = obj.bookingInfo;
 
 
@@ -2733,6 +2737,19 @@ namespace SignalRHub.Controllers
                             {
                                 objMaster.Current.AutoDespatchTime = null;
                                 objMaster.Current.DeadMileage = 0;
+                            }
+                        }
+                        if (Global.EnablePriority == "true")
+                        {
+                            if (obj.bookingInfo.JourneyTimeInMins == 1)
+                            {
+                                objMaster.Current.ExtraMile = obj.bookingInfo.ExtraMile;
+                                objMaster.Current.JourneyTimeInMins = obj.bookingInfo.JourneyTimeInMins;
+                            }
+                            else
+                            {
+                                objMaster.Current.ExtraMile = 0;
+                                objMaster.Current.JourneyTimeInMins = 0;
                             }
                         }
                         objMaster.ReturnCustomerPrice = objMaster.Current.ServiceCharges.ToDecimal();

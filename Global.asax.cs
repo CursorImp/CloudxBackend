@@ -123,6 +123,7 @@ namespace SignalRHub
         public static string CancellationFee = "0";
         public static string CancellationFeeType = "1"; //1- Amount, 2- Percentage
         public static string EnableManualLeadTime = "false";
+        public static string EnablePriority = "false";
         public static string ShowAllocatedInFutureList = "0";
         public static string EnableCustomPayment = "0";
         public static string EnableSoundAdjustment = "0";
@@ -728,7 +729,8 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableOrdernoInAccountInvoice", SetVal = "false", description = "Enable Orderno In Account Invoice Report"  },
                              new AppSetting { SetKey = "EnableBookedByInAccountInvoice", SetVal = "false", description = "Enable BookedBy In Account Invoice Report"  },
                              new AppSetting { SetKey = "EnableIsClosedValidation", SetVal = "false", description = "Enable IsClosed Account Validation"  },
-
+                             new AppSetting { SetKey = "EnablePriority", SetVal = "false", description = "Enable Priority"  },
+                             new AppSetting { SetKey = "EnableSMSOnBookingForm", SetVal = "false", description = "Enable SMS On Booking Form"  },
                         };
 
                 using (var db = new TaxiDataContext())
