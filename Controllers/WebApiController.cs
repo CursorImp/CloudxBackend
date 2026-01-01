@@ -4747,16 +4747,16 @@ namespace SignalRHub.Controllers
 
 
                         if (obj.routeInfo.PickupDateTime != null)
-                            info.PickupDateTime = string.Format("{0:yyyy-MM-dd HH:mm}", obj.routeInfo.PickupDateTime);
+                            info.PickupDateTime = string.Format("{0:dd-MMM-yyyy HH:mm}", obj.routeInfo.PickupDateTime);
                         else
-                            info.PickupDateTime = string.Format("{0:yyyy-MM-dd HH:mm}", DateTime.Now);
+                            info.PickupDateTime = string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
 
 
 
                         if (obj.routeInfo.returnPickupDateTime != null)
-                            info.returnPickupDateTime = string.Format("{0:yyyy-MM-dd HH:mm}", obj.routeInfo.returnPickupDateTime);
+                            info.returnPickupDateTime = string.Format("{0:dd-MMM-yyyy HH:mm}", obj.routeInfo.returnPickupDateTime);
                         else
-                            info.returnPickupDateTime = string.Format("{0:yyyy-MM-dd HH:mm}", DateTime.Now);
+                            info.returnPickupDateTime = string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
 
                         if (obj.routeInfo.viaAddresses != null)
                         {
