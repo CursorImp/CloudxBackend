@@ -8844,7 +8844,7 @@ namespace SignalRHub
 
                         string postedFrom = string.Empty;
 
-
+                        var enableJ1530Jobs = db.Gen_SysPolicy_PDASettings.FirstOrDefault().EnableJ15J30Jobs;
 
 
                         var result = db.stp_GetAreaPlotsByVehicle(driverId, Instance.objPolicy.PlotsJobExpiryValue1, Instance.objPolicy.PlotsJobExpiryValue2).ToList();
@@ -9035,8 +9035,12 @@ namespace SignalRHub
                                     item2.Distance = 0.0;
                                 }
                                 else
-                                    list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
-
+                                {
+                                    if (enableJ1530Jobs != false)
+                                    {
+                                        list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
+                                    }
+                                }
 
 
 
@@ -9064,6 +9068,11 @@ namespace SignalRHub
 
                             }
 
+                        }
+
+                        if (enableJ1530Jobs == false)
+                        {
+                            list = list.Where(x => x.ZoneName == "-" || !(x.Drivers == 0 && x.Bid == 0)).ToList();
                         }
 
                         response = new JavaScriptSerializer().Serialize(list);
@@ -9160,7 +9169,7 @@ namespace SignalRHub
                     try
                     {
                         db.CommandTimeout = 4;
-
+                        var enableJ1530Jobs = db.Gen_SysPolicy_PDASettings.FirstOrDefault().EnableJ15J30Jobs;
                         int driverId = values[0].ToInt();
 
                         string postedFrom = string.Empty;
@@ -9333,7 +9342,13 @@ namespace SignalRHub
                                 item2.Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt());
                             }
                             else
-                                list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt()) });
+                            {
+                                if (enableJ1530Jobs != false)
+                                {
+                                    list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt()) });
+                                }
+                            }
+                                
 
 
                             //
@@ -9408,6 +9423,12 @@ namespace SignalRHub
                         {
                             finalList = list.ToList();
                         }
+
+                        if (enableJ1530Jobs == false)
+                        {
+                            finalList = finalList.Where(x => x.ZoneName == "-" || !(x.Drivers == 0 && x.Bid == 0)).ToList();
+                        }
+
                         response = new JavaScriptSerializer().Serialize(finalList);
                         data.Data = response;
                         data.IsSuccess = true;
