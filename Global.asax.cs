@@ -9076,25 +9076,23 @@ namespace SignalRHub
 
         private async Task CheckBiddingJobsAsync()
         {
-            await Task.Run(() =>
+            try
+            {
+                await Task.Yield(); 
+                CheckBiddingJobs();
+            }
+            catch (Exception ex)
             {
                 try
                 {
-                    CheckBiddingJobs();
+                    File.AppendAllText("CheckBiddingJobsAsync_Error.txt",
+                        $"{DateTime.Now}: {ex.Message}{Environment.NewLine}");
                 }
-                catch (Exception ex)
+                catch
                 {
-                    try
-                    {
-                        File.AppendAllText("CheckBiddingJobsAsync_Error.txt",
-                            $"{DateTime.Now}: {ex.Message}{Environment.NewLine}");
-                    }
-                    catch
-                    {
-                        // swallow logging exception
-                    }
+                    // swallow logging exception
                 }
-            });
+            }
         }
         private void CheckBiddingJobs()
         {
