@@ -129,6 +129,7 @@ namespace SignalRHub
         public static string EnableSoundAdjustment = "0";
         public static string NotAcceptedRetry = "0";
         public static string RestrictedIPs = "";
+        public static string AdvancedReturnEditBooking = "false";
         public static string EnableViaArriveSMS = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
@@ -732,6 +733,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableIsClosedValidation", SetVal = "false", description = "Enable IsClosed Account Validation"  },
                              new AppSetting { SetKey = "EnablePriority", SetVal = "false", description = "Enable Priority"  },
                              new AppSetting { SetKey = "EnableSMSOnBookingForm", SetVal = "false", description = "Enable SMS On Booking Form"  },
+                             new AppSetting { SetKey = "AdvancedReturnEditBooking", SetVal = "false", description = "Advanced Return Edit Booking"  },
                              new AppSetting { SetKey = "EnableViaArriveSMS", SetVal = "false", description = "EnableViaArriveSMS"  },
                         };
 
@@ -1714,6 +1716,10 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("RestrictedIPs")))
                 {
                     RestrictedIPs = GetAppSetting<string>("RestrictedIPs").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("AdvancedReturnEditBooking")))
+                {
+                    AdvancedReturnEditBooking = GetAppSetting<string>("AdvancedReturnEditBooking").ToStr();
                 }
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableViaArriveSMS")))
                 {
