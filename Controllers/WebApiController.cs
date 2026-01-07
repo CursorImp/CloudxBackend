@@ -4553,9 +4553,9 @@ namespace SignalRHub.Controllers
         public static int[] GetOptimizedWaypointOrder(
     double pickupLat, double pickupLng,
     double destLat, double destLng,
-    List<(double lat, double lng)> vias)
+    List<(double lat, double lng)> vias,string apiKey)
         {
-            string apiKey = "AIzaSyASPmp4BkVYiigDzyrsmunZsSkEUXZQhl8";
+          
             string origin = $"{pickupLat},{pickupLng}";
             string destination = $"{destLat},{destLng}";
 
@@ -4698,33 +4698,43 @@ namespace SignalRHub.Controllers
                         }
                     }
 
-                    
-
-                    if ( obj.routeInfo.HasOptimizeRoute==true && obj.routeInfo.viaAddresses != null && obj.routeInfo.viaAddresses.Count > 1)
+                    try
                     {
-                        List<(double lat, double lng)> viaCoords = new List<(double lat, double lng)>();
-                        foreach (var item in obj.routeInfo.viaAddresses)
+                        if (obj.routeInfo.HasOptimizeRoute == true && obj.routeInfo.viaAddresses != null && obj.routeInfo.viaAddresses.Count > 1)
                         {
-                            var coord = db.stp_getCoordinatesByAddress(item.Address.ToStr().Trim(), General.GetPostCodeMatch(item.Address.ToStr().Trim())).FirstOrDefault();
-                            if (coord != null)
-                                viaCoords.Add((coord.Latitude.Value, coord.Longtiude.Value));
-                        }
-                        int[] optimizedOrder = GetOptimizedWaypointOrder(
-    obj.routeInfo.pickupAddress.Latitude.Value,
-    obj.routeInfo.pickupAddress.Longitude.Value,
-    obj.routeInfo.destinationAddress.Latitude.Value,
-    obj.routeInfo.destinationAddress.Longitude.Value,
-    viaCoords
-);
-                        if (optimizedOrder != null && optimizedOrder.Length > 0)
-                        {
-                            var reorderedVias = new List<AddressInfo>();
-                            for (int i = 0; i < optimizedOrder.Length; i++)
+                            string apikey = db.ExecuteQuery<string>("select APIKey from mapkeys where maptype='direction'").FirstOrDefault().ToStr().Trim();
+                            if (!string.IsNullOrWhiteSpace(apikey))
                             {
-                                reorderedVias.Add(obj.routeInfo.viaAddresses[optimizedOrder[i]]);
+                                List<(double lat, double lng)> viaCoords = new List<(double lat, double lng)>();
+                                foreach (var item in obj.routeInfo.viaAddresses)
+                                {
+                                    var coord = db.stp_getCoordinatesByAddress(item.Address.ToStr().Trim(), General.GetPostCodeMatch(item.Address.ToStr().Trim())).FirstOrDefault();
+                                    if (coord != null)
+                                        viaCoords.Add((coord.Latitude.Value, coord.Longtiude.Value));
+                                }
+                                int[] optimizedOrder = GetOptimizedWaypointOrder(
+                                obj.routeInfo.pickupAddress.Latitude.Value,
+                                obj.routeInfo.pickupAddress.Longitude.Value,
+                                obj.routeInfo.destinationAddress.Latitude.Value,
+                                obj.routeInfo.destinationAddress.Longitude.Value,
+                                viaCoords,
+                                apikey
+                            );
+                                if (optimizedOrder != null && optimizedOrder.Length > 0)
+                                {
+                                    var reorderedVias = new List<AddressInfo>();
+                                    for (int i = 0; i < optimizedOrder.Length; i++)
+                                    {
+                                        reorderedVias.Add(obj.routeInfo.viaAddresses[optimizedOrder[i]]);
+                                    }
+                                    obj.routeInfo.viaAddresses = reorderedVias;
+                                }
                             }
-                            obj.routeInfo.viaAddresses = reorderedVias;
                         }
+                    }
+                    catch
+                    {
+
                     }
                    
                     try
