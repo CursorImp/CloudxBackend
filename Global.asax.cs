@@ -735,6 +735,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableSMSOnBookingForm", SetVal = "false", description = "Enable SMS On Booking Form"  },
                              new AppSetting { SetKey = "AdvancedReturnEditBooking", SetVal = "false", description = "Advanced Return Edit Booking"  },
                              new AppSetting { SetKey = "EnableViaArriveSMS", SetVal = "false", description = "EnableViaArriveSMS"  },
+                             new AppSetting { SetKey = "EnableOptimizeRoute", SetVal = "false", description = "EnableOptimizeRoute"  },
                         };
 
                 using (var db = new TaxiDataContext())

@@ -3805,7 +3805,7 @@ namespace SignalRHub.Controllers
 
 
 
-
+        
 
 
         [System.Web.Http.HttpGet]
@@ -4550,8 +4550,40 @@ namespace SignalRHub.Controllers
 
         //    return new CustomJsonResult { Data = response };
         //}
+        public static int[] GetOptimizedWaypointOrder(
+    double pickupLat, double pickupLng,
+    double destLat, double destLng,
+    List<(double lat, double lng)> vias)
+        {
+            string apiKey = "AIzaSyASPmp4BkVYiigDzyrsmunZsSkEUXZQhl8";
+            string origin = $"{pickupLat},{pickupLng}";
+            string destination = $"{destLat},{destLng}";
 
+            string waypointStr =
+                "optimize:true|" +
+                string.Join("|", vias.Select(v => $"{v.lat},{v.lng}"));
 
+            string url =
+                "https://maps.googleapis.com/maps/api/directions/json?" +
+                $"origin={origin}&destination={destination}" +
+                $"&waypoints={Uri.EscapeDataString(waypointStr)}" +
+                "&mode=driving&language=en&key=" + apiKey;
+
+            using (var client = new WebClient())
+            {
+                string json = client.DownloadString(url);
+                dynamic result = Newtonsoft.Json.JsonConvert.DeserializeObject(json);
+
+                if (result.routes.Count == 0)
+                    return null;
+
+                return ((IEnumerable<dynamic>)result.routes[0].waypoint_order)
+                    .Select(x => (int)x)
+                    .ToArray();
+            }
+        }
+
+       
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("CalculateRoute")]
@@ -4666,6 +4698,35 @@ namespace SignalRHub.Controllers
                         }
                     }
 
+                    
+
+                    if ( obj.routeInfo.HasOptimizeRoute==true && obj.routeInfo.viaAddresses != null && obj.routeInfo.viaAddresses.Count > 1)
+                    {
+                        List<(double lat, double lng)> viaCoords = new List<(double lat, double lng)>();
+                        foreach (var item in obj.routeInfo.viaAddresses)
+                        {
+                            var coord = db.stp_getCoordinatesByAddress(item.Address.ToStr().Trim(), General.GetPostCodeMatch(item.Address.ToStr().Trim())).FirstOrDefault();
+                            if (coord != null)
+                                viaCoords.Add((coord.Latitude.Value, coord.Longtiude.Value));
+                        }
+                        int[] optimizedOrder = GetOptimizedWaypointOrder(
+    obj.routeInfo.pickupAddress.Latitude.Value,
+    obj.routeInfo.pickupAddress.Longitude.Value,
+    obj.routeInfo.destinationAddress.Latitude.Value,
+    obj.routeInfo.destinationAddress.Longitude.Value,
+    viaCoords
+);
+                        if (optimizedOrder != null && optimizedOrder.Length > 0)
+                        {
+                            var reorderedVias = new List<AddressInfo>();
+                            for (int i = 0; i < optimizedOrder.Length; i++)
+                            {
+                                reorderedVias.Add(obj.routeInfo.viaAddresses[optimizedOrder[i]]);
+                            }
+                            obj.routeInfo.viaAddresses = reorderedVias;
+                        }
+                    }
+                   
                     try
                     {
                         string vias = "";
@@ -4743,6 +4804,7 @@ namespace SignalRHub.Controllers
                         obj.routeInfo.Distance = route.Distance;
                         obj.routeInfo.HasDeadMileage = route.HasDeadMileage;
                         obj.routeInfo.legs = route.legs;
+                        route.viaAddresses = obj.routeInfo.viaAddresses;
                         if (obj.routeInfo.AutoCalculateFares.ToBool() && pickup.ToStr().Trim().Length > 0 && destination.ToStr().Trim().Length > 0)
                         {
                             //if (obj.routeInfo.Noofhours > 0)
@@ -4824,7 +4886,7 @@ namespace SignalRHub.Controllers
                                 route.ReturnDriver = driver;
                             }
                         }
-
+                        
 
 
                         response.Data = route;

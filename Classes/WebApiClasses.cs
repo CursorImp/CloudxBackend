@@ -1791,6 +1791,7 @@ namespace SignalRHub.WebApiClasses
         public bool? AutoCalculateFares { get; set; }
         public decimal Distance;
         public bool HasDeadMileage;
+        public bool? HasOptimizeRoute { get; set; }
         public int Duration;
         public string unit;
         public string currency;
@@ -1840,6 +1841,7 @@ namespace SignalRHub.WebApiClasses
 
         public Fleet_Driver Driver;
         public Fleet_Driver ReturnDriver;
+        public List<AddressInfo> viaAddresses { get; set; }
     }
 
 
