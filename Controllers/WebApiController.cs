@@ -2157,6 +2157,243 @@ namespace SignalRHub.Controllers
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendBookingConfirmationSms")]
+        public JsonResult SendBookingConfirmationSms(WebApiClasses.RequestWebApi obj)
+        {
+            ResponseWebApi response = new ResponseWebApi();
+            BookingBO objMaster = new BookingBO();
+            objMaster.GetByPrimaryKey(obj.bookingInfo.Id);
+            Global.InitializeSMSTags();
+
+            DateTime? pickupdateTime = objMaster.Current.PickupDateTime;
+            if (HubProcessor.Instance.objPolicy.EnableAdvanceBookingSMSConfirmation.ToBool() && Global.listofSMSTags != null
+                 && pickupdateTime != null && objMaster.Current.IsQuotation.ToBool() == false
+                && (objMaster.Current.CompanyId == null || objMaster.Current.Gen_Company.DefaultIfEmpty().DisableAdvanceText.ToBool() == false))
+            {
+
+                // string msg=string.Empty;
+                string msg = HubProcessor.Instance.objPolicy.AdvanceBookingSMSText.ToStr().Trim();
+
+                string advancemsg = msg;
+
+                string mobileNo = obj.bookingInfo.CustomerMobileNo.ToStr().Trim();
+
+                if (mobileNo.Length > 0)
+                {
+                    string pickupSpan = string.Format("{0:HH:mm}", pickupdateTime);
+
+                    TimeSpan picktime = TimeSpan.Parse(pickupSpan);
+
+                    string nowP = string.Format("{0:HH:mm}", DateTime.Now);
+                    TimeSpan nowSpantime = TimeSpan.Parse(nowP);
+
+                    int afterMins = HubProcessor.Instance.objPolicy.AdvanceBookingSMSConfirmationMins.ToInt();
+                    double minDifference = pickupdateTime.Value.Subtract(DateTime.Now).TotalMinutes;
+
+                    if (afterMins == 0 || minDifference >= afterMins)
+                    {
+                        object propertyValue = string.Empty;
+
+                        foreach (var tag in Global.listofSMSTags.Where(c => msg.Contains(c.TagMemberValue)))
+                        {
+                            switch (tag.TagObjectName)
+                            {
+                                case "booking":
+
+                                    if (tag.TagPropertyValue.Contains('.'))
+                                    {
+
+                                        string[] val = tag.TagPropertyValue.Split(new char[] { '.' });
+
+                                        object parentObj = objMaster.Current.GetType().GetProperty(val[0]).GetValue(objMaster.Current, null);
+
+                                        if (parentObj != null)
+                                        {
+                                            propertyValue = parentObj.GetType().GetProperty(val[1]).GetValue(parentObj, null);
+                                        }
+                                        else
+                                            propertyValue = string.Empty;
+
+
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current, null);
+                                    }
+
+
+                                    if (string.IsNullOrEmpty(propertyValue.ToStr()) && !string.IsNullOrEmpty(tag.TagPropertyValue2))
+                                    {
+                                        propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue2).GetValue(objMaster.Current, null);
+                                    }
+                                    break;
+
+
+                                case "Booking_ViaLocations":
+                                    if (tag.TagPropertyValue == "ViaLocValue")
+                                    {
+
+
+                                        string[] VilLocs = null;
+                                        int cnt = 1;
+                                        VilLocs = objMaster.Current.Booking_ViaLocations.Select(c => cnt++.ToStr() + ". " + c.ViaLocValue).ToArray();
+                                        if (VilLocs.Count() > 0)
+                                        {
+
+                                            string Locations = "VIA POINT(s) : \n" + string.Join("\n", VilLocs);
+                                            propertyValue = Locations;
+                                        }
+                                        else
+                                            propertyValue = string.Empty;
+
+                                    }
+                                    break;
+
+
+
+
+                                default:
+
+
+                                    propertyValue = objMaster.Current.Gen_SubCompany.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current.Gen_SubCompany, null);
+
+
+                                    break;
+
+
+
+                            }
+
+
+                            msg = msg.Replace(tag.TagMemberValue,
+                                tag.TagPropertyValuePrefix.ToStr() + string.Format(tag.TagDataFormat, propertyValue) + tag.TagPropertyValueSuffix.ToStr());
+
+                        }
+
+
+                        msg.Replace("\n\n", "\n");
+
+                        string refMsg = "";
+
+
+                        HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + mobileNo.Trim() + " = " + msg);
+
+                        try
+                        {
+
+                            if (objMaster.Current.JourneyTypeId.ToInt() == Enums.JOURNEY_TYPES.RETURN && objMaster.Current.BookingReturns.Count > 0)
+                            {
+                                msg = advancemsg;
+
+                                Booking objReturn = objMaster.Current.BookingReturns[0];
+
+                                foreach (var tag in Global.listofSMSTags.Where(c => msg.Contains(c.TagMemberValue)))
+                                {
+                                    switch (tag.TagObjectName)
+                                    {
+                                        case "booking":
+
+                                            if (tag.TagPropertyValue.Contains('.'))
+                                            {
+
+                                                string[] val = tag.TagPropertyValue.Split(new char[] { '.' });
+
+                                                object parentObj = objReturn.GetType().GetProperty(val[0]).GetValue(objReturn, null);
+
+                                                if (parentObj != null)
+                                                {
+                                                    propertyValue = parentObj.GetType().GetProperty(val[1]).GetValue(parentObj, null);
+                                                }
+                                                else
+                                                    propertyValue = string.Empty;
+
+
+                                                break;
+                                            }
+                                            else
+                                            {
+                                                propertyValue = objReturn.GetType().GetProperty(tag.TagPropertyValue).GetValue(objReturn, null);
+                                            }
+
+
+                                            if (string.IsNullOrEmpty(propertyValue.ToStr()) && !string.IsNullOrEmpty(tag.TagPropertyValue2))
+                                            {
+                                                propertyValue = objReturn.GetType().GetProperty(tag.TagPropertyValue2).GetValue(objReturn, null);
+                                            }
+                                            break;
+
+
+                                        case "Booking_ViaLocations":
+                                            if (tag.TagPropertyValue == "ViaLocValue")
+                                            {
+
+
+                                                string[] VilLocs = null;
+                                                int cnt = 1;
+                                                VilLocs = objReturn.Booking_ViaLocations.Select(c => cnt++.ToStr() + ". " + c.ViaLocValue).ToArray();
+                                                if (VilLocs.Count() > 0)
+                                                {
+
+                                                    string Locations = "VIA POINT(s) : \n" + string.Join("\n", VilLocs);
+                                                    propertyValue = Locations;
+                                                }
+                                                else
+                                                    propertyValue = string.Empty;
+
+                                            }
+                                            break;
+
+
+                                        default:
+
+
+                                            propertyValue = objMaster.Current.Gen_SubCompany.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current.Gen_SubCompany, null);
+
+
+                                            break;
+
+
+
+                                    }
+
+
+                                    msg = msg.Replace(tag.TagMemberValue,
+                                        tag.TagPropertyValuePrefix.ToStr() + string.Format(tag.TagDataFormat, propertyValue) + tag.TagPropertyValueSuffix.ToStr());
+
+                                }
+
+                                msg.Replace("\n\n", "\n");
+
+
+                                HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + mobileNo.Trim() + " = " + msg);
+
+                                response.Message = "Success";
+                                response.HasError = false;
+
+                            }
+                        }
+                        catch
+                        {
+
+
+                        }
+
+
+
+
+                        return Json(response, JsonRequestBehavior.AllowGet);
+
+
+                    }
+                }
+            }
+            response.Message = "SMS not sent: conditions not met or invalid booking.";
+            response.HasError = true;
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
         [System.Web.Http.Route("SaveBooking")]
         public JsonResult SaveBooking(WebApiClasses.RequestWebApi obj)
         {
@@ -3948,6 +4185,7 @@ namespace SignalRHub.Controllers
                                     {
                                         pendingBookings.Add(new WaitingCurrentHistoryList
                                         {
+                                            Id = Convert.ToInt64(reader["Id"]),
                                             BookingNo = reader["BookingNo"] as string,
                                             PickupDateTime = Convert.ToDateTime(reader["PickupDateTime"]),
                                             FromAddress = reader["FromAddress"] as string,
@@ -3963,6 +4201,7 @@ namespace SignalRHub.Controllers
                                     {
                                         completedBookings.Add(new WaitingCurrentHistoryList
                                         {
+                                            Id = Convert.ToInt64(reader["Id"]),
                                             BookingNo = reader["BookingNo"] as string,
                                             PickupDateTime = Convert.ToDateTime(reader["PickupDateTime"]),
                                             FromAddress = reader["FromAddress"] as string,
@@ -9643,7 +9882,7 @@ namespace SignalRHub.Controllers
                         }
 
 
-                        var data = new EmailInfo { SubCompanyId = obj2.SubcompanyId.ToInt(), From = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(c => c.SmtpUserName).FirstOrDefault(), Subject = subject, BookingId = obj2.Id, To = obj2.CustomerEmail, IsAccountJob = obj2.CompanyId != null ? true : false, PaymentTypeId = obj2.PaymentTypeId.ToInt() };
+                        var data = new EmailInfo { CustomerMobileNo=obj2.CustomerMobileNo, SubCompanyId = obj2.SubcompanyId.ToInt(), From = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(c => c.SmtpUserName).FirstOrDefault(), Subject = subject, BookingId = obj2.Id, To = obj2.CustomerEmail, IsAccountJob = obj2.CompanyId != null ? true : false, PaymentTypeId = obj2.PaymentTypeId.ToInt() };
                         try
                         {
                             var EnableThirdPartyEmailSetting = false;

@@ -228,6 +228,7 @@ namespace SignalRHub.WebApiClasses
 
     public class WaitingCurrentHistoryList
     {
+        public long Id { get; set; }
         public string BookingNo { get; set; }
         public DateTime PickupDateTime { get; set; }
         public string FromAddress { get; set; }
@@ -1422,6 +1423,7 @@ namespace SignalRHub.WebApiClasses
         public string From { get; set; }
         public string To { get; set; }
         public string CustomerName { get; set; }
+        public string CustomerMobileNo { get; set; }
         public string Subject { get; set; }
         public string MessageBody { get; set; }
         public bool HideFares { get; set; }
