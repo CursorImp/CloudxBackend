@@ -129,6 +129,8 @@ namespace SignalRHub
         public static string EnableSoundAdjustment = "0";
         public static string NotAcceptedRetry = "0";
         public static string RestrictedIPs = "";
+        public static string AdvancedReturnEditBooking = "false";
+        public static string EnableViaArriveSMS = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -731,6 +733,8 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableIsClosedValidation", SetVal = "false", description = "Enable IsClosed Account Validation"  },
                              new AppSetting { SetKey = "EnablePriority", SetVal = "false", description = "Enable Priority"  },
                              new AppSetting { SetKey = "EnableSMSOnBookingForm", SetVal = "false", description = "Enable SMS On Booking Form"  },
+                             new AppSetting { SetKey = "AdvancedReturnEditBooking", SetVal = "false", description = "Advanced Return Edit Booking"  },
+                             new AppSetting { SetKey = "EnableViaArriveSMS", SetVal = "false", description = "EnableViaArriveSMS"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1712,6 +1716,14 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("RestrictedIPs")))
                 {
                     RestrictedIPs = GetAppSetting<string>("RestrictedIPs").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("AdvancedReturnEditBooking")))
+                {
+                    AdvancedReturnEditBooking = GetAppSetting<string>("AdvancedReturnEditBooking").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableViaArriveSMS")))
+                {
+                    EnableViaArriveSMS = GetAppSetting<string>("EnableViaArriveSMS").ToStr();
                 }
 
             }
@@ -4366,7 +4378,7 @@ namespace SignalRHub
 
                                 // add price plot rule
 
-                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
+                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && (job.AllocatedDriver.ToBool() || job.IsConfirmedDriver.ToBool()))
                                 {
                                     listofJobAvailableDrvs = listofJobAvailableDrvs.Where(x => x.DriverId == job.DriverId).ToList();
                                     if (listofJobAvailableDrvs.Count == 0)
@@ -4583,7 +4595,7 @@ namespace SignalRHub
 
                                 if (listofJobAvailableDrvs.Count == 0)
                                 {
-                                    if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
+                                    if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && (job.AllocatedDriver.ToBool() || job.IsConfirmedDriver.ToBool()))
                                     {
                                         continue;
                                     }
@@ -5014,7 +5026,7 @@ namespace SignalRHub
                                         {
                                             // Put Bidding Sub Rule 3
 
-                                            if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
+                                            if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && (job.AllocatedDriver.ToBool() || job.IsConfirmedDriver.ToBool()))
                                             {
                                                 continue;
                                             }
@@ -5829,7 +5841,7 @@ namespace SignalRHub
                                                     {
                                                         // Put Bidding Sub Rule 3
 
-                                                        if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
+                                                        if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && (job.AllocatedDriver.ToBool() || job.IsConfirmedDriver.ToBool()))
                                                         {
                                                             continue;
                                                         }
@@ -6200,7 +6212,7 @@ namespace SignalRHub
                                             {
                                                 // Put Bidding Sub Rule 3
 
-                                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
+                                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && (job.AllocatedDriver.ToBool() || job.IsConfirmedDriver.ToBool()))
                                                 {
                                                     continue;
                                                 }
@@ -7409,7 +7421,7 @@ namespace SignalRHub
 
                             foreach (var job in bookings)
                             {
-                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
+                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && (job.AllocatedDriver.ToBool() || job.IsConfirmedDriver.ToBool()))
                                 {
                                     continue;
                                 }

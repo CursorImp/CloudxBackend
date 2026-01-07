@@ -1750,12 +1750,13 @@ namespace SignalRHub.Controllers
                     var obj2 = db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id);
                     try
                     {
-
+                        obj.bookingInfo.BookingReturn = new Booking();
                         var master = db.Bookings.FirstOrDefault(x => x.MasterJobId == obj2.Id);
                         string query = "SELECT DriverId, VehicleTypeId FROM Booking WHERE ID =" + master.Id;
                         var data = db.ExecuteQuery<BookingInfo>(query).FirstOrDefault();
                         obj.bookingInfo.DriverIdReturn = data.DriverId;
                         obj.bookingInfo.VehicleTypeIdReturn = data.VehicleTypeId;
+                        obj.bookingInfo.BookingReturn.Id = master.Id;
                     }
                     catch
                     {
@@ -2812,31 +2813,29 @@ namespace SignalRHub.Controllers
                             objMaster.Current.ReturnPickupDateTime = startDate.ToDate() + objMaster.Current.ReturnPickupDateTime.Value.TimeOfDay;
 
 
-                        }
+                        }                        
+                            //if (objMaster.Current.Id > 0 && obj.editbookingInfo != null)
+                            //{
+                            //    try
+                            //    {
+                            //        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "EditBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",old pickup:" + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime) + ",new pickup:" + string.Format("{0:dd/MM/yyyy HH:mm}", obj.bookingInfo.PickupDateTime) + Environment.NewLine);
+                            //    }
+                            //    catch
+                            //    {
+
+                            //    }
+
+                            //    if (obj.editbookingInfo.PickupDateTime != objMaster.Current.PickupDateTime)
+                            //    {
 
 
-                        //if (objMaster.Current.Id > 0 && obj.editbookingInfo != null)
-                        //{
-                        //    try
-                        //    {
-                        //        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "EditBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",old pickup:" + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime) + ",new pickup:" + string.Format("{0:dd/MM/yyyy HH:mm}", obj.bookingInfo.PickupDateTime) + Environment.NewLine);
-                        //    }
-                        //    catch
-                        //    {
+                            //        objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime), AfterUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", objMaster.Current.PickupDateTime), UpdateDate = DateTime.Now });
 
-                        //    }
+                            //    }
 
-                        //    if (obj.editbookingInfo.PickupDateTime != objMaster.Current.PickupDateTime)
-                        //    {
+                            //}
 
-
-                        //        objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime), AfterUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", objMaster.Current.PickupDateTime), UpdateDate = DateTime.Now });
-
-                        //    }
-
-                        //}
-
-                        try
+                            try
                         {
                             if (IsAddMode == true && Global.ShowAllocatedInFutureList == "1" && objMaster.Current.DriverId.ToInt() > 0)
                             {
@@ -3010,6 +3009,16 @@ namespace SignalRHub.Controllers
                         }
                         try
                         {
+                            if (obj.editbookingInfo != null && obj.editbookingInfo.JourneyTypeId == 2 && Global.AdvancedReturnEditBooking == "true") 
+                            {
+                                db.ExecuteQuery<int>("update booking set JourneyTypeId= 2 where Id=" + objMaster.Current.Id);
+                            }
+                        }
+                        catch
+                        {                            
+                        }
+                        try
+                        {
                             if (!string.IsNullOrEmpty(obj.bookingInfo.OrderNo) && obj.bookingInfo.CompanyId > 0)
                             {
                                 // Check if the order number already exists for this company
@@ -3052,13 +3061,13 @@ namespace SignalRHub.Controllers
 
                         try
                         {
-                            string query1 = "Update booking set IsFare= {0} where Id={1}";
-                            db.ExecuteCommand(query1, obj.bookingInfo.IsFare, objMaster.Current.Id);
+                            string query1 = "Update booking set IsFare= {0},disabledriversms ={2},disablepassengersms = {3},JourneyTimeInMins = {4},extramile = {5} where Id={1}";
+                            db.ExecuteCommand(query1, obj.bookingInfo.IsFare, objMaster.Current.Id,obj.bookingInfo.DisableDriverSMS,obj.bookingInfo.DisablePassengerSMS,obj.bookingInfo.JourneyTimeInMins,obj.bookingInfo.ExtraMile);
                             var master = db.Bookings.FirstOrDefault(x => x.MasterJobId == objMaster.Current.Id);
                             if (master != null)
                             {
-                                string query2 = "Update booking set IsFare= {0} where Id={1}";
-                                db.ExecuteCommand(query2, obj.bookingInfo.IsFare, master.Id);
+                                string query2 = "Update booking set IsFare= {0},disabledriversms ={2},disablepassengersms = {3},JourneyTimeInMins = {4},extramile = {5} where Id={1}";
+                                db.ExecuteCommand(query2, obj.bookingInfo.IsFare, master.Id, obj.bookingInfo.DisableDriverSMS, obj.bookingInfo.DisablePassengerSMS, obj.bookingInfo.JourneyTimeInMins, obj.bookingInfo.ExtraMile);
                             }
                         }
                         catch
