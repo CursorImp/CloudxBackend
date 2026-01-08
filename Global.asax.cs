@@ -739,6 +739,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableMapReportOnBookingForm", SetVal = "false", description = "Enable Map Report On Booking Form"  },
                              new AppSetting { SetKey = "EnableBookingConfirmationSms", SetVal = "false", description = "Enable Booking Confirmation Sms"  },
                              new AppSetting { SetKey = "EnableEditWaitingBookingOnCallerIdPopup", SetVal = "false", description = "Enable Edit Waiting Booking On CallerId Popup"  },
+                             new AppSetting { SetKey = "QuotationExpiryDays", SetVal = "0", description = "Quotation Expiry Days"  },
                         };
 
                 using (var db = new TaxiDataContext())
