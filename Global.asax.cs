@@ -742,7 +742,8 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableEditWaitingBookingOnCallerIdPopup", SetVal = "false", description = "Enable Edit Waiting Booking On CallerId Popup"  },
                              new AppSetting { SetKey = "QuotationExpiryDays", SetVal = "0", description = "Quotation Expiry Days"  },
                              new AppSetting { SetKey = "EnablekonnectPayReciept", SetVal = "0", description = "EnablekonnectPayReciept"  },
-                             new AppSetting { SetKey = "EnablePromotionOnBooking", SetVal = "true", description = "Enable Promotion On Booking"  },
+                             new AppSetting { SetKey = "EnablePromotionOnBooking", SetVal = "false", description = "Enable Promotion On Booking"  },
+                             new AppSetting { SetKey = "showRouteType", SetVal = "false", description = "show Route Type"  },
                         };
 
                 using (var db = new TaxiDataContext())
