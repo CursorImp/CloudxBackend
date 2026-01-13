@@ -26,6 +26,10 @@ using System.Threading.Tasks;
 using CabTreasureWebApi.Models.HereForwardGeocode;
 using System.Collections;
 using System.Reflection;
+using Newtonsoft.Json;
+using System.Text.RegularExpressions;
+using System.Diagnostics.Metrics;
+using Vonage.SubAccounts;
 
 namespace SignalRHub.Controllers
 {
@@ -1734,6 +1738,37 @@ namespace SignalRHub.Controllers
                     {
 
                     }
+                    try
+                    {
+                        if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='EnablePromotionOnBooking'").FirstOrDefault().ToStr().Trim() == "true")
+                        {
+                            string query = $@"
+SELECT 
+    PromotionId,
+    ISNULL(PromotionCode, '') AS PromotionCode,
+    ISNULL(CustomerId, 0) AS CustomerId,
+   OriginalFare,
+    DiscountedFare,
+    type AS PromotionType,
+   promoValue AS promoValue
+FROM promotion_applied
+WHERE BookingId = {obj.bookingInfo.Id}";
+                            var data = db.ExecuteQuery<BookingInfo>(query).FirstOrDefault();
+                            if (data != null)
+                            {
+                                obj.bookingInfo.PromotionCode = data.PromotionCode;
+                                obj.bookingInfo.PromotionId = data.PromotionId;
+                                obj.bookingInfo.CustomerId = data.CustomerId;
+                                obj.bookingInfo.OriginalFare = data.OriginalFare;
+                                obj.bookingInfo.DiscountedFare = data.DiscountedFare;
+                                obj.bookingInfo.promoValue = data.promoValue;
+                                obj.bookingInfo.Type = data.PromotionType == "percent" ? 1 : 2;
+                            }
+                        }
+                    }
+                    catch
+                    {
+                    }
 
                     try
                     {
@@ -2990,6 +3025,80 @@ namespace SignalRHub.Controllers
                         }
                         objMaster.ReturnCustomerPrice = objMaster.Current.ServiceCharges.ToDecimal();
                         objMaster.Save();
+
+                        try
+                        {
+                            if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='EnablePromotionOnBooking'").FirstOrDefault().ToStr().Trim() == "true")
+                            {
+                                if (Convert.ToInt64(obj.bookingInfo.PromotionId) > 0)
+                                {
+                                    string sqlq = string.Format(@"
+DELETE FROM promotion_applied WHERE BookingId = {0};
+UPDATE booking SET PromotionId = 0 WHERE Id = {0};
+", objMaster.Current.Id);
+                                    db.ExecuteQuery<long>(sqlq);
+                                    string sql = string.Format(@"
+        INSERT INTO promotion_applied
+        (
+            PromotionId,
+            PromotionCode,
+            LastUsedOn,
+            CustomerId,
+            BookingId,
+            OriginalFare,
+            DiscountedFare,
+            type,
+            promoValue
+        )
+        VALUES
+        (
+            {0}, -- PromotionId
+            '{1}', -- PromotionCode
+            GETDATE(),
+            {2}, -- CustomerId
+            {3}, -- BookingId
+            {4}, -- OriginalFare
+            {5}, -- DiscountedFare
+            '{6}', -- type
+            {7} -- promoValue
+        );
+    ",
+                                        Convert.ToInt64(obj.bookingInfo.PromotionId),
+                                        obj.bookingInfo.PromotionCode?.Replace("'", "''") ?? "",
+                                        Convert.ToInt32(obj.bookingInfo.CustomerId),
+                                        objMaster.Current.Id,
+                                        Convert.ToDecimal(obj.bookingInfo.OriginalFare),
+                                        Convert.ToDecimal(obj.bookingInfo.DiscountedFare),
+                                        obj.bookingInfo.Type == 1 ? "percent" : "amount",
+                                        Convert.ToDouble(obj.bookingInfo.promoValue)
+                                    );
+
+                                    db.ExecuteQuery<long>(sql); // Now no anonymous object
+
+                                    string query2 = "Update booking set PromotionId={0} where Id={1}";
+                                    db.ExecuteCommand(query2, obj.bookingInfo.PromotionId, objMaster.Current.Id);
+                                }
+                                else
+                                {
+                                    string sql = string.Format(@"
+DELETE FROM promotion_applied WHERE BookingId = {0};
+UPDATE booking SET PromotionId = 0 WHERE Id = {0};
+", objMaster.Current.Id);
+                                    db.ExecuteQuery<long>(sql);
+
+                                }
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+
+                        
+
+
+
+
                         try
                         {
                             if (obj.editbookingInfo != null && obj.editbookingInfo.CustomerId != null && obj.bookingInfo.PermanentNotes != null)
@@ -4758,10 +4867,19 @@ namespace SignalRHub.Controllers
                             KEY = db.ExecuteQuery<string>("select APIKey from mapkeys where maptype='google'").FirstOrDefault().ToStr().Trim();
 
                         string routeType = "short";
-                        if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='EnableFastestRoute'").FirstOrDefault().ToStr().Trim() == "1")
+
+                        if (!string.IsNullOrWhiteSpace(obj.routeInfo.RouteType))
                         {
-                            routeType = "fastest";
+                            routeType = obj.routeInfo.RouteType;
                         }
+                        else
+                        {
+                            if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='EnableFastestRoute'").FirstOrDefault().ToStr().Trim() == "1")
+                            {
+                                routeType = "fastest";
+                            }
+                        }
+                        
                         bool HasDeadMileage = false;
                         if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='HasDeadMileage'").FirstOrDefault().ToStr().Trim() == "true")
                         {
@@ -4839,6 +4957,39 @@ namespace SignalRHub.Controllers
                             //        route.fareModel = CalculateFares(obj);
                             //    }
                             //}
+
+                            try
+                            {
+                                if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='EnablePromotionOnBooking'").FirstOrDefault().ToStr().Trim() == "true")
+                                {
+                                    var query = db.Customers.AsQueryable();
+
+                                    if (!string.IsNullOrWhiteSpace(obj.routeInfo.CustomerName))
+                                    {
+                                        query = query.Where(x => x.Name == obj.routeInfo.CustomerName);
+                                    }
+
+                                    if (!string.IsNullOrWhiteSpace(obj.routeInfo.TelephoneNo))
+                                    {
+                                        query = query.Where(x => x.TelephoneNo == obj.routeInfo.TelephoneNo);
+                                    }
+
+                                    if (!string.IsNullOrWhiteSpace(obj.routeInfo.MobileNo))
+                                    {
+                                        query = query.Where(x => x.MobileNo == obj.routeInfo.MobileNo);
+                                    }
+
+                                    var customer = query.FirstOrDefault();
+                                    obj.routeInfo.CustomerId = customer?.Id;
+                                    route.CustomerId = customer?.Id;
+                                }
+                            }
+                            catch
+                            {
+
+                            }
+                            
+
                             route.fareModel = CalculateFares(obj);
                         }
                         if (obj.routeInfo.DriverId > 0)
@@ -5050,6 +5201,11 @@ namespace SignalRHub.Controllers
                         info.FromType = obj.routeInfo.pickupAddress.locTypeId == 1 ? "airport" : "address";
                         info.ToType = obj.routeInfo.destinationAddress.locTypeId == 1 ? "airport" : "address";
                         info.CompanyId = obj.routeInfo.CompanyId.ToInt();
+                        if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='EnablePromotionOnBooking'").FirstOrDefault().ToStr().Trim() == "true")
+                        {
+                            info.CustomerId = obj.routeInfo.CustomerId.ToInt();
+                            info.PromotionCode = obj.routeInfo.PromotionCode;
+                        }
                         //info.PickupDateTime = string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
 
                         //if (info.PickupDateTime != null)
@@ -5194,8 +5350,20 @@ namespace SignalRHub.Controllers
                         result = result.Substring(startIndex);
                         int lastIndex = result.IndexOf("}]") + 1;
                         result = result.Substring(0, lastIndex);
+                        result = Regex.Replace(result, @"""PromotionDetails"":""({.*?})""", match =>
+                        {
+                            string innerJson = match.Groups[1].Value;
+                            innerJson = innerJson.Replace("\"", "\\\""); // escape quotes
+                            return $"\"PromotionDetails\":\"{innerJson}\"";
+                        });
 
-                        var res = Newtonsoft.Json.JsonConvert.DeserializeObject<ClsDispatchFares>(result);
+                        var res = JsonConvert.DeserializeObject<ClsDispatchFares>(result);
+                        // Step 3: Deserialize PromotionDetails separately
+                        JobPromotion promo = null;
+                        if (!string.IsNullOrWhiteSpace(res.PromotionDetails))
+                        {
+                            res.PromotionDetail = JsonConvert.DeserializeObject<JobPromotions>(res.PromotionDetails);
+                        }
                         //try
                         //{
                         //    var FareSett = CalculateFareSetting(obj, res);
@@ -10101,230 +10269,85 @@ namespace SignalRHub.Controllers
                 {
 
 
-                    var obj2 = db.Bookings.FirstOrDefault(c => c.Id == obj.emailInfo.BookingId);
+                        var obj2 = db.Bookings.FirstOrDefault(c => c.Id == obj.emailInfo.BookingId);
 
-                    obj.emailInfo.toEmailType = 0;
-                    if (obj2 != null)
-                    {
-                        var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).FirstOrDefault();
-                        //var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(args => new { args.SmtpHost, args.SmtpUserName, args.SmtpPassword, args.SmtpPort, args.SmtpHasSSL, args.EmailCC }).FirstOrDefault();
-                        if (obj.emailInfo.toEmailType == 0)
+                        obj.emailInfo.toEmailType = 0;
+                        if (obj2 != null)
                         {
-                            emailTo = obj2.CustomerName.ToStr();
-                            price = obj2.FareRate.ToDecimal() + obj2.MeetAndGreetCharges.ToDecimal() + obj2.CongtionCharges.ToDecimal() + obj2.ExtraDropCharges.ToDecimal() + obj2.ServiceCharges.ToDecimal();
-                            returnPrice = obj2.BookingReturns.Count > 0 ? obj2.BookingReturns[0].FareRate.ToDecimal() + obj2.BookingReturns[0].CongtionCharges.ToDecimal() + obj2.BookingReturns[0].ExtraDropCharges.ToDecimal() + obj2.BookingReturns[0].MeetAndGreetCharges.ToDecimal() + obj2.BookingReturns[0].ServiceCharges.ToDecimal() : 0.00m;
-
-                        }
-                        StringBuilder StrBld = new StringBuilder();
-
-
-                        StrBld.Append("<table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid; background-color:White;font-family: verdana, arial;font-size: 11px;font-weight: normal;color: #000;text-decoration: none;'>");
-                        //  StrBld.Append("<tr><td style='text-align: left; padding: 10px 20px 10px 20px; font-size: 16px;font-weight: bold; color: #ef0000; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>Booking Confirmation</td>");
-
-                        string fullCompanyName = obj2.Gen_SubCompany.CompanyName;
-                        StrBld.Append("Dear: " + emailTo + "<td width='20%' style='padding: 10px 5px 10px 5px; font-size: 16px; font-weight: bold;border-right: #d4e0ee 1px solid;'>REF NO:</td><td width='30%' style='padding: 10px 5px 10px 5px; font-size: 16px; font-weight: bold;border-right: #d4e0ee 1px solid; color: #008000;'>" + obj2.BookingNo.ToStr() + "</td>");
-
-                        StrBld.Append("</tr>");
-                        StrBld.Append("<tr style='background-color: #eff3f9;'><td colspan='2' style='padding: 5px; text-decoration: underline;border-top: #d4e0ee 1px solid; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;'>");
-                        StrBld.Append("Traveller Information</td><td colspan='2' style='padding: 5px; text-decoration: underline;border-top: #d4e0ee 1px solid; border-bottom: #d4e0ee 1px solid; font-size: 12px;'>Carrier Details</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 15%'>");
-                        StrBld.Append("Passenger:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 25%'>" + obj2.CustomerName.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 15%'>");
-                        StrBld.Append("Passenger No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;width: 45%'>" + obj2.NoofPassengers.ToInt() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                        StrBld.Append("Mobile:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.CustomerMobileNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                        StrBld.Append("   </td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + " " + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                        StrBld.Append("Phone:</td><td style='padding: 5px; bold; border-bottom: #d4e0ee 1px solid;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + obj2.CustomerPhoneNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                        StrBld.Append("Check-in Luggage:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.NoofLuggages.ToInt() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                        StrBld.Append("Email:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.CustomerEmail.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                        StrBld.Append("Vehicle:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.Fleet_VehicleType.VehicleType.ToStr() + "</td></tr>");
-                        StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Pickup Date/Time:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + string.Format("{0:dd-MMM-yyyy HH:mm}", obj2.PickupDateTime) + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                        StrBld.Append("Special Ins:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.SpecialRequirements.ToStr() + "</td></tr>");
-                        StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Account:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.Gen_Company.DefaultIfEmpty().CompanyName.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                        StrBld.Append("Order No</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.OrderNo.ToStr() + "</td></tr><tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr valign='top'><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
-                        StrBld.Append("Pick-up Information</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromAddress + "</td></tr>");
-                        if (obj2.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
-                        {
-                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Flight Number:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromDoorNo.ToStr() + "</td></tr>");
-                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Coming From:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromStreet.ToStr() + "</td></tr>");
-
-                        }
-                        else if (obj2.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE)
-                        {
-                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From Door #:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromDoorNo.ToStr() + "</td></tr>");
-                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From Street:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromStreet.ToStr() + "</td></tr>");
-                        }
-                        else
-                        {
-                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Door #:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromDoorNo.ToStr() + "</td></tr>");
-                        }
-                        StrBld.Append("</table></td><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
-                        StrBld.Append("Drop-off Information</td></tr>");
-
-
-                        StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>To:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.ToAddress + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-
-                        if (obj2.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE)
-                        {
-
-                            StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.ToDoorNo + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                            StrBld.Append("To Street:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.ToStreet.ToStr() + "</td></tr>");
-                        }
-                        else
-                        {
-                            string toDoorNo = obj2.ToDoorNo.ToStr().Trim();
-
-                            if (obj2.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT && obj2.JourneyTypeId.ToInt() == Enums.JOURNEY_TYPES.RETURN)
-                                toDoorNo = string.Empty;
-                            else if (toDoorNo.Length > 0)
-                                toDoorNo = toDoorNo + "-";
-
-                            StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + toDoorNo + "</td></tr>");
-
-
-                            //  StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objBooking.ToDoorNo + "</td></tr>");
-
-
-                        }
-
-                        StrBld.Append("</table></td></tr>");
-
-
-                        if (obj2.Booking_ViaLocations.Count > 0)
-                        {
-
-                            StrBld.Append("<tr><td colspan='4'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline; border-bottom: #d4e0ee 1px solid;font-size: 12px; width: 50%' align='center'>From</td><td style='padding: 5px; text-decoration: underline; border-bottom: #d4e0ee 1px solid;font-size: 12px; width: 50%' align='center'>To</td></tr>");
-
-                            int cnt = obj2.Booking_ViaLocations.Count;
-
-
-                            for (int i = 0; i < cnt; i++)
+                            var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).FirstOrDefault();
+                            //var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(args => new { args.SmtpHost, args.SmtpUserName, args.SmtpPassword, args.SmtpPort, args.SmtpHasSSL, args.EmailCC }).FirstOrDefault();
+                            if (obj.emailInfo.toEmailType == 0)
                             {
-                                if (i == 0)
-                                {
-                                    StrBld.Append("<tr>");
-                                    StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + obj2.FromAddress.ToStr() + "</td>");
-
-                                    StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
-                                    StrBld.Append("</tr>");
-
-                                }
-                                else
-                                {
-                                    if (i < cnt)
-                                    {
-
-                                        StrBld.Append("<tr>");
-                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + obj2.Booking_ViaLocations[i - 1].ViaLocValue.ToStr() + "</td>");
-
-
-                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
-                                        StrBld.Append("</tr>");
-                                    }
-                                }
-
-
-                                if (i + 1 == cnt)
-                                {
-                                    StrBld.Append("<tr>");
-                                    StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + obj2.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
-
-                                    StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.ToAddress.ToStr() + "</td>");
-                                    StrBld.Append("</tr>");
-
-                                }
-
+                                emailTo = obj2.CustomerName.ToStr();
+                                price = obj2.FareRate.ToDecimal() + obj2.MeetAndGreetCharges.ToDecimal() + obj2.CongtionCharges.ToDecimal() + obj2.ExtraDropCharges.ToDecimal() + obj2.ServiceCharges.ToDecimal();
+                                returnPrice = obj2.BookingReturns.Count > 0 ? obj2.BookingReturns[0].FareRate.ToDecimal() + obj2.BookingReturns[0].CongtionCharges.ToDecimal() + obj2.BookingReturns[0].ExtraDropCharges.ToDecimal() + obj2.BookingReturns[0].MeetAndGreetCharges.ToDecimal() + obj2.BookingReturns[0].ServiceCharges.ToDecimal() : 0.00m;
 
                             }
+                            StringBuilder StrBld = new StringBuilder();
 
 
+                            StrBld.Append("<table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid; background-color:White;font-family: verdana, arial;font-size: 11px;font-weight: normal;color: #000;text-decoration: none;'>");
+                            //  StrBld.Append("<tr><td style='text-align: left; padding: 10px 20px 10px 20px; font-size: 16px;font-weight: bold; color: #ef0000; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>Booking Confirmation</td>");
 
+                            string fullCompanyName = obj2.Gen_SubCompany.CompanyName;
+                            StrBld.Append("Dear: " + emailTo + "<td width='20%' style='padding: 10px 5px 10px 5px; font-size: 16px; font-weight: bold;border-right: #d4e0ee 1px solid;'>REF NO:</td><td width='30%' style='padding: 10px 5px 10px 5px; font-size: 16px; font-weight: bold;border-right: #d4e0ee 1px solid; color: #008000;'>" + obj2.BookingNo.ToStr() + "</td>");
 
-
-                            StrBld.Append("</table></td></tr>");
-                        }
-
-
-                        StrBld.Append("<tr><td colspan='4'>&nbsp;</td></tr>");
-                        StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-size: 18px; border-bottom: #d4e0ee 1px solid;background-color: #eff3f9;'>");
-
-
-                        //if (objBooking.IsQuotation.ToBool() || (chkHideFares == null && hideFares == false) || (chkHideFares != null && chkHideFares.Checked == false))
-                        if (obj2.IsQuotation.ToBool())
-                        {
-                            StrBld.Append("GBP Cost: <span style='color: #008000;'>£ " + string.Format("{0:f2}", (price)) + "</span>");
-                        }
-                        StrBld.Append(" <span style='color: #008000;'>" + obj2.Gen_PaymentType.DefaultIfEmpty().PaymentType.ToStr() + "</span></td></tr>");
-
-                        if (obj2.BookingReturns.Count > 0)
-                        {
-
-                            Booking objReturns = obj2.BookingReturns[0];
-
+                            StrBld.Append("</tr>");
                             StrBld.Append("<tr style='background-color: #eff3f9;'><td colspan='2' style='padding: 5px; text-decoration: underline;border-top: #d4e0ee 1px solid; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;'>");
-
-                            StrBld.Append("Return Booking Details</td><td colspan='2' style='padding: 5px; text-decoration: underline;border-top: #d4e0ee 1px solid; border-bottom: #d4e0ee 1px solid; font-size: 12px;'>REF NO:" + objReturns.BookingNo.ToStr() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 15%'>");
-                            StrBld.Append("Passenger:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 25%'>" + objReturns.CustomerName.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 15%'>");
-                            StrBld.Append("Passenger No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;width: 45%'>" + objReturns.NoofPassengers.ToInt() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                            StrBld.Append("Mobile:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.CustomerMobileNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Traveller Information</td><td colspan='2' style='padding: 5px; text-decoration: underline;border-top: #d4e0ee 1px solid; border-bottom: #d4e0ee 1px solid; font-size: 12px;'>Carrier Details</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 15%'>");
+                            StrBld.Append("Passenger:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 25%'>" + obj2.CustomerName.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 15%'>");
+                            StrBld.Append("Passenger No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;width: 45%'>" + obj2.NoofPassengers.ToInt() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Mobile:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.CustomerMobileNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
                             StrBld.Append("   </td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + " " + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-
-
-                            StrBld.Append("Phone:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.CustomerPhoneNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                            // StrBld.Append("Phone:</td><td style='padding: 5px; bold; border-bottom: #d4e0ee 1px solid;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + objReturns.CustomerPhoneNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                            StrBld.Append("Check-in Luggage:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.NoofLuggages.ToInt() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                            StrBld.Append("Email:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.CustomerEmail.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Phone:</td><td style='padding: 5px; bold; border-bottom: #d4e0ee 1px solid;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + obj2.CustomerPhoneNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Check-in Luggage:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.NoofLuggages.ToInt() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Email:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.CustomerEmail.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
                             StrBld.Append("Vehicle:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.Fleet_VehicleType.VehicleType.ToStr() + "</td></tr>");
-                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Pickup Date/Time:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + string.Format("{0:dd-MMM-yyyy HH:mm}", objReturns.PickupDateTime) + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-
-                            StrBld.Append("Special Ins:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.SpecialRequirements.ToStr() + "</td></tr>");
-
-                            //  StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr valign='top'><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
-
-
-
-                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Account:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.Gen_Company.DefaultIfEmpty().CompanyName.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-
-                            StrBld.Append("Order No</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.OrderNo.ToStr() + "</td></tr><tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr valign='top'><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
-
-
-
-                            StrBld.Append("Pick-up Information</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromAddress + "</td></tr>");
-
-                            if (objReturns.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Pickup Date/Time:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + string.Format("{0:dd-MMM-yyyy HH:mm}", obj2.PickupDateTime) + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Special Ins:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.SpecialRequirements.ToStr() + "</td></tr>");
+                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Account:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.Gen_Company.DefaultIfEmpty().CompanyName.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Order No</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.OrderNo.ToStr() + "</td></tr><tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr valign='top'><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
+                            StrBld.Append("Pick-up Information</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromAddress + "</td></tr>");
+                            if (obj2.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
                             {
-                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Flight Number:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromDoorNo.ToStr() + "</td></tr>");
-                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Coming From:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromStreet.ToStr() + "</td></tr>");
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Flight Number:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromDoorNo.ToStr() + "</td></tr>");
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Coming From:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromStreet.ToStr() + "</td></tr>");
 
                             }
-                            else if (objReturns.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE)
+                            else if (obj2.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE)
                             {
-                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From Door #:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromDoorNo.ToStr() + "</td></tr>");
-                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From Street:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromStreet.ToStr() + "</td></tr>");
-
-
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From Door #:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromDoorNo.ToStr() + "</td></tr>");
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From Street:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromStreet.ToStr() + "</td></tr>");
                             }
                             else
                             {
-
-
-                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Door #:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromDoorNo.ToStr() + "</td></tr>");
-
-
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Door #:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromDoorNo.ToStr() + "</td></tr>");
                             }
                             StrBld.Append("</table></td><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
                             StrBld.Append("Drop-off Information</td></tr>");
 
 
-                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>To:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToAddress + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>To:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.ToAddress + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
 
-                            if (objReturns.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE)
+                            if (obj2.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE)
                             {
 
-                                StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToDoorNo + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
-                                StrBld.Append("To Street:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToStreet.ToStr() + "</td></tr>");
+                                StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.ToDoorNo + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                StrBld.Append("To Street:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.ToStreet.ToStr() + "</td></tr>");
                             }
                             else
                             {
+                                string toDoorNo = obj2.ToDoorNo.ToStr().Trim();
 
-                                StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToDoorNo + "</td></tr>");
+                                if (obj2.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT && obj2.JourneyTypeId.ToInt() == Enums.JOURNEY_TYPES.RETURN)
+                                    toDoorNo = string.Empty;
+                                else if (toDoorNo.Length > 0)
+                                    toDoorNo = toDoorNo + "-";
+
+                                StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + toDoorNo + "</td></tr>");
+
+
+                                //  StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objBooking.ToDoorNo + "</td></tr>");
 
 
                             }
@@ -10332,12 +10355,12 @@ namespace SignalRHub.Controllers
                             StrBld.Append("</table></td></tr>");
 
 
-                            if (objReturns.Booking_ViaLocations.Count > 0)
+                            if (obj2.Booking_ViaLocations.Count > 0)
                             {
 
                                 StrBld.Append("<tr><td colspan='4'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline; border-bottom: #d4e0ee 1px solid;font-size: 12px; width: 50%' align='center'>From</td><td style='padding: 5px; text-decoration: underline; border-bottom: #d4e0ee 1px solid;font-size: 12px; width: 50%' align='center'>To</td></tr>");
 
-                                int cnt = objReturns.Booking_ViaLocations.Count;
+                                int cnt = obj2.Booking_ViaLocations.Count;
 
 
                                 for (int i = 0; i < cnt; i++)
@@ -10345,9 +10368,9 @@ namespace SignalRHub.Controllers
                                     if (i == 0)
                                     {
                                         StrBld.Append("<tr>");
-                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + objReturns.FromAddress.ToStr() + "</td>");
+                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + obj2.FromAddress.ToStr() + "</td>");
 
-                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
+                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
                                         StrBld.Append("</tr>");
 
                                     }
@@ -10357,10 +10380,10 @@ namespace SignalRHub.Controllers
                                         {
 
                                             StrBld.Append("<tr>");
-                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + objReturns.Booking_ViaLocations[i - 1].ViaLocValue.ToStr() + "</td>");
+                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + obj2.Booking_ViaLocations[i - 1].ViaLocValue.ToStr() + "</td>");
 
 
-                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
+                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
                                             StrBld.Append("</tr>");
                                         }
                                     }
@@ -10369,14 +10392,17 @@ namespace SignalRHub.Controllers
                                     if (i + 1 == cnt)
                                     {
                                         StrBld.Append("<tr>");
-                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + objReturns.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
+                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + obj2.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
 
-                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToAddress.ToStr() + "</td>");
+                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.ToAddress.ToStr() + "</td>");
                                         StrBld.Append("</tr>");
 
                                     }
 
+
                                 }
+
+
 
 
 
@@ -10385,161 +10411,303 @@ namespace SignalRHub.Controllers
 
 
                             StrBld.Append("<tr><td colspan='4'>&nbsp;</td></tr>");
-
-
-                            //                 <tr><td style='padding: 10px 5px 10px 5px; font-size: 14px; border: #d4e0ee 1px solid;background-color: White; text-decoration: underline; font-weight: bold;'>Meeting Point:</td><td style='padding: 10px 5px 10px 5px; font-size: 11px; border: #d4e0ee 1px solid;background-color: #eff3f9;' colspan='3'>The driver will meet you with a name board displaying the Passenger name at ARRIVALS <span style='color: Green'>05 Minutes</span> after your flight lands (as per your request). You will have a further <span style='color: Green'>35 minutes</span> of Free waiting time, meaning a total Free waiting time allowance of <span style='color: Red'>40 Minutes</span> from the time of landing which also include car park. Please Note thereafter waiting time is chargeable at the rate of <span style='color: Red'>GBP £20p</span> per minute.</td></tr>
                             StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-size: 18px; border-bottom: #d4e0ee 1px solid;background-color: #eff3f9;'>");
 
 
-
-                            //if (objReturns.IsQuotation.ToBool() || (chkHideFares == null && hideFares == false) || (chkHideFares != null && chkHideFares.Checked == false))
-                            if (objReturns.IsQuotation.ToBool())
+                            //if (objBooking.IsQuotation.ToBool() || (chkHideFares == null && hideFares == false) || (chkHideFares != null && chkHideFares.Checked == false))
+                            if (obj2.IsQuotation.ToBool())
                             {
-                                StrBld.Append("GBP Cost: <span style='color: #008000;'>£ " + string.Format("{0:f2}", (returnPrice)) + "</span>");
+                                StrBld.Append("GBP Cost: <span style='color: #008000;'>£ " + string.Format("{0:f2}", (price)) + "</span>");
+                            }
+                            StrBld.Append(" <span style='color: #008000;'>" + obj2.Gen_PaymentType.DefaultIfEmpty().PaymentType.ToStr() + "</span></td></tr>");
+
+                            if (obj2.BookingReturns.Count > 0)
+                            {
+
+                                Booking objReturns = obj2.BookingReturns[0];
+
+                                StrBld.Append("<tr style='background-color: #eff3f9;'><td colspan='2' style='padding: 5px; text-decoration: underline;border-top: #d4e0ee 1px solid; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;'>");
+
+                                StrBld.Append("Return Booking Details</td><td colspan='2' style='padding: 5px; text-decoration: underline;border-top: #d4e0ee 1px solid; border-bottom: #d4e0ee 1px solid; font-size: 12px;'>REF NO:" + objReturns.BookingNo.ToStr() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 15%'>");
+                                StrBld.Append("Passenger:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 25%'>" + objReturns.CustomerName.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 15%'>");
+                                StrBld.Append("Passenger No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;width: 45%'>" + objReturns.NoofPassengers.ToInt() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                StrBld.Append("Mobile:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.CustomerMobileNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                StrBld.Append("   </td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + " " + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+
+
+                                StrBld.Append("Phone:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.CustomerPhoneNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                // StrBld.Append("Phone:</td><td style='padding: 5px; bold; border-bottom: #d4e0ee 1px solid;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + objReturns.CustomerPhoneNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                StrBld.Append("Check-in Luggage:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.NoofLuggages.ToInt() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                StrBld.Append("Email:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.CustomerEmail.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                StrBld.Append("Vehicle:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.Fleet_VehicleType.VehicleType.ToStr() + "</td></tr>");
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Pickup Date/Time:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + string.Format("{0:dd-MMM-yyyy HH:mm}", objReturns.PickupDateTime) + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+
+                                StrBld.Append("Special Ins:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.SpecialRequirements.ToStr() + "</td></tr>");
+
+                                //  StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr valign='top'><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
+
+
+
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Account:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.Gen_Company.DefaultIfEmpty().CompanyName.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+
+                                StrBld.Append("Order No</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.OrderNo.ToStr() + "</td></tr><tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr valign='top'><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
+
+
+
+                                StrBld.Append("Pick-up Information</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromAddress + "</td></tr>");
+
+                                if (objReturns.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                                {
+                                    StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Flight Number:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromDoorNo.ToStr() + "</td></tr>");
+                                    StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Coming From:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromStreet.ToStr() + "</td></tr>");
+
+                                }
+                                else if (objReturns.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE)
+                                {
+                                    StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From Door #:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromDoorNo.ToStr() + "</td></tr>");
+                                    StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From Street:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromStreet.ToStr() + "</td></tr>");
+
+
+                                }
+                                else
+                                {
+
+
+                                    StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Door #:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromDoorNo.ToStr() + "</td></tr>");
+
+
+                                }
+                                StrBld.Append("</table></td><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
+                                StrBld.Append("Drop-off Information</td></tr>");
+
+
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>To:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToAddress + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+
+                                if (objReturns.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE)
+                                {
+
+                                    StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToDoorNo + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                    StrBld.Append("To Street:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToStreet.ToStr() + "</td></tr>");
+                                }
+                                else
+                                {
+
+                                    StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToDoorNo + "</td></tr>");
+
+
+                                }
+
+                                StrBld.Append("</table></td></tr>");
+
+
+                                if (objReturns.Booking_ViaLocations.Count > 0)
+                                {
+
+                                    StrBld.Append("<tr><td colspan='4'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline; border-bottom: #d4e0ee 1px solid;font-size: 12px; width: 50%' align='center'>From</td><td style='padding: 5px; text-decoration: underline; border-bottom: #d4e0ee 1px solid;font-size: 12px; width: 50%' align='center'>To</td></tr>");
+
+                                    int cnt = objReturns.Booking_ViaLocations.Count;
+
+
+                                    for (int i = 0; i < cnt; i++)
+                                    {
+                                        if (i == 0)
+                                        {
+                                            StrBld.Append("<tr>");
+                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + objReturns.FromAddress.ToStr() + "</td>");
+
+                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
+                                            StrBld.Append("</tr>");
+
+                                        }
+                                        else
+                                        {
+                                            if (i < cnt)
+                                            {
+
+                                                StrBld.Append("<tr>");
+                                                StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + objReturns.Booking_ViaLocations[i - 1].ViaLocValue.ToStr() + "</td>");
+
+
+                                                StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
+                                                StrBld.Append("</tr>");
+                                            }
+                                        }
+
+
+                                        if (i + 1 == cnt)
+                                        {
+                                            StrBld.Append("<tr>");
+                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + objReturns.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
+
+                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToAddress.ToStr() + "</td>");
+                                            StrBld.Append("</tr>");
+
+                                        }
+
+                                    }
+
+
+
+                                    StrBld.Append("</table></td></tr>");
+                                }
+
+
+                                StrBld.Append("<tr><td colspan='4'>&nbsp;</td></tr>");
+
+
+                                //                 <tr><td style='padding: 10px 5px 10px 5px; font-size: 14px; border: #d4e0ee 1px solid;background-color: White; text-decoration: underline; font-weight: bold;'>Meeting Point:</td><td style='padding: 10px 5px 10px 5px; font-size: 11px; border: #d4e0ee 1px solid;background-color: #eff3f9;' colspan='3'>The driver will meet you with a name board displaying the Passenger name at ARRIVALS <span style='color: Green'>05 Minutes</span> after your flight lands (as per your request). You will have a further <span style='color: Green'>35 minutes</span> of Free waiting time, meaning a total Free waiting time allowance of <span style='color: Red'>40 Minutes</span> from the time of landing which also include car park. Please Note thereafter waiting time is chargeable at the rate of <span style='color: Red'>GBP £20p</span> per minute.</td></tr>
+                                StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-size: 18px; border-bottom: #d4e0ee 1px solid;background-color: #eff3f9;'>");
+
+
+
+                                //if (objReturns.IsQuotation.ToBool() || (chkHideFares == null && hideFares == false) || (chkHideFares != null && chkHideFares.Checked == false))
+                                if (objReturns.IsQuotation.ToBool())
+                                {
+                                    StrBld.Append("GBP Cost: <span style='color: #008000;'>£ " + string.Format("{0:f2}", (returnPrice)) + "</span>");
+
+                                }
+
+                                StrBld.Append(" <span style='color: #008000;'>" + objReturns.Gen_PaymentType.DefaultIfEmpty().PaymentType.ToStr() + "</span></td></tr>");
+
+
+
 
                             }
+                            string footer = string.Empty;
+                            //try
+                            //{
 
-                            StrBld.Append(" <span style='color: #008000;'>" + objReturns.Gen_PaymentType.DefaultIfEmpty().PaymentType.ToStr() + "</span></td></tr>");
+                            //    footer = db.ExecuteQuery<string>("select Footer from EmailSettings").FirstOrDefault();
+
+                            //}
+                            //catch
+                            //{
+
+                            //}
+
+                            //if (footer.ToStr().Trim().Length > 0)
+                            //    if (footer.ToStr().Trim().Length > 0)
+                            //        StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;color: #6b97c2;'><p style=\"color:#6b97c2\"><strong>" + footer + "</strong></p></td></tr>");
+
+                            // }
+
+                            //if (footer.ToStr().Trim().Length > 0)
+                            //    StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-weight: bold; font-size: 17px;text-align: center; border-bottom: #d4e0ee 1px solid; line-height:10px'><p style=\"color:#6b97c2\"><strong>" + footer + "</strong></p></td></tr>");
+
+                            if (obj2.IsQuotation.ToBool())
+                            {
+                                StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-weight: bold; font-size: 17px;text-align: center; border-bottom: #d4e0ee 1px solid; line-height:10px'><p style=\"color:#6b97c2\"><strong>Please check the quotation carefully…</strong></p></td></tr>");
+
+                            }
+                            else
+                                StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-weight: bold; font-size: 17px;text-align: center; border-bottom: #d4e0ee 1px solid; line-height:10px'><p style=\"color:#6b97c2\"><strong>Please check the confirmation carefully…</strong></p></td></tr>");
+
+
+
+                            StrBld.Append("<tr><td colspan='4' style='text-align: center; padding: 5px 0px 5px 0px; font-size: 18px;font-weight: normal; color: #6b97c2;' ><p align=\"Center\">We welcome all comments on the services that we provide.</p></td></tr>");
+
+
+
+
+
+                            StrBld.Append("</table>");
+
+                            //try
+                            //{
+                            //    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendConfirmationEmailTable.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + Environment.NewLine + StrBld + Environment.NewLine);
+
+                            //}
+                            //catch (Exception)
+                            //{
+
+                            //}
+
+                            var obja = new
+                            {
+                                //   imageName = file,
+                                //   file = base64Text,
+                                subject = obj.emailInfo.Subject,
+                                messageBody = StrBld.ToStr(),
+                                fromEmail = obj.emailInfo.From,
+                                toEmail = obj.emailInfo.To,
+                                CCEmail = objSubCompany.EmailCC.ToStr(),
+                                smtpHost = objSubCompany.SmtpHost,
+                                smtpPwd = objSubCompany.SmtpPassword,
+                                defaultclientid = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr(),
+                                sourceType = "dispatch-cloudx"
+                            };
+                            objSubCompany.UseDifferentEmailForInvoices = false;
+
+                            List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
+                            SignalRHub.Classes.ClsEmail.Send(obja.subject, obja.messageBody, obja.fromEmail, obja.toEmail, attachments, objSubCompany, "");
+
+                            response.Data = "Booking confirmation email sent successfully.";
+
+                            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                            //HttpClient httpClient = new HttpClient();
+                            //var stringContent = new StringContent
+                            //(Newtonsoft.Json.JsonConvert.SerializeObject(obja), Encoding.UTF8, "application/json");
+
+                            //HttpResponseMessage res = httpClient.PostAsync("https://cabtreasureappapi.co.uk/CabTreasureWebApi/Home/SendTPEmail", stringContent).Result;
+                            //httpClient.Dispose();
+                            //string sd = res.Content.ReadAsStringAsync().Result;
+
+
+
+                            //if (sd.ToStr().Contains("\"success\"") == false)
+                            //{
+                            //    ResponseData dt = null;
+                            //    try
+                            //    {
+                            //        dt = Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseData>(sd);
+
+                            //    }
+                            //    catch
+                            //    {
+
+                            //    }
+
+                            //    if (dt != null)
+                            //    {
+
+                            //        response.HasError = true;
+                            //        response.Message = dt.Message;
+
+                            //    }
+                            //    else
+                            //    {
+                            //        response.HasError = true;
+                            //        //  response.Message =
+
+
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    try
+                            //    {
+                            //        using (TaxiDataContext dbContext = new TaxiDataContext())
+                            //        {
+                            //            dbContext.ExecuteCommand("exec insertInSendEmail {0}, {1}, {2}, {3}",
+                            //                obja.subject,
+                            //                obja.messageBody,
+                            //                string.IsNullOrWhiteSpace(obj.UserName) ? obj.objUserInfo?.UserName : obj.UserName,
+                            //                obja.toEmail);
+                            //        }
+                            //    }
+                            //    catch (Exception ex)
+                            //    {
+                            //    }
+                            //    response.Data = sd;
+                            //}
+
 
 
 
 
                         }
-                        string footer = string.Empty;
-                        //try
-                        //{
 
-                        //    footer = db.ExecuteQuery<string>("select Footer from EmailSettings").FirstOrDefault();
-
-                        //}
-                        //catch
-                        //{
-
-                        //}
-
-                        //if (footer.ToStr().Trim().Length > 0)
-                        //    if (footer.ToStr().Trim().Length > 0)
-                        //        StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;color: #6b97c2;'><p style=\"color:#6b97c2\"><strong>" + footer + "</strong></p></td></tr>");
-
-                        // }
-
-                        //if (footer.ToStr().Trim().Length > 0)
-                        //    StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-weight: bold; font-size: 17px;text-align: center; border-bottom: #d4e0ee 1px solid; line-height:10px'><p style=\"color:#6b97c2\"><strong>" + footer + "</strong></p></td></tr>");
-
-                        if (obj2.IsQuotation.ToBool())
-                        {
-                            StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-weight: bold; font-size: 17px;text-align: center; border-bottom: #d4e0ee 1px solid; line-height:10px'><p style=\"color:#6b97c2\"><strong>Please check the quotation carefully…</strong></p></td></tr>");
-
-                        }
-                        else
-                            StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-weight: bold; font-size: 17px;text-align: center; border-bottom: #d4e0ee 1px solid; line-height:10px'><p style=\"color:#6b97c2\"><strong>Please check the confirmation carefully…</strong></p></td></tr>");
-
-
-
-                        StrBld.Append("<tr><td colspan='4' style='text-align: center; padding: 5px 0px 5px 0px; font-size: 18px;font-weight: normal; color: #6b97c2;' ><p align=\"Center\">We welcome all comments on the services that we provide.</p></td></tr>");
-
-
-
-
-
-                        StrBld.Append("</table>");
-
-                        //try
-                        //{
-                        //    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendConfirmationEmailTable.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + Environment.NewLine + StrBld + Environment.NewLine);
-
-                        //}
-                        //catch (Exception)
-                        //{
-
-                        //}
-
-                        var obja = new
-                        {
-                            //   imageName = file,
-                            //   file = base64Text,
-                            subject = obj.emailInfo.Subject,
-                            messageBody = StrBld.ToStr(),
-                            fromEmail = obj.emailInfo.From,
-                            toEmail = obj.emailInfo.To,
-                            CCEmail = objSubCompany.EmailCC.ToStr(),
-                            smtpHost = objSubCompany.SmtpHost,
-                            smtpPwd = objSubCompany.SmtpPassword,
-                            defaultclientid = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr(),
-                            sourceType = "dispatch-cloudx"
-                        };
-                        objSubCompany.UseDifferentEmailForInvoices = false;
-
-                        List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
-                        SignalRHub.Classes.ClsEmail.Send(obja.subject, obja.messageBody, obja.fromEmail, obja.toEmail, attachments, objSubCompany, "");
-
-                        response.Data = "Booking confirmation email sent successfully.";
-
-                        //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                        //HttpClient httpClient = new HttpClient();
-                        //var stringContent = new StringContent
-                        //(Newtonsoft.Json.JsonConvert.SerializeObject(obja), Encoding.UTF8, "application/json");
-
-                        //HttpResponseMessage res = httpClient.PostAsync("https://cabtreasureappapi.co.uk/CabTreasureWebApi/Home/SendTPEmail", stringContent).Result;
-                        //httpClient.Dispose();
-                        //string sd = res.Content.ReadAsStringAsync().Result;
-
-
-
-                        //if (sd.ToStr().Contains("\"success\"") == false)
-                        //{
-                        //    ResponseData dt = null;
-                        //    try
-                        //    {
-                        //        dt = Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseData>(sd);
-
-                        //    }
-                        //    catch
-                        //    {
-
-                        //    }
-
-                        //    if (dt != null)
-                        //    {
-
-                        //        response.HasError = true;
-                        //        response.Message = dt.Message;
-
-                        //    }
-                        //    else
-                        //    {
-                        //        response.HasError = true;
-                        //        //  response.Message =
-
-
-                        //    }
-                        //}
-                        //else
-                        //{
-                        //    try
-                        //    {
-                        //        using (TaxiDataContext dbContext = new TaxiDataContext())
-                        //        {
-                        //            dbContext.ExecuteCommand("exec insertInSendEmail {0}, {1}, {2}, {3}",
-                        //                obja.subject,
-                        //                obja.messageBody,
-                        //                string.IsNullOrWhiteSpace(obj.UserName) ? obj.objUserInfo?.UserName : obj.UserName,
-                        //                obja.toEmail);
-                        //        }
-                        //    }
-                        //    catch (Exception ex)
-                        //    {
-                        //    }
-                        //    response.Data = sd;
-                        //}
-
-
-
-
-
-                    }
-
-
+                     
                 }
             }
             catch (Exception ex)

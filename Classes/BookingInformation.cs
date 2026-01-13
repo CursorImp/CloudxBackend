@@ -126,6 +126,8 @@ namespace SignalRHub
 
         }
         public int? ReturnVehicleTypeId { get;  set; }
+        public string PromotionCode { get;  set; }
+        public int? CustomerId { get;  set; }
     }
 
     public class ViaAddresses
