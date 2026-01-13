@@ -131,6 +131,7 @@ namespace SignalRHub
         public static string RestrictedIPs = "";
         public static string AdvancedReturnEditBooking = "false";
         public static string EnableViaArriveSMS = "0";
+        public static string EnablekonnectPayReciept = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -740,6 +741,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableBookingConfirmationSms", SetVal = "false", description = "Enable Booking Confirmation Sms"  },
                              new AppSetting { SetKey = "EnableEditWaitingBookingOnCallerIdPopup", SetVal = "false", description = "Enable Edit Waiting Booking On CallerId Popup"  },
                              new AppSetting { SetKey = "QuotationExpiryDays", SetVal = "0", description = "Quotation Expiry Days"  },
+                             new AppSetting { SetKey = "EnablekonnectPayReciept", SetVal = "0", description = "EnablekonnectPayReciept"  },
                              new AppSetting { SetKey = "EnablePromotionOnBooking", SetVal = "true", description = "Enable Promotion On Booking"  },
                              new AppSetting { SetKey = "EnableRouteType", SetVal = "false", description = "Enable Route Type"  },
                         };
@@ -1731,6 +1733,10 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableViaArriveSMS")))
                 {
                     EnableViaArriveSMS = GetAppSetting<string>("EnableViaArriveSMS").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnablekonnectPayReciept")))
+                {
+                    EnablekonnectPayReciept = GetAppSetting<string>("EnablekonnectPayReciept").ToStr();
                 }
 
             }
