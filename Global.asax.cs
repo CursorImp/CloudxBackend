@@ -104,6 +104,7 @@ namespace SignalRHub
         public static string AutoRecoverOnNoMoveInSec = "0";
         public static string EnableSubCompanyWiseKonnect = "false";
         public static string EnableTodayBookingFilterUpTo2AM = "false";
+        public static string EnableTodayBookingFilterInHours = "0";
         public static string AllowBidRadiusInMiles = "0";
         public static string SortPlotByNearestOnPda = "0";
         public static string EnableBidDetails = "0";
@@ -744,6 +745,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnablekonnectPayReciept", SetVal = "0", description = "EnablekonnectPayReciept"  },
                              new AppSetting { SetKey = "EnablePromotionOnBooking", SetVal = "false", description = "Enable Promotion On Booking"  },
                              new AppSetting { SetKey = "showRouteType", SetVal = "false", description = "show Route Type"  },
+                             new AppSetting { SetKey = "EnableTodayBookingFilterInHours", SetVal = "0", description = "Enable Today Booking Filter In Hours"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1705,7 +1707,10 @@ namespace SignalRHub
                 {
                     EnableTodayBookingFilterUpTo2AM = GetAppSetting<string>("EnableTodayBookingFilterUpTo2AM").ToStr();
                 }
-
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableTodayBookingFilterInHours")))
+                {
+                    EnableTodayBookingFilterInHours = GetAppSetting<string>("EnableTodayBookingFilterInHours").ToStr();
+                }
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("ShowAllocatedInFutureList")))
                 {
                     ShowAllocatedInFutureList = GetAppSetting<string>("ShowAllocatedInFutureList").ToStr();

@@ -593,24 +593,27 @@ namespace SignalRHub.Controllers
                 //      data.listofdrivers = db.stp_GetDashboardDrivers(1).ToList();
 
 
-                if (Global.EnableTodayBookingFilterUpTo2AM == "true")
+                if (Convert.ToInt32(Global.EnableTodayBookingFilterInHours) > 0)
                 {
-                    DateTime recentDay = dt.Value.Date;
-                    DateTime endOfToday = dt.Value.Date.AddDays(1).AddHours(2); // today + 2 AM next day
+                    int filterHours = Convert.ToInt32(Global.EnableTodayBookingFilterInHours);
+
+                    // Extend the current end limit by filterHours while keeping the same date behavior
+                    DateTime endLimit = dt.Value.AddDays(0).AddHours(filterHours);
+
                     data.listoftodaybookings = data.listofbookings
                         .Where(a =>
-                            a.PickupDateTemp >= recentDay && a.PickupDateTemp < endOfToday
+                            a.PickupDateTemp >= recentDays
+                            && a.PickupDateTemp.Value.Date <= endLimit  // only change is using endLimit
                             &&
-                            (a.StatusId == Enums.BOOKINGSTATUS.WAITING ||
-                             a.StatusId == Enums.BOOKINGSTATUS.PENDING ||
-                             a.StatusId == Enums.BOOKINGSTATUS.NOTACCEPTED ||
-                             a.StatusId == Enums.BOOKINGSTATUS.REJECTED ||
-                             a.StatusId == Enums.BOOKINGSTATUS.NOSHOW ||
-                             a.StatusId == Enums.BOOKINGSTATUS.ONHOLD ||
-                             a.StatusId == Enums.BOOKINGSTATUS.BID ||
-                             a.StatusId == Enums.BOOKINGSTATUS.PENDING_START ||
-                             a.StatusId == Enums.BOOKINGSTATUS.FOJ)
-                        )
+                            (a.StatusId == Enums.BOOKINGSTATUS.WAITING
+                             || a.StatusId == Enums.BOOKINGSTATUS.PENDING
+                             || a.StatusId == Enums.BOOKINGSTATUS.NOTACCEPTED
+                             || a.StatusId == Enums.BOOKINGSTATUS.REJECTED
+                             || a.StatusId == Enums.BOOKINGSTATUS.NOSHOW
+                             || a.StatusId == Enums.BOOKINGSTATUS.ONHOLD
+                             || a.StatusId == Enums.BOOKINGSTATUS.BID
+                             || a.StatusId == Enums.BOOKINGSTATUS.PENDING_START
+                             || a.StatusId == Enums.BOOKINGSTATUS.FOJ))
                         .OrderBy(c => c.Lead)
                         .ToList();
                 }
@@ -4480,53 +4483,89 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         //if (obj.addressInfo.AddressType.ToInt() == 1 && latitude != null && latitude != 0)
                         if (latitude != null && latitude != 0)
                         {
-                            try
+                            try 
                             {
-
-                                var ListofAvailDrvs = (from a in db.GetTable<Fleet_DriverQueueList>().Where(c => c.Status == true &&
-                                            (c.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE))
-                                                       join b in db.GetTable<Fleet_Driver_Location>().Where(c => c.Latitude != 0)
-
-                                                       on a.DriverId equals b.DriverId
-
-                                                       join d in db.GetTable<Fleet_Driver>() on a.DriverId equals d.Id
-
-                                                       select new
-                                                       {
-                                                           DriverId = a.DriverId,
-                                                           DriverNo = d.DriverNo,
-                                                           DriverLocation = b.LocationName,
-                                                           Latitude = b.Latitude,
-                                                           Longitude = b.Longitude,
-                                                           // NoofPassengers = a.Fleet_Driver.Fleet_VehicleType.NoofPassengers
-                                                       }).ToList();
-
-                                var nearestDrivers = ListofAvailDrvs.Select(args => new
+                                if (obj.addressInfo.IsPickup == 1)
                                 {
-                                    args.DriverId,
+                                    var query =
+                                        from a in db.GetTable<Fleet_DriverQueueList>()
+                                        join b in db.GetTable<Fleet_Driver_Location>()
+                                            on a.DriverId equals b.DriverId
+                                        join d in db.GetTable<Fleet_Driver>()
+                                            on a.DriverId equals d.Id
+                                        join bk in db.GetTable<Booking>()
+                                            on a.CurrentJobId equals bk.Id into bkJoin
+                                        from booking in bkJoin.DefaultIfEmpty()
 
-                                    MilesAwayFromPickup = new DotNetCoords.LatLng(args.Latitude, args.Longitude).DistanceMiles(new DotNetCoords.LatLng(Convert.ToDouble(latitude), Convert.ToDouble(longitude))),
-                                    args.DriverNo,
-                                    Latitude = args.Latitude,
-                                    Longitude = args.Longitude,
-                                    Location = args.DriverLocation
+                                        where a.Status == true
+                                           && (
+                                                a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
+                                                || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR
+                                                || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE
+                                              )
+                                        select new
+                                        {
+                                            a.DriverId,
+                                            d.DriverNo,
+                                            b.LocationName,
+                                            b.Latitude,
+                                            b.Longitude,
+                                            a.DriverWorkStatusId,
+                                            booking
+                                        };
+                                    var ListofAvailDrvs = query
+    .AsEnumerable() 
+    .Where(x =>
+        x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
+        || (
+            (x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR
+             || x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE)
+            && x.booking != null
+            && General.GetZoneId(x.booking.ToAddress.Trim()) == obj.addressInfo.zoneId
+        )
+    )
+    .Select(x => new
+    {
+        x.DriverId,
+        x.DriverNo,
+        DriverLocation = x.LocationName,
+        x.Latitude,
+        x.Longitude,
+        x.DriverWorkStatusId
+    })
+    .ToList();
+                                   
+                                    var nearestDrivers = ListofAvailDrvs.Select(args => new
+                                    {
+                                        args.DriverId,
+                                        args.DriverWorkStatusId,
 
-                                }).OrderBy(args => args.MilesAwayFromPickup)
-                                .Take(3).ToList();
-                                //List<RouteCoords> coords;
-                                for (int i = 0; i < nearestDrivers.Count; i++)
-                                {
-                                    string time = string.Empty;
+                                        MilesAwayFromPickup = new DotNetCoords.LatLng(args.Latitude, args.Longitude).DistanceMiles(new DotNetCoords.LatLng(Convert.ToDouble(latitude), Convert.ToDouble(longitude))),
+                                        args.DriverNo,
+                                        Latitude = args.Latitude,
+                                        Longitude = args.Longitude,
+                                        Location = args.DriverLocation
 
-                                    time = General.GetETATime(nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude, Convert.ToDouble(latitude) + "," + Convert.ToDouble(longitude), "").ToStr();
+                                    }).OrderBy(args => args.MilesAwayFromPickup)
+                                    .Take(3).ToList();
+                                    //List<RouteCoords> coords;
+                                    for (int i = 0; i < nearestDrivers.Count; i++)
+                                    {
+                                        string time = string.Empty;
 
-                                    //obj.addressInfo.drvlatlong.Add(nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude);
+                                        time = General.GetETATime(nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude, Convert.ToDouble(latitude) + "," + Convert.ToDouble(longitude), "").ToStr();
 
-                                    if (obj.addressInfo.NearestDrivers == null)
-                                        obj.addressInfo.NearestDrivers = new List<string>();
+                                        //obj.addressInfo.drvlatlong.Add(nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude);
 
-                                    obj.addressInfo.NearestDrivers.Add("Drv " + nearestDrivers[i].DriverNo + " - " + time + "_LatLng" + nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude);
+                                        if (obj.addressInfo.NearestDrivers == null)
+                                            obj.addressInfo.NearestDrivers = new List<string>();
+
+                                        obj.addressInfo.NearestDrivers.Add(
+         $"Drv {nearestDrivers[i].DriverNo} - {time}_LatLng{nearestDrivers[i].Latitude},{nearestDrivers[i].Longitude}_WorkStatus{nearestDrivers[i].DriverWorkStatusId}"
+     );
+                                    }
                                 }
+
                             }
                             catch (Exception ex)
                             {
