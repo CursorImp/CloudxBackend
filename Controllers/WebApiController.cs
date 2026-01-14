@@ -10290,6 +10290,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             string emailTo = string.Empty;
             decimal price = 0.00m;
             decimal returnPrice = 0.00m;
+            string body = "";
             try
             {
 
@@ -10307,6 +10308,174 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
 
+                    if (HubProcessor.Instance.objPolicy.DefaultClientId.ToStr() == "n!k!tA$")
+                    {
+                        string Name = string.Empty;
+                        obj.emailInfo.toEmailType = 0;
+                        var objBooking = db.Bookings.FirstOrDefault(c => c.Id == obj.emailInfo.BookingId);
+                        string vehicle = objBooking.Fleet_VehicleType.VehicleType.ToString();
+                        if (obj.emailInfo.toEmailType == 0)
+                        {
+                            emailTo = objBooking.CustomerName.ToStr();
+                            price = objBooking.FareRate.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal() + objBooking.AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal();
+                            returnPrice = objBooking.BookingReturns.Count > 0 ? objBooking.BookingReturns[0].FareRate.ToDecimal() + objBooking.BookingReturns[0].CongtionCharges.ToDecimal() + objBooking.BookingReturns[0].ExtraDropCharges.ToDecimal() + objBooking.BookingReturns[0].MeetAndGreetCharges.ToDecimal() + objBooking.BookingReturns[0].ServiceCharges.ToDecimal() + objBooking.BookingReturns[0].AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal() : 0.00m;
+
+
+                            if (objBooking.CompanyId != null)
+                            {
+
+                                price = objBooking.CompanyPrice.ToDecimal() + objBooking.ParkingCharges.ToDecimal() + objBooking.WaitingCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal() + objBooking.AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal();
+                                returnPrice = objBooking.BookingReturns.Count > 0 ? objBooking.BookingReturns[0].CompanyPrice.ToDecimal() + objBooking.BookingReturns[0].ParkingCharges.ToDecimal() + objBooking.BookingReturns[0].WaitingCharges.ToDecimal() + objBooking.BookingReturns[0].ExtraDropCharges.ToDecimal() + objBooking.BookingReturns[0].ServiceCharges.ToDecimal() + objBooking.BookingReturns[0].AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal() : 0.00m;
+
+                            }
+
+
+                        }
+                        if (objBooking.IsQuotation.ToBool())
+                        {
+                            if (objBooking.CompanyId == null)
+                            {
+                                price = objBooking.FareRate.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal();
+
+                                if (objBooking.BookingReturns.Count > 0)
+                                    returnPrice = objBooking.BookingReturns[0].FareRate.ToDecimal() + objBooking.BookingReturns[0].CongtionCharges.ToDecimal() + objBooking.BookingReturns[0].MeetAndGreetCharges.ToDecimal() + objBooking.BookingReturns[0].ExtraDropCharges.ToDecimal();
+
+
+                            }
+                            else
+                            {
+                                price = objBooking.CompanyPrice.ToDecimal() + objBooking.ParkingCharges.ToDecimal() + objBooking.WaitingCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal();
+
+                                if (objBooking.BookingReturns.Count > 0)
+                                    returnPrice = objBooking.BookingReturns[0].CompanyPrice.ToDecimal() + objBooking.BookingReturns[0].ParkingCharges.ToDecimal() + objBooking.BookingReturns[0].WaitingCharges.ToDecimal() + objBooking.BookingReturns[0].ExtraDropCharges.ToDecimal();
+
+
+                            }
+                        }
+
+                        var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == objBooking.SubcompanyId).FirstOrDefault();
+
+                        StringBuilder StrBld = new StringBuilder();
+                        StrBld.Append("<table width='100%' border='0' cellspacing='0' cellpadding='5' style='border: 1px solid #ccc; font-family: Arial; font-size: 12px;'>");
+                        StrBld.Append("<tr><td colspan='2' align='center' style='border: 1px solid #ccc; padding:10px;'>");
+                        if (objSubCompany.CompanyLogoOnlinePath.ToStr().Trim().Length > 0)
+                            StrBld.Append("<img src='" + objSubCompany.CompanyLogoOnlinePath + "' style='max-height:80px;' /><br/>");
+
+                        StrBld.Append("<strong style='font-size:16px; color:#003366;'>" + objSubCompany.TelephoneNo + "</strong><br/>");
+                        StrBld.Append("<span style='color:#003366; font-weight:bold;'> 24hr Mobile " + objSubCompany.MobileNo + " (Text or WhatsApp)</span><br/>");
+                        StrBld.Append("<a href='mailto:" + objSubCompany.EmailAddress + "'>" + objSubCompany.EmailAddress + "</a><br/>");
+                        StrBld.Append("<h2 style='margin-top:10px;'>BOOKING CONFIRMATION</h2>");
+                        StrBld.Append("</td></tr>");
+                        StrBld.Append("<tr><td colspan='2' style=' border:1px solid #ccc; font-weight:bold; padding:10px;'>" + objBooking.CustomerName.ToUpper() + "</td></tr>");
+                        StrBld.Append("<tr>");
+                        StrBld.Append("<td width='50%' valign='top' style='border:1px solid #ccc; padding:10px;'>");
+                        StrBld.Append("<strong style='text-decoration:underline;'>Outwards</strong><br/><br/>");
+                        StrBld.Append(string.Format("{0:dd/MM/yyyy HH:mm:ss}", objBooking.PickupDateTime) + "<br/>");
+                        StrBld.Append("<strong>" + objBooking.FromAddress + "</strong><br/>");
+                        foreach (var via in objBooking.Booking_ViaLocations)
+                        {
+                            StrBld.Append("-to-<br/>VIA: " + via.ViaLocValue + "<br/>");
+                        }
+
+                        StrBld.Append("-to-<br/>");
+                        StrBld.Append("<strong>" + objBooking.ToAddress + "</strong>");
+                        StrBld.Append("</td>");
+                        StrBld.Append("<td width='50%' valign='top' style='border: 1px solid #ccc; padding:10px;'>");
+                        if (objBooking.BookingReturns.Count > 0)
+                        {
+                            var ret = objBooking.BookingReturns[0];
+                            StrBld.Append("<strong style='text-decoration:underline;'>Return</strong><br/><br/>");
+                            StrBld.Append(string.Format("{0:dd/MM/yyyy HH:mm:ss}", ret.PickupDateTime) + "<br/>");
+                            StrBld.Append("<strong>" + ret.FromAddress + "</strong><br/>");
+
+                            foreach (var via in ret.Booking_ViaLocations)
+                            {
+                                StrBld.Append("-to-<br/>VIA: " + via.ViaLocValue + "<br/>");
+                            }
+
+                            StrBld.Append("-to-<br/>");
+                            StrBld.Append("<strong>" + ret.ToAddress + "</strong>");
+                        }
+                        StrBld.Append("</td></tr>");
+                        StrBld.Append("<tr style='border:1px solid #ccc;'>");
+                        StrBld.Append("<td style='border:1px solid #ccc; padding:10px;'>" + objBooking.NoofPassengers + " People - " + vehicle + "</td>");
+                        StrBld.Append("<td style='border:1px solid #ccc; padding:10px;'>Fare " + string.Format("{0:f2}", price) + " (£) ");
+                        if (objBooking.BookingReturns.Count > 0) StrBld.Append("Return Fare " + string.Format("{0:f2}", returnPrice) + " (£)");
+                        StrBld.Append("</td></tr>");
+                        StrBld.Append("<tr style='border:1px solid #ccc;'>");
+                        StrBld.Append(
+                            "<td style='border:1px solid #ccc; padding:10px;'> "
+                            + (!string.IsNullOrWhiteSpace(objBooking.SpecialRequirements)
+                                ? "<strong>Notes :</strong>" + objBooking.SpecialRequirements
+                                : string.Empty)
+                            + "</td>"
+                        );
+                        StrBld.Append(
+                            "<td style='border:1px solid #ccc; padding:10px;'> "
+                            + (objBooking.BookingReturns.Count > 0
+                                && !string.IsNullOrWhiteSpace(objBooking.BookingReturns[0].SpecialRequirements)
+                                    ? "<strong>Notes :</strong>" + objBooking.BookingReturns[0].SpecialRequirements
+                                    : string.Empty)
+                            + "</td></tr>"
+                        );
+                        StrBld.Append("<tr style='border:1px solid #ccc;'><td  colspan='2' style='border:1px solid #ccc;padding:15px; font-size:10px; color:#555;'>");
+                        StrBld.Append("<ul style='padding-left:15px; margin:0;'>");
+                        StrBld.Append("<li>Please arrange to pay the driver on the outgoing journey to include the return (if applicable). We would ask that you pay the driver by credit or debit card and provide your return flight details either printed from the airline or on the booking app (return boarding pass is ideal).</li>");
+                        StrBld.Append("<li>Failure to provide your return flight details for the driver to take a copy of may incur charges if incorrect details have be supplied.</li>");
+                        StrBld.Append("<li>Our Bank details are: ACCOUNT TITLE: " + objSubCompany.AccountTitle + ".SORT CODE: " + objSubCompany.SortCode + ".A/C " + objSubCompany.AccountNo + ".REF: " + objBooking.BookingNo + ", BANK A/C: " + objSubCompany.BankName + "</li>");
+                        StrBld.Append(
+                            "<li>Booking details are: Passenger Contact No: "
+                            + objBooking.CustomerMobileNo
+                            + (objBooking.BookingReturns != null
+                               && objBooking.BookingReturns.Count > 0
+                               && objBooking.BookingReturns[0].FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT
+                                    ? ", RETURN Flight No: " + objBooking.BookingReturns[0].FromDoorNo.ToStr()
+                                    : string.Empty)
+                            + "</li>"
+                        );
+
+                        StrBld.Append("<li>The Office will contact you the evening before you travel, usually between 17:00/20:00 to confirm your journey and let you know who your driver is.</li>");
+                        StrBld.Append("<li>We DO NOT supply baby/child seats but are happy to retain your own ones for your return journey.</li>");
+                        StrBld.Append("<li>On the Return, please switch your Mobile on as soon as possible. Again, the Driver will contact you about twenty minutes after you land. Once you have your luggage and are heading out of the Terminal to the pick-up point just call the Driver and he/she will pull round for you. Please be aware that the Drivers will NOT pull round until they have heard from you.</li>");
+                        StrBld.Append("<li> If anything changes in the meantime, please do not hesitate to contact us and we will adjust accordingly.</li>");
+                        StrBld.Append("<li>In the event of severe delays on return flights please call, text or WhatsApp the office or the emergency phone number, as this will help us to provide the correct service for you.</li>");
+                        StrBld.Append("<li>In the event of extreme circumstances I.E. Protestors, road closures and adverse weather some delays may occur at short notice.</li>");
+                        StrBld.Append("</ul></td></tr>");
+                        StrBld.Append("<tr style='border:1px solid #ccc;'><td colspan='2' align='center' style='border:1px solid #ccc; padding:10px;'>");
+                        StrBld.Append("<strong>" + objSubCompany.Address + "</strong><br/>");
+                        StrBld.Append("Proprietor: Mark Morrison");
+                        StrBld.Append("</td></tr>");
+
+                        StrBld.Append("</table>");
+
+
+
+                        var obja = new
+                        {
+                            //   imageName = file,
+                            //   file = base64Text,
+                            subject = obj.emailInfo.Subject,
+                            messageBody = StrBld.ToStr(),
+                            fromEmail = obj.emailInfo.From,
+                            toEmail = obj.emailInfo.To,
+                            CCEmail = objSubCompany.EmailCC.ToStr(),
+                            smtpHost = objSubCompany.SmtpHost,
+                            smtpPwd = objSubCompany.SmtpPassword,
+                            defaultclientid = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr(),
+                            sourceType = "dispatch-cloudx"
+                        };
+                        objSubCompany.UseDifferentEmailForInvoices = false;
+
+                        List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
+                        SignalRHub.Classes.ClsEmail.Send(obja.subject, obja.messageBody, obja.fromEmail, obja.toEmail, attachments, objSubCompany, "");
+
+                        response.Data = "Booking confirmation email sent successfully.";
+
+
+
+                    }
+                    else
+                    {
 
                         var obj2 = db.Bookings.FirstOrDefault(c => c.Id == obj.emailInfo.BookingId);
 
@@ -10745,8 +10914,9 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
 
                         }
+                    }
 
-                     
+
                 }
             }
             catch (Exception ex)
