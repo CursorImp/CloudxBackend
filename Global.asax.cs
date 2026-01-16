@@ -746,6 +746,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnablePromotionOnBooking", SetVal = "false", description = "Enable Promotion On Booking"  },
                              new AppSetting { SetKey = "showRouteType", SetVal = "false", description = "show Route Type"  },
                              new AppSetting { SetKey = "EnableTodayBookingFilterInHours", SetVal = "0", description = "Enable Today Booking Filter In Hours"  },
+                             new AppSetting { SetKey = "EnableSamePaymentTypeForReturnBooking", SetVal = "false", description = "Enable Same PaymentType For ReturnBooking"  },
                         };
 
                 using (var db = new TaxiDataContext())

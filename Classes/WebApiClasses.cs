@@ -670,7 +670,8 @@ namespace SignalRHub.WebApiClasses
         public string PromotionType { get; set; }   // VARCHAR
         public double? promoValue { get; set; }     // FLOAT
         public int? Type { get;  set; }
-
+        public string Status { get;  set; }
+        public bool? IsSamePaymentType { get;  set; }
     }
 
     public class Booking_DriverCommsiion

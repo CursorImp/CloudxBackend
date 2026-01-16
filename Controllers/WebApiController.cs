@@ -1800,7 +1800,16 @@ WHERE BookingId = {obj.bookingInfo.Id}";
                     {
 
                     }
+                    try
+                    {
+                        obj.bookingInfo.ReturnSpecialRequirements = obj2.BookingReturns[0].SpecialRequirements;
+                    }
+                    catch
+                    {
 
+                    }
+                   
+                    obj.bookingInfo.Status = obj2.BookingStatus.StatusName;
                     if (obj?.bookingInfo?.DriverId > 0)
                     {
 
@@ -3096,9 +3105,22 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         {
 
                         }
+                        try
+                        {
+                            if (obj.bookingInfo.IsSamePaymentType == true && obj.bookingInfo.JourneyTypeId==2)
+                            {
+                                var master = db.Bookings.FirstOrDefault(x => x.MasterJobId == objMaster.Current.Id);
+                                if (master != null)
+                                {
+                                    string query2 = "Update booking set PaymentTypeId= {0} where Id={1}";
+                                    db.ExecuteCommand(query2, obj.bookingInfo.PaymentTypeId,master.Id);
+                                }
+                            }
+                        }
+                        catch
+                        {
 
-                        
-
+                        }
 
 
 
