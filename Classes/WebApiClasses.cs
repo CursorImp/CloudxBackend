@@ -2639,5 +2639,13 @@ namespace SignalRHub.WebApiClasses
         public int? Vias { get; set; }
     }
 
+    public class FormUserDefinedSettingsVM
+    {
+        public int Id { get; set; }
+        public bool IsVisible { get; set; }
+        public int GridColMoveTo { get; set; }
+
+        public string HeaderText { get; set; }
+    }
 
 }

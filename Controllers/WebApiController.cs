@@ -13331,5 +13331,86 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             return string.Empty;
         }
 
+
+        #region sort and visible column
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SaveFormUserDefinedSettings")]
+        public JsonResult SaveFormUserDefinedSettings(List<FormUserDefinedSettingsVM> model)
+        {
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    foreach (var item in model)
+                    {
+                        var row = db.UM_Form_UserDefinedSettings
+                                    .FirstOrDefault(x => x.Id == item.Id);
+
+                        if (row != null)
+                        {
+                            row.IsVisible = item.IsVisible;
+                            row.GridColMoveTo = item.GridColMoveTo;
+                            row.HeaderText = item.HeaderText;
+                        }
+                    }
+
+                    db.SubmitChanges();
+                    response.Message = "Column settings saved successfully";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetFormUserDefinedSettings")]
+        public JsonResult GetFormUserDefinedSettings()
+        {
+
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext()) // use your actual DbContext
+                {
+                    var columnSettings = db.UM_Form_UserDefinedSettings
+                        .Where(x => x.FormId == 20)
+                        .OrderBy(x => x.GridColMoveTo)
+                        .Select(x => new
+                        {
+                            Id = x.Id,
+                            FormId = x.FormId,
+                            GridColumnName = x.GridColumnName,
+                            IsVisible = x.IsVisible,
+                            GridColWidth = x.GridColWidth,
+                            GridColMoveTo = x.GridColMoveTo,
+                            HeaderText = x.HeaderText,
+                            FormTab = x.FormTab
+                        })
+                        .ToList();
+
+                    response.Data = columnSettings;
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        #endregion
     }
 }
