@@ -26834,28 +26834,42 @@ SET
             }
             return Json(response, JsonRequestBehavior.AllowGet);
         }
-        //[System.Web.Http.HttpGet]
-        //[System.Web.Http.HttpPost]
-        //[System.Web.Http.Route("SendPushNotification")]
-        //public async Task<JsonResult> SendPushNotification([FromBody] PushNotificationRequest request)
-        //{
-        //    var response = new ResponseAdminApi();
-        //    try
-        //    {
-        //        foreach (var token in request.Tokens)
-        //        {
-        //            await FcmNotification.SendNotificationAsync(request.Title, request.Message, token);
-        //        }
-        //        response.HasError = false;
-        //        response.Message = "Notifications sent successfully.";
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        response.HasError = true;
-        //        response.Message = "Error while sending notifications: " + ex.Message;
-        //    }
-        //    return Json(response, JsonRequestBehavior.AllowGet);
-        //}
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendPushNotification")]
+        public async Task<JsonResult> SendPushNotification([FromBody] PushNotificationRequest request)
+        {
+            var response = new ResponseAdminApi();
+            try
+            {
+                General.WriteLog("SendPushNotification", "json: " + new JavaScriptSerializer().Serialize(request));
+            }
+            catch
+            {
+            }
+            try
+            {
+                foreach (var token in request.Tokens)
+                {
+                    await FcmNotification.SendNotificationAsync(request.Title, request.Message, token);
+                }
+                response.HasError = false;
+                response.Message = "Notifications sent successfully.";
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    General.WriteLog("SendPushNotification_exception", "json:" + new JavaScriptSerializer().Serialize(request) + ", Exception: " + ex.Message);
+                }
+                catch
+                {
+                }
+                response.HasError = true;
+                response.Message = "Error while sending notifications: " + ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
 
 
         [System.Web.Http.HttpGet]
