@@ -104,6 +104,7 @@ namespace SignalRHub
         public static string AutoRecoverOnNoMoveInSec = "0";
         public static string EnableSubCompanyWiseKonnect = "false";
         public static string EnableTodayBookingFilterUpTo2AM = "false";
+        public static string EnableTodayBookingFilterInHours = "0";
         public static string AllowBidRadiusInMiles = "0";
         public static string SortPlotByNearestOnPda = "0";
         public static string EnableBidDetails = "0";
@@ -130,6 +131,8 @@ namespace SignalRHub
         public static string NotAcceptedRetry = "0";
         public static string RestrictedIPs = "";
         public static string AdvancedReturnEditBooking = "false";
+        public static string EnableViaArriveSMS = "0";
+        public static string EnablekonnectPayReciept = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -733,6 +736,19 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnablePriority", SetVal = "false", description = "Enable Priority"  },
                              new AppSetting { SetKey = "EnableSMSOnBookingForm", SetVal = "false", description = "Enable SMS On Booking Form"  },
                              new AppSetting { SetKey = "AdvancedReturnEditBooking", SetVal = "false", description = "Advanced Return Edit Booking"  },
+                             new AppSetting { SetKey = "EnableViaArriveSMS", SetVal = "false", description = "EnableViaArriveSMS"  },
+                             new AppSetting { SetKey = "EnableOptimizeRoute", SetVal = "false", description = "EnableOptimizeRoute"  },
+                             new AppSetting { SetKey = "EnableMapReportOnBookingForm", SetVal = "false", description = "Enable Map Report On Booking Form"  },
+                             new AppSetting { SetKey = "EnableBookingConfirmationSms", SetVal = "false", description = "Enable Booking Confirmation Sms"  },
+                             new AppSetting { SetKey = "EnableEditWaitingBookingOnCallerIdPopup", SetVal = "false", description = "Enable Edit Waiting Booking On CallerId Popup"  },
+                             new AppSetting { SetKey = "QuotationExpiryDays", SetVal = "0", description = "Quotation Expiry Days"  },
+                             new AppSetting { SetKey = "EnablekonnectPayReciept", SetVal = "0", description = "EnablekonnectPayReciept"  },
+                             new AppSetting { SetKey = "EnablePromotionOnBooking", SetVal = "false", description = "Enable Promotion On Booking"  },
+                             new AppSetting { SetKey = "showRouteType", SetVal = "false", description = "show Route Type"  },
+                             new AppSetting { SetKey = "EnableTodayBookingFilterInHours", SetVal = "0", description = "Enable Today Booking Filter In Hours"  },
+                             new AppSetting { SetKey = "EnableSamePaymentTypeForReturnBooking", SetVal = "false", description = "Enable Same PaymentType For ReturnBooking"  },
+                             new AppSetting { SetKey = "EnableStatusOnBookingForm", SetVal = "false", description = "Enable Status On BookingForm"  },
+                             new AppSetting { SetKey = "EnablePlateNo", SetVal = "true", description = "Enable PlateNo"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1694,7 +1710,10 @@ namespace SignalRHub
                 {
                     EnableTodayBookingFilterUpTo2AM = GetAppSetting<string>("EnableTodayBookingFilterUpTo2AM").ToStr();
                 }
-
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableTodayBookingFilterInHours")))
+                {
+                    EnableTodayBookingFilterInHours = GetAppSetting<string>("EnableTodayBookingFilterInHours").ToStr();
+                }
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("ShowAllocatedInFutureList")))
                 {
                     ShowAllocatedInFutureList = GetAppSetting<string>("ShowAllocatedInFutureList").ToStr();
@@ -1718,6 +1737,14 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("AdvancedReturnEditBooking")))
                 {
                     AdvancedReturnEditBooking = GetAppSetting<string>("AdvancedReturnEditBooking").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableViaArriveSMS")))
+                {
+                    EnableViaArriveSMS = GetAppSetting<string>("EnableViaArriveSMS").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnablekonnectPayReciept")))
+                {
+                    EnablekonnectPayReciept = GetAppSetting<string>("EnablekonnectPayReciept").ToStr();
                 }
 
             }
@@ -4372,7 +4399,7 @@ namespace SignalRHub
 
                                 // add price plot rule
 
-                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
+                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && (job.AllocatedDriver.ToBool() || job.IsConfirmedDriver.ToBool()))
                                 {
                                     listofJobAvailableDrvs = listofJobAvailableDrvs.Where(x => x.DriverId == job.DriverId).ToList();
                                     if (listofJobAvailableDrvs.Count == 0)
@@ -4589,7 +4616,7 @@ namespace SignalRHub
 
                                 if (listofJobAvailableDrvs.Count == 0)
                                 {
-                                    if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
+                                    if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && (job.AllocatedDriver.ToBool() || job.IsConfirmedDriver.ToBool()))
                                     {
                                         continue;
                                     }
@@ -5020,7 +5047,7 @@ namespace SignalRHub
                                         {
                                             // Put Bidding Sub Rule 3
 
-                                            if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
+                                            if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && (job.AllocatedDriver.ToBool() || job.IsConfirmedDriver.ToBool()))
                                             {
                                                 continue;
                                             }
@@ -5835,7 +5862,7 @@ namespace SignalRHub
                                                     {
                                                         // Put Bidding Sub Rule 3
 
-                                                        if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
+                                                        if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && (job.AllocatedDriver.ToBool() || job.IsConfirmedDriver.ToBool()))
                                                         {
                                                             continue;
                                                         }
@@ -6206,7 +6233,7 @@ namespace SignalRHub
                                             {
                                                 // Put Bidding Sub Rule 3
 
-                                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
+                                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && (job.AllocatedDriver.ToBool() || job.IsConfirmedDriver.ToBool()))
                                                 {
                                                     continue;
                                                 }
@@ -7415,7 +7442,7 @@ namespace SignalRHub
 
                             foreach (var job in bookings)
                             {
-                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0)// && job.AllocatedDriver.ToBool())
+                                if (DispatchAllocatedJobsToAllocatedDriverOnly == "1" && job.DriverId.ToInt() > 0 && (job.AllocatedDriver.ToBool() || job.IsConfirmedDriver.ToBool()))
                                 {
                                     continue;
                                 }

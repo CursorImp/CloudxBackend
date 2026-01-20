@@ -14983,7 +14983,23 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
 
                     objdriver.Save();
-                    //db.SubmitChanges();
+                    //db.SubmitChanges()
+                    //
+                    //;
+
+                    try
+                    {
+                        if (obj.VehiclePlateNo != null)
+                        {
+                            db.ExecuteQuery<int>(@"UPDATE Fleet_Driver SET VehiclePlateNo = {0} WHERE Id = {1}",
+                                                         obj.VehiclePlateNo, objdriver.Current.Id);
+                        }
+
+                    }
+                    catch
+                    {
+
+                    }
                     try
                     {
                         if (VehicleLogBookDocument_TemNameStore != null)
@@ -26808,7 +26824,7 @@ SET
                         string trimmedPhoneNumber = phoneNumber.Trim();
                         if (!string.IsNullOrEmpty(trimmedPhoneNumber))
                         {
-                            General.AddSMS(trimmedPhoneNumber, $"request pda=0=0=Message>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}", 1);
+                            General.AddSMS(trimmedPhoneNumber, $"{msg}", 1);
                         }
 
                         using (TaxiDataContext db = new TaxiDataContext())

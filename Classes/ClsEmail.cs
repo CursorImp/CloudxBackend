@@ -94,19 +94,7 @@ namespace SignalRHub.Classes
                     emailcc = objSubCompany.EmailCC.ToStr().Trim();
                     enableSSL = objSubCompany.SmtpHasSSL.ToBool();
                     companyName = objSubCompany.CompanyName.ToStr().Trim();
-                    FromEmail = userName;
-
-
-                    if (isInvoiceOrStatement=="true" && objSubCompany.IsTpCompany.ToBool() && objSubCompany.UseDifferentEmailForInvoices.ToBool())
-                    {
-
-                        smptHost = objSubCompany.SmtpInvoiceHost.ToStr().Trim();
-                        port = objSubCompany.SmtpInvoicePort.ToInt();
-                        userName = objSubCompany.SmtpInvoiceUserName.ToStr().Trim();
-                        pwd = objSubCompany.SmtpInvoicePassword.ToStr().Trim();
-                        enableSSL = objSubCompany.SmtpInvoiceSSL.ToBool();
-                        FromEmail = userName;
-                    }
+                    //FromEmail = userName;
 
 
                 }
@@ -129,19 +117,33 @@ namespace SignalRHub.Classes
                     {
                         if (new TaxiDataContext().ExecuteQuery<string>("select SetVal from AppSettings where setkey= 'EnableThirdPartyEmailSetting'").FirstOrDefault().ToStr() == "true")
                         {
-                            string fromEmail = new TaxiDataContext().ExecuteQuery<string>($"select SmtpEmailAddress from Gen_SubCompany WHERE ID={objSubCompany.Id}").FirstOrDefault().ToStr();
-                            FromEmail = !string.IsNullOrEmpty(fromEmail) ? fromEmail : FromEmail;
+                            if (isInvoiceOrStatement == "true")
+                            {
+                                string fromEmail = new TaxiDataContext().ExecuteQuery<string>($"select SmtpInvoiceUserName from Gen_SubCompany WHERE ID={objSubCompany.Id}").FirstOrDefault().ToStr();
+                                FromEmail = !string.IsNullOrEmpty(fromEmail) ? fromEmail : FromEmail;
+                            }
+                            else
+                            {
+                                string fromEmail = new TaxiDataContext().ExecuteQuery<string>($"select SmtpEmailAddress from Gen_SubCompany WHERE ID={objSubCompany.Id}").FirstOrDefault().ToStr();
+                                FromEmail = !string.IsNullOrEmpty(fromEmail) ? fromEmail : FromEmail;
+                            }
+                            
                         }
                         else
                         {
                             if (isInvoiceOrStatement == "true" && objSubCompany.IsTpCompany.ToBool() && objSubCompany.UseDifferentEmailForInvoices.ToBool())
                             {
-                                FromEmail =  objSubCompany.SmtpInvoiceUserName ;
+
+                                smptHost = objSubCompany.SmtpInvoiceHost.ToStr().Trim();
+                                port = objSubCompany.SmtpInvoicePort.ToInt();
+                                userName = objSubCompany.SmtpInvoiceUserName.ToStr().Trim();
+                                pwd = objSubCompany.SmtpInvoicePassword.ToStr().Trim();
+                                enableSSL = objSubCompany.SmtpInvoiceSSL.ToBool();
+                                FromEmail = userName;
                             }
                             else
                             {
-                                FromEmail = objSubCompany.EmailAddress;
-
+                                FromEmail = userName;
                             }
 
                             //FromEmail = userName;

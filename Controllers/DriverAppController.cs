@@ -11687,6 +11687,7 @@ namespace SignalRHub
                         pda.HideAccountName = Global.HideAccountName;
                         pda.EnableCustomPayment = Global.EnableCustomPayment;
                         pda.EnableSoundAdjustment = Global.EnableSoundAdjustment;
+                        pda.EnablekonnectPayReciept = Global.EnablekonnectPayReciept;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
@@ -19539,6 +19540,43 @@ namespace SignalRHub
                                 db.ExecuteQuery<int>("update booking_viaLocations set iscurrentstop=1, arrivaldatetime=getdate() where bookingid=" + jobId + " and vialocvalue='" + via + "'");
 
                                 db.stp_BookingLog(jobId, "DRIVER", "Via (ARRIVED) : " + via);
+
+                                if (Global.EnableViaArriveSMS == "1" && HubProcessor.Instance.objPolicy.EnableArrivalBookingText.ToBool())
+                                {
+                                    Booking job = General.GetObject<Booking>(c => c.Id == jobId);
+
+                                    if (job != null && job.JobCode.ToStr().Trim().Length == 0)
+                                    {
+                                        var onlineBookingId = job.OnlineBookingId.ToLong();
+                                        if (!string.IsNullOrEmpty(job.CustomerMobileNo))
+                                        {
+                                            if (job.CompanyId == null || job.Gen_Company.DisableArrivalText.ToBool() == false)
+                                            {
+                                                string arrivalText = string.Empty;
+                                                if (job.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                                                {
+                                                    arrivalText = HubProcessor.Instance.objPolicy.ArrivalAirportBookingText.ToStr().Trim();
+                                                }
+                                                else
+                                                {
+                                                    arrivalText = HubProcessor.Instance.objPolicy.ArrivalBookingText.ToStr().Trim();
+                                                }
+
+                                                if (!string.IsNullOrEmpty(arrivalText))
+                                                {
+                                                    new Thread(delegate ()
+                                                    {
+                                                        AddSMS(job.CustomerMobileNo.ToStr().Trim(), GetMessage(arrivalText, job, jobId), job.SMSType.ToInt());
+                                                    }).Start();
+                                                }
+                                            }
+                                        }
+                                    }
+
+
+
+
+                                }
 
                             }
                             else if (objAction.JStatus.ToStr() == "7")
