@@ -2514,17 +2514,17 @@ namespace SignalRHub.Classes
             // Build the message
             var message = new FirebaseAdmin.Messaging.Message()
             {
+                Token = token,
                 Data = new Dictionary<string, string>
                 {
                     { "mutable-content", "1" },                    
                     { "sound", "notification_sound" }
                 },
-                Notification = new Notification
+                Notification = new FirebaseAdmin.Messaging.Notification
                 {
-                    Title = token,
-                    Body = body
+                    Title = title,
+                    Body = body,
                 },
-                Token = token
             };
 
             try
