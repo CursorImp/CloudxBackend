@@ -133,6 +133,7 @@ namespace SignalRHub
         public static string AdvancedReturnEditBooking = "false";
         public static string EnableViaArriveSMS = "0";
         public static string EnablekonnectPayReciept = "0";
+        public static string EnableOnlineBookingSMS = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -749,6 +750,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableSamePaymentTypeForReturnBooking", SetVal = "false", description = "Enable Same PaymentType For ReturnBooking"  },
                              new AppSetting { SetKey = "EnableStatusOnBookingForm", SetVal = "false", description = "Enable Status On BookingForm"  },
                              new AppSetting { SetKey = "EnablePlateNo", SetVal = "true", description = "Enable PlateNo"  },
+                             new AppSetting { SetKey = "EnableOnlineBookingSMS", SetVal = "0", description = "EnableOnlineBookingSMS"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1745,6 +1747,10 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnablekonnectPayReciept")))
                 {
                     EnablekonnectPayReciept = GetAppSetting<string>("EnablekonnectPayReciept").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableOnlineBookingSMS")))
+                {
+                    EnableOnlineBookingSMS = GetAppSetting<string>("EnableOnlineBookingSMS").ToStr();
                 }
 
             }
