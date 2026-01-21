@@ -6092,7 +6092,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                 //    && (AppVars.keyLocations.Contains(text.Split(new char[] { ' ' })[0])))
                                 //{
                                 //  aTxt.ListBoxElement.Items.Clear();
-                                if (searchValue.Contains(" ") && searchValue.Length < 20 && searchValue.WordCount() == 2 && searchValue.Contains(".") == false && searchValue.Strip(' ').IsAlpha() == false)
+                                if (searchValue.Contains(" ") && searchValue.Length < 20 && searchValue.WordCount() == 2 && searchValue.Contains(".") == false)// && searchValue.Strip(' ').IsAlpha() == false)
                                 {
 
                                     string[] arr = searchValue.Split(new char[] { ' ' });
