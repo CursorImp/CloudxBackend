@@ -2043,6 +2043,38 @@ WHERE BookingId = {obj.bookingInfo.Id}";
                     obj.bookingInfo.DisablePassengerSMS = obj2.DisablePassengerSMS;
                     obj.bookingInfo.ExtraMile = obj2.ExtraMile;
                     obj.bookingInfo.JourneyTimeInMins = obj2.JourneyTimeInMins;
+
+                    try
+                    {
+                        if (obj2.PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.CREDIT_CARD_PAID && db.Booking_Payments.Count(c => c.BookingId == obj2.Id) > 0)
+                        {
+
+                            obj.bookingInfo.AuthCode = db.Booking_Payments.Where(c => c.BookingId == obj2.Id).Select(c => c.AuthCode).FirstOrDefault().ToStr();
+                            Booking_Payment BookingPayment = db.Booking_Payments.Where(c => c.BookingId == obj2.Id).FirstOrDefault();
+                            if (BookingPayment != null)
+                            {
+                                obj.bookingInfo.PaymentGatewayID = BookingPayment.PaymentGatewayId.ToInt();
+                                obj.bookingInfo.AuthCode = BookingPayment.AuthCode.ToStr();
+                                obj.bookingInfo.IsRefund = false;
+
+                                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj2.Id);
+                                Booking_Log RefundLog = null;
+                                if (objBooking.Booking_Logs != null)
+                                {
+                                    RefundLog = objBooking.Booking_Logs.Where(c => c.AfterUpdate.ToLower().Contains("refund") && c.AfterUpdate.ToLower().Contains("payment")).FirstOrDefault();
+                                    if (RefundLog != null)
+                                    {
+                                        obj.bookingInfo.IsRefund = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+
                     response.Data = obj.bookingInfo;
 
 
