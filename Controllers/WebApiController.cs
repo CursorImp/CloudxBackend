@@ -1775,6 +1775,13 @@ namespace SignalRHub.Controllers
                     catch
                     {
                     }
+                    try {
+
+                        obj.bookingInfo.BookingStatusBgColor = obj2.BookingStatus.BackgroundColor;
+                    }
+
+                    catch { }
+
                     try
                     {
                         foreach (var item in obj2.GetType().GetProperties())
@@ -12424,6 +12431,7 @@ namespace SignalRHub.Controllers
         }
 
 
+        
 
     }
 }

@@ -433,6 +433,7 @@ namespace SignalRHub.WebApiClasses
 
         }
 
+        public string BookingStatusBgColor { get; set; }
         public bool ExtendMulti { get; set; }
         public int LeadTime { get; set; }
         public string PickupZoneName { get; set; }
@@ -1859,6 +1860,7 @@ namespace SignalRHub.WebApiClasses
         public string CompanyName { get; set; }
     }
 
+ 
     public class ClsBookingListData
     {
 
