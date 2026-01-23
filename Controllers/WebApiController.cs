@@ -2044,6 +2044,38 @@ WHERE BookingId = {obj.bookingInfo.Id}";
                     obj.bookingInfo.DisablePassengerSMS = obj2.DisablePassengerSMS;
                     obj.bookingInfo.ExtraMile = obj2.ExtraMile;
                     obj.bookingInfo.JourneyTimeInMins = obj2.JourneyTimeInMins;
+
+                    try
+                    {
+                        if (Global.EnableRefundButton == "1" && obj2.PaymentTypeId.ToInt() == Enums.PAYMENT_TYPES.CREDIT_CARD_PAID && db.Booking_Payments.Count(c => c.BookingId == obj2.Id) > 0)
+                        {
+
+                            obj.bookingInfo.AuthCode = db.Booking_Payments.Where(c => c.BookingId == obj2.Id).Select(c => c.AuthCode).FirstOrDefault().ToStr();
+                            Booking_Payment BookingPayment = db.Booking_Payments.Where(c => c.BookingId == obj2.Id).FirstOrDefault();
+                            if (BookingPayment != null)
+                            {
+                                obj.bookingInfo.PaymentGatewayID = BookingPayment.PaymentGatewayId.ToInt();
+                                obj.bookingInfo.AuthCode = BookingPayment.AuthCode.ToStr();
+                                obj.bookingInfo.IsRefund = false;
+
+                                Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == obj2.Id);
+                                Booking_Log RefundLog = null;
+                                if (objBooking.Booking_Logs != null)
+                                {
+                                    RefundLog = objBooking.Booking_Logs.Where(c => c.AfterUpdate.ToLower().Contains("refund") && c.AfterUpdate.ToLower().Contains("payment")).FirstOrDefault();
+                                    if (RefundLog != null)
+                                    {
+                                        obj.bookingInfo.IsRefund = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+
                     response.Data = obj.bookingInfo;
 
 
@@ -6091,32 +6123,51 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                 //    && (AppVars.keyLocations.Contains(text.Split(new char[] { ' ' })[0])))
                                 //{
                                 //  aTxt.ListBoxElement.Items.Clear();
-                                if (searchValue.Contains(" ") && searchValue.Length < 20 && searchValue.WordCount() == 2 && searchValue.Contains(".") == false && searchValue.Strip(' ').IsAlpha() == false)
+                                if (searchValue.Contains(" ") && searchValue.Length < 13 && searchValue.WordCount() == 2 && searchValue.Contains(".") == false && searchValue.Strip(' ').IsAlpha() == false)
                                 {
 
                                     string[] arr = searchValue.Split(new char[] { ' ' });
 
                                     if (arr.Count() == 2)
                                     {
-                                        if (arr[0].IsAlpha())
-                                        {
-                                            string pcode = General.GetPostCodeMatch(arr[1].ToStr().ToUpper());
+                                        response.Data = (from a in db.Gen_Locations.Where(c => c.ShortCutKey == searchValue)
+                                                         select (a.PostCode != string.Empty ? a.LocationName + ", " + a.PostCode : a.LocationName)
+                                          ).ToArray<string>();
 
-                                            if (pcode.ToStr().Length > 0)
-                                            {
-                                                response.Data = (from a in db.Gen_Locations.Where(c => (c.Gen_LocationType.ShortCutKey == arr[0]) && c.PostCode.StartsWith(pcode))
-                                                                 select (a.PostCode != string.Empty ? a.LocationName + ", " + a.PostCode : a.LocationName)
-                                                  ).ToArray<string>();
-
-                                                if (response.Data != null && (response.Data as string[]).Count() == 0)
-                                                    response.Data = null;
-
-                                            }
-                                        }
+                                        if (response.Data != null && (response.Data as string[]).Count() == 0)
+                                            response.Data = null;
                                     }
 
                                 }
 
+                                if (response.Data == null)
+                                {
+                                    if (searchValue.Contains(" ") && searchValue.Length < 20 && searchValue.WordCount() == 2 && searchValue.Contains(".") == false && searchValue.Strip(' ').IsAlpha() == false)
+                                    {
+
+                                        string[] arr = searchValue.Split(new char[] { ' ' });
+
+                                        if (arr.Count() == 2)
+                                        {
+                                            if (arr[0].IsAlpha())
+                                            {
+                                                string pcode = General.GetPostCodeMatch(arr[1].ToStr().ToUpper());
+
+                                                if (pcode.ToStr().Length > 0)
+                                                {
+                                                    response.Data = (from a in db.Gen_Locations.Where(c => (c.Gen_LocationType.ShortCutKey == arr[0]) && c.PostCode.StartsWith(pcode))
+                                                                     select (a.PostCode != string.Empty ? a.LocationName + ", " + a.PostCode : a.LocationName)
+                                                      ).ToArray<string>();
+
+                                                    if (response.Data != null && (response.Data as string[]).Count() == 0)
+                                                        response.Data = null;
+
+                                                }
+                                            }
+                                        }
+
+                                    }
+                                }
 
 
 

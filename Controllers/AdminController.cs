@@ -14564,7 +14564,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                             System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverPhotoAction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",DriverNo:" + obj.fleetDriver.DriverNo + Environment.NewLine + ", PhotoAction:" + obj.PhotoAction + Environment.NewLine);
                         }
                         catch
-                        {                            
+                        {
                         }
                         objdriver.Current.Fleet_Driver_Images[0].Photo = null;
                     }
@@ -27447,6 +27447,10 @@ SET
                     {
 
                         db.stp_UpdateOnlineJobStatus(obj.Id, Enums.BOOKINGSTATUS.WAITING, "OnlineBooking Accept", "Accept", "Controller");
+                        if (Global.EnableOnlineBookingSMS == "1")
+                        {
+                            SendBookingConfirmationSms(obj.Id);
+                        }
                         if (Global.EnableOnlineBookingEmail == "1")
                         {
                             string subject = "";
@@ -27847,6 +27851,121 @@ SET
             return new CustomJsonResult { Data = response };
         }
 
+
+        public static void SendBookingConfirmationSms(long bookingId)
+        {
+            try
+            {
+                try
+                {
+                    General.WriteLog("SendBookingConfirmationSms", "sending confirmation sms...");
+                }
+                catch {
+                }
+                BookingBO objMaster = new BookingBO();
+                objMaster.GetByPrimaryKey(bookingId);
+                Global.InitializeSMSTags();
+                string msg = HubProcessor.Instance.objPolicy.ConfirmationSMSText.ToStr().Trim();
+                if (!string.IsNullOrEmpty(msg))
+                {
+                    string mobileNo = objMaster.Current.CustomerMobileNo.ToStr().Trim();
+
+                    if (mobileNo.Length > 0)
+                    {
+                        object propertyValue = string.Empty;
+
+                        foreach (var tag in Global.listofSMSTags.Where(c => msg.Contains(c.TagMemberValue)))
+                        {
+                            switch (tag.TagObjectName)
+                            {
+                                case "booking":
+
+                                    if (tag.TagPropertyValue.Contains('.'))
+                                    {
+
+                                        string[] val = tag.TagPropertyValue.Split(new char[] { '.' });
+
+                                        object parentObj = objMaster.Current.GetType().GetProperty(val[0]).GetValue(objMaster.Current, null);
+
+                                        if (parentObj != null)
+                                        {
+                                            propertyValue = parentObj.GetType().GetProperty(val[1]).GetValue(parentObj, null);
+                                        }
+                                        else
+                                            propertyValue = string.Empty;
+
+
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current, null);
+                                    }
+
+
+                                    if (string.IsNullOrEmpty(propertyValue.ToStr()) && !string.IsNullOrEmpty(tag.TagPropertyValue2))
+                                    {
+                                        propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue2).GetValue(objMaster.Current, null);
+                                    }
+                                    break;
+
+
+                                case "Booking_ViaLocations":
+                                    if (tag.TagPropertyValue == "ViaLocValue")
+                                    {
+
+
+                                        string[] VilLocs = null;
+                                        int cnt = 1;
+                                        VilLocs = objMaster.Current.Booking_ViaLocations.Select(c => cnt++.ToStr() + ". " + c.ViaLocValue).ToArray();
+                                        if (VilLocs.Count() > 0)
+                                        {
+
+                                            string Locations = "VIA POINT(s) : \n" + string.Join("\n", VilLocs);
+                                            propertyValue = Locations;
+                                        }
+                                        else
+                                            propertyValue = string.Empty;
+
+                                    }
+                                    break;
+
+
+
+
+                                default:
+
+
+                                    propertyValue = objMaster.Current.Gen_SubCompany.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current.Gen_SubCompany, null);
+
+
+                                    break;
+
+
+
+                            }
+
+
+                            msg = msg.Replace(tag.TagMemberValue,
+                                tag.TagPropertyValuePrefix.ToStr() + string.Format(tag.TagDataFormat, propertyValue) + tag.TagPropertyValueSuffix.ToStr());
+
+                        }
+                        msg.Replace("\n\n", "\n");
+                        HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + mobileNo.Trim() + " = " + msg);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    General.WriteLog("SendBookingConfirmationSms", $"sending confirmation sms failed... exception: {ex.Message}");
+                }
+                catch
+                {
+                }
+            }
+        }
         #endregion
 
         #region Braithwaites invoice report 
