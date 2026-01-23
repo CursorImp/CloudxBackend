@@ -151,9 +151,10 @@ namespace SignalRHub.Controllers
                         }
                     }
                 }
-                catch {
+                catch
+                {
                 }
-                
+
 
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
@@ -348,8 +349,8 @@ namespace SignalRHub.Controllers
                                 objUser.Email,
                                 SessionId = sessionId,
                                 objUser.Id,
-                                SubcompanyLat=SubcompanyCoord.Latitude,
-                                SubcompanyLong=SubcompanyCoord.Longtiude,
+                                SubcompanyLat = SubcompanyCoord.Latitude,
+                                SubcompanyLong = SubcompanyCoord.Longtiude,
                                 objUser.SubcompanyId,
                                 BookingColumns = bookingcolumns,
                                 SysSettings = sysSettings,
@@ -1808,7 +1809,7 @@ WHERE BookingId = {obj.bookingInfo.Id}";
                     {
 
                     }
-                   
+
                     obj.bookingInfo.Status = obj2.BookingStatus.StatusName;
                     if (obj?.bookingInfo?.DriverId > 0)
                     {
@@ -2892,29 +2893,29 @@ WHERE BookingId = {obj.bookingInfo.Id}";
                             objMaster.Current.ReturnPickupDateTime = startDate.ToDate() + objMaster.Current.ReturnPickupDateTime.Value.TimeOfDay;
 
 
-                        }                        
-                            //if (objMaster.Current.Id > 0 && obj.editbookingInfo != null)
-                            //{
-                            //    try
-                            //    {
-                            //        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "EditBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",old pickup:" + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime) + ",new pickup:" + string.Format("{0:dd/MM/yyyy HH:mm}", obj.bookingInfo.PickupDateTime) + Environment.NewLine);
-                            //    }
-                            //    catch
-                            //    {
+                        }
+                        //if (objMaster.Current.Id > 0 && obj.editbookingInfo != null)
+                        //{
+                        //    try
+                        //    {
+                        //        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "EditBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",old pickup:" + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime) + ",new pickup:" + string.Format("{0:dd/MM/yyyy HH:mm}", obj.bookingInfo.PickupDateTime) + Environment.NewLine);
+                        //    }
+                        //    catch
+                        //    {
 
-                            //    }
+                        //    }
 
-                            //    if (obj.editbookingInfo.PickupDateTime != objMaster.Current.PickupDateTime)
-                            //    {
+                        //    if (obj.editbookingInfo.PickupDateTime != objMaster.Current.PickupDateTime)
+                        //    {
 
 
-                            //        objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime), AfterUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", objMaster.Current.PickupDateTime), UpdateDate = DateTime.Now });
+                        //        objMaster.Current.Booking_Logs.Add(new Booking_Log { BookingId = objMaster.Current.Id, User = obj.UserName.ToStr(), BeforeUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", obj.editbookingInfo.PickupDateTime), AfterUpdate = "Pickup Date/Time : " + string.Format("{0:dd/MM/yyyy HH:mm}", objMaster.Current.PickupDateTime), UpdateDate = DateTime.Now });
 
-                            //    }
+                        //    }
 
-                            //}
+                        //}
 
-                            try
+                        try
                         {
                             if (IsAddMode == true && Global.ShowAllocatedInFutureList == "1" && objMaster.Current.DriverId.ToInt() > 0)
                             {
@@ -3139,13 +3140,13 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         }
                         try
                         {
-                            if (obj.bookingInfo.IsSamePaymentType == true && obj.bookingInfo.JourneyTypeId==2)
+                            if (obj.bookingInfo.IsSamePaymentType == true && obj.bookingInfo.JourneyTypeId == 2)
                             {
                                 var master = db.Bookings.FirstOrDefault(x => x.MasterJobId == objMaster.Current.Id);
                                 if (master != null)
                                 {
                                     string query2 = "Update booking set PaymentTypeId= {0} where Id={1}";
-                                    db.ExecuteCommand(query2, obj.bookingInfo.PaymentTypeId,master.Id);
+                                    db.ExecuteCommand(query2, obj.bookingInfo.PaymentTypeId, master.Id);
                                 }
                             }
                         }
@@ -3175,13 +3176,13 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         }
                         try
                         {
-                            if (obj.editbookingInfo != null && obj.editbookingInfo.JourneyTypeId == 2 && Global.AdvancedReturnEditBooking == "true") 
+                            if (obj.editbookingInfo != null && obj.editbookingInfo.JourneyTypeId == 2 && Global.AdvancedReturnEditBooking == "true")
                             {
                                 db.ExecuteQuery<int>("update booking set JourneyTypeId= 2 where Id=" + objMaster.Current.Id);
                             }
                         }
                         catch
-                        {                            
+                        {
                         }
                         try
                         {
@@ -3228,7 +3229,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         try
                         {
                             string query1 = "Update booking set IsFare= {0},disabledriversms ={2},disablepassengersms = {3},JourneyTimeInMins = {4},extramile = {5} where Id={1}";
-                            db.ExecuteCommand(query1, obj.bookingInfo.IsFare, objMaster.Current.Id,obj.bookingInfo.DisableDriverSMS,obj.bookingInfo.DisablePassengerSMS,obj.bookingInfo.JourneyTimeInMins,obj.bookingInfo.ExtraMile);
+                            db.ExecuteCommand(query1, obj.bookingInfo.IsFare, objMaster.Current.Id, obj.bookingInfo.DisableDriverSMS, obj.bookingInfo.DisablePassengerSMS, obj.bookingInfo.JourneyTimeInMins, obj.bookingInfo.ExtraMile);
                             var master = db.Bookings.FirstOrDefault(x => x.MasterJobId == objMaster.Current.Id);
                             if (master != null)
                             {
@@ -3971,7 +3972,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
 
 
-        
+
 
 
         [System.Web.Http.HttpGet]
@@ -4080,7 +4081,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                                 try
                                                 {
                                                     //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_alreadyacceptedthisdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",jobid:" + obj.bookingInfo.Id + ",driverid:" + obj.bookingInfo.DriverId.ToInt() + Environment.NewLine);
-                                                    General.WriteLog("DispatchBooking", "jobid: " + obj.bookingInfo.Id + ", driverid: " + obj.bookingInfo.DriverId.ToInt() );
+                                                    General.WriteLog("DispatchBooking", "jobid: " + obj.bookingInfo.Id + ", driverid: " + obj.bookingInfo.DriverId.ToInt());
                                                 }
                                                 catch
                                                 {
@@ -4537,7 +4538,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         //if (obj.addressInfo.AddressType.ToInt() == 1 && latitude != null && latitude != 0)
                         if (latitude != null && latitude != 0)
                         {
-                            try 
+                            try
                             {
                                 if (obj.addressInfo.IsPickup == 1)
                                 {
@@ -4568,7 +4569,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                             booking
                                         };
                                     var ListofAvailDrvs = query
-    .AsEnumerable() 
+    .AsEnumerable()
     .Where(x =>
         x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
         || (
@@ -4588,7 +4589,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
         x.DriverWorkStatusId
     })
     .ToList();
-                                   
+
                                     var nearestDrivers = ListofAvailDrvs.Select(args => new
                                     {
                                         args.DriverId,
@@ -4755,9 +4756,9 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
         public static int[] GetOptimizedWaypointOrder(
     double pickupLat, double pickupLng,
     double destLat, double destLng,
-    List<(double lat, double lng)> vias,string apiKey)
+    List<(double lat, double lng)> vias, string apiKey)
         {
-          
+
             string origin = $"{pickupLat},{pickupLng}";
             string destination = $"{destLat},{destLng}";
 
@@ -4785,7 +4786,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             }
         }
 
-       
+
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("CalculateRoute")]
@@ -4938,7 +4939,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                     {
 
                     }
-                   
+
                     try
                     {
                         string vias = "";
@@ -4972,7 +4973,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                 routeType = "fastest";
                             }
                         }
-                        
+
                         bool HasDeadMileage = false;
                         if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='HasDeadMileage'").FirstOrDefault().ToStr().Trim() == "true")
                         {
@@ -5081,7 +5082,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             {
 
                             }
-                            
+
 
                             route.fareModel = CalculateFares(obj);
                         }
@@ -5140,7 +5141,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                 route.ReturnDriver = driver;
                             }
                         }
-                        
+
 
 
                         response.Data = route;
@@ -6124,32 +6125,51 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                 //    && (AppVars.keyLocations.Contains(text.Split(new char[] { ' ' })[0])))
                                 //{
                                 //  aTxt.ListBoxElement.Items.Clear();
-                                if (searchValue.Contains(" ") && searchValue.Length < 20 && searchValue.WordCount() == 2 && searchValue.Contains(".") == false)// && searchValue.Strip(' ').IsAlpha() == false)
+                                if (searchValue.Contains(" ") && searchValue.Length < 13 && searchValue.WordCount() == 2 && searchValue.Contains(".") == false && searchValue.Strip(' ').IsAlpha() == false)
                                 {
 
                                     string[] arr = searchValue.Split(new char[] { ' ' });
 
                                     if (arr.Count() == 2)
                                     {
-                                        if (arr[0].IsAlpha())
-                                        {
-                                            string pcode = General.GetPostCodeMatch(arr[1].ToStr().ToUpper());
+                                        response.Data = (from a in db.Gen_Locations.Where(c => c.ShortCutKey == searchValue)
+                                                         select (a.PostCode != string.Empty ? a.LocationName + ", " + a.PostCode : a.LocationName)
+                                          ).ToArray<string>();
 
-                                            if (pcode.ToStr().Length > 0)
-                                            {
-                                                response.Data = (from a in db.Gen_Locations.Where(c => (c.Gen_LocationType.ShortCutKey == arr[0]) && c.PostCode.StartsWith(pcode))
-                                                                 select (a.PostCode != string.Empty ? a.LocationName + ", " + a.PostCode : a.LocationName)
-                                                  ).ToArray<string>();
-
-                                                if (response.Data != null && (response.Data as string[]).Count() == 0)
-                                                    response.Data = null;
-
-                                            }
-                                        }
+                                        if (response.Data != null && (response.Data as string[]).Count() == 0)
+                                            response.Data = null;
                                     }
 
                                 }
 
+                                if (response.Data == null)
+                                {
+                                    if (searchValue.Contains(" ") && searchValue.Length < 20 && searchValue.WordCount() == 2 && searchValue.Contains(".") == false && searchValue.Strip(' ').IsAlpha() == false)
+                                    {
+
+                                        string[] arr = searchValue.Split(new char[] { ' ' });
+
+                                        if (arr.Count() == 2)
+                                        {
+                                            if (arr[0].IsAlpha())
+                                            {
+                                                string pcode = General.GetPostCodeMatch(arr[1].ToStr().ToUpper());
+
+                                                if (pcode.ToStr().Length > 0)
+                                                {
+                                                    response.Data = (from a in db.Gen_Locations.Where(c => (c.Gen_LocationType.ShortCutKey == arr[0]) && c.PostCode.StartsWith(pcode))
+                                                                     select (a.PostCode != string.Empty ? a.LocationName + ", " + a.PostCode : a.LocationName)
+                                                      ).ToArray<string>();
+
+                                                    if (response.Data != null && (response.Data as string[]).Count() == 0)
+                                                        response.Data = null;
+
+                                                }
+                                            }
+                                        }
+
+                                    }
+                                }
 
 
 
@@ -10224,7 +10244,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         }
 
 
-                        var data = new EmailInfo { CustomerMobileNo=obj2.CustomerMobileNo, SubCompanyId = obj2.SubcompanyId.ToInt(), From = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(c => c.SmtpUserName).FirstOrDefault(), Subject = subject, BookingId = obj2.Id, To = obj2.CustomerEmail, IsAccountJob = obj2.CompanyId != null ? true : false, PaymentTypeId = obj2.PaymentTypeId.ToInt() };
+                        var data = new EmailInfo { CustomerMobileNo = obj2.CustomerMobileNo, SubCompanyId = obj2.SubcompanyId.ToInt(), From = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(c => c.SmtpUserName).FirstOrDefault(), Subject = subject, BookingId = obj2.Id, To = obj2.CustomerEmail, IsAccountJob = obj2.CompanyId != null ? true : false, PaymentTypeId = obj2.PaymentTypeId.ToInt() };
                         try
                         {
                             var EnableThirdPartyEmailSetting = false;
@@ -10257,7 +10277,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    General.WriteLog("GetBookingConfirmationDetails_exception", "json:" + new JavaScriptSerializer().Serialize(obj) +  ", Exception: " + ex.Message);
+                    General.WriteLog("GetBookingConfirmationDetails_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
                     //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingConfirmationDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
                 }
                 catch
