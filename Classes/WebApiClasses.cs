@@ -70,7 +70,7 @@ namespace SignalRHub.WebApiClasses
         public string SetKey { get; set; }
         public string SetVal { get; set; }
         public string description { get; set; }
-        public bool IsLogin { get;  set; }
+        public bool IsLogin { get; set; }
     }
     public class ClsOnlineBooking
     {
@@ -94,6 +94,7 @@ namespace SignalRHub.WebApiClasses
         public string ToStreet;
         public int? BookingStatusId { get; set; }
         public int? VehicleTypeId { get; set; }
+        public int? CompanyId { get; set; }
         public int? BookingTypeId;
         public string CompanyName;
         public string VehicleType;
@@ -227,6 +228,7 @@ namespace SignalRHub.WebApiClasses
 
     public class WaitingCurrentHistoryList
     {
+        public long Id { get; set; }
         public string BookingNo { get; set; }
         public DateTime PickupDateTime { get; set; }
         public string FromAddress { get; set; }
@@ -578,6 +580,7 @@ namespace SignalRHub.WebApiClasses
         public string AddLog { get; set; }
         public bool? IsCompanyWise { get; set; }
         public DateTime? PickupDateTime { get; set; }
+        public DateTime? EndDate { get; set; }
         public string PickupDateTimeStr { get; set; }
         public long Id { get; set; }
         public int? FromLocTypeId { get; set; }
@@ -661,6 +664,16 @@ namespace SignalRHub.WebApiClasses
         public int? VehicleTypeIdReturn { get;  set; }
         public int? DriverIdReturn { get;  set; }
         public bool? IsHideJobFromDrivers { get;  set; }
+
+        public long PromotionId { get; set; }       // BIGINT
+        public string PromotionCode { get; set; }   // VARCHAR
+        public decimal? OriginalFare { get; set; }  // DECIMAL
+        public decimal? DiscountedFare { get; set; } // DECIMAL
+        public string PromotionType { get; set; }   // VARCHAR
+        public double? promoValue { get; set; }     // FLOAT
+        public int? Type { get;  set; }
+        public string Status { get;  set; }
+        public bool? IsSamePaymentType { get;  set; }
     }
 
     public class Booking_DriverCommsiion
@@ -966,6 +979,28 @@ namespace SignalRHub.WebApiClasses
         public int totalOnline;
 
     }
+    public class JobPromotions
+    {
+        public long PromotionId;
+        public string PromotionCode;
+        public string PromotionTitle;
+        public string PromotionMessage;
+        public string PromotionStartDateTime;
+        public string PromotionEndDateTime;
+        public int? PromotionTypeID; // 1 percent // 2 Amount
+        public decimal? Charges;
+        public int? Totaljourney;
+        public int? Used;
+        public int? DiscountTypeId;
+        public decimal? MinimumFare;
+        public decimal? MaximumDiscount;
+        public int? JourneyLeft;
+        public string PromotionImageUrl;
+        public int? FreeJourney;
+        public string LoyalityMessage;
+        public int? TotalCompletedJourney;
+        public string ReferralCode;
+    }
 
     public partial class ClsDispatchFares
     {
@@ -1057,16 +1092,9 @@ namespace SignalRHub.WebApiClasses
             set { _DisplayMessage = value; }
         }
 
-
-
-        private string _PromotionDetails;
-
-        public string PromotionDetails
-        {
-            get { return _PromotionDetails; }
-            set { _PromotionDetails = value; }
-        }
-
+        public string PromotionDetails { get; set; }
+        public JobPromotions PromotionDetail { get; set; }
+       
         public ClsDispatchFares()
         {
         }
@@ -1422,6 +1450,7 @@ namespace SignalRHub.WebApiClasses
         public string From { get; set; }
         public string To { get; set; }
         public string CustomerName { get; set; }
+        public string CustomerMobileNo { get; set; }
         public string Subject { get; set; }
         public string MessageBody { get; set; }
         public bool HideFares { get; set; }
@@ -1455,6 +1484,7 @@ namespace SignalRHub.WebApiClasses
 
     public class RequestWebApi
     {
+        public int? RecordingId { get; set; }
         public List<int> AdvanceBookingIds { get; set; }
         public bool? AllocateAnyDriver { get; set; }
         public bool? HasReturnBooking { get; set; }
@@ -1488,7 +1518,8 @@ namespace SignalRHub.WebApiClasses
         public ClsAutoDispatchInfo autoDispatchInfo { get; set; }
 
 
-        public AdvanceBookingInfo advancebookingInfo { get; set; }
+        public List<AdvanceBookingInfo> advancebookingInfo { get; set; }
+        public List<AdvanceBookingInfo> advancebookingInfoReturn { get; set; }
         public DateTime? ScheduleDateTime { get; set; }
         public DateTime? DelayedDateTime { get; set; }
         public string ArrivalTerminal { get; set; }
@@ -1540,13 +1571,13 @@ namespace SignalRHub.WebApiClasses
         public long? AdvanceBookingId { get; set; }
         public List<long> Ids { get; set; }
 
-        public AdvanceBookingInfo BookingReturn { get; set; }
+        public List<AdvanceBookingInfo> BookingReturn { get; set; }
 
 
         public decimal? FareRate { get; set; }
         public decimal? CompanyPrice { get; set; }
         public int? PaymentTypeId { get; set; }
-        //  public string SpecialRequirements { get; set; }
+        public string SpecialRequirements { get; set; }
         public string FromAddress { get; set; }
         public string ToAddress { get; set; }
         //   public string FromPostCode { get; set; }
@@ -1589,8 +1620,15 @@ namespace SignalRHub.WebApiClasses
         public long? DepartmentId { get; set; }
 
         public int? DriverId { get; set; }
-        public DateTime? ReturnPickupDateTime { get;  set; }
+        public DateTime? ReturnPickupDateTime { get; set; }
         public List<ClsBooking_ViaLocation> Booking_ViaLocations { get; set; }
+        public int? LeadTime { get; set; }
+        public int? IsQuotedPrice { get; set; }
+        public string PickupNotes { get; set; }
+        public string PickupZoneName { get; set; }
+        public string DestinationZoneName { get; set; }
+        public int? IsSuspend { get; set; }
+        public string IsSuspend_Str { get; set; }
     }
 
     public class AuthInfo
@@ -1788,6 +1826,7 @@ namespace SignalRHub.WebApiClasses
         public bool? AutoCalculateFares { get; set; }
         public decimal Distance;
         public bool HasDeadMileage;
+        public bool? HasOptimizeRoute { get; set; }
         public int Duration;
         public string unit;
         public string currency;
@@ -1795,14 +1834,20 @@ namespace SignalRHub.WebApiClasses
         public int Noofhours { get; set; }
         public int? PaymentTypeId { get; set; }
         public int FareCalculationSetting { get; set; }
-       
+
 
         public List<RouteLeg> legs;
 
         public int? JourneyTypeId { get; set; }
+        public int? CustomerId { get; set; }
         public int? SubCompanyId { get; set; }
         public int DriverId { get;  set; }
         public int? ReturnDriverId { get;  set; }
+        public string PromotionCode { get;  set; }
+        public string CustomerName { get;  set; }
+        public string MobileNo { get;  set; }
+        public string TelephoneNo { get;  set; }
+        public string RouteType { get;  set; }
     }
     public class FareSettings
     {
@@ -1837,6 +1882,8 @@ namespace SignalRHub.WebApiClasses
 
         public Fleet_Driver Driver;
         public Fleet_Driver ReturnDriver;
+        public List<AddressInfo> viaAddresses { get; set; }
+        public int? CustomerId { get;  set; }
     }
 
 
@@ -1901,6 +1948,7 @@ namespace SignalRHub.WebApiClasses
 
         private System.Nullable<int> _DriverId;
         private System.Nullable<int> _VehicleTypeId;
+        private System.Nullable<int> _CompanyId;
 
         private string _Vehicle;
 
@@ -2007,7 +2055,7 @@ namespace SignalRHub.WebApiClasses
                 }
             }
         }
-         [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_SpecialReq", DbType = "VarChar(max)")]
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_SpecialReq", DbType = "VarChar(max)")]
         public string SpecialReq
         {
             get
@@ -2274,6 +2322,21 @@ namespace SignalRHub.WebApiClasses
                 if ((this._VehicleTypeId != value))
                 {
                     this._VehicleTypeId = value;
+                }
+            }
+        }
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_CompanyId", DbType = "Int")]
+        public System.Nullable<int> CompanyId
+        {
+            get
+            {
+                return this._CompanyId;
+            }
+            set
+            {
+                if ((this._CompanyId != value))
+                {
+                    this._CompanyId = value;
                 }
             }
         }
@@ -2583,8 +2646,16 @@ namespace SignalRHub.WebApiClasses
         }
         public int? Pax { get; set; }
         public string BookingTypeName { get; set; }
-
+        public int? Vias { get; set; }
     }
 
+    public class FormUserDefinedSettingsVM
+    {
+        public int Id { get; set; }
+        public bool IsVisible { get; set; }
+        public int GridColMoveTo { get; set; }
+
+        public string HeaderText { get; set; }
+    }
 
 }

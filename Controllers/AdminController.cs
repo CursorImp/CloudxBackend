@@ -561,10 +561,10 @@ namespace SignalRHub.Controllers
                 //
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-            
+
 
                     int? Id = obj.fleetDriver.Id;
-                   
+
 
                     var objQueue = db.Fleet_DriverQueueLists.Where(a => a.DriverId == Id && a.Status == true).OrderByDescending(c => c.Id).FirstOrDefault();
 
@@ -572,7 +572,7 @@ namespace SignalRHub.Controllers
                     {
                         response.Message = "You can't update pda settings at this time " + Environment.NewLine + "Please Login a Driver before updating it";
                         response.HasError = true;
-                        
+
                         return Json(response, JsonRequestBehavior.AllowGet);
                     }
                     else
@@ -584,9 +584,9 @@ namespace SignalRHub.Controllers
                             {
                                 response.Message = "Driver PDA is not working at the moment! Please Re-Login it or Check pda Internet settings";
                                 response.HasError = true;
-                              
+
                                 return Json(response, JsonRequestBehavior.AllowGet);
-                                                           
+
 
                             }
                         }
@@ -669,7 +669,7 @@ namespace SignalRHub.Controllers
                     }
 
                     DriverPDASettings pda = new DriverPDASettings();
-                    var FleetPDA = db.Fleet_Driver_PDASettings.FirstOrDefault(x => x.DriverId == objMaster.Current.Id);
+                    var FleetPDA = db.Fleet_Driver_PDASettings.FirstOrDefault(x => x.DriverId == Id);
                     pda.Ip = HubProcessor.Instance.objPolicy.ListenerIP.ToStr();
                     pda.DrvId = obj.fleetDriver.Id.ToStr();
                     pda.DrvNo = obj.fleetDriver.DriverNo.ToStr();
@@ -677,10 +677,10 @@ namespace SignalRHub.Controllers
                     pda.VehType = obj.fleetDriver.Fleet_VehicleType.VehicleType.ToStr().ToUpper();
                     pda.ShowCompletedJobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCompletedJob == true ? "1" : "0";
                     pda.DisableJobAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares == true ? "1" : "0";
-                    pda.EnableBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding == true ? "1" : "0"; 
-                    pda.ShowPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlots == true ? "1" : "0"; 
-                    pda.JobTimeout = obj.fleetDriver.Fleet_Driver_PDASettings[0].JobTimeOutInterval.ToString(); 
-                    pda.SoundOnZoneChange = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnZoneChange.ToBool() ? "1" : "0"; 
+                    pda.EnableBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding == true ? "1" : "0";
+                    pda.ShowPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlots == true ? "1" : "0";
+                    pda.JobTimeout = obj.fleetDriver.Fleet_Driver_PDASettings[0].JobTimeOutInterval.ToString();
+                    pda.SoundOnZoneChange = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnZoneChange.ToBool() ? "1" : "0";
                     pda.MessageStayOnScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen == true ? "1" : "0";
                     pda.EnableCompanyCars = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen == true ? "1" : "0";
                     pda.EnableFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeter == true ? "1" : "0";
@@ -689,33 +689,33 @@ namespace SignalRHub.Controllers
                     pda.NavigationType = navigationApp;
                     pda.EnableFlagDown = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFlagDown == true ? "1" : "0";
                     pda.DisablePanic = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisablePanicButton.ToBool() ? "1" : "0";
-                    pda.DisableRank = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableDriverRank.ToBool() ? "1" : "0"; 
+                    pda.DisableRank = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableDriverRank.ToBool() ? "1" : "0";
                     pda.MeterVoice = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterVoice.ToBool() ? "1" : "0";
-                    pda.DisableChangeJobPlot = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots.ToBool() ? "1" : "0"; 
-                    pda.EnableJ15Jobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJ15J30Jobs.ToBool() ? "1" : "0";  
+                    pda.DisableChangeJobPlot = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots.ToBool() ? "1" : "0";
+                    pda.EnableJ15Jobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJ15J30Jobs.ToBool() ? "1" : "0";
                     pda.EnableLogoutAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableLogoutAuthorization.ToBool() ? "1" : "0";
                     pda.EnableIgnoreArrive = obj.fleetDriver.Fleet_Driver_PDASettings[0].IgnoreArriveAction.ToBool() ? "1" : "0";
                     pda.DisableMeterForAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareMeterOnAccJob == true ? "1" : "0";
                     pda.EnableCallCustomer = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableCallCustomer == true ? "1" : "0";
-                    pda.EnableRecoverJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableRecoverJob == true ? "1" : "0";  
+                    pda.EnableRecoverJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableRecoverJob == true ? "1" : "0";
                     pda.EnableMeterWaitingCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterWaitingCharges == true ? "1" : "0";
-                    pda.DisableBase = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableBase == true ? "1" : "0";   
-                    pda.DisableBreak = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableOnBreak == true ? "1" : "0";  
-                    pda.DisableRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJob == true ? "1" : "0";  
+                    pda.DisableBase = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableBase == true ? "1" : "0";
+                    pda.DisableBreak = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableOnBreak == true ? "1" : "0";
+                    pda.DisableRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJob == true ? "1" : "0";
                     pda.DisableChangeDest = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeDestination == true ? "1" : "0";
                     pda.DisableChangeDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeDestination == true ? "1" : "0";
                     pda.DisableNoPickup = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableNoPickup == true ? "1" : "0";
-                    pda.ShowSpecialReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront == true ? "1" : "0";  
-                    pda.ShowSpecReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront == true ? "1" : "0";  
-                    pda.DisableFareOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareOnAccJob == true ? "1" : "0";  
-                    pda.DisableSTC = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSTC == true ? "1" : "0"; 
-                    pda.NotifyOnJobLate = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnJobLate == true ? "1" : "0"; 
-                    pda.EnableAutoRotate = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen == true ? "1" : "0";  
-                    pda.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen == true ? "1" : "0";  
-                    pda.ShowPlotOnOffer = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlotOnJobOffer == true ? "1" : "0";  
+                    pda.ShowSpecialReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront == true ? "1" : "0";
+                    pda.ShowSpecReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront == true ? "1" : "0";
+                    pda.DisableFareOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareOnAccJob == true ? "1" : "0";
+                    pda.DisableSTC = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSTC == true ? "1" : "0";
+                    pda.NotifyOnJobLate = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnJobLate == true ? "1" : "0";
+                    pda.EnableAutoRotate = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen == true ? "1" : "0";
+                    pda.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen == true ? "1" : "0";
+                    pda.ShowPlotOnOffer = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlotOnJobOffer == true ? "1" : "0";
                     pda.showDestAfterPob = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowDestinationAfterPOB == true ? "1" : "0";
-                    pda.OnBreakDur = obj.fleetDriver.Fleet_Driver_PDASettings[0].BreakTime.ToStr();  
-                    pda.ManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares == true ? "1" : "0"; 
+                    pda.OnBreakDur = obj.fleetDriver.Fleet_Driver_PDASettings[0].BreakTime.ToStr();
+                    pda.ManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares == true ? "1" : "0";
                     pda.BiddingType = biddingMessage;
                     pda.FareMeterType = FareMessage;
 
@@ -805,7 +805,7 @@ namespace SignalRHub.Controllers
                     catch
                     {
                     }
-                    
+
                     string json = Newtonsoft.Json.JsonConvert.SerializeObject(pda);
                     contents.Append(json);
 
@@ -861,49 +861,49 @@ namespace SignalRHub.Controllers
                     if (obj.fleetDriver.Fleet_Driver_PDASettings.Count == 0)
                         objdriver.Current.Fleet_Driver_PDASettings.Add(new Fleet_Driver_PDASetting());
                     objPDA = objdriver.Current.Fleet_Driver_PDASettings[0];
-                    objPDA.ShowPlotOnJobOffer = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlotOnJobOffer; 
+                    objPDA.ShowPlotOnJobOffer = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlotOnJobOffer;
                     objPDA.DriverId = objdriver.Current.Id;
-                    objPDA.EnableFareMeterWaitingCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterWaitingCharges; 
+                    objPDA.EnableFareMeterWaitingCharges = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterWaitingCharges;
                     objPDA.EnableRecoverJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableRecoverJob;
-                    objPDA.EnableCallCustomer = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableCallCustomer; 
-                    objPDA.EnableBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding; 
-                    objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen; 
+                    objPDA.EnableCallCustomer = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableCallCustomer;
+                    objPDA.EnableBidding = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableBidding;
+                    objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen;
                     objPDA.EnableFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeter;
-                    objPDA.EnableFlagDown = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFlagDown; 
-                    objPDA.EnableJ15J30Jobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJ15J30Jobs; 
+                    objPDA.EnableFlagDown = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFlagDown;
+                    objPDA.EnableJ15J30Jobs = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableJ15J30Jobs;
                     objPDA.EnableLogoutAuthorization = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableLogoutAuthorization;
-                    objPDA.DisableChangeJobPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots; 
-                    objPDA.BreakTime = obj.fleetDriver.Fleet_Driver_PDASettings[0].BreakTime; 
-                    objPDA.DisableDriverRank = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableDriverRank; 
-                    objPDA.DisablePanicButton = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisablePanicButton; 
-                    objPDA.DisableFareMeterOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareMeterOnAccJob; 
+                    objPDA.DisableChangeJobPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeJobPlots;
+                    objPDA.BreakTime = obj.fleetDriver.Fleet_Driver_PDASettings[0].BreakTime;
+                    objPDA.DisableDriverRank = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableDriverRank;
+                    objPDA.DisablePanicButton = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisablePanicButton;
+                    objPDA.DisableFareMeterOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareMeterOnAccJob;
                     objPDA.NavigationApp = obj.fleetDriver.Fleet_Driver_PDASettings[0].NavigationApp;
                     objPDA.MessageStayOnScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].MessageStayOnScreen;
                     objPDA.ShowCompletedJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCompletedJob;
-                    objPDA.ShowCustomerMobileNo = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCustomerMobileNo; 
+                    objPDA.ShowCustomerMobileNo = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowCustomerMobileNo;
                     objPDA.ShowPlots = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowPlots;
                     objPDA.JobTimeOutInterval = obj.fleetDriver.Fleet_Driver_PDASettings[0].JobTimeOutInterval;
                     objPDA.NotifyOnZoneChange = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnZoneChange;
                     objPDA.HasCompanyCars = obj.fleetDriver.Fleet_Driver_PDASettings[0].HasCompanyCars;
-                    objPDA.IgnoreArriveAction = obj.fleetDriver.Fleet_Driver_PDASettings[0].IgnoreArriveAction; 
+                    objPDA.IgnoreArriveAction = obj.fleetDriver.Fleet_Driver_PDASettings[0].IgnoreArriveAction;
                     //objPDA.HidePickAndDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickAndDestination.ToBool();
-                    objPDA.NotifyOnJobLate = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnJobLate; 
-                    objPDA.OptionalFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].OptionalFareMeter; 
+                    objPDA.NotifyOnJobLate = obj.fleetDriver.Fleet_Driver_PDASettings[0].NotifyOnJobLate;
+                    objPDA.OptionalFareMeter = obj.fleetDriver.Fleet_Driver_PDASettings[0].OptionalFareMeter;
                     objPDA.DisableOnBreak = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableOnBreak;
-                    objPDA.DisableBase = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableBase; 
+                    objPDA.DisableBase = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableBase;
                     objPDA.DisableRejectJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJob;
-                    objPDA.DisableChangeDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeDestination; 
-                    objPDA.DisableRejectJobAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJobAuth; 
+                    objPDA.DisableChangeDestination = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableChangeDestination;
+                    objPDA.DisableRejectJobAuth = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableRejectJobAuth;
                     objPDA.DisableFareOnAccJob = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableFareOnAccJob;
-                    objPDA.DisableSTC = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSTC; 
-                    objPDA.DisableNoPickup = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableNoPickup; 
-                    objPDA.ShowSpecReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront; 
-                    objPDA.EnableManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares; 
+                    objPDA.DisableSTC = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableSTC;
+                    objPDA.DisableNoPickup = obj.fleetDriver.Fleet_Driver_PDASettings[0].DisableNoPickup;
+                    objPDA.ShowSpecReqOnFront = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowSpecReqOnFront;
+                    objPDA.EnableManualFares = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableManualFares;
                     objPDA.EnableFareMeterVoice = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableFareMeterVoice;
-                    objPDA.ShowDestinationAfterPOB = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowDestinationAfterPOB; 
-                    objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen; 
-                    objPDA.BiddingType = biddingMessage; 
-                    objPDA.FareMeterType = FareMessage; 
+                    objPDA.ShowDestinationAfterPOB = obj.fleetDriver.Fleet_Driver_PDASettings[0].ShowDestinationAfterPOB;
+                    objPDA.EnableAutoRotateScreen = obj.fleetDriver.Fleet_Driver_PDASettings[0].EnableAutoRotateScreen;
+                    objPDA.BiddingType = biddingMessage;
+                    objPDA.FareMeterType = FareMessage;
                     //if (obj.fleetDriver.Fleet_Driver_PDASettings[0].HidePickAndDestination.ToBool())
                     //{
                     //    if (obj.fleetDriver.Fleet_Driver_PDASettings[0].OldPdaVersion.ToInt() == 1)
@@ -10265,7 +10265,7 @@ namespace SignalRHub.Controllers
             List<Attachment> attachments = new List<Attachment>();
             attachments.Add(pdfAttachment);
             ClsEmail Email = new ClsEmail();
-            ClsEmail.Send(EmailSubject, body, from, ToEmail, attachments, objSubcompany,"", obj.isInvoiceOrStatement);
+            ClsEmail.Send(EmailSubject, body, from, ToEmail, attachments, objSubcompany, "", obj.isInvoiceOrStatement);
             try
             {
                 using (TaxiDataContext db = new TaxiDataContext())
@@ -14557,6 +14557,17 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         catch { }
                         // }
                     }
+                    else if (obj.PhotoAction == "remove")
+                    {
+                        try
+                        {
+                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverPhotoAction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",DriverNo:" + obj.fleetDriver.DriverNo + Environment.NewLine + ", PhotoAction:" + obj.PhotoAction + Environment.NewLine);
+                        }
+                        catch
+                        {
+                        }
+                        objdriver.Current.Fleet_Driver_Images[0].Photo = null;
+                    }
                     if (Documents != null)
                     {
                         foreach (var item in Documents)
@@ -14972,7 +14983,23 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
 
                     objdriver.Save();
-                    //db.SubmitChanges();
+                    //db.SubmitChanges()
+                    //
+                    //;
+
+                    try
+                    {
+                        if (obj.VehiclePlateNo != null)
+                        {
+                            db.ExecuteQuery<int>(@"UPDATE Fleet_Driver SET VehiclePlateNo = {0} WHERE Id = {1}",
+                                                         obj.VehiclePlateNo, objdriver.Current.Id);
+                        }
+
+                    }
+                    catch
+                    {
+
+                    }
                     try
                     {
                         if (VehicleLogBookDocument_TemNameStore != null)
@@ -20569,7 +20596,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
 
                     DriverBO objMaster = new DriverBO();
-                    
+
                     for (int i = 0; i < list2.Count; i++)
                     {
                         StringBuilder contents = new StringBuilder();
@@ -20601,7 +20628,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         }
 
                         decimal version = list2[i].PDAVersion.ToDecimal();//0.00m;
-                        
+
                         //please check logic below
                         var policy = db.Gen_SysPolicy_Configurations.Where(m => m.SysPolicyId == 1).FirstOrDefault();
                         if (objPda.EnableBidding == true)
@@ -20622,7 +20649,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
                         }
 
-                       
+
                         if (objPda.EnableFareMeter == true)
                         {
 
@@ -20742,9 +20769,9 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         pda.HidePickupAndDest = FleetPDA.HidePickAndDestination.ToStr();
                         pda.EnableOptMeter = "0";
                         pda.OptionalFareMeter = ((FleetPDA.OptionalFareMeter.ToBool() ? "1" : "0"));
-                        pda.DrvWaitingMins =drvWaitingCharges.ToString();
-                        pda.AccWaitingMins =drvAccWaitingCharges.ToString();
-                        pda.FontSize ="20";
+                        pda.DrvWaitingMins = drvWaitingCharges.ToString();
+                        pda.AccWaitingMins = drvAccWaitingCharges.ToString();
+                        pda.FontSize = "20";
                         pda.EnablePriceBid = ((FleetPDA.EnablePriceBidding.ToBool() ? "1" : "0"));
 
 
@@ -20784,7 +20811,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         updateBulkSettingNotifyOnPDA(contents.ToStr(), objMaster.Current.Id);
 
                     }
-                   
+
 
                 }
                 using (TaxiDataContext db = new TaxiDataContext())
@@ -20852,19 +20879,19 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     //}
                     //else
                     //    objSavedSettings.OldPdaVersion = 0;
-                    
+
 
                     if (objSavedSettings.Id == 0)
                     {
                         db.Gen_SysPolicy_PDASettings.InsertOnSubmit(objSavedSettings);
 
                     }
-                    
+
                     db.SubmitChanges();
                     var query = @"
 UPDATE Gen_SysPolicy_PDASettings
 SET
-    ShowDestinationAfterPOB = " + (obj.ShowDestinationAfterPOB==true ? "1" : "0");
+    ShowDestinationAfterPOB = " + (obj.ShowDestinationAfterPOB == true ? "1" : "0");
 
                     db.ExecuteQuery<int>(query);
 
@@ -20884,49 +20911,49 @@ SET
         {
             try
             {
-                if (!string.IsNullOrEmpty(contents) && driverid>0)
+                if (!string.IsNullOrEmpty(contents) && driverid > 0)
                 {
                     //var objDriverList = new TaxiDataContext().ExecuteQuery<int>("Select DriverId from Fleet_DriverQueueList where Status=1 where driverid="+ driverid).ToList();
 
-                  
+
+                    try
+                    {
+
+
                         try
                         {
-                          
-                               
-                                try
-                                {
-                                    HubProcessor.Instance.listofJobs.Add(new clsPDA
-                                    {
+                            HubProcessor.Instance.listofJobs.Add(new clsPDA
+                            {
 
-                                        DriverId = driverid,
-                                        JobId = 0,
-                                        MessageDateTime = DateTime.Now.AddSeconds(-50),
-                                        JobMessage = contents.ToStr(),
-                                        MessageTypeId = 12
-                                    });
+                                DriverId = driverid,
+                                JobId = 0,
+                                MessageDateTime = DateTime.Now.AddSeconds(-50),
+                                JobMessage = contents.ToStr(),
+                                MessageTypeId = 12
+                            });
 
-                                }
-                                catch
-                                {
-
-                                }
-                                //
-                                //
-                                SocketIO.SendToSocket(driverid.ToStr(), contents.ToStr(), "updateSetting");
-
-                                try
-                                {
-                                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverbtnUpdateSetting1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverid + ",contents:" + contents + Environment.NewLine);
-                                }
-                                catch
-                                {
-                                }
-                            
                         }
                         catch
                         {
 
                         }
+                        //
+                        //
+                        SocketIO.SendToSocket(driverid.ToStr(), contents.ToStr(), "updateSetting");
+
+                        try
+                        {
+                            System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverbtnUpdateSetting1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverid + ",contents:" + contents + Environment.NewLine);
+                        }
+                        catch
+                        {
+                        }
+
+                    }
+                    catch
+                    {
+
+                    }
 
 
                 }
@@ -21035,7 +21062,7 @@ SET
                                                 DriverNo = g.Key.DriverNo,
                                                 CurrentPdaVersion = g.FirstOrDefault().b.CurrentPdaVersion
                                             };
-              
+
                     //var PDASettings = General.GetObject<Gen_SysPolicy_PDASetting>(c => c.Id > 0);
                     //var PDALoggedinDriversList = (from a in db.GetTable<Fleet_DriverQueueList>()
                     //            where a.Status != null && a.Status == true && a.Fleet_Driver.HasPDA == true
@@ -21592,7 +21619,7 @@ SET
 
                     }
                 }
-                
+
 
                 response.Data = new { Message = "Messages sent successfully" };
             }
@@ -26797,7 +26824,7 @@ SET
                         string trimmedPhoneNumber = phoneNumber.Trim();
                         if (!string.IsNullOrEmpty(trimmedPhoneNumber))
                         {
-                            General.AddSMS(trimmedPhoneNumber, $"request pda=0=0=Message>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}", 1);
+                            General.AddSMS(trimmedPhoneNumber, $"{msg}", 1);
                         }
 
                         using (TaxiDataContext db = new TaxiDataContext())
@@ -26823,28 +26850,42 @@ SET
             }
             return Json(response, JsonRequestBehavior.AllowGet);
         }
-        //[System.Web.Http.HttpGet]
-        //[System.Web.Http.HttpPost]
-        //[System.Web.Http.Route("SendPushNotification")]
-        //public async Task<JsonResult> SendPushNotification([FromBody] PushNotificationRequest request)
-        //{
-        //    var response = new ResponseAdminApi();
-        //    try
-        //    {
-        //        foreach (var token in request.Tokens)
-        //        {
-        //            await FcmNotification.SendNotificationAsync(request.Title, request.Message, token);
-        //        }
-        //        response.HasError = false;
-        //        response.Message = "Notifications sent successfully.";
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        response.HasError = true;
-        //        response.Message = "Error while sending notifications: " + ex.Message;
-        //    }
-        //    return Json(response, JsonRequestBehavior.AllowGet);
-        //}
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendPushNotification")]
+        public async Task<JsonResult> SendPushNotification([FromBody] PushNotificationRequest request)
+        {
+            var response = new ResponseAdminApi();
+            try
+            {
+                General.WriteLog("SendPushNotification", "json: " + new JavaScriptSerializer().Serialize(request));
+            }
+            catch
+            {
+            }
+            try
+            {
+                foreach (var token in request.Tokens)
+                {
+                    await FcmNotification.SendNotificationAsync(request.Title, request.Message, token);
+                }
+                response.HasError = false;
+                response.Message = "Notifications sent successfully.";
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    General.WriteLog("SendPushNotification_exception", "json:" + new JavaScriptSerializer().Serialize(request) + ", Exception: " + ex.Message);
+                }
+                catch
+                {
+                }
+                response.HasError = true;
+                response.Message = "Error while sending notifications: " + ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
 
 
         [System.Web.Http.HttpGet]
@@ -27324,14 +27365,15 @@ SET
                             join c in db.Gen_Companies on a.CompanyId equals c.Id into table2
                             from c in table2.DefaultIfEmpty()
                             join v in db.Fleet_VehicleTypes on a.VehicleTypeId equals v.Id
-                            
+
                             where a.BookingStatusId == Enums.BOOKINGSTATUS.WAITING_WEBBOOKING
                             && (a.BookingTypeId == Enums.BOOKING_TYPES.ONLINE || a.BookingTypeId == Enums.BOOKING_TYPES.WEB || a.BookingTypeId == 11)
 
                             select new WebApiClasses.ClsOnlineBooking
                             {
                                 Id = a.Id,
-                                VehicleTypeId=a.VehicleTypeId,
+                                VehicleTypeId = a.VehicleTypeId,
+                                CompanyId = a.CompanyId,
                                 BookingNo = a.BookingNo,
                                 BookingDate = a.BookingDate,
                                 //BookingDateString = a.BookingDate.HasValue ? "" : a.BookingDate.Value.ToString("dd-MMM-yyyy"),
@@ -27405,6 +27447,10 @@ SET
                     {
 
                         db.stp_UpdateOnlineJobStatus(obj.Id, Enums.BOOKINGSTATUS.WAITING, "OnlineBooking Accept", "Accept", "Controller");
+                        if (Global.EnableOnlineBookingSMS == "1")
+                        {
+                            SendBookingConfirmationSms(obj.Id);
+                        }
                         if (Global.EnableOnlineBookingEmail == "1")
                         {
                             string subject = "";
@@ -27805,6 +27851,121 @@ SET
             return new CustomJsonResult { Data = response };
         }
 
+
+        public static void SendBookingConfirmationSms(long bookingId)
+        {
+            try
+            {
+                try
+                {
+                    General.WriteLog("SendBookingConfirmationSms", "sending confirmation sms...");
+                }
+                catch {
+                }
+                BookingBO objMaster = new BookingBO();
+                objMaster.GetByPrimaryKey(bookingId);
+                Global.InitializeSMSTags();
+                string msg = HubProcessor.Instance.objPolicy.ConfirmationSMSText.ToStr().Trim();
+                if (!string.IsNullOrEmpty(msg))
+                {
+                    string mobileNo = objMaster.Current.CustomerMobileNo.ToStr().Trim();
+
+                    if (mobileNo.Length > 0)
+                    {
+                        object propertyValue = string.Empty;
+
+                        foreach (var tag in Global.listofSMSTags.Where(c => msg.Contains(c.TagMemberValue)))
+                        {
+                            switch (tag.TagObjectName)
+                            {
+                                case "booking":
+
+                                    if (tag.TagPropertyValue.Contains('.'))
+                                    {
+
+                                        string[] val = tag.TagPropertyValue.Split(new char[] { '.' });
+
+                                        object parentObj = objMaster.Current.GetType().GetProperty(val[0]).GetValue(objMaster.Current, null);
+
+                                        if (parentObj != null)
+                                        {
+                                            propertyValue = parentObj.GetType().GetProperty(val[1]).GetValue(parentObj, null);
+                                        }
+                                        else
+                                            propertyValue = string.Empty;
+
+
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current, null);
+                                    }
+
+
+                                    if (string.IsNullOrEmpty(propertyValue.ToStr()) && !string.IsNullOrEmpty(tag.TagPropertyValue2))
+                                    {
+                                        propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue2).GetValue(objMaster.Current, null);
+                                    }
+                                    break;
+
+
+                                case "Booking_ViaLocations":
+                                    if (tag.TagPropertyValue == "ViaLocValue")
+                                    {
+
+
+                                        string[] VilLocs = null;
+                                        int cnt = 1;
+                                        VilLocs = objMaster.Current.Booking_ViaLocations.Select(c => cnt++.ToStr() + ". " + c.ViaLocValue).ToArray();
+                                        if (VilLocs.Count() > 0)
+                                        {
+
+                                            string Locations = "VIA POINT(s) : \n" + string.Join("\n", VilLocs);
+                                            propertyValue = Locations;
+                                        }
+                                        else
+                                            propertyValue = string.Empty;
+
+                                    }
+                                    break;
+
+
+
+
+                                default:
+
+
+                                    propertyValue = objMaster.Current.Gen_SubCompany.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current.Gen_SubCompany, null);
+
+
+                                    break;
+
+
+
+                            }
+
+
+                            msg = msg.Replace(tag.TagMemberValue,
+                                tag.TagPropertyValuePrefix.ToStr() + string.Format(tag.TagDataFormat, propertyValue) + tag.TagPropertyValueSuffix.ToStr());
+
+                        }
+                        msg.Replace("\n\n", "\n");
+                        HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + mobileNo.Trim() + " = " + msg);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    General.WriteLog("SendBookingConfirmationSms", $"sending confirmation sms failed... exception: {ex.Message}");
+                }
+                catch
+                {
+                }
+            }
+        }
         #endregion
 
         #region Braithwaites invoice report 

@@ -3,7 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using System.Web;
+using FirebaseAdmin.Messaging;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Taxi_Model;
 
 namespace SignalRHub.Classes
@@ -345,7 +349,7 @@ namespace SignalRHub.Classes
     public class AdminApi
     {
         public decimal? SubCompanyBookingFees { get; set; }
-
+        public string PhotoAction { get; set; }
         public int pageNumber { get; set; }
         public int pageSize { get; set; }
         public string searchTerm { get; set; }
@@ -590,6 +594,7 @@ namespace SignalRHub.Classes
         public int[] ControllerIds { get; set; }
         public bool? ShowDestinationAfterPOB { get;  set; }
         public bool? EnableDriverConnect { get;  set; }
+        public string VehiclePlateNo { get;  set; }
     }
     public class FareDto
     {
@@ -2468,5 +2473,71 @@ namespace SignalRHub.Classes
         public int? CompletedCashTotal { get; set; } // Nullable Decimal
         public int? CompletedCardTotal { get; set; } // Nullable Decimal
         public int RejectedJobs { get; set; }
+    }
+    public class FCMPushNotificationModel
+    {
+        public bool Successful { get; set; }
+        public string Response { get; set; }
+        public Exception Error { get; set; }
+
+        public string SenderId { get; set; }
+        public string ServerKey { get; set; }
+
+    }
+
+    public class FcmNotification
+    {
+        private static FirebaseApp _firebaseApp;        
+        public static void InitializeFirebase()
+        {
+            if (_firebaseApp == null)
+            {
+
+                string startupPath = Path.Combine("~/", "FCM-Credentials.json");
+                // put json file in the bin\debug folder otherwise uncomment the below line 
+                //Directory.SetCurrentDirectory(Path.Combine(startupPath, @"..\..\"));
+                string path = HttpContext.Current.Server.MapPath(startupPath);
+
+
+                _firebaseApp = FirebaseApp.Create(new AppOptions()
+                {
+                    Credential = GoogleCredential.FromFile(path)
+                });
+            }
+        }
+
+        public static async Task SendNotificationAsync(string title, string body, string token)
+        {
+            // Ensure Firebase SDK is initialized
+            InitializeFirebase();
+
+            // Build the message
+            var message = new FirebaseAdmin.Messaging.Message()
+            {
+                Token = token,
+                Data = new Dictionary<string, string>
+                {
+                    { "mutable-content", "1" },                    
+                    { "sound", "notification_sound" }
+                },
+                Notification = new FirebaseAdmin.Messaging.Notification
+                {
+                    Title = title,
+                    Body = body,
+                },
+            };
+
+            try
+            {
+                string response = await FirebaseMessaging.DefaultInstance.SendAsync(message);
+                Console.WriteLine("Successfully sent message: " + response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error sending message: " + ex.Message);
+            }
+        }
+
+        
     }
 }

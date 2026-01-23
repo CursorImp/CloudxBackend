@@ -137,5 +137,6 @@ namespace SignalRHub
         public bool? IsHideJobFromDrivers { get; set; }
         public string BookingTypeName { get; set; }
         public string OrderNo { get; set; }
+        public int? ZoneId { get; set; }
     }
 }

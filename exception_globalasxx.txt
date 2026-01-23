@@ -11,3 +11,12 @@
 10/2/2025 8:03:32 PMException has been thrown by the target of an invocation.
 10/9/2025 7:34:54 PMException has been thrown by the target of an invocation.
 10/23/2025 11:06:54 PMA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The network location cannot be reached. For information about network troubleshooting, see Windows Help.)
+25/11/2025 6:33:27 pmA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The network location cannot be reached. For information about network troubleshooting, see Windows Help.)
+05/12/2025 8:52:17 pmException has been thrown by the target of an invocation.
+05/12/2025 8:56:51 pmException has been thrown by the target of an invocation.
+05/12/2025 8:57:30 pmException has been thrown by the target of an invocation.
+05/12/2025 8:59:25 pmException has been thrown by the target of an invocation.
+05/12/2025 9:02:35 pmException has been thrown by the target of an invocation.
+05/12/2025 9:04:17 pmException has been thrown by the target of an invocation.
+05/12/2025 9:22:43 pmException has been thrown by the target of an invocation.
+05/12/2025 9:23:12 pmException has been thrown by the target of an invocation.

@@ -5456,6 +5456,9 @@ namespace SignalRHub
                             }
                             else if (!string.IsNullOrEmpty(gatewayName) && (gatewayName.ToLower().Trim() == "konnectpay" || item.PaymentGatewayId == 15))
                             {
+                               
+
+
                                 long jobId = input.jobId.ToLong();
                                 Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == jobId);
                                 int SubcompanyId = 1;
@@ -5466,7 +5469,8 @@ namespace SignalRHub
                                     try
                                     {
                                         makePaymentResponse.KonnectAccId = CheckKonnectConfig?.PaypalID.ToStr();
-
+                                        string DriverAccountID = GetDriverAccountIDKp(input.driverId.ToLong());
+                                        if (!string.IsNullOrEmpty(DriverAccountID)) { makePaymentResponse.KonnectAccId = DriverAccountID; }
                                     }
                                     catch { }
 
@@ -6676,7 +6680,8 @@ namespace SignalRHub
                     string StripeCountryId = obj.ApplicationId;
                     string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
 
-
+                    string DriverAccountID = GetDriverAccountIDKp(DriverID);
+                    if (!string.IsNullOrEmpty(DriverAccountID)) { StripeAccountId = DriverAccountID; }
 
                     if (!string.IsNullOrEmpty(StripeAccountId) && !string.IsNullOrEmpty(StripeCountryId))
                     {
@@ -6849,7 +6854,8 @@ namespace SignalRHub
 
                     if (objBooking != null && paymentGateway != null)
                     {
-
+                        string DriverAccountID = GetDriverAccountIDKp(Convert.ToInt64(objBooking?.DriverId));
+                        if (!string.IsNullOrEmpty(DriverAccountID)) { paymentGateway.PaypalID = DriverAccountID; }
                         resp = CreatePaymentLinkKonnectPay(paymentGateway, objBooking, input.sendType, input.mobileno, input.email, Price);
 
                     }
@@ -7054,6 +7060,8 @@ namespace SignalRHub
                     bool? IsMoto = input.IsMoto != null ? input.IsMoto : false;
                     if (objBooking != null && paymentGateway != null)
                     {
+                        string DriverAccountID = GetDriverAccountIDKp(Convert.ToInt64(objBooking?.DriverId));
+                        if (!string.IsNullOrEmpty(DriverAccountID)) { paymentGateway.PaypalID = DriverAccountID; }
                         if (!string.IsNullOrEmpty(input.serialnumber) && input.serialnumber.ToLower().Contains("terminal"))
                         {
                             StripeTerminalDTO StripeTerminals = GetTerminalList(paymentGateway.PaypalID, paymentGateway.ApplicationId, StripeAPIBaseURL);
@@ -7265,7 +7273,8 @@ namespace SignalRHub
 
                     if (objBooking != null && paymentGateway != null)
                     {
-
+                        string DriverAccountID = GetDriverAccountIDKp(Convert.ToInt64(objBooking?.DriverId));
+                        if (!string.IsNullOrEmpty(DriverAccountID)) { paymentGateway.PaypalID = DriverAccountID; }
                         resp = GetPaymentLinkKonnectPay(paymentGateway, objBooking, Price, false);
                         if (resp != null && resp.IsSuccess && !string.IsNullOrEmpty(resp.Data))
                         {
@@ -8844,7 +8853,7 @@ namespace SignalRHub
 
                         string postedFrom = string.Empty;
 
-
+                        var enableJ1530Jobs = db.Gen_SysPolicy_PDASettings.FirstOrDefault().EnableJ15J30Jobs;
 
 
                         var result = db.stp_GetAreaPlotsByVehicle(driverId, Instance.objPolicy.PlotsJobExpiryValue1, Instance.objPolicy.PlotsJobExpiryValue2).ToList();
@@ -9035,8 +9044,12 @@ namespace SignalRHub
                                     item2.Distance = 0.0;
                                 }
                                 else
-                                    list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
-
+                                {
+                                    if (enableJ1530Jobs != false)
+                                    {
+                                        list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = 0.0 });
+                                    }
+                                }
 
 
 
@@ -9064,6 +9077,11 @@ namespace SignalRHub
 
                             }
 
+                        }
+
+                        if (enableJ1530Jobs == false)
+                        {
+                            list = list.Where(x => x.ZoneName == "-" || !(x.Drivers == 0 && x.Bid == 0)).ToList();
                         }
 
                         response = new JavaScriptSerializer().Serialize(list);
@@ -9160,7 +9178,7 @@ namespace SignalRHub
                     try
                     {
                         db.CommandTimeout = 4;
-
+                        var enableJ1530Jobs = db.Gen_SysPolicy_PDASettings.FirstOrDefault().EnableJ15J30Jobs;
                         int driverId = values[0].ToInt();
 
                         string postedFrom = string.Empty;
@@ -9333,7 +9351,13 @@ namespace SignalRHub
                                 item2.Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt());
                             }
                             else
-                                list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt()) });
+                            {
+                                if (enableJ1530Jobs != false)
+                                {
+                                    list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt()) });
+                                }
+                            }
+                                
 
 
                             //
@@ -9408,6 +9432,12 @@ namespace SignalRHub
                         {
                             finalList = list.ToList();
                         }
+
+                        if (enableJ1530Jobs == false)
+                        {
+                            finalList = finalList.Where(x => x.ZoneName == "-" || !(x.Drivers == 0 && x.Bid == 0)).ToList();
+                        }
+
                         response = new JavaScriptSerializer().Serialize(finalList);
                         data.Data = response;
                         data.IsSuccess = true;
@@ -11666,6 +11696,8 @@ namespace SignalRHub
                         pda.HideAccountName = Global.HideAccountName;
                         pda.EnableCustomPayment = Global.EnableCustomPayment;
                         pda.EnableSoundAdjustment = Global.EnableSoundAdjustment;
+                        pda.EnablekonnectPayReciept = Global.EnablekonnectPayReciept;
+                        pda.disableBigFare = Global.disableBigFare;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
@@ -19519,6 +19551,43 @@ namespace SignalRHub
 
                                 db.stp_BookingLog(jobId, "DRIVER", "Via (ARRIVED) : " + via);
 
+                                if (Global.EnableViaArriveSMS == "1" && HubProcessor.Instance.objPolicy.EnableArrivalBookingText.ToBool())
+                                {
+                                    Booking job = General.GetObject<Booking>(c => c.Id == jobId);
+
+                                    if (job != null && job.JobCode.ToStr().Trim().Length == 0)
+                                    {
+                                        var onlineBookingId = job.OnlineBookingId.ToLong();
+                                        if (!string.IsNullOrEmpty(job.CustomerMobileNo))
+                                        {
+                                            if (job.CompanyId == null || job.Gen_Company.DisableArrivalText.ToBool() == false)
+                                            {
+                                                string arrivalText = string.Empty;
+                                                if (job.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                                                {
+                                                    arrivalText = HubProcessor.Instance.objPolicy.ArrivalAirportBookingText.ToStr().Trim();
+                                                }
+                                                else
+                                                {
+                                                    arrivalText = HubProcessor.Instance.objPolicy.ArrivalBookingText.ToStr().Trim();
+                                                }
+
+                                                if (!string.IsNullOrEmpty(arrivalText))
+                                                {
+                                                    new Thread(delegate ()
+                                                    {
+                                                        AddSMS(job.CustomerMobileNo.ToStr().Trim(), GetMessage(arrivalText, job, jobId), job.SMSType.ToInt());
+                                                    }).Start();
+                                                }
+                                            }
+                                        }
+                                    }
+
+
+
+
+                                }
+
                             }
                             else if (objAction.JStatus.ToStr() == "7")
                             {
@@ -20050,6 +20119,52 @@ namespace SignalRHub
             }
 
             return res;
+        }
+
+        public class DriverAccountKP
+        {
+            public bool IsCreditToDriverAccount { get; set; }
+            public string AffiliateKey { get; set; }
+        }
+        private string GetDriverAccountIDKp(long DriverID)
+        {
+            string AccountId = string.Empty;
+            DriverAccountKP obj = new DriverAccountKP();
+
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    obj = db.ExecuteQuery<DriverAccountKP>("select AffiliateKey,IsCreditToDriverAccount from  Fleet_Driver_DeviceInfo where DriverId=" + DriverID).FirstOrDefault();
+                    if (obj != null && obj.IsCreditToDriverAccount && !string.IsNullOrEmpty(obj.AffiliateKey))
+                    {
+                        AccountId = obj.AffiliateKey;
+                    }
+
+                }
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\GetDriverAccountIDKp.txt", DateTime.Now.ToStr() + " Driver [" + DriverID + "] Account details : " + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                }
+                catch
+                {
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\GetDriverAccountIDKp_exception.txt", DateTime.Now.ToStr() + "Driver [" + DriverID + "]  Error: " + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+                }
+
+            }
+            return AccountId;
+
+
         }
     }
 

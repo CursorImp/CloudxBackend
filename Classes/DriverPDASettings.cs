@@ -133,5 +133,7 @@ namespace SignalRHub
         public string NotifyOnJobLate = "";
         public string EnableCustomPayment = "";
         public string EnableSoundAdjustment = "";
+        public string EnablekonnectPayReciept = "";
+        public string disableBigFare = "";
     }
 }
