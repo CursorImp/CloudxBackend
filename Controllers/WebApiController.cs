@@ -5049,29 +5049,6 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         route.viaAddresses = obj.routeInfo.viaAddresses;
                         if (obj.routeInfo.AutoCalculateFares.ToBool() && pickup.ToStr().Trim().Length > 0 && destination.ToStr().Trim().Length > 0)
                         {
-                            //if (obj.routeInfo.Noofhours > 0)
-                            //{
-                            //    if (obj.routeInfo.VehicleTypeId == -1)
-                            //    {
-                            //        route.fareModel = CalculateFaresByFixedHoursAllVehicle(obj);
-                            //    }
-                            //    else
-                            //    {
-                            //        route.fareModel = CalculateFaresByFixedHours(obj);
-                            //    }
-                            //}
-                            //else
-                            //{
-                            //    if (obj.routeInfo.VehicleTypeId == -1)
-                            //    {
-                            //        route.fareModel = CalculateFaresAllVehicle(obj);
-                            //    }
-                            //    else
-                            //    {
-                            //        route.fareModel = CalculateFares(obj);
-                            //    }
-                            //}
-
                             try
                             {
                                 if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='EnablePromotionOnBooking'").FirstOrDefault().ToStr().Trim() == "true")
@@ -5104,8 +5081,32 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             }
 
 
-                            route.fareModel = CalculateFares(obj);
+                            //route.fareModel = CalculateFares(obj);
                         }
+
+                        if (obj.routeInfo.Noofhours > 0)
+                        {
+                            if (obj.routeInfo.VehicleTypeId == -1)
+                            {
+                                route.fareModel = CalculateFaresByFixedHoursAllVehicle(obj);
+                            }
+                            else
+                            {
+                                route.fareModel = CalculateFaresByFixedHours(obj);
+                            }
+                        }
+                        else
+                        {
+                            if (obj.routeInfo.VehicleTypeId == -1)
+                            {
+                                route.fareModel = CalculateFaresAllVehicle(obj);
+                            }
+                            else
+                            {
+                                route.fareModel = CalculateFares(obj);
+                            }
+                        }
+
                         if (obj.routeInfo.DriverId > 0)
                         {
                             var tempDriver = db.Fleet_Drivers
@@ -13951,6 +13952,25 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             return Json(response, JsonRequestBehavior.AllowGet);
         }
 
+        #endregion
+
+        #region webphone/softphone
+        public Classes.WebPhone GetWebPhoneByExtension(string extension)
+        {
+            using (TaxiDataContext db = new TaxiDataContext())
+            {
+                string query = "SELECT Id, Extension, Password, Status FROM Gen_SysPolicy_Configurations_WebPhone WHERE Extension = {0}";
+                var webPhone = db.ExecuteQuery<SignalRHub.Classes.WebPhone>(query, extension).FirstOrDefault();
+                if (webPhone != null)
+                {
+                    return webPhone; // Returning the WebPhone object with the found data
+                }
+                else
+                {
+                    throw new Exception("WebPhone not found for the provided extension.");
+                }
+            }
+        }
         #endregion
     }
 }
