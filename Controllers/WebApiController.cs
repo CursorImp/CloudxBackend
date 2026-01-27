@@ -1,34 +1,23 @@
 ﻿using DotNetCoords;
+using Newtonsoft.Json;
 using SignalRHub.WebApiClasses;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
+using System.Threading;
 using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Script.Serialization;
 using Taxi_BLL;
 using Taxi_Model;
-
-
 using Utils;
-using System.Text;
-using System.Threading;
-using System.Configuration;
-using System.Dynamic;
-using System.Xml.Linq;
-using System.Data.SqlClient;
-using static SignalRHub.DriverAppController;
-using System.Threading.Tasks;
-using CabTreasureWebApi.Models.HereForwardGeocode;
-using System.Collections;
-using System.Reflection;
-using Newtonsoft.Json;
-using System.Text.RegularExpressions;
-using System.Diagnostics.Metrics;
 using Vonage.SubAccounts;
 
 namespace SignalRHub.Controllers
@@ -5465,7 +5454,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         result = result.Substring(startIndex);
                         int lastIndex = result.IndexOf("}]") + 1;
                         result = result.Substring(0, lastIndex);
-                        result = Regex.Replace(result, @"""PromotionDetails"":""({.*?})""", match =>
+                        result = System.Text.RegularExpressions.Regex.Replace(result, @"""PromotionDetails"":""({.*?})""", match =>
                         {
                             string innerJson = match.Groups[1].Value;
                             innerJson = innerJson.Replace("\"", "\\\""); // escape quotes
@@ -10778,6 +10767,149 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             //   return Json(response, JsonRequestBehavior.AllowGet);
             return new CustomJsonResult { Data = response };
         }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetBookingConfirmationQuotationDetails")]
+        public JsonResult GetBookingConfirmationQuotationDetails(WebApiClasses.RequestWebApi obj)
+        {
+            //
+
+            try
+            {
+                General.WriteLog("GetBookingConfirmationQuotationDetails", "json: " + new JavaScriptSerializer().Serialize(obj));
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingConfirmationDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+
+                    var obj2 = db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id);
+
+
+                    if (obj2 != null)
+                    {
+                        string subject = string.Empty;
+                        if (obj2.IsQuotation.ToBool())
+                        {
+
+                            //if (BookingActionType.ToStr().Trim().ToUpper() == "AMENDMENT")
+                            //{
+                            //    subject = "AMENDMENT OF QUOTATION -" + objBook.BookingNo.ToStr() + " - " + string.Format("{0:dd MMMM yyyy}", objBook.PickupDateTime)
+                            //     + ", TIME " + string.Format("{0:HH.mm}", objBook.PickupDateTime);
+                            //}
+
+
+                            //else
+                            //{
+                            subject = "BOOKING QUOTATION - " + string.Format("{0:dd MMMM yyyy}", obj2.PickupDateTime)
+                                 + ", TIME " + string.Format("{0:HH.mm}", obj2.PickupDateTime) + " - BOOKING ID "
+                                 + obj2.BookingNo.ToStr();
+                            //   }
+
+                        }
+                        else
+                        {
+
+                            //if (BookingActionType.ToStr().Trim().ToUpper() == "AMENDMENT")
+                            //{
+                            //    subject = "AMENDMENT OF BOOKING REFERENCE:" + objBook.BookingNo.ToStr() + " - " + string.Format("{0:dd MMMM yyyy}", objBook.PickupDateTime)
+                            //     + ", TIME " + string.Format("{0:HH.mm}", objBook.PickupDateTime);
+                            //}
+
+
+                            //else
+                            //{
+                            subject = "BOOKING CONFIRMATION -  " + string.Format("{0:dd MMMM yyyy}", obj2.PickupDateTime)
+                                 + ", TIME " + string.Format("{0:HH.mm}", obj2.PickupDateTime) + " - BOOKING ID "
+                                 + obj2.BookingNo.ToStr();
+                            //   }
+
+                        }
+
+                        var pickupDateTime = obj2.PickupDateTime;
+
+                        var data = new EmailInfo
+                        {
+                            CustomerMobileNo = obj2.CustomerMobileNo,
+                            SubCompanyId = obj2.SubcompanyId.ToInt(),
+                            From = db.Gen_SubCompanies
+                                     .Where(c => c.Id == obj2.SubcompanyId)
+                                     .Select(c => c.SmtpUserName)
+                                     .FirstOrDefault(),
+                            Subject = subject,
+                            BookingId = obj2.Id,
+                            To = obj2.CustomerEmail,
+                            IsAccountJob = obj2.CompanyId != null,
+                            PaymentTypeId = obj2.PaymentTypeId.ToInt(),
+
+                            CustomerName = obj2.Customer.Name.ToStr(),
+                            FromAddress = obj2.FromAddress.ToStr(),
+                            ToAddress = obj2.ToAddress.ToStr(),
+                            Fare = obj2.FareRate.ToDecimal(),
+
+                            PickupDate = obj2.PickupDateTime ?? DateTime.MinValue,
+                            PickupTime = obj2.PickupDateTime ?? DateTime.MinValue,
+                            BookingNo = obj2.BookingNo.ToStr()
+
+
+                        };
+
+                        //var data = new EmailInfo { CustomerMobileNo = obj2.CustomerMobileNo, SubCompanyId = obj2.SubcompanyId.ToInt(), From = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(c => c.SmtpUserName).FirstOrDefault(), Subject = subject, BookingId = obj2.Id, To = obj2.CustomerEmail, IsAccountJob = obj2.CompanyId != null ? true : false, PaymentTypeId = obj2.PaymentTypeId.ToInt(),CustomerName = obj2.Customer.ToStr(),FromAdress = obj2.FromAddress.ToStr(),ToAddress=obj2.ToAddress.ToStr(),Fare=obj2.FareRate.ToDecimal(),PickupDate=obj2.PickupDateTime.ToDateTime(), PickupTime = obj2.PickupDateTime.ToDateTime() };
+                        try
+                        {
+                            var EnableThirdPartyEmailSetting = false;
+                            if (db.ExecuteQuery<string>("select SetVal from AppSettings where setkey= 'EnableThirdPartyEmailSetting'").FirstOrDefault().ToStr() == "true")
+                            {
+                                EnableThirdPartyEmailSetting = true;
+                            }
+                            var subCompany = db.ExecuteQuery<Gen_SubcompanyFields>($"select Id,EmailAddress,SmtpEmailAddress,SmtpInvoiceEmailAddress,SmtpDriverEmailAddress,CAST(ISNULL(UseDifferentEmailForInvoices,0) AS BIT) UseDifferentEmailForInvoices,SmtpInvoiceUserName from Gen_SubCompany WHERE Id={obj2.SubcompanyId}").FirstOrDefault();
+                            if (subCompany != null && EnableThirdPartyEmailSetting)
+                            {
+                                data.From = (EnableThirdPartyEmailSetting ? subCompany.SmtpEmailAddress : subCompany.EmailAddress);
+                            }
+                        }
+                        catch
+                        {
+                        }
+
+
+                        response.Data = data;
+
+                    }
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    response.HasError = true;
+                    response.Message = ex.Message;
+
+                    General.WriteLog("GetBookingConfirmationDetails_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetBookingConfirmationDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+                }
+            }
+
+
+            //   return Json(response, JsonRequestBehavior.AllowGet);
+            return new CustomJsonResult { Data = response };
+        }
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("GetBookingDetailsForSMS")]
@@ -13169,12 +13301,14 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                     {
                         db.ExecuteQuery<int>("exec stp_UpdateQuotationJobStatus {0},{1},{2},{3},{4},{5}", obj.BookingId, Enums.BOOKINGSTATUS.WAITING, obj.IsQuotation, "Quotation", "Quotation Booking Confirmed", Username);
                         response.Message = "Quotation Booking Confirmed";
+                        General.BroadCastMessage("**refresh quotation count confirmed");
                     }
                     else
                     {
 
                         db.ExecuteQuery<int>("exec stp_UpdateQuotationJobStatus {0},{1},{2},{3},{4},{5}", obj.BookingId, Enums.BOOKINGSTATUS.CANCELLED, 0, "Quotation", "Quotation Booking Cancelled", Username);
                         response.Message = "Quotation Booking Cancelled";
+                        General.BroadCastMessage("**refresh quotation count cancelled");
                     }
                     response.HasError = false;
                     response.Message = "Booking Updated";
@@ -13954,6 +14088,173 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
         #endregion
 
+
+        #region ConfirmationEmail
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendQuotationConfirmationEmail")]
+        public JsonResult SendQuotationConfirmationEmail(QuotationConfirmationEmailModel model)
+        {
+            Gen_SubCompany objSubcompany = new Gen_SubCompany();
+           
+          
+                objSubcompany = new TaxiDataContext().Gen_SubCompanies.FirstOrDefault(x => x.Id == 1);
+                model.SubCompanyName = objSubcompany.CompanyName;
+           
+            if (objSubcompany == null || string.IsNullOrEmpty(objSubcompany?.SmtpUserName.ToStr()) || string.IsNullOrEmpty(objSubcompany?.SmtpPassword.ToStr()) || string.IsNullOrEmpty(objSubcompany?.SmtpHost.ToStr()))
+            {
+                objSubcompany = new TaxiDataContext().Gen_SubCompanies.FirstOrDefault();
+            }
+            if (objSubcompany != null)
+            {
+                objSubcompany.IsTpCompany = /*ReportViewer1.Tag.ToStr() == "invoice" &&*/ objSubcompany != null && objSubcompany.UseDifferentEmailForInvoices.ToBool() ? true : false;
+            }
+           
+                objSubcompany.UseDifferentEmailForInvoices = false;
+           
+            ResponseWebApi response = new ResponseWebApi();
+            
+            try
+            {
+                //if (model == null || string.IsNullOrEmpty(model.ToEmail))
+                //{
+                //    response.HasError = true;
+                //    response.Message = "Invalid email data";
+                //    return Json(response, JsonRequestBehavior.AllowGet);
+                //}
+
+               
+
+                string emailBody = BuildQuotationConfirmationEmail(model);
+                
+                SignalRHub.Classes.ClsEmail Email = new SignalRHub.Classes.ClsEmail();
+                SignalRHub.Classes.ClsEmail.Send(model.Subject, emailBody, model.FromEmail, model.ToEmail, null, objSubcompany, "", "false");
+               // SignalRHub.Classes.ClsEmail.Send(model.Subject, model.Body, model.FromEmail, model.ToEmail, null, objSubcompany, "", "false");
+
+                response.HasError = false;
+                response.Message = "Email sent successfully";
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        private string BuildQuotationConfirmationEmail(QuotationConfirmationEmailModel model)
+        {
+
+            var encodedCustomerName = System.Web.HttpUtility.UrlEncode(model.CustomerName);
+            string baseUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}";
+
+            var confirmUrl = $"{baseUrl}/WebApi/ConfirmQuotationFromEmail?bookingId={model.BookingId}&customerName={Uri.EscapeDataString(model.CustomerName)}";
+
+           // string huburl = System.Configuration.ConfigurationManager.AppSettings["huburl"];
+            //var _AdminBaseURL = huburl;
+
+            
+
+            return $@"
+<html>
+<body style='font-family: Arial, sans-serif; color:#333;'>
+
+    <h2 style='color:#2c7be5;'>Booking Confirmation</h2>
+
+    <p>Dear <b>{model.CustomerName}</b>,</p>
+
+    <p>Your quotation booking has been confirmed with the following details:</p>
+
+    <table style='border-collapse: collapse; width: 100%; max-width:600px;'>
+        <tr>
+            <td style='padding:8px; border:1px solid #ddd;'><b>Reference</b></td>
+            <td style='padding:8px; border:1px solid #ddd;'>{model.BookingNo}</td>
+        </tr>
+        <tr>
+            <td style='padding:8px; border:1px solid #ddd;'><b>Pickup Date</b></td>
+            <td style='padding:8px; border:1px solid #ddd;'>{model.PickupDate}</td>
+        </tr>
+        <tr>
+            <td style='padding:8px; border:1px solid #ddd;'><b>Pickup Time</b></td>
+            <td style='padding:8px; border:1px solid #ddd;'>{model.PickupTime}</td>
+        </tr>
+        <tr>
+            <td style='padding:8px; border:1px solid #ddd;'><b>From</b></td>
+            <td style='padding:8px; border:1px solid #ddd;'>{model.FromAddress}</td>
+        </tr>
+        <tr>
+            <td style='padding:8px; border:1px solid #ddd;'><b>To</b></td>
+            <td style='padding:8px; border:1px solid #ddd;'>{model.ToAddress}</td>
+        </tr>
+        <tr>
+            <td style='padding:8px; border:1px solid #ddd;'><b>Fare</b></td>
+            <td style='padding:8px; border:1px solid #ddd;'>£{model.Fare:0.00}</td>
+        </tr>
+
+        <tr>
+            <td colspan='2' style='padding:16px; text-align:center;'>
+                <a href='{confirmUrl}'
+                   style='background:#2c7be5;
+                          color:#ffffff;
+                          padding:12px 24px;
+                          text-decoration:none;
+                          font-weight:bold;
+                          border-radius:4px;
+                          display:inline-block;'>
+                    Confirm Booking
+                </a>
+            </td>
+        </tr>
+    </table>
+
+    <br/>
+
+    <p>Thank you for choosing our service.</p>
+
+    <p>
+        Regards,<br/>
+        <b>{model.SubCompanyName}</b>
+    </p>
+
+</body>
+</html>";
+        }
+
+
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.Route("ConfirmQuotationFromEmail")]
+
+        public JsonResult ConfirmQuotationFromEmail(int bookingId,string customerName)
+        {
+            ResponseWebApi response = new ResponseWebApi();
+            try
+            {
+                var obj = new WebApiClasses.ClsQuotationBooking
+                {
+                    BookingId = bookingId,
+                    IsQuotation = false,
+                    UserName = customerName
+                };
+
+                UpdateQuotationBookingStatus(obj);
+                response.HasError = false;
+                response.Message = "success";
+            }
+
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "error";
+
+
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        #endregion
+
         #region webphone/softphone
         public Classes.WebPhone GetWebPhoneByExtension(string extension)
         {
@@ -13973,4 +14274,25 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
         }
         #endregion
     }
+}
+
+public class QuotationConfirmationEmailModel
+{
+    public int BookingId { get; set; }
+    public string Ref { get; set; }
+    public string PickupDate { get; set; }
+    public string PickupTime { get; set; }
+    public string CustomerName { get; set; }
+    public string FromAddress { get; set; }
+    public string ToAddress { get; set; }
+    public decimal Fare { get; set; }
+
+    public string FromEmail { get; set; }
+    public string ToEmail { get; set; }
+    public string Subject { get; set; }
+    public string Body { get; set; }
+
+    public string SubCompanyName { get; set; }
+
+    public string BookingNo { get; set; }
 }

@@ -1461,6 +1461,15 @@ namespace SignalRHub.WebApiClasses
         public bool IsAccountJob { get; set; }
         public int PaymentTypeId { get; set; }
         public int toEmailType { get; set; }
+
+        public decimal? Fare { get; set; }
+        public DateTime? PickupDate { get; set; }
+
+        public DateTime? PickupTime { get; set; }
+        public string FromAddress { get; set; }
+        public string ToAddress { get; set; }
+
+        public string BookingNo { get; set; }
     }
     public class ClsAutoDispatchInfo
     {

@@ -27860,7 +27860,8 @@ SET
                 {
                     General.WriteLog("SendBookingConfirmationSms", "sending confirmation sms...");
                 }
-                catch {
+                catch
+                {
                 }
                 BookingBO objMaster = new BookingBO();
                 objMaster.GetByPrimaryKey(bookingId);
@@ -28171,5 +28172,124 @@ SET
             return Json(response, JsonRequestBehavior.AllowGet);
         }
         #endregion
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetUserDetails")]
+
+        public JsonResult GetUserDetails(string user)
+        {
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var u = db.UM_Users
+                              .Where(x => x.UserName == user)
+                              .Select(x => new
+                              {
+                                  x.Id,
+                                  x.UserName,
+                                  x.Email,
+                                  x.Phone,
+                                  SubCompanyName = x.Gen_SubCompany.CompanyName,
+                                  GroupName = x.UM_SecurityGroup.GroupName
+                              })
+                              .FirstOrDefault();
+
+                    if (u == null)
+                    {
+                        return Json(new { success = false, message = "User not found" }, JsonRequestBehavior.AllowGet);
+                    }
+
+                    return Json(new { success = true, Data = u }, JsonRequestBehavior.AllowGet);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SaveUserProfile")]
+        public JsonResult SaveUserProfile(UserProfileDto model)
+        {
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var user = db.UM_Users.FirstOrDefault(x => x.UserName.ToLower() == model.UserName.ToLower());
+
+                    if (user == null)
+                    {
+                        return Json(new { success = false, message = "User not found" });
+                    }
+
+                    user.Email = model.Email;
+                    user.Phone = model.Phone;
+
+                    db.SubmitChanges();
+
+                    return Json(new { success = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("ChangePasswordPopUp")]
+        public JsonResult ChangePasswordPopUp(UserProfileDto model)
+        {
+            try
+            {
+                
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var user = db.UM_Users.FirstOrDefault(u => u.UserName.ToLower() == model.UserName.ToLower());
+                    if (user == null)
+                    {
+                        return Json(new { success = false, message = "User not found." });
+                    }
+
+                    if (user.Passwrd != model.CurrentPassword) 
+                    {
+                        return Json(new { success = false, message = "Current password is incorrect." });
+                    }
+
+                    user.Passwrd = model.NewPassword; 
+                    db.SubmitChanges();
+
+                    return Json(new { success = true, message = "Password changed successfully." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+
     }
+}
+
+public class UserProfileDto
+{
+    public string UserName { get; set; }
+    public string Email { get; set; }
+    public string Phone { get; set; }
+
+    public string CurrentPassword { get; set; }
+
+    public string NewPassword { get; set; }
+
 }
