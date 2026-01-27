@@ -1494,7 +1494,7 @@ namespace SignalRHub.WebApiClasses
         public string VerifiedToken { get; set; }
         public string UserName { get; set; }
         public string Password { get; set; }
-
+        public string Extension { get; set; }
         public UserInfo objUserInfo { get; set; }
 
         public BookingInfo editbookingInfo { get; set; }

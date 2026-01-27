@@ -28023,5 +28023,153 @@ SET
             }
         }
         #endregion
+
+        #region webphone/softphone
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SaveSettingWebPhone")]
+        public JsonResult SaveSettingWebPhone(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                try
+                {
+                    // Log incoming data
+                    General.WriteLog("SaveSettingWebPhone", "json: " + new JavaScriptSerializer().Serialize(obj));
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveSettingWebPhone.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                }
+                catch
+                {
+                    // Handle logging exceptions silently
+                }
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var webPhone = obj.WebPhone;
+
+                    if (webPhone.Id > 0)
+                    {
+                        // Update existing record by Id
+                        db.ExecuteQuery<int>(
+                            "UPDATE Gen_SysPolicy_Configurations_WebPhone SET Extension = {0}, Password = {1}, Status = {2}, ModifiedOn = {3}, ModifyBy = {4} WHERE Id = {5}",
+                            webPhone.Extension,
+                            webPhone.Password,
+                            webPhone.Status,
+                            DateTime.Now,
+                            obj.UserName ?? "",
+                            webPhone.Id
+                        );
+                        response.Data = "Extension updated successfully";
+                    }
+                    else
+                    {
+                        // Insert a new record
+                        db.ExecuteQuery<int>(
+                            "INSERT INTO Gen_SysPolicy_Configurations_WebPhone (Extension, Password, Status, CreatedOn, ModifyBy) VALUES ({0}, {1}, {2}, {3}, {4})",
+                            webPhone.Extension,
+                            webPhone.Password,
+                            webPhone.Status,
+                            DateTime.Now,
+
+                            obj.UserName ?? ""
+                        );
+                        response.Data = "Extension saved successfully";
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("DeleteWebPhoneExtension")]
+        public JsonResult DeleteWebPhoneExtension(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    int webPhoneId = obj.WebPhone.Id;
+                    string query = "DELETE FROM Gen_SysPolicy_Configurations_WebPhone WHERE Id = {0}";
+                    db.ExecuteQuery<int>(query, webPhoneId);
+                    response.HasError = false;
+                    response.Message = "Record deleted successfully.";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "Error: " + ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.Route("GetWebPhoneById/{id}")]
+        public JsonResult GetWebPhoneById(int id)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    string query = "SELECT Id, Extension, Password, Status FROM Gen_SysPolicy_Configurations_WebPhone WHERE Id = {0}";
+                    var webPhone = db.ExecuteQuery<WebPhone>(query, id).FirstOrDefault();
+                    if (webPhone != null)
+                    {
+                        response.Data = webPhone;
+                    }
+                    else
+                    {
+                        response.HasError = true;
+                        response.Message = "WebPhone not found.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "Error: " + ex.Message;
+            }
+            return Json(new { Success = true, Data = response.Data }, JsonRequestBehavior.AllowGet);
+
+        }
+
+
+
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.Route("GetWebPhoneSettings")]
+        public JsonResult GetWebPhoneSettings()
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    string query = "SELECT Id, Extension, Password, Status FROM Gen_SysPolicy_Configurations_WebPhone";
+                    var webPhones = db.ExecuteQuery<WebPhone>(query).ToList();
+                    response.Data = webPhones;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        #endregion
     }
 }

@@ -338,9 +338,21 @@ namespace SignalRHub.Controllers
 
                                 .OrderBy(c => c.GridColMoveTo).ToList();
 
+                            // webphone change start ------------->
 
+                            SignalRHub.Classes.WebPhone webPhone = null;
+                            if (!string.IsNullOrEmpty(obj.Extension))
+                            {
+                                try
+                                {
+                                    webPhone = GetWebPhoneByExtension(obj.Extension); // Get WebPhone details
+                                }
+                                catch (Exception ex)
+                                {
 
-                            //
+                                }
+                            }
+                            // webphone change end ------------->
 
                             response.Data = new
                             {
@@ -360,8 +372,11 @@ namespace SignalRHub.Controllers
                                 ListofUserRights = ListofUserRights,
                                 EnableBookingCharges = EnableBookingChargesSetting.SetVal,
                                 BookingPayment = BookingPaymentSetting.SetVal,
-                                ShowMapBydefaultOndashboard = ShowMapBydefaultOndashboard.SetVal
-
+                                ShowMapBydefaultOndashboard = ShowMapBydefaultOndashboard.SetVal,
+                                // webphone change start ------------->
+                                Extension = webPhone?.Extension ?? string.Empty,
+                                ExtenionPassword = webPhone?.Password ?? string.Empty
+                                // webphone change end ------------->
                             };
 
 
