@@ -330,7 +330,7 @@ namespace SignalRHub.Controllers
                             // webphone change start ------------->
 
                             SignalRHub.Classes.WebPhone webPhone = null;
-                            if (!string.IsNullOrEmpty(obj.Extension))
+                            if (Global.EnableSoftPhone == "1" && !string.IsNullOrEmpty(obj.Extension))
                             {
                                 try
                                 {
