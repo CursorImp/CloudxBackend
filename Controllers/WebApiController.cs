@@ -5069,29 +5069,29 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
                             }
 
-                            //route.fareModel = CalculateFares(obj);
-                            if (obj.routeInfo.Noofhours > 0)
-                            {
-                                if (obj.routeInfo.VehicleTypeId == -1)
-                                {
-                                    route.fareModel = CalculateFaresByFixedHoursAllVehicle(obj);
-                                }
-                                else
-                                {
-                                    route.fareModel = CalculateFaresByFixedHours(obj);
-                                }
-                            }
-                            else
-                            {
-                                if (obj.routeInfo.VehicleTypeId == -1)
-                                {
-                                    route.fareModel = CalculateFaresAllVehicle(obj);
-                                }
-                                else
-                                {
-                                    route.fareModel = CalculateFares(obj);
-                                }
-                            }
+                            route.fareModel = CalculateFares(obj);
+                            //if (obj.routeInfo.Noofhours > 0)
+                            //{
+                            //    if (obj.routeInfo.VehicleTypeId == -1)
+                            //    {
+                            //        route.fareModel = CalculateFaresByFixedHoursAllVehicle(obj);
+                            //    }
+                            //    else
+                            //    {
+                            //        route.fareModel = CalculateFaresByFixedHours(obj);
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    if (obj.routeInfo.VehicleTypeId == -1)
+                            //    {
+                            //        route.fareModel = CalculateFaresAllVehicle(obj);
+                            //    }
+                            //    else
+                            //    {
+                            //        route.fareModel = CalculateFares(obj);
+                            //    }
+                            //}
                         }
 
                         if (obj.routeInfo.DriverId > 0)
