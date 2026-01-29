@@ -27860,7 +27860,8 @@ SET
                 {
                     General.WriteLog("SendBookingConfirmationSms", "sending confirmation sms...");
                 }
-                catch {
+                catch
+                {
                 }
                 BookingBO objMaster = new BookingBO();
                 objMaster.GetByPrimaryKey(bookingId);
@@ -28023,5 +28024,272 @@ SET
             }
         }
         #endregion
+
+        #region webphone/softphone
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SaveSettingWebPhone")]
+        public JsonResult SaveSettingWebPhone(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                try
+                {
+                    // Log incoming data
+                    General.WriteLog("SaveSettingWebPhone", "json: " + new JavaScriptSerializer().Serialize(obj));
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveSettingWebPhone.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                }
+                catch
+                {
+                    // Handle logging exceptions silently
+                }
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var webPhone = obj.WebPhone;
+
+                    if (webPhone.Id > 0)
+                    {
+                        // Update existing record by Id
+                        db.ExecuteQuery<int>(
+                            "UPDATE Gen_SysPolicy_Configurations_WebPhone SET Extension = {0}, Password = {1}, Status = {2}, ModifiedOn = {3}, ModifyBy = {4} WHERE Id = {5}",
+                            webPhone.Extension,
+                            webPhone.Password,
+                            webPhone.Status,
+                            DateTime.Now,
+                            obj.UserName ?? "",
+                            webPhone.Id
+                        );
+                        response.Data = "Extension updated successfully";
+                    }
+                    else
+                    {
+                        // Insert a new record
+                        db.ExecuteQuery<int>(
+                            "INSERT INTO Gen_SysPolicy_Configurations_WebPhone (Extension, Password, Status, CreatedOn, ModifyBy) VALUES ({0}, {1}, {2}, {3}, {4})",
+                            webPhone.Extension,
+                            webPhone.Password,
+                            webPhone.Status,
+                            DateTime.Now,
+
+                            obj.UserName ?? ""
+                        );
+                        response.Data = "Extension saved successfully";
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("DeleteWebPhoneExtension")]
+        public JsonResult DeleteWebPhoneExtension(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    int webPhoneId = obj.WebPhone.Id;
+                    string query = "DELETE FROM Gen_SysPolicy_Configurations_WebPhone WHERE Id = {0}";
+                    db.ExecuteQuery<int>(query, webPhoneId);
+                    response.HasError = false;
+                    response.Message = "Record deleted successfully.";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "Error: " + ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.Route("GetWebPhoneById/{id}")]
+        public JsonResult GetWebPhoneById(int id)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    string query = "SELECT Id, Extension, Password, Status FROM Gen_SysPolicy_Configurations_WebPhone WHERE Id = {0}";
+                    var webPhone = db.ExecuteQuery<WebPhone>(query, id).FirstOrDefault();
+                    if (webPhone != null)
+                    {
+                        response.Data = webPhone;
+                    }
+                    else
+                    {
+                        response.HasError = true;
+                        response.Message = "WebPhone not found.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "Error: " + ex.Message;
+            }
+            return Json(new { Success = true, Data = response.Data }, JsonRequestBehavior.AllowGet);
+
+        }
+
+
+
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.Route("GetWebPhoneSettings")]
+        public JsonResult GetWebPhoneSettings()
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    string query = "SELECT Id, Extension, Password, Status FROM Gen_SysPolicy_Configurations_WebPhone";
+                    var webPhones = db.ExecuteQuery<WebPhone>(query).ToList();
+                    response.Data = webPhones;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        #endregion
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetUserDetails")]
+
+        public JsonResult GetUserDetails(string user)
+        {
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var u = db.UM_Users
+                              .Where(x => x.UserName == user)
+                              .Select(x => new
+                              {
+                                  x.Id,
+                                  x.UserName,
+                                  x.Email,
+                                  x.Phone,
+                                  SubCompanyName = x.Gen_SubCompany.CompanyName,
+                                  GroupName = x.UM_SecurityGroup.GroupName
+                              })
+                              .FirstOrDefault();
+
+                    if (u == null)
+                    {
+                        return Json(new { success = false, message = "User not found" }, JsonRequestBehavior.AllowGet);
+                    }
+
+                    return Json(new { success = true, Data = u }, JsonRequestBehavior.AllowGet);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SaveUserProfile")]
+        public JsonResult SaveUserProfile(UserProfileDto model)
+        {
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var user = db.UM_Users.FirstOrDefault(x => x.UserName.ToLower() == model.UserName.ToLower());
+
+                    if (user == null)
+                    {
+                        return Json(new { success = false, message = "User not found" });
+                    }
+
+                    user.Email = model.Email;
+                    user.Phone = model.Phone;
+
+                    db.SubmitChanges();
+
+                    return Json(new { success = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("ChangePasswordPopUp")]
+        public JsonResult ChangePasswordPopUp(UserProfileDto model)
+        {
+            try
+            {
+                
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var user = db.UM_Users.FirstOrDefault(u => u.UserName.ToLower() == model.UserName.ToLower());
+                    if (user == null)
+                    {
+                        return Json(new { success = false, message = "User not found." });
+                    }
+
+                    if (user.Passwrd != model.CurrentPassword) 
+                    {
+                        return Json(new { success = false, message = "Current password is incorrect." });
+                    }
+
+                    user.Passwrd = model.NewPassword; 
+                    db.SubmitChanges();
+
+                    return Json(new { success = true, message = "Password changed successfully." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+
     }
+}
+
+public class UserProfileDto
+{
+    public string UserName { get; set; }
+    public string Email { get; set; }
+    public string Phone { get; set; }
+
+    public string CurrentPassword { get; set; }
+
+    public string NewPassword { get; set; }
+
 }

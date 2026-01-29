@@ -595,6 +595,7 @@ namespace SignalRHub.Classes
         public bool? ShowDestinationAfterPOB { get;  set; }
         public bool? EnableDriverConnect { get;  set; }
         public string VehiclePlateNo { get;  set; }
+        public WebPhone WebPhone { get; set; }
     }
     public class FareDto
     {
@@ -2539,5 +2540,13 @@ namespace SignalRHub.Classes
         }
 
         
+    }
+
+    public class WebPhone
+    {
+        public int Id { get; set; }
+        public string Extension { get; set; }
+        public string Password { get; set; }
+        public bool Status { get; set; }
     }
 }

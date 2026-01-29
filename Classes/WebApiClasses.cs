@@ -435,6 +435,7 @@ namespace SignalRHub.WebApiClasses
 
         }
 
+        public string BookingStatusBgColor { get; set; }
         public bool ExtendMulti { get; set; }
         public int LeadTime { get; set; }
         public string PickupZoneName { get; set; }
@@ -1460,6 +1461,15 @@ namespace SignalRHub.WebApiClasses
         public bool IsAccountJob { get; set; }
         public int PaymentTypeId { get; set; }
         public int toEmailType { get; set; }
+
+        public decimal? Fare { get; set; }
+        public DateTime? PickupDate { get; set; }
+
+        public DateTime? PickupTime { get; set; }
+        public string FromAddress { get; set; }
+        public string ToAddress { get; set; }
+
+        public string BookingNo { get; set; }
     }
     public class ClsAutoDispatchInfo
     {
@@ -1493,7 +1503,7 @@ namespace SignalRHub.WebApiClasses
         public string VerifiedToken { get; set; }
         public string UserName { get; set; }
         public string Password { get; set; }
-
+        public string Extension { get; set; }
         public UserInfo objUserInfo { get; set; }
 
         public BookingInfo editbookingInfo { get; set; }
@@ -1906,6 +1916,7 @@ namespace SignalRHub.WebApiClasses
         public string CompanyName { get; set; }
     }
 
+ 
     public class ClsBookingListData
     {
 
