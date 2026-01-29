@@ -2189,6 +2189,7 @@ WHERE BookingId = {obj.bookingInfo.Id}";
                      Id = datarow.Field<int>("Id"),
                      CompanyName = datarow.Field<string>("CompanyName"),
                      IsClosed = datarow.Field<bool>("isclosed"),
+                     CompanyCode = datarow.Field<string>("CompanyCode"),
                      // HasVat = datarow.Field<bool>("HasVat")
                  });
 
