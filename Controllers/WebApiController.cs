@@ -330,7 +330,7 @@ namespace SignalRHub.Controllers
                             // webphone change start ------------->
 
                             SignalRHub.Classes.WebPhone webPhone = null;
-                            if (!string.IsNullOrEmpty(obj.Extension))
+                            if (Global.EnableSoftPhone == "1" && !string.IsNullOrEmpty(obj.Extension))
                             {
                                 try
                                 {
@@ -4565,8 +4565,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                         where a.Status == true
                                            && (
                                                 a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
-                                                || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR
-                                                || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE
+                                                || (Global.AllowOnJobStatusOnNearestDriver == "1" && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR)
+                                                || (Global.AllowOnJobStatusOnNearestDriver == "1" && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE)
                                               )
                                         select new
                                         {
@@ -4582,7 +4582,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
     .AsEnumerable()
     .Where(x =>
         x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
-        || (
+        || (Global.AllowOnJobStatusOnNearestDriver == "1" &&
             (x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR
              || x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE)
             && x.booking != null
@@ -5070,31 +5070,29 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
                             }
 
-
-                            //route.fareModel = CalculateFares(obj);
-                        }
-
-                        if (obj.routeInfo.Noofhours > 0)
-                        {
-                            if (obj.routeInfo.VehicleTypeId == -1)
-                            {
-                                route.fareModel = CalculateFaresByFixedHoursAllVehicle(obj);
-                            }
-                            else
-                            {
-                                route.fareModel = CalculateFaresByFixedHours(obj);
-                            }
-                        }
-                        else
-                        {
-                            if (obj.routeInfo.VehicleTypeId == -1)
-                            {
-                                route.fareModel = CalculateFaresAllVehicle(obj);
-                            }
-                            else
-                            {
-                                route.fareModel = CalculateFares(obj);
-                            }
+                            route.fareModel = CalculateFares(obj);
+                            //if (obj.routeInfo.Noofhours > 0)
+                            //{
+                            //    if (obj.routeInfo.VehicleTypeId == -1)
+                            //    {
+                            //        route.fareModel = CalculateFaresByFixedHoursAllVehicle(obj);
+                            //    }
+                            //    else
+                            //    {
+                            //        route.fareModel = CalculateFaresByFixedHours(obj);
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    if (obj.routeInfo.VehicleTypeId == -1)
+                            //    {
+                            //        route.fareModel = CalculateFaresAllVehicle(obj);
+                            //    }
+                            //    else
+                            //    {
+                            //        route.fareModel = CalculateFares(obj);
+                            //    }
+                            //}
                         }
 
                         if (obj.routeInfo.DriverId > 0)

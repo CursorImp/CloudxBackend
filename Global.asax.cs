@@ -136,6 +136,8 @@ namespace SignalRHub
         public static string EnableOnlineBookingSMS = "0";
         public static string EnableRefundButton = "0";
         public static string disableBigFare = "0";
+        public static string EnableSoftPhone = "0";
+        public static string AllowOnJobStatusOnNearestDriver = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -755,6 +757,8 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableOnlineBookingSMS", SetVal = "0", description = "EnableOnlineBookingSMS"  },
                              new AppSetting { SetKey = "EnableRefundButton", SetVal = "0", description = "EnableRefundButton"  },
                              new AppSetting { SetKey = "disableBigFare", SetVal = "0", description = "disableBigFare"  },
+                             new AppSetting { SetKey = "EnableSoftPhone", SetVal = "0", description = "EnableSoftPhone"  },
+                             new AppSetting { SetKey = "AllowOnJobStatusOnNearestDriver", SetVal = "0", description = "AllowOnJobStatusOnNearestDriver"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1763,6 +1767,14 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("disableBigFare")))
                 {
                     disableBigFare = GetAppSetting<string>("disableBigFare").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableSoftPhone")))
+                {
+                    EnableSoftPhone = GetAppSetting<string>("EnableSoftPhone").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("AllowOnJobStatusOnNearestDriver")))
+                {
+                    AllowOnJobStatusOnNearestDriver = GetAppSetting<string>("AllowOnJobStatusOnNearestDriver").ToStr();
                 }
 
             }
