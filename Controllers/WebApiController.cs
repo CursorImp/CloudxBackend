@@ -13876,6 +13876,88 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             return new CustomJsonResult { Data = response };
         }
 
+
+        public string GetCallRecordingURL(long RecordingId)
+        {
+            ResponseWebApi Apiresponse = new ResponseWebApi();
+            try
+            {
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "PlayCallRecordingYasteck.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", id:" + obj?.RecordingId + Environment.NewLine);
+                General.WriteLog("PlayCallRecordingYasteck", "id:" + RecordingId);
+            }
+            catch
+            {
+            }
+            string url = "";
+
+            if (RecordingId <= 0)
+            {
+                return url;
+            }
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var callLog = db.CallHistories.Where(e => e.Id == RecordingId).FirstOrDefault();
+                    var voipConfig = db.CallerIdVOIP_Configurations.FirstOrDefault();
+                    if (callLog != null)
+                    {
+                        //string CountryPhoneCode = "44";
+                        //string CallerId = CountryPhoneCode + callLog.PhoneNumber.Substring(1, callLog.PhoneNumber.Length - 1);
+                        string CallerId = (callLog.PhoneNumber.StartsWith("0") ? "44" + callLog.PhoneNumber.Substring(1) : callLog.PhoneNumber);
+                        var UniqueID = callLog.CallDuration;
+                        string fileName = UniqueID + "_" + CallerId + ".wav";
+                        var callRecordingHost = voipConfig.Host;
+
+
+
+                        if (voipConfig.Host.Contains("vipvoipuk"))
+                        {
+                            //string callRefNo = obj.RecordingId.ToString();
+                            //TCS.Call.MakeCall c = new TCS.Call.MakeCall();
+                            string dirName = $"{callLog.AnsweredDateTime.Value.Year}-{callLog.AnsweredDateTime.Value.Month}/{callLog.AnsweredDateTime.Value.Day}";
+                            string savePath = Server.MapPath("~/CallRecordings/" + dirName);
+                            url = String.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, Url.Content("~/")) + "CallRecordings/" + dirName + "/" + UniqueID + ".wav";
+                            if (!Directory.Exists(savePath))
+                            {
+                                Directory.CreateDirectory(savePath);
+                            }
+                            var response = YESTECH_GetRecordingFile(savePath, "", "", UniqueID, callLog.AnsweredDateTime.Value, HubProcessor.Instance.objPolicy.CallRecordingToken.ToStr());
+                        }
+                        else if (voipConfig.Host.Contains("95.217.43.170"))
+                        {
+                            url = ("http://95.217.43.170/eurosoft/voip/recordings/" + voipConfig.UserName + "/" + fileName).Trim();
+                        }
+                        else
+                        {
+                            fileName = callLog.CallDuration + "_" + CallerId + ".wav";
+                            url = ($"https://recordings.emeraldtel.co.uk/" + voipConfig.UserName + "/inbound/" + fileName).Trim();
+                        }
+                        try
+                        {
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "PlayCallRecordingYasteck.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", url:" + url + Environment.NewLine);
+                            General.WriteLog("PlayCallRecordingYasteck", "url: " + url);
+                        }
+                        catch
+                        {
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "PlayCallRecordingYasteck.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ", error:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("PlayCallRecordingYasteck", ", error:" + ex.Message);
+                }
+                catch
+                {
+                }
+            }
+            return url;
+        }
+
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("PlayCallRecordingYESTECH")]
@@ -13905,10 +13987,10 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                     var voipConfig = db.CallerIdVOIP_Configurations.FirstOrDefault();
                     if (callLog != null)
                     {
-                        string CountryPhoneCode = "44";
-                        string CallerId = CountryPhoneCode + callLog.PhoneNumber.Substring(1, callLog.PhoneNumber.Length - 1);
+                        //string CountryPhoneCode = "44";
+                        //string CallerId = CountryPhoneCode + callLog.PhoneNumber.Substring(1, callLog.PhoneNumber.Length - 1);
+                        string CallerId = (callLog.PhoneNumber.StartsWith("0") ? "44" + callLog.PhoneNumber.Substring(1) : callLog.PhoneNumber);
                         var UniqueID = callLog.CallDuration;
-
                         string fileName = UniqueID + "_" + CallerId + ".wav";
                         var callRecordingHost = voipConfig.Host;
 
