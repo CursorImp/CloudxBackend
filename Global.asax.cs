@@ -763,6 +763,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "AllowOnJobStatusOnNearestDriver", SetVal = "0", description = "AllowOnJobStatusOnNearestDriver"  },
                              new AppSetting { SetKey = "EnableETABase", SetVal = "false", description = "EnableETABase"  },
                              new AppSetting { SetKey = "EnableMultiBookingExtraFields", SetVal = "false", description = "EnableMultiBookingExtraFields"  },
+                             new AppSetting { SetKey = "MinFareForCreditCard", SetVal = "0", description = "MinFareForCreditCard -> if fare is greater than or equal to this fare change payment to credit card"  },
                         };
 
                 using (var db = new TaxiDataContext())
