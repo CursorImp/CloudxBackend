@@ -138,6 +138,8 @@ namespace SignalRHub
         public static string disableBigFare = "0";
         public static string EnableSoftPhone = "0";
         public static string AllowOnJobStatusOnNearestDriver = "0";
+        public static string EnableETAtoBase = "false";
+        public static string EnableMultiBookingExtraFields = "false";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -759,6 +761,8 @@ namespace SignalRHub
                              new AppSetting { SetKey = "disableBigFare", SetVal = "0", description = "disableBigFare"  },
                              new AppSetting { SetKey = "EnableSoftPhone", SetVal = "0", description = "EnableSoftPhone"  },
                              new AppSetting { SetKey = "AllowOnJobStatusOnNearestDriver", SetVal = "0", description = "AllowOnJobStatusOnNearestDriver"  },
+                             new AppSetting { SetKey = "EnableETABase", SetVal = "false", description = "EnableETABase"  },
+                             new AppSetting { SetKey = "EnableMultiBookingExtraFields", SetVal = "false", description = "EnableMultiBookingExtraFields"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1716,6 +1720,14 @@ namespace SignalRHub
                 {
                     EnableManualLeadTime = GetAppSetting<string>("EnableManualLeadTime").ToStr();
                 }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableETAtoBase")))
+                {
+                    EnableETAtoBase = GetAppSetting<string>("EnableETAtoBase").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableMultiBookingExtraFields")))
+                {
+                    EnableMultiBookingExtraFields = GetAppSetting<string>("EnableMultiBookingExtraFields").ToStr();
+                }                
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableTodayBookingFilterUpTo2AM")))
                 {
                     EnableTodayBookingFilterUpTo2AM = GetAppSetting<string>("EnableTodayBookingFilterUpTo2AM").ToStr();

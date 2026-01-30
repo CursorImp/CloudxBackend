@@ -838,6 +838,7 @@ namespace SignalRHub.WebApiClasses
         public int Id { get; set; }
         public DateTime UpdateDate { get; set; }
         public DateTime WaitSinceOn { get; set; }
+        public int? SubCompanyId { get; set; }
     }
 
     public class clsTrackEscort
