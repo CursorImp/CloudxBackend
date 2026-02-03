@@ -658,12 +658,12 @@ namespace SignalRHub.WebApiClasses
         public decimal? DriverHours { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
-        public Fleet_Driver Driver { get;  set; }
-        public Gen_Company Company { get;  set; }
+        public Fleet_Driver Driver { get; set; }
+        public Gen_Company Company { get; set; }
         public bool? AllocatedDriver { get; set; }
-        public int? VehicleTypeIdReturn { get;  set; }
-        public int? DriverIdReturn { get;  set; }
-        public bool? IsHideJobFromDrivers { get;  set; }
+        public int? VehicleTypeIdReturn { get; set; }
+        public int? DriverIdReturn { get; set; }
+        public bool? IsHideJobFromDrivers { get; set; }
 
         public long PromotionId { get; set; }       // BIGINT
         public string PromotionCode { get; set; }   // VARCHAR
@@ -671,9 +671,9 @@ namespace SignalRHub.WebApiClasses
         public decimal? DiscountedFare { get; set; } // DECIMAL
         public string PromotionType { get; set; }   // VARCHAR
         public double? promoValue { get; set; }     // FLOAT
-        public int? Type { get;  set; }
-        public string Status { get;  set; }
-        public bool? IsSamePaymentType { get;  set; }
+        public int? Type { get; set; }
+        public string Status { get; set; }
+        public bool? IsSamePaymentType { get; set; }
     }
 
     public class Booking_DriverCommsiion
@@ -1095,7 +1095,7 @@ namespace SignalRHub.WebApiClasses
 
         public string PromotionDetails { get; set; }
         public JobPromotions PromotionDetail { get; set; }
-       
+
         public ClsDispatchFares()
         {
         }
@@ -1526,10 +1526,9 @@ namespace SignalRHub.WebApiClasses
 
         public AuthInfo authInfo { get; set; }
         public ClsAutoDispatchInfo autoDispatchInfo { get; set; }
-
-
-        public List<AdvanceBookingInfo> advancebookingInfo { get; set; }
-        public List<AdvanceBookingInfo> advancebookingInfoReturn { get; set; }
+        public AdvanceBookingInfo advancebookingInfo { get; set; }
+        public List<AdvanceBookingInfo> advancebookingInfo_List { get; set; }
+        public List<AdvanceBookingInfo> advancebookingInfoReturn_List { get; set; }
         public DateTime? ScheduleDateTime { get; set; }
         public DateTime? DelayedDateTime { get; set; }
         public string ArrivalTerminal { get; set; }
@@ -1551,9 +1550,9 @@ namespace SignalRHub.WebApiClasses
         public int MoveToDriverId { get; set; }
         public SMSInfo smsInfo { get; set; }
         public string MessageType { get; set; }
-        public int? UserId { get;  set; }
-        public string Type { get;  set; }
-        public int? SubcompanyId { get;  set; }
+        public int? UserId { get; set; }
+        public string Type { get; set; }
+        public int? SubcompanyId { get; set; }
     }
     public class bookingFare
     {
@@ -1581,7 +1580,7 @@ namespace SignalRHub.WebApiClasses
         public long? AdvanceBookingId { get; set; }
         public List<long> Ids { get; set; }
 
-        public List<AdvanceBookingInfo> BookingReturn { get; set; }
+        public AdvanceBookingInfo BookingReturn { get; set; }
 
 
         public decimal? FareRate { get; set; }
@@ -1851,13 +1850,13 @@ namespace SignalRHub.WebApiClasses
         public int? JourneyTypeId { get; set; }
         public int? CustomerId { get; set; }
         public int? SubCompanyId { get; set; }
-        public int DriverId { get;  set; }
-        public int? ReturnDriverId { get;  set; }
-        public string PromotionCode { get;  set; }
-        public string CustomerName { get;  set; }
-        public string MobileNo { get;  set; }
-        public string TelephoneNo { get;  set; }
-        public string RouteType { get;  set; }
+        public int DriverId { get; set; }
+        public int? ReturnDriverId { get; set; }
+        public string PromotionCode { get; set; }
+        public string CustomerName { get; set; }
+        public string MobileNo { get; set; }
+        public string TelephoneNo { get; set; }
+        public string RouteType { get; set; }
     }
     public class FareSettings
     {
@@ -1893,7 +1892,7 @@ namespace SignalRHub.WebApiClasses
         public Fleet_Driver Driver;
         public Fleet_Driver ReturnDriver;
         public List<AddressInfo> viaAddresses { get; set; }
-        public int? CustomerId { get;  set; }
+        public int? CustomerId { get; set; }
     }
 
 
@@ -1917,7 +1916,7 @@ namespace SignalRHub.WebApiClasses
         public string CompanyName { get; set; }
     }
 
- 
+
     public class ClsBookingListData
     {
 
