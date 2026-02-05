@@ -1463,7 +1463,7 @@ namespace SignalRHub
         }
 
 
-        public static string AllocateDriver(TaxiDataContext db, Gen_SysPolicy_Configuration objPolicy, Booking objBooking, Fleet_Driver ObjDriver, int dispatchType = 0)
+        public static string AllocateDriver(TaxiDataContext db, Gen_SysPolicy_Configuration objPolicy, Booking objBooking, Fleet_Driver ObjDriver, int dispatchType = 0,bool? IsConfirmedDriver=false,int? ReturnDriverId = null)
         {
 
             string message = string.Empty;
@@ -1483,7 +1483,7 @@ namespace SignalRHub
                     //    DateTime? pickupDateAndTime = ObjMaster.Current.PickupDateTime.ToDateTimeorNull();
 
 
-                    bool isConfirmedDriver = true;
+                    bool isConfirmedDriver = IsConfirmedDriver.ToBool();
 
                     if (driverId == null)
                         isConfirmedDriver = false;
@@ -1697,8 +1697,8 @@ namespace SignalRHub
 
                             }
 
-                            objBooking.IsConfirmedDriver = driverId != null ? isConfirmedDriver : false;
-
+                            //objBooking.IsConfirmedDriver = driverId != null ? isConfirmedDriver : false;
+                            objBooking.IsConfirmedDriver = isConfirmedDriver;
 
 
 
@@ -1777,6 +1777,7 @@ namespace SignalRHub
 
                             db.SubmitChanges();
 
+
                             //if (cancelJob)
                             //{
 
@@ -1815,8 +1816,11 @@ namespace SignalRHub
                             {
                             }
 
-
-
+                            if (ReturnDriverId != null)
+                            {
+                                string allocatedDriverQuery = $"Update Booking SET DriverId={ReturnDriverId} WHERE MasterJobId={objBooking.Id}";
+                                db.ExecuteQuery<int>(allocatedDriverQuery);
+                            }
                         }
                         else
                         {

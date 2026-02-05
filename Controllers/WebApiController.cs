@@ -3266,7 +3266,11 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                         string query2 = "Update booking set DriverId=NULLIF({0},0), VehicleTypeId=NULLIF({1},0) where Id={2}";
                                         db.ExecuteCommand(query2, obj.bookingInfo.DriverIdReturn > 0 ? obj.bookingInfo.DriverIdReturn : 0, obj.bookingInfo.VehicleTypeIdReturn > 0 ? obj.bookingInfo.VehicleTypeIdReturn : 0, master.Id);
                                     }
-
+                                    if (Global.EnableConfirmedReturnDriver == "true" && obj.bookingInfo.JourneyTypeId == 2)
+                                    {
+                                        string query2 = "Update booking set DriverId=NULLIF({0},0) where Id={1}";
+                                        db.ExecuteCommand(query2, obj.bookingInfo.DriverIdReturn > 0 ? obj.bookingInfo.DriverIdReturn : null, master.Id);
+                                    }
 
                                 }
                                 catch
@@ -4075,7 +4079,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                             //
                                         }
                                         else
-                                            msg = General.AllocateDriver(db, HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt());
+                                            msg = General.AllocateDriver(db, HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt(), obj.bookingInfo.IsConfirmedDriver,obj.bookingInfo.DriverIdReturn);
 
 
 
