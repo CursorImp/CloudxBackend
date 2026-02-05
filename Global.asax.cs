@@ -140,6 +140,7 @@ namespace SignalRHub
         public static string AllowOnJobStatusOnNearestDriver = "0";
         public static string EnableETAtoBase = "false";
         public static string EnableMultiBookingExtraFields = "false";
+        public static string EnableConfirmedReturnDriver = "false";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -765,6 +766,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableMultiBookingExtraFields", SetVal = "false", description = "EnableMultiBookingExtraFields"  },
                              new AppSetting { SetKey = "MinFareForCreditCard", SetVal = "0", description = "MinFareForCreditCard -> if fare is greater than or equal to this fare change payment to credit card"  },
                              new AppSetting { SetKey = "ApplyIncrementOnAccount", SetVal = "1", description = "ApplyIncrementOnAccount"  },
+                             new AppSetting { SetKey = "EnableConfirmedReturnDriver", SetVal = "false", description = "EnableConfirmedReturnDriver"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1729,7 +1731,11 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableMultiBookingExtraFields")))
                 {
                     EnableMultiBookingExtraFields = GetAppSetting<string>("EnableMultiBookingExtraFields").ToStr();
-                }                
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableConfirmedReturnDriver")))
+                {
+                    EnableConfirmedReturnDriver = GetAppSetting<string>("EnableConfirmedReturnDriver").ToStr();
+                }
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableTodayBookingFilterUpTo2AM")))
                 {
                     EnableTodayBookingFilterUpTo2AM = GetAppSetting<string>("EnableTodayBookingFilterUpTo2AM").ToStr();
