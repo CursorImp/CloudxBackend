@@ -22961,35 +22961,35 @@ SET
                 {
 
                     var objBooking = db.Bookings.Where(x => x.Id == BookingId)
-                         .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges }).FirstOrDefault();
+                         .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges,args.ServiceCharges }).FirstOrDefault();
 
 
                     if (objBooking.CompanyId == null)
                     {
-                        total = objBooking.FareRate.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal();
+                        total = objBooking.FareRate.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal();
 
                         if (objBooking.JourneyTypeId.ToInt() == 2)
                         {
                             objBooking = db.Bookings.Where(x => x.MasterJobId == BookingId)
-                     .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges }).FirstOrDefault();
+                     .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges,args.ServiceCharges }).FirstOrDefault();
 
 
                             if (objBooking != null)
-                                total += objBooking.FareRate.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal();
+                                total += objBooking.FareRate.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal();
 
                         }
                     }
                     else
                     {
-                        total = objBooking.CompanyPrice.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal();
+                        total = objBooking.CompanyPrice.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal();
                         if (objBooking.JourneyTypeId.ToInt() == 2)
                         {
                             objBooking = db.Bookings.Where(x => x.MasterJobId == BookingId)
-                     .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges }).FirstOrDefault();
+                     .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges, args.ServiceCharges }).FirstOrDefault();
 
 
                             if (objBooking != null)
-                                total += objBooking.CompanyPrice.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal();
+                                total += objBooking.CompanyPrice.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal();
 
                         }
 
