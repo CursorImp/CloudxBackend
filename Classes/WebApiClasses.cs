@@ -1553,6 +1553,7 @@ namespace SignalRHub.WebApiClasses
         public int? UserId { get; set; }
         public string Type { get; set; }
         public int? SubcompanyId { get; set; }
+        public bool? IsInCompleteBooking { get; set; }
     }
     public class bookingFare
     {

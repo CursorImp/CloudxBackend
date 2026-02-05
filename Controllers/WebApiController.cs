@@ -4021,7 +4021,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 {
                     string despatchBy = obj.bookingInfo.Despatchby.ToStr();
                     var pickupDateTime = db.Bookings.Where(c => c.Id == obj.bookingInfo.Id).Select(x => x.PickupDateTime).FirstOrDefault();
-                    if (pickupDateTime != null && pickupDateTime?.Date != DateTime.Now.Date && obj.bookingInfo.BookingTypeId.ToInt() != 4 && obj.bookingInfo.BookingTypeId.ToInt() != 3)
+                    if (pickupDateTime != null && pickupDateTime?.Date != DateTime.Now.Date && obj.bookingInfo.BookingTypeId.ToInt() != 4 && obj.bookingInfo.BookingTypeId.ToInt() != 3 && obj.IsInCompleteBooking != true)
                     {
                         //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_warning.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",pickup date" + pickupDateTime?.Date.ToStr() + "bookingid: " + obj.bookingInfo.Id.ToStr() + " type: " + obj.bookingInfo.BookingTypeId.ToStr() + Environment.NewLine);
                         try
@@ -14263,7 +14263,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             //TCS.Call.MakeCall c = new TCS.Call.MakeCall();
                             string dirName = $"{callLog.AnsweredDateTime.Value.Year}-{callLog.AnsweredDateTime.Value.Month}/{callLog.AnsweredDateTime.Value.Day}";
                             string savePath = Server.MapPath("~/CallRecordings/" + dirName);
-                            url = String.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, Url.Content("~/")) + "CallRecordings/" + dirName + "/" + UniqueID + ".wav";
+                            url = String.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, Url.Content("~/")) + "CallRecordings/" + dirName + "/" + UniqueID;
                             if (!Directory.Exists(savePath))
                             {
                                 Directory.CreateDirectory(savePath);

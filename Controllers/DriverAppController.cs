@@ -6167,6 +6167,7 @@ namespace SignalRHub
                             //
                             decimal parking = objBooking.CongtionCharges.ToDecimal();
                             decimal waiting = objBooking.MeetAndGreetCharges.ToDecimal();
+                            decimal bookingFee = objBooking.ServiceCharges.ToDecimal();
 
 
 
@@ -6225,7 +6226,7 @@ namespace SignalRHub
 
 
                             //     listofsummary.Add(new BookingSummary { fieldname = "Tip", isedit = true, isvisible = true, label = "Tip", value = 0 });
-                            listofsummary.Add(new BookingSummary { fieldname = "BookingFee", isedit = false, isvisible = true, label = "BookingFee", value = objAction.BookingFee.ToDecimal() });
+                            listofsummary.Add(new BookingSummary { fieldname = "BookingFee", isedit = false, isvisible = true, label = "BookingFee", value = bookingFee.ToDecimal() });
 
                             response = Newtonsoft.Json.JsonConvert.SerializeObject(listofsummary);
                             //response = "{ \"JobId\" :\"" + jobId.ToStr() +
