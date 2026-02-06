@@ -11699,6 +11699,7 @@ namespace SignalRHub
                         pda.EnableSoundAdjustment = Global.EnableSoundAdjustment;
                         pda.EnablekonnectPayReciept = Global.EnablekonnectPayReciept;
                         pda.disableBigFare = Global.disableBigFare;
+                        pda.EnableAddStopAfterPOB = Global.EnableAddStopAfterPOB;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
