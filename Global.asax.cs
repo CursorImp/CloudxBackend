@@ -141,7 +141,7 @@ namespace SignalRHub
         public static string EnableETAtoBase = "false";
         public static string EnableMultiBookingExtraFields = "false";
         public static string EnableConfirmedReturnDriver = "false";
-        public static string EnableAddStopAfterPOB = "";
+        public static string EnableAddStopAfterPOB = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -768,7 +768,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "MinFareForCreditCard", SetVal = "0", description = "MinFareForCreditCard -> if fare is greater than or equal to this fare change payment to credit card"  },
                              new AppSetting { SetKey = "ApplyIncrementOnAccount", SetVal = "1", description = "ApplyIncrementOnAccount"  },
                              new AppSetting { SetKey = "EnableConfirmedReturnDriver", SetVal = "false", description = "EnableConfirmedReturnDriver"  },
-                             new AppSetting { SetKey = "EnableAddStopAfterPOB", SetVal = "", description = "EnableAddStopAfterPOB"  },
+                             new AppSetting { SetKey = "EnableAddStopAfterPOB", SetVal = "0", description = "EnableAddStopAfterPOB"  },
                         };
 
                 using (var db = new TaxiDataContext())
