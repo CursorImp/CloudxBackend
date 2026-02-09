@@ -11671,14 +11671,14 @@ namespace SignalRHub
 
                         pda.SyncBookingHistory = "1";
                         pda.EnableWaitingAfterArrive = Global.EnableWaitingAfterArrive;
-                        //
                         pda.EnableOnlineStatus = "1";
 
-                        //  if (pda.EnableDriverPinLogin == "1")
-                        //if (pda.EnableCompanyCars == "1")
-                        //    pda.EnableDriverPinLogin = "1";
-                        //else
-                        pda.EnableDriverPinLogin = "0";
+                        if (pda.EnableCompanyCars == "1")
+                            pda.EnableDriverPinLogin = Global.EnableDriverPinLogin;
+                        else
+                        {
+                            pda.EnableDriverPinLogin = "0";
+                        }
                         pda.EnableSocketIO = "1";
                         pda.EnableLocationAck = "1";
                         pda.CheckJobStatus = "1";
