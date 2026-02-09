@@ -8296,16 +8296,16 @@ namespace SignalRHub
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("GetClientKonnectPayConfig")]
-        public ResponseSupplierApi GetClientKonnectPayConfig(int subcompanyid)
+        public ResponseSupplierApi GetClientKonnectPayConfig(int subcompanyid = 0)
         {
             ResponseSupplierApi response = new ResponseSupplierApi();
             try
             {
-                if (subcompanyid == 0)
-                {
-                    response.Message = "Required Sub CompanyID";
-                    response.HasError = true;
-                }
+                //if (subcompanyid == 0)
+                //{
+                //    response.Message = "Required Sub CompanyID";
+                //    response.HasError = true;
+                //}
                 string StripeAPIURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
                 Classes.KonnectPay.PaymentConfig KPinfo = null;// General.GetObject<Gen_SysPolicy_PaymentDetail>(c => c.PaymentGatewayId == 15);
                 KPinfo = General.GetKoNectConfigDetails(subcompanyid);
