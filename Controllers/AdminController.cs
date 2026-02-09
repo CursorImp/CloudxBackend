@@ -14564,7 +14564,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                             System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveFleetDriverPhotoAction.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",DriverNo:" + obj.fleetDriver.DriverNo + Environment.NewLine + ", PhotoAction:" + obj.PhotoAction + Environment.NewLine);
                         }
                         catch
-                        {                            
+                        {
                         }
                         objdriver.Current.Fleet_Driver_Images[0].Photo = null;
                     }
@@ -22961,35 +22961,35 @@ SET
                 {
 
                     var objBooking = db.Bookings.Where(x => x.Id == BookingId)
-                         .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges }).FirstOrDefault();
+                         .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges,args.ServiceCharges }).FirstOrDefault();
 
 
                     if (objBooking.CompanyId == null)
                     {
-                        total = objBooking.FareRate.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal();
+                        total = objBooking.FareRate.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal();
 
                         if (objBooking.JourneyTypeId.ToInt() == 2)
                         {
                             objBooking = db.Bookings.Where(x => x.MasterJobId == BookingId)
-                     .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges }).FirstOrDefault();
+                     .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges,args.ServiceCharges }).FirstOrDefault();
 
 
                             if (objBooking != null)
-                                total += objBooking.FareRate.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal();
+                                total += objBooking.FareRate.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal();
 
                         }
                     }
                     else
                     {
-                        total = objBooking.CompanyPrice.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal();
+                        total = objBooking.CompanyPrice.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal();
                         if (objBooking.JourneyTypeId.ToInt() == 2)
                         {
                             objBooking = db.Bookings.Where(x => x.MasterJobId == BookingId)
-                     .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges }).FirstOrDefault();
+                     .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges, args.ServiceCharges }).FirstOrDefault();
 
 
                             if (objBooking != null)
-                                total += objBooking.CompanyPrice.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal();
+                                total += objBooking.CompanyPrice.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal();
 
                         }
 
@@ -26824,7 +26824,7 @@ SET
                         string trimmedPhoneNumber = phoneNumber.Trim();
                         if (!string.IsNullOrEmpty(trimmedPhoneNumber))
                         {
-                            General.AddSMS(trimmedPhoneNumber, $"request pda=0=0=Message>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}", 1);
+                            General.AddSMS(trimmedPhoneNumber, $"{msg}", 1);
                         }
 
                         using (TaxiDataContext db = new TaxiDataContext())
@@ -26847,6 +26847,42 @@ SET
             {
                 response.HasError = true;
                 response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendPushNotification")]
+        public async Task<JsonResult> SendPushNotification([FromBody] PushNotificationRequest request)
+        {
+            var response = new ResponseAdminApi();
+            try
+            {
+                General.WriteLog("SendPushNotification", "json: " + new JavaScriptSerializer().Serialize(request));
+            }
+            catch
+            {
+            }
+            try
+            {
+                foreach (var token in request.Tokens)
+                {
+                    await FcmNotification.SendNotificationAsync(request.Title, request.Message, token);
+                }
+                response.HasError = false;
+                response.Message = "Notifications sent successfully.";
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    General.WriteLog("SendPushNotification_exception", "json:" + new JavaScriptSerializer().Serialize(request) + ", Exception: " + ex.Message);
+                }
+                catch
+                {
+                }
+                response.HasError = true;
+                response.Message = "Error while sending notifications: " + ex.Message;
             }
             return Json(response, JsonRequestBehavior.AllowGet);
         }
@@ -27489,6 +27525,10 @@ SET
                     {
 
                         db.stp_UpdateOnlineJobStatus(obj.Id, Enums.BOOKINGSTATUS.WAITING, "OnlineBooking Accept", "Accept", "Controller");
+                        if (Global.EnableOnlineBookingSMS == "1")
+                        {
+                            SendBookingConfirmationSms(obj.Id);
+                        }
                         if (Global.EnableOnlineBookingEmail == "1")
                         {
                             string subject = "";
@@ -27889,6 +27929,122 @@ SET
             return new CustomJsonResult { Data = response };
         }
 
+
+        public static void SendBookingConfirmationSms(long bookingId)
+        {
+            try
+            {
+                try
+                {
+                    General.WriteLog("SendBookingConfirmationSms", "sending confirmation sms...");
+                }
+                catch
+                {
+                }
+                BookingBO objMaster = new BookingBO();
+                objMaster.GetByPrimaryKey(bookingId);
+                Global.InitializeSMSTags();
+                string msg = HubProcessor.Instance.objPolicy.ConfirmationSMSText.ToStr().Trim();
+                if (!string.IsNullOrEmpty(msg))
+                {
+                    string mobileNo = objMaster.Current.CustomerMobileNo.ToStr().Trim();
+
+                    if (mobileNo.Length > 0)
+                    {
+                        object propertyValue = string.Empty;
+
+                        foreach (var tag in Global.listofSMSTags.Where(c => msg.Contains(c.TagMemberValue)))
+                        {
+                            switch (tag.TagObjectName)
+                            {
+                                case "booking":
+
+                                    if (tag.TagPropertyValue.Contains('.'))
+                                    {
+
+                                        string[] val = tag.TagPropertyValue.Split(new char[] { '.' });
+
+                                        object parentObj = objMaster.Current.GetType().GetProperty(val[0]).GetValue(objMaster.Current, null);
+
+                                        if (parentObj != null)
+                                        {
+                                            propertyValue = parentObj.GetType().GetProperty(val[1]).GetValue(parentObj, null);
+                                        }
+                                        else
+                                            propertyValue = string.Empty;
+
+
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current, null);
+                                    }
+
+
+                                    if (string.IsNullOrEmpty(propertyValue.ToStr()) && !string.IsNullOrEmpty(tag.TagPropertyValue2))
+                                    {
+                                        propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue2).GetValue(objMaster.Current, null);
+                                    }
+                                    break;
+
+
+                                case "Booking_ViaLocations":
+                                    if (tag.TagPropertyValue == "ViaLocValue")
+                                    {
+
+
+                                        string[] VilLocs = null;
+                                        int cnt = 1;
+                                        VilLocs = objMaster.Current.Booking_ViaLocations.Select(c => cnt++.ToStr() + ". " + c.ViaLocValue).ToArray();
+                                        if (VilLocs.Count() > 0)
+                                        {
+
+                                            string Locations = "VIA POINT(s) : \n" + string.Join("\n", VilLocs);
+                                            propertyValue = Locations;
+                                        }
+                                        else
+                                            propertyValue = string.Empty;
+
+                                    }
+                                    break;
+
+
+
+
+                                default:
+
+
+                                    propertyValue = objMaster.Current.Gen_SubCompany.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current.Gen_SubCompany, null);
+
+
+                                    break;
+
+
+
+                            }
+
+
+                            msg = msg.Replace(tag.TagMemberValue,
+                                tag.TagPropertyValuePrefix.ToStr() + string.Format(tag.TagDataFormat, propertyValue) + tag.TagPropertyValueSuffix.ToStr());
+
+                        }
+                        msg.Replace("\n\n", "\n");
+                        HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + mobileNo.Trim() + " = " + msg);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    General.WriteLog("SendBookingConfirmationSms", $"sending confirmation sms failed... exception: {ex.Message}");
+                }
+                catch
+                {
+                }
+            }
+        }
         #endregion
 
         #region Braithwaites invoice report 
@@ -27946,5 +28102,272 @@ SET
             }
         }
         #endregion
+
+        #region webphone/softphone
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SaveSettingWebPhone")]
+        public JsonResult SaveSettingWebPhone(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                try
+                {
+                    // Log incoming data
+                    General.WriteLog("SaveSettingWebPhone", "json: " + new JavaScriptSerializer().Serialize(obj));
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveSettingWebPhone.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                }
+                catch
+                {
+                    // Handle logging exceptions silently
+                }
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var webPhone = obj.WebPhone;
+
+                    if (webPhone.Id > 0)
+                    {
+                        // Update existing record by Id
+                        db.ExecuteQuery<int>(
+                            "UPDATE Gen_SysPolicy_Configurations_WebPhone SET Extension = {0}, Password = {1}, Status = {2}, ModifiedOn = {3}, ModifyBy = {4} WHERE Id = {5}",
+                            webPhone.Extension,
+                            webPhone.Password,
+                            webPhone.Status,
+                            DateTime.Now,
+                            obj.UserName ?? "",
+                            webPhone.Id
+                        );
+                        response.Data = "Extension updated successfully";
+                    }
+                    else
+                    {
+                        // Insert a new record
+                        db.ExecuteQuery<int>(
+                            "INSERT INTO Gen_SysPolicy_Configurations_WebPhone (Extension, Password, Status, CreatedOn, ModifyBy) VALUES ({0}, {1}, {2}, {3}, {4})",
+                            webPhone.Extension,
+                            webPhone.Password,
+                            webPhone.Status,
+                            DateTime.Now,
+
+                            obj.UserName ?? ""
+                        );
+                        response.Data = "Extension saved successfully";
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("DeleteWebPhoneExtension")]
+        public JsonResult DeleteWebPhoneExtension(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    int webPhoneId = obj.WebPhone.Id;
+                    string query = "DELETE FROM Gen_SysPolicy_Configurations_WebPhone WHERE Id = {0}";
+                    db.ExecuteQuery<int>(query, webPhoneId);
+                    response.HasError = false;
+                    response.Message = "Record deleted successfully.";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "Error: " + ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.Route("GetWebPhoneById/{id}")]
+        public JsonResult GetWebPhoneById(int id)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    string query = "SELECT Id, Extension, Password, Status FROM Gen_SysPolicy_Configurations_WebPhone WHERE Id = {0}";
+                    var webPhone = db.ExecuteQuery<WebPhone>(query, id).FirstOrDefault();
+                    if (webPhone != null)
+                    {
+                        response.Data = webPhone;
+                    }
+                    else
+                    {
+                        response.HasError = true;
+                        response.Message = "WebPhone not found.";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = "Error: " + ex.Message;
+            }
+            return Json(new { Success = true, Data = response.Data }, JsonRequestBehavior.AllowGet);
+
+        }
+
+
+
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.Route("GetWebPhoneSettings")]
+        public JsonResult GetWebPhoneSettings()
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    string query = "SELECT Id, Extension, Password, Status FROM Gen_SysPolicy_Configurations_WebPhone";
+                    var webPhones = db.ExecuteQuery<WebPhone>(query).ToList();
+                    response.Data = webPhones;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        #endregion
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetUserDetails")]
+
+        public JsonResult GetUserDetails(string user)
+        {
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var u = db.UM_Users
+                              .Where(x => x.UserName == user)
+                              .Select(x => new
+                              {
+                                  x.Id,
+                                  x.UserName,
+                                  x.Email,
+                                  x.Phone,
+                                  SubCompanyName = x.Gen_SubCompany.CompanyName,
+                                  GroupName = x.UM_SecurityGroup.GroupName
+                              })
+                              .FirstOrDefault();
+
+                    if (u == null)
+                    {
+                        return Json(new { success = false, message = "User not found" }, JsonRequestBehavior.AllowGet);
+                    }
+
+                    return Json(new { success = true, Data = u }, JsonRequestBehavior.AllowGet);
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message }, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SaveUserProfile")]
+        public JsonResult SaveUserProfile(UserProfileDto model)
+        {
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var user = db.UM_Users.FirstOrDefault(x => x.UserName.ToLower() == model.UserName.ToLower());
+
+                    if (user == null)
+                    {
+                        return Json(new { success = false, message = "User not found" });
+                    }
+
+                    user.Email = model.Email;
+                    user.Phone = model.Phone;
+
+                    db.SubmitChanges();
+
+                    return Json(new { success = true });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("ChangePasswordPopUp")]
+        public JsonResult ChangePasswordPopUp(UserProfileDto model)
+        {
+            try
+            {
+                
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var user = db.UM_Users.FirstOrDefault(u => u.UserName.ToLower() == model.UserName.ToLower());
+                    if (user == null)
+                    {
+                        return Json(new { success = false, message = "User not found." });
+                    }
+
+                    if (user.Passwrd != model.CurrentPassword) 
+                    {
+                        return Json(new { success = false, message = "Current password is incorrect." });
+                    }
+
+                    user.Passwrd = model.NewPassword; 
+                    db.SubmitChanges();
+
+                    return Json(new { success = true, message = "Password changed successfully." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+
+
     }
+}
+
+public class UserProfileDto
+{
+    public string UserName { get; set; }
+    public string Email { get; set; }
+    public string Phone { get; set; }
+
+    public string CurrentPassword { get; set; }
+
+    public string NewPassword { get; set; }
+
 }

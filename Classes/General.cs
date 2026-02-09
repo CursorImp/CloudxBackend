@@ -1463,7 +1463,7 @@ namespace SignalRHub
         }
 
 
-        public static string AllocateDriver(TaxiDataContext db, Gen_SysPolicy_Configuration objPolicy, Booking objBooking, Fleet_Driver ObjDriver, int dispatchType = 0)
+        public static string AllocateDriver(TaxiDataContext db, Gen_SysPolicy_Configuration objPolicy, Booking objBooking, Fleet_Driver ObjDriver, int dispatchType = 0,bool? IsConfirmedDriver=false,int? ReturnDriverId = null)
         {
 
             string message = string.Empty;
@@ -1483,7 +1483,7 @@ namespace SignalRHub
                     //    DateTime? pickupDateAndTime = ObjMaster.Current.PickupDateTime.ToDateTimeorNull();
 
 
-                    bool isConfirmedDriver = true;
+                    bool isConfirmedDriver = IsConfirmedDriver.ToBool();
 
                     if (driverId == null)
                         isConfirmedDriver = false;
@@ -1697,8 +1697,8 @@ namespace SignalRHub
 
                             }
 
-                            objBooking.IsConfirmedDriver = driverId != null ? isConfirmedDriver : false;
-
+                            //objBooking.IsConfirmedDriver = driverId != null ? isConfirmedDriver : false;
+                            objBooking.IsConfirmedDriver = isConfirmedDriver;
 
 
 
@@ -1777,6 +1777,7 @@ namespace SignalRHub
 
                             db.SubmitChanges();
 
+
                             //if (cancelJob)
                             //{
 
@@ -1815,8 +1816,11 @@ namespace SignalRHub
                             {
                             }
 
-
-
+                            if (ReturnDriverId != null)
+                            {
+                                string allocatedDriverQuery = $"Update Booking SET DriverId={ReturnDriverId} WHERE MasterJobId={objBooking.Id}";
+                                db.ExecuteQuery<int>(allocatedDriverQuery);
+                            }
                         }
                         else
                         {
@@ -2400,12 +2404,14 @@ namespace SignalRHub
                                     List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
                                     string EmailSubject = $"New Future Job ({objBooking.BookingNo.ToStr()}) Notification From {objSubCompany.CompanyName.ToStr()}";
                                     var notes = "";
+                                    var flightNo = "";
                                     var specialReq = "";
                                     var paymentTypeName = "";
                                     var vehicleType = "";
                                     try
                                     {
                                         notes = objBooking.NotesString;
+                                        flightNo = objBooking.FromFlightNo;
                                         specialReq = objBooking.SpecialRequirements;
                                         paymentTypeName = objBooking?.Gen_PaymentType?.PaymentType.ToStr();
                                         vehicleType = objBooking?.Fleet_VehicleType?.VehicleType.ToStr();
@@ -2422,8 +2428,13 @@ namespace SignalRHub
                                     <table cellpadding='5' cellspacing='0' border='0'>
                                         <tr><td><b>Job Ref:</b></td><td>{objBooking.BookingNo}</td></tr>
                                         <tr><td><b>Pickup Date/Time:</b></td><td>{objBooking.PickupDateTime.ToDateTime().ToString("f")}</td></tr>
-                                        <tr><td><b>Pickup:</b></td><td>{objBooking.FromAddress}</td></tr>";
+                                        <tr><td><b>Pickup:</b></td><td>{objBooking.FromAddress}";
 
+                                    if (!string.IsNullOrWhiteSpace(flightNo))
+                                    {
+                                        body += $" (Fligh No: {flightNo})";
+                                    }
+                                    body += "</td></tr>";
                                     if (!string.IsNullOrWhiteSpace(notes))
                                     {
                                         body += $@"

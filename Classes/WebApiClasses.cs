@@ -70,7 +70,7 @@ namespace SignalRHub.WebApiClasses
         public string SetKey { get; set; }
         public string SetVal { get; set; }
         public string description { get; set; }
-        public bool IsLogin { get;  set; }
+        public bool IsLogin { get; set; }
     }
     public class ClsOnlineBooking
     {
@@ -435,6 +435,7 @@ namespace SignalRHub.WebApiClasses
 
         }
 
+        public string BookingStatusBgColor { get; set; }
         public bool ExtendMulti { get; set; }
         public int LeadTime { get; set; }
         public string PickupZoneName { get; set; }
@@ -579,6 +580,7 @@ namespace SignalRHub.WebApiClasses
         public string AddLog { get; set; }
         public bool? IsCompanyWise { get; set; }
         public DateTime? PickupDateTime { get; set; }
+        public DateTime? EndDate { get; set; }
         public string PickupDateTimeStr { get; set; }
         public long Id { get; set; }
         public int? FromLocTypeId { get; set; }
@@ -656,12 +658,12 @@ namespace SignalRHub.WebApiClasses
         public decimal? DriverHours { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? ToDate { get; set; }
-        public Fleet_Driver Driver { get;  set; }
-        public Gen_Company Company { get;  set; }
+        public Fleet_Driver Driver { get; set; }
+        public Gen_Company Company { get; set; }
         public bool? AllocatedDriver { get; set; }
-        public int? VehicleTypeIdReturn { get;  set; }
-        public int? DriverIdReturn { get;  set; }
-        public bool? IsHideJobFromDrivers { get;  set; }
+        public int? VehicleTypeIdReturn { get; set; }
+        public int? DriverIdReturn { get; set; }
+        public bool? IsHideJobFromDrivers { get; set; }
 
         public long PromotionId { get; set; }       // BIGINT
         public string PromotionCode { get; set; }   // VARCHAR
@@ -669,9 +671,9 @@ namespace SignalRHub.WebApiClasses
         public decimal? DiscountedFare { get; set; } // DECIMAL
         public string PromotionType { get; set; }   // VARCHAR
         public double? promoValue { get; set; }     // FLOAT
-        public int? Type { get;  set; }
-        public string Status { get;  set; }
-        public bool? IsSamePaymentType { get;  set; }
+        public int? Type { get; set; }
+        public string Status { get; set; }
+        public bool? IsSamePaymentType { get; set; }
     }
 
     public class Booking_DriverCommsiion
@@ -836,6 +838,7 @@ namespace SignalRHub.WebApiClasses
         public int Id { get; set; }
         public DateTime UpdateDate { get; set; }
         public DateTime WaitSinceOn { get; set; }
+        public int? SubCompanyId { get; set; }
     }
 
     public class clsTrackEscort
@@ -1092,7 +1095,6 @@ namespace SignalRHub.WebApiClasses
 
         public string PromotionDetails { get; set; }
         public JobPromotions PromotionDetail { get; set; }
-
 
         public ClsDispatchFares()
         {
@@ -1460,6 +1462,15 @@ namespace SignalRHub.WebApiClasses
         public bool IsAccountJob { get; set; }
         public int PaymentTypeId { get; set; }
         public int toEmailType { get; set; }
+
+        public decimal? Fare { get; set; }
+        public DateTime? PickupDate { get; set; }
+
+        public DateTime? PickupTime { get; set; }
+        public string FromAddress { get; set; }
+        public string ToAddress { get; set; }
+
+        public string BookingNo { get; set; }
     }
     public class ClsAutoDispatchInfo
     {
@@ -1493,7 +1504,7 @@ namespace SignalRHub.WebApiClasses
         public string VerifiedToken { get; set; }
         public string UserName { get; set; }
         public string Password { get; set; }
-
+        public string Extension { get; set; }
         public UserInfo objUserInfo { get; set; }
 
         public BookingInfo editbookingInfo { get; set; }
@@ -1515,9 +1526,9 @@ namespace SignalRHub.WebApiClasses
 
         public AuthInfo authInfo { get; set; }
         public ClsAutoDispatchInfo autoDispatchInfo { get; set; }
-
-
         public AdvanceBookingInfo advancebookingInfo { get; set; }
+        public List<AdvanceBookingInfo> advancebookingInfo_List { get; set; }
+        public List<AdvanceBookingInfo> advancebookingInfoReturn_List { get; set; }
         public DateTime? ScheduleDateTime { get; set; }
         public DateTime? DelayedDateTime { get; set; }
         public string ArrivalTerminal { get; set; }
@@ -1539,9 +1550,10 @@ namespace SignalRHub.WebApiClasses
         public int MoveToDriverId { get; set; }
         public SMSInfo smsInfo { get; set; }
         public string MessageType { get; set; }
-        public int? UserId { get;  set; }
-        public string Type { get;  set; }
-        public int? SubcompanyId { get;  set; }
+        public int? UserId { get; set; }
+        public string Type { get; set; }
+        public int? SubcompanyId { get; set; }
+        public bool? IsInCompleteBooking { get; set; }
     }
     public class bookingFare
     {
@@ -1575,7 +1587,7 @@ namespace SignalRHub.WebApiClasses
         public decimal? FareRate { get; set; }
         public decimal? CompanyPrice { get; set; }
         public int? PaymentTypeId { get; set; }
-        //  public string SpecialRequirements { get; set; }
+        public string SpecialRequirements { get; set; }
         public string FromAddress { get; set; }
         public string ToAddress { get; set; }
         //   public string FromPostCode { get; set; }
@@ -1618,8 +1630,15 @@ namespace SignalRHub.WebApiClasses
         public long? DepartmentId { get; set; }
 
         public int? DriverId { get; set; }
-        public DateTime? ReturnPickupDateTime { get;  set; }
+        public DateTime? ReturnPickupDateTime { get; set; }
         public List<ClsBooking_ViaLocation> Booking_ViaLocations { get; set; }
+        public int? LeadTime { get; set; }
+        public int? IsQuotedPrice { get; set; }
+        public string PickupNotes { get; set; }
+        public string PickupZoneName { get; set; }
+        public string DestinationZoneName { get; set; }
+        public int? IsSuspend { get; set; }
+        public string IsSuspend_Str { get; set; }
     }
 
     public class AuthInfo
@@ -1825,20 +1844,20 @@ namespace SignalRHub.WebApiClasses
         public int Noofhours { get; set; }
         public int? PaymentTypeId { get; set; }
         public int FareCalculationSetting { get; set; }
-       
+
 
         public List<RouteLeg> legs;
 
         public int? JourneyTypeId { get; set; }
         public int? CustomerId { get; set; }
         public int? SubCompanyId { get; set; }
-        public int DriverId { get;  set; }
-        public int? ReturnDriverId { get;  set; }
-        public string PromotionCode { get;  set; }
-        public string CustomerName { get;  set; }
-        public string MobileNo { get;  set; }
-        public string TelephoneNo { get;  set; }
-        public string RouteType { get;  set; }
+        public int DriverId { get; set; }
+        public int? ReturnDriverId { get; set; }
+        public string PromotionCode { get; set; }
+        public string CustomerName { get; set; }
+        public string MobileNo { get; set; }
+        public string TelephoneNo { get; set; }
+        public string RouteType { get; set; }
     }
     public class FareSettings
     {
@@ -1874,7 +1893,7 @@ namespace SignalRHub.WebApiClasses
         public Fleet_Driver Driver;
         public Fleet_Driver ReturnDriver;
         public List<AddressInfo> viaAddresses { get; set; }
-        public int? CustomerId { get;  set; }
+        public int? CustomerId { get; set; }
     }
 
 
@@ -1897,6 +1916,7 @@ namespace SignalRHub.WebApiClasses
         public string SmtpDriverEmailAddress { get; set; }
         public string CompanyName { get; set; }
     }
+
 
     public class ClsBookingListData
     {
@@ -2045,7 +2065,7 @@ namespace SignalRHub.WebApiClasses
                 }
             }
         }
-         [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_SpecialReq", DbType = "VarChar(max)")]
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_SpecialReq", DbType = "VarChar(max)")]
         public string SpecialReq
         {
             get

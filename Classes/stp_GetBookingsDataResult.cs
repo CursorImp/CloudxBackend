@@ -138,5 +138,6 @@ namespace SignalRHub
         public string BookingTypeName { get; set; }
         public string OrderNo { get; set; }
         public int? ZoneId { get; set; }
+        public long? MasterJobId { get; set; }
     }
 }

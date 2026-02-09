@@ -1,0 +1,2 @@
+23/12/2025 19:41:46,DriverNo:2000
+, PhotoAction:remove

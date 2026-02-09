@@ -5456,6 +5456,9 @@ namespace SignalRHub
                             }
                             else if (!string.IsNullOrEmpty(gatewayName) && (gatewayName.ToLower().Trim() == "konnectpay" || item.PaymentGatewayId == 15))
                             {
+                               
+
+
                                 long jobId = input.jobId.ToLong();
                                 Taxi_Model.Booking objBooking = General.GetObject<Taxi_Model.Booking>(c => c.Id == jobId);
                                 int SubcompanyId = 1;
@@ -5466,7 +5469,8 @@ namespace SignalRHub
                                     try
                                     {
                                         makePaymentResponse.KonnectAccId = CheckKonnectConfig?.PaypalID.ToStr();
-
+                                        string DriverAccountID = GetDriverAccountIDKp(input.driverId.ToLong());
+                                        if (!string.IsNullOrEmpty(DriverAccountID)) { makePaymentResponse.KonnectAccId = DriverAccountID; }
                                     }
                                     catch { }
 
@@ -6163,6 +6167,7 @@ namespace SignalRHub
                             //
                             decimal parking = objBooking.CongtionCharges.ToDecimal();
                             decimal waiting = objBooking.MeetAndGreetCharges.ToDecimal();
+                            decimal bookingFee = objBooking.ServiceCharges.ToDecimal();
 
 
 
@@ -6221,7 +6226,7 @@ namespace SignalRHub
 
 
                             //     listofsummary.Add(new BookingSummary { fieldname = "Tip", isedit = true, isvisible = true, label = "Tip", value = 0 });
-                            listofsummary.Add(new BookingSummary { fieldname = "BookingFee", isedit = false, isvisible = true, label = "BookingFee", value = objAction.BookingFee.ToDecimal() });
+                            listofsummary.Add(new BookingSummary { fieldname = "BookingFee", isedit = false, isvisible = true, label = "BookingFee", value = bookingFee.ToDecimal() });
 
                             response = Newtonsoft.Json.JsonConvert.SerializeObject(listofsummary);
                             //response = "{ \"JobId\" :\"" + jobId.ToStr() +
@@ -6676,7 +6681,8 @@ namespace SignalRHub
                     string StripeCountryId = obj.ApplicationId;
                     string StripeAPIBaseURL = System.Configuration.ConfigurationManager.AppSettings["StripeAPIBaseURL"];
 
-
+                    string DriverAccountID = GetDriverAccountIDKp(DriverID);
+                    if (!string.IsNullOrEmpty(DriverAccountID)) { StripeAccountId = DriverAccountID; }
 
                     if (!string.IsNullOrEmpty(StripeAccountId) && !string.IsNullOrEmpty(StripeCountryId))
                     {
@@ -6849,7 +6855,8 @@ namespace SignalRHub
 
                     if (objBooking != null && paymentGateway != null)
                     {
-
+                        string DriverAccountID = GetDriverAccountIDKp(Convert.ToInt64(objBooking?.DriverId));
+                        if (!string.IsNullOrEmpty(DriverAccountID)) { paymentGateway.PaypalID = DriverAccountID; }
                         resp = CreatePaymentLinkKonnectPay(paymentGateway, objBooking, input.sendType, input.mobileno, input.email, Price);
 
                     }
@@ -7054,6 +7061,8 @@ namespace SignalRHub
                     bool? IsMoto = input.IsMoto != null ? input.IsMoto : false;
                     if (objBooking != null && paymentGateway != null)
                     {
+                        string DriverAccountID = GetDriverAccountIDKp(Convert.ToInt64(objBooking?.DriverId));
+                        if (!string.IsNullOrEmpty(DriverAccountID)) { paymentGateway.PaypalID = DriverAccountID; }
                         if (!string.IsNullOrEmpty(input.serialnumber) && input.serialnumber.ToLower().Contains("terminal"))
                         {
                             StripeTerminalDTO StripeTerminals = GetTerminalList(paymentGateway.PaypalID, paymentGateway.ApplicationId, StripeAPIBaseURL);
@@ -7265,7 +7274,8 @@ namespace SignalRHub
 
                     if (objBooking != null && paymentGateway != null)
                     {
-
+                        string DriverAccountID = GetDriverAccountIDKp(Convert.ToInt64(objBooking?.DriverId));
+                        if (!string.IsNullOrEmpty(DriverAccountID)) { paymentGateway.PaypalID = DriverAccountID; }
                         resp = GetPaymentLinkKonnectPay(paymentGateway, objBooking, Price, false);
                         if (resp != null && resp.IsSuccess && !string.IsNullOrEmpty(resp.Data))
                         {
@@ -11688,6 +11698,8 @@ namespace SignalRHub
                         pda.EnableCustomPayment = Global.EnableCustomPayment;
                         pda.EnableSoundAdjustment = Global.EnableSoundAdjustment;
                         pda.EnablekonnectPayReciept = Global.EnablekonnectPayReciept;
+                        pda.disableBigFare = Global.disableBigFare;
+                        pda.EnableAddStopAfterPOB = Global.EnableAddStopAfterPOB;
                         try
                         {
                             string cred = "voipserver1469.vipvoipuk.net,250-voipserver1469,QnqUdyTEpZFsrZ,30001";
@@ -20109,6 +20121,52 @@ namespace SignalRHub
             }
 
             return res;
+        }
+
+        public class DriverAccountKP
+        {
+            public bool IsCreditToDriverAccount { get; set; }
+            public string AffiliateKey { get; set; }
+        }
+        private string GetDriverAccountIDKp(long DriverID)
+        {
+            string AccountId = string.Empty;
+            DriverAccountKP obj = new DriverAccountKP();
+
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    obj = db.ExecuteQuery<DriverAccountKP>("select AffiliateKey,IsCreditToDriverAccount from  Fleet_Driver_DeviceInfo where DriverId=" + DriverID).FirstOrDefault();
+                    if (obj != null && obj.IsCreditToDriverAccount && !string.IsNullOrEmpty(obj.AffiliateKey))
+                    {
+                        AccountId = obj.AffiliateKey;
+                    }
+
+                }
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\GetDriverAccountIDKp.txt", DateTime.Now.ToStr() + " Driver [" + DriverID + "] Account details : " + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                }
+                catch
+                {
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\GetDriverAccountIDKp_exception.txt", DateTime.Now.ToStr() + "Driver [" + DriverID + "]  Error: " + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+                }
+
+            }
+            return AccountId;
+
+
         }
     }
 

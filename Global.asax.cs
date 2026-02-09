@@ -133,6 +133,15 @@ namespace SignalRHub
         public static string AdvancedReturnEditBooking = "false";
         public static string EnableViaArriveSMS = "0";
         public static string EnablekonnectPayReciept = "0";
+        public static string EnableOnlineBookingSMS = "0";
+        public static string EnableRefundButton = "0";
+        public static string disableBigFare = "0";
+        public static string EnableSoftPhone = "0";
+        public static string AllowOnJobStatusOnNearestDriver = "0";
+        public static string EnableETAtoBase = "false";
+        public static string EnableMultiBookingExtraFields = "false";
+        public static string EnableConfirmedReturnDriver = "false";
+        public static string EnableAddStopAfterPOB = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -748,6 +757,18 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableTodayBookingFilterInHours", SetVal = "0", description = "Enable Today Booking Filter In Hours"  },
                              new AppSetting { SetKey = "EnableSamePaymentTypeForReturnBooking", SetVal = "false", description = "Enable Same PaymentType For ReturnBooking"  },
                              new AppSetting { SetKey = "EnableStatusOnBookingForm", SetVal = "false", description = "Enable Status On BookingForm"  },
+                             new AppSetting { SetKey = "EnablePlateNo", SetVal = "true", description = "Enable PlateNo"  },
+                             new AppSetting { SetKey = "EnableOnlineBookingSMS", SetVal = "0", description = "EnableOnlineBookingSMS"  },
+                             new AppSetting { SetKey = "EnableRefundButton", SetVal = "0", description = "EnableRefundButton"  },
+                             new AppSetting { SetKey = "disableBigFare", SetVal = "0", description = "disableBigFare"  },
+                             new AppSetting { SetKey = "EnableSoftPhone", SetVal = "0", description = "EnableSoftPhone"  },
+                             new AppSetting { SetKey = "AllowOnJobStatusOnNearestDriver", SetVal = "0", description = "AllowOnJobStatusOnNearestDriver"  },
+                             new AppSetting { SetKey = "EnableETABase", SetVal = "false", description = "EnableETABase"  },
+                             new AppSetting { SetKey = "EnableMultiBookingExtraFields", SetVal = "false", description = "EnableMultiBookingExtraFields"  },
+                             new AppSetting { SetKey = "MinFareForCreditCard", SetVal = "0", description = "MinFareForCreditCard -> if fare is greater than or equal to this fare change payment to credit card"  },
+                             new AppSetting { SetKey = "ApplyIncrementOnAccount", SetVal = "1", description = "ApplyIncrementOnAccount"  },
+                             new AppSetting { SetKey = "EnableConfirmedReturnDriver", SetVal = "false", description = "EnableConfirmedReturnDriver"  },
+                             new AppSetting { SetKey = "EnableAddStopAfterPOB", SetVal = "0", description = "EnableAddStopAfterPOB"  },
                              new AppSetting { SetKey = "EnablePlateNo", SetVal = "false", description = "Enable PlateNo"  },
                              new AppSetting { SetKey = "EnableOnlineBookingDetailNotification", SetVal = "false", description = "Enable Online Booking Detail Notification"},
                         };
@@ -1707,6 +1728,18 @@ namespace SignalRHub
                 {
                     EnableManualLeadTime = GetAppSetting<string>("EnableManualLeadTime").ToStr();
                 }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableETAtoBase")))
+                {
+                    EnableETAtoBase = GetAppSetting<string>("EnableETAtoBase").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableMultiBookingExtraFields")))
+                {
+                    EnableMultiBookingExtraFields = GetAppSetting<string>("EnableMultiBookingExtraFields").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableConfirmedReturnDriver")))
+                {
+                    EnableConfirmedReturnDriver = GetAppSetting<string>("EnableConfirmedReturnDriver").ToStr();
+                }
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableTodayBookingFilterUpTo2AM")))
                 {
                     EnableTodayBookingFilterUpTo2AM = GetAppSetting<string>("EnableTodayBookingFilterUpTo2AM").ToStr();
@@ -1746,6 +1779,30 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnablekonnectPayReciept")))
                 {
                     EnablekonnectPayReciept = GetAppSetting<string>("EnablekonnectPayReciept").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableOnlineBookingSMS")))
+                {
+                    EnableOnlineBookingSMS = GetAppSetting<string>("EnableOnlineBookingSMS").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableRefundButton")))
+                {
+                    EnableRefundButton = GetAppSetting<string>("EnableRefundButton").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("disableBigFare")))
+                {
+                    disableBigFare = GetAppSetting<string>("disableBigFare").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableSoftPhone")))
+                {
+                    EnableSoftPhone = GetAppSetting<string>("EnableSoftPhone").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("AllowOnJobStatusOnNearestDriver")))
+                {
+                    AllowOnJobStatusOnNearestDriver = GetAppSetting<string>("AllowOnJobStatusOnNearestDriver").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableAddStopAfterPOB")))
+                {
+                    EnableAddStopAfterPOB = GetAppSetting<string>("EnableAddStopAfterPOB").ToStr();
                 }
 
             }

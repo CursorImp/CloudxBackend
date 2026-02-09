@@ -20,3 +20,12 @@
 05/12/2025 9:04:17 pmException has been thrown by the target of an invocation.
 05/12/2025 9:22:43 pmException has been thrown by the target of an invocation.
 05/12/2025 9:23:12 pmException has been thrown by the target of an invocation.
+29/01/2026 5:17:26 pmLogin failed for user 'demo7321'.
+29/01/2026 5:20:54 pmLogin failed for user 'demo7321'.
+29/01/2026 5:29:19 pmLogin failed for user 'demo7321'.
+29/01/2026 5:29:59 pmLogin failed for user 'demo7321'.
+29/01/2026 5:31:56 pmThe SELECT permission was denied on the object 'CallerIdVOIP_Configurations', database 'DemoGB7', schema 'dbo'.
+29/01/2026 5:32:43 pmThe SELECT permission was denied on the object 'CallerIdVOIP_Configurations', database 'DemoGB7', schema 'dbo'.
+29/01/2026 5:33:05 pmThe SELECT permission was denied on the object 'CallerIdVOIP_Configurations', database 'DemoGB7', schema 'dbo'.
+29/01/2026 5:34:04 pmThe SELECT permission was denied on the object 'CallerIdVOIP_Configurations', database 'DemoGB7', schema 'dbo'.
+1/29/2026 5:56:45 PMThe SELECT permission was denied on the object 'CallerIdVOIP_Configurations', database 'DemoGB7', schema 'dbo'.
