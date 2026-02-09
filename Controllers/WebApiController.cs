@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Script.Serialization;
@@ -13129,7 +13130,143 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             }
             return rtn;
         }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("NearestDriverAsync")]
+        public async Task<JsonResult> NearestDriverAsync( AddressInfo obj)
+        {
+            ResponseWebApi response = new ResponseWebApi();
 
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    if (obj.IsPickup == 1 && obj.Longitude != null && obj.Latitude!=null)
+                    {
+
+
+
+                        var query =
+                            from a in db.GetTable<Fleet_DriverQueueList>()
+                            join b in db.GetTable<Fleet_Driver_Location>()
+                                on a.DriverId equals b.DriverId
+                            join d in db.GetTable<Fleet_Driver>()
+                                on a.DriverId equals d.Id
+                            join bk in db.GetTable<Booking>()
+                                on a.CurrentJobId equals bk.Id into bkJoin
+                            from booking in bkJoin.DefaultIfEmpty()
+                            where a.Status == true &&
+                                  (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
+                                   || (Global.AllowOnJobStatusOnNearestDriver == "1" &&
+                                       (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR
+                                        || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE)))
+                            select new
+                            {
+                                a.DriverId,
+                                d.DriverNo,
+                                b.LocationName,
+                                b.Latitude,
+                                b.Longitude,
+                                a.DriverWorkStatusId,
+                                booking
+                            };
+
+                        // Step 1: Load all drivers into memory
+                        var allDrivers = query.ToList();
+
+                        // Step 2: Filter drivers asynchronously by zone
+                        var tasks = allDrivers.Select(async x =>
+                        {
+                            if (x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE)
+                                return new
+                                {
+                                    x.DriverId,
+                                    x.DriverNo,
+                                    DriverLocation = x.LocationName,
+                                    x.Latitude,
+                                    x.Longitude,
+                                    x.DriverWorkStatusId
+                                };
+
+                            if (Global.AllowOnJobStatusOnNearestDriver == "1" &&
+                                (x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR ||
+                                 x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE) &&
+                                x.booking != null)
+                            {
+                                int? zoneId = await General.GetZoneIdAsync(x.booking.ToAddress.Trim());
+                                if (zoneId == obj.zoneId)
+                                    return new
+                                    {
+                                        x.DriverId,
+                                        x.DriverNo,
+                                        DriverLocation = x.LocationName,
+                                        x.Latitude,
+                                        x.Longitude,
+                                        x.DriverWorkStatusId
+                                    };
+                            }
+
+                            return null;
+                        });
+
+                        var listOfAvailDrvs = (await Task.WhenAll(tasks)).Where(d => d != null).ToList();
+
+                        // Step 3: Calculate distance and take nearest 3
+                        var nearestDrivers = listOfAvailDrvs
+                            .Select(args => new
+                            {
+                                args.DriverId,
+                                args.DriverWorkStatusId,
+                                MilesAwayFromPickup = new DotNetCoords.LatLng(args.Latitude, args.Longitude)
+                                    .DistanceMiles(new DotNetCoords.LatLng(Convert.ToDouble(obj.Latitude), Convert.ToDouble(obj.Longitude))),
+                                args.DriverNo,
+                                Latitude = args.Latitude,
+                                Longitude = args.Longitude,
+                                Location = args.DriverLocation
+                            })
+                            .OrderBy(args => args.MilesAwayFromPickup)
+                            .Take(3)
+                            .ToList();
+
+                        // Step 4: Get ETA asynchronously and build NearestDrivers list
+                        if (obj.NearestDrivers == null)
+                            obj.NearestDrivers = new List<string>();
+
+                        var etaTasks = nearestDrivers.Select(async drv =>
+                        {
+                            string time = await General.GetETATimeAsync(
+                                $"{drv.Latitude},{drv.Longitude}",
+                                $"{obj.Latitude},{obj.Longitude}",
+                                ""
+                            );
+
+                            return $"Drv {drv.DriverNo} - {time}_LatLng{drv.Latitude},{drv.Longitude}_WorkStatus{drv.DriverWorkStatusId}";
+                        });
+
+                        var results = await Task.WhenAll(etaTasks);
+                        obj.NearestDrivers.AddRange(results);
+                        WebApiClasses.RequestWebApi data = new RequestWebApi();
+                        data.addressInfo = obj;
+                        response.Data = data.addressInfo;
+                        response.HasError = false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    General.WriteLog("NearestDriverAsync_exceptionnearestdriver",
+                        "json:" + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
+                }
+                catch { }
+
+                response.HasError = true;
+                response.Message = "exception occured: " + ex.Message;
+            }
+            return new CustomJsonResult { Data = response };
+        }
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("GetNearestDrivers")]

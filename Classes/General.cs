@@ -1382,6 +1382,60 @@ namespace SignalRHub
             return res;
 
         }
+
+        public static async Task<string> GetETATimeAsync(string origin, string destination, string key)
+        
+            {
+            string res = "";
+            try
+            {
+                var obj = new
+                {
+                    originLat = Convert.ToDouble(origin.Split(',')[0]),
+                    originLng = Convert.ToDouble(origin.Split(',')[1]),
+                    destLat = Convert.ToDouble(destination.Split(',')[0]),
+                    destLng = Convert.ToDouble(destination.Split(',')[1]),
+                    //defaultclientid = AppVars.objPolicyConfiguration.DefaultClientId.ToStr(),
+                    defaultclientid = "DemoNadeem",
+                    keys = key,
+                    //MapType = AppVars.objPolicyConfiguration.MapType.ToInt(),
+                    MapType = 2,
+                    sourceType = "dispatch"
+
+                };
+
+
+                string json = new System.Web.Script.Serialization.JavaScriptSerializer().Serialize(obj);
+                //string API = objLic.AppServiceUrl + "GetETA" + "?json=" + json;
+                string API = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/" + "GetETA" + "?json=" + json;
+
+
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(API);
+                request.ContentType = "application/json; charset=utf-8";
+                request.Accept = "application/json";
+                request.Method = WebRequestMethods.Http.Post;
+                request.Proxy = null;
+                request.ContentLength = 0;
+
+                using (WebResponse responsea = request.GetResponse())
+                {
+
+                    using (StreamReader sr = new StreamReader(responsea.GetResponseStream()))
+                    {
+                        res = sr.ReadToEnd().ToStr();
+                    }
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+
+            }
+            return res;
+
+        }
+        
         public static string GetToken()
         {
 
@@ -3046,7 +3100,128 @@ namespace SignalRHub
 
             return zoneId;
         }
+        public static async Task<int?> GetZoneIdAsync(string address)
+            {
+            //if (AppVars.objPolicyConfiguration.EnablePDA.ToBool() == false)
+            //    return null;
 
+            //if (address != "AS DIRECTED" && string.IsNullOrEmpty(General.GetPostCodeMatch(address)))
+            //    return null;
+
+            if (address.Contains(", UK"))
+                address = address.Remove(address.LastIndexOf(", UK"));
+
+            int? zoneId = 0;
+
+            try
+            {
+                if (address == "AS DIRECTED")
+                {
+                    zoneId = General.GetObject<Gen_Zone>(c => c.ZoneName == address).DefaultIfEmpty().Id;
+                }
+                else
+                {
+                    // if (AppVars.listOfAddress.Count(c=>c.AddressLine1.Contains(address.ToStr().ToUpper()))
+
+                    //if (Instance.objPolicy.PriorityPostCodes.ToStr().Trim().Length > 0)
+                    //    zoneId = AppVars.listOfAddress.FirstOrDefault(c => c.AddressLine1.Contains(address.ToStr().ToUpper())).DefaultIfEmpty().ZoneId;
+
+                    if (zoneId == 0)
+                    {
+                        string postCode = GetPostCodeMatch(address);
+
+                        if (address.Contains(",") && HubProcessor.Instance.objPolicy.PriorityPostCodes.ToStr().Trim().Length > 0)
+                        {
+                            string addr = address.Substring(0, address.LastIndexOf(',')).Trim();
+
+                            if (addr.ToStr().Trim() != string.Empty)
+                            {
+                                zoneId = General.GetObject<Gen_Location>(c => c.PostCode == postCode && c.LocationName == addr).DefaultIfEmpty().ZoneId.ToInt();
+                            }
+                        }
+
+                        if (zoneId == 0)
+                        {
+                            //string postCode = General.GetPostCode(address);
+                            Gen_Coordinate objCoord = General.GetObject<Gen_Coordinate>(c => c.PostCode == postCode);
+                            if (objCoord != null)
+                            {
+                                double latitude = 0, longitude = 0;
+
+                                latitude = Convert.ToDouble(objCoord.Latitude);
+                                longitude = Convert.ToDouble(objCoord.Longitude);
+
+                                int[] plot = null;
+
+
+                                plot = (from a in General.GetQueryable<Gen_Zone>(c => (c.ShapeType != null && c.ShapeType == "circle") || (c.MinLatitude != null && (latitude >= c.MinLatitude && latitude <= c.MaxLatitude)
+                                                                  && (longitude <= c.MaxLongitude && longitude >= c.MinLongitude)))
+                                        orderby a.PlotKind
+
+                                        select a.Id).ToArray<int>();
+
+
+
+
+                                if (plot.Count() > 0)
+                                {
+                                    var list = (from p in plot
+                                                join a in General.GetQueryable<Gen_Zone_PolyVertice>(null) on p equals a.ZoneId
+                                                select a).ToList();
+
+                                    foreach (int plotId in plot)
+                                    {
+                                        if (FindPoint(latitude, longitude, list.Where(c => c.ZoneId == plotId).ToList()))
+                                        {
+                                            zoneId = plotId;
+                                            break;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    if (HubProcessor.Instance.objPolicy.PriorityPostCodes.ToStr().Length > 0)
+                                    {
+                                        double distPick = Convert.ToDouble(HubProcessor.Instance.objPolicy.CreditCardExtraCharges.ToDecimal());
+
+                                        if (distPick > 0)
+                                        {
+                                            string[] arr = HubProcessor.Instance.objPolicy.PriorityPostCodes.Split(new char[] { ',' });
+
+                                            if (objCoord.PostCode.ToStr().Contains(" ") && arr.Contains(objCoord.PostCode.Split(new char[] { ' ' })[0]))
+                                            {
+                                                var zone = (from a in General.GetQueryable<Gen_Zone_PolyVertice>(null).AsEnumerable()
+                                                            select new
+                                                            {
+                                                                a.Gen_Zone.Id,
+                                                                a.Gen_Zone.ZoneName,
+                                                                DistanceMin = new LatLng(Convert.ToDouble(a.Latitude), Convert.ToDouble(a.Longitude)).DistanceMiles(new LatLng(Convert.ToDouble(objCoord.Latitude), Convert.ToDouble(objCoord.Longitude))),
+                                                            }).OrderBy(c => c.DistanceMin).Where(c => c.DistanceMin <= distPick).FirstOrDefault();
+
+                                                if (zone != null)
+                                                    zoneId = zone.Id;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+
+            if (zoneId == 0)
+                zoneId = null;
+
+            return zoneId;
+        }
+
+        
         public static bool FindPoint(double pointLat, double pointLng, List<Gen_Zone_PolyVertice> PontosPolig)
         {
             //                             X               y               
