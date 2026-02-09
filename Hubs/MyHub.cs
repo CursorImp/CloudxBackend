@@ -556,7 +556,7 @@ namespace SignalRHub
                                     General.BroadCastMessage(
                                         "**requestauthorize web>>" +
                                         Instance.objPolicy.DefaultClientId.ToStr() +
-                                        ">>>" + json
+                                        ">>" + json
                                     );
                                 }
 
