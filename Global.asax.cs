@@ -769,6 +769,8 @@ namespace SignalRHub
                              new AppSetting { SetKey = "ApplyIncrementOnAccount", SetVal = "1", description = "ApplyIncrementOnAccount"  },
                              new AppSetting { SetKey = "EnableConfirmedReturnDriver", SetVal = "false", description = "EnableConfirmedReturnDriver"  },
                              new AppSetting { SetKey = "EnableAddStopAfterPOB", SetVal = "0", description = "EnableAddStopAfterPOB"  },
+                             new AppSetting { SetKey = "EnablePlateNo", SetVal = "false", description = "Enable PlateNo"  },
+                             new AppSetting { SetKey = "EnableOnlineBookingDetailNotification", SetVal = "false", description = "Enable Online Booking Detail Notification"},
                         };
 
                 using (var db = new TaxiDataContext())
