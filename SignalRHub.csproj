@@ -77,14 +77,17 @@
     <Reference Include="Google.Api.Gax.Rest, Version=4.8.0.0, Culture=neutral, PublicKeyToken=3ec5ea7f18953e47, processorArchitecture=MSIL">
       <HintPath>packages\Google.Api.Gax.Rest.4.8.0\lib\net462\Google.Api.Gax.Rest.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis, Version=1.68.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>packages\Google.Apis.1.68.0\lib\net462\Google.Apis.dll</HintPath>
+    <Reference Include="Google.Apis, Version=1.73.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>packages\Google.Apis.1.73.0\lib\net462\Google.Apis.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Auth, Version=1.68.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>packages\Google.Apis.Auth.1.68.0\lib\net462\Google.Apis.Auth.dll</HintPath>
+    <Reference Include="Google.Apis.Auth, Version=1.73.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>packages\Google.Apis.Auth.1.73.0\lib\net462\Google.Apis.Auth.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Apis.Core, Version=1.68.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
-      <HintPath>packages\Google.Apis.Core.1.68.0\lib\net462\Google.Apis.Core.dll</HintPath>
+    <Reference Include="Google.Apis.Calendar.v3, Version=1.73.0.3993, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>packages\Google.Apis.Calendar.v3.1.73.0.3993\lib\net462\Google.Apis.Calendar.v3.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Apis.Core, Version=1.73.0.0, Culture=neutral, PublicKeyToken=4b01fa6e34db77ab, processorArchitecture=MSIL">
+      <HintPath>packages\Google.Apis.Core.1.73.0\lib\net462\Google.Apis.Core.dll</HintPath>
     </Reference>
     <Reference Include="JobPoolAPICaller, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -409,6 +412,7 @@
     <Compile Include="Classes\FlightData.cs" />
     <Compile Include="Classes\General.cs" />
     <Compile Include="Classes\GetDistance.cs" />
+    <Compile Include="Classes\GoogleCalendarEvent.cs" />
     <Compile Include="Classes\HereForwardGeocoding.cs" />
     <Compile Include="Classes\HereMapApi.cs" />
     <Compile Include="Classes\HereMaps.cs" />

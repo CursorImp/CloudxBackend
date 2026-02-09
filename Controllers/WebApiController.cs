@@ -3357,7 +3357,16 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                     }
 
                     response.Data = GetBookingJSON(objMaster);
-
+                    try
+                    {
+                        if (Global.EnableGoogleCalendarEmail == "1")
+                        {
+                            GoogleCalendarEvent obj1 = new GoogleCalendarEvent();
+                            Task.Run(() => obj1.CreateEvent((int?)objMaster.Current.Id));
+                        }
+                    }
+                    catch {
+                    }
                     try
                     {
                         string driverCommissionQuery = $"Update Booking SET DriverCommissionTypeId={obj.bookingInfo.DriverCommissionTypeId}, DriverCommissionValue={obj.bookingInfo.DriverCommissionValue.ToDecimal()}, DriverHours={obj.bookingInfo.DriverHours.ToDecimal()}, IsFixedNoOfHours={(obj.bookingInfo.IsFixNoOfHours.ToBool() ? "1" : "0")}, IsFixedDriverCommission={(obj.bookingInfo.IsFixedDriverCommission.ToBool() ? "1" : "0")} WHERE Id={objMaster.Current.Id}";
@@ -3962,6 +3971,16 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                     CallGetDashboardData();
 
                     response.Data = obj.bookingInfo.Id;
+                    try
+                    {
+                        if (Global.EnableGoogleCalendarEmail == "1")
+                        {
+                            GoogleCalendarEvent obje = new GoogleCalendarEvent();
+                            Task.Run(() => obje.DeleteBookingEvents(obj.bookingInfo.Id));
+                        }
+                    }
+                    catch {
+                    }
 
                 }
             }

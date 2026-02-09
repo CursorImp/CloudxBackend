@@ -12,6 +12,11 @@ using Taxi_Model;
 
 namespace SignalRHub.WebApiClasses
 {
+    public class Booking_Events
+    {
+        public long JobId { get; set; }
+        public string EventId { get; set; }
+    }
     #region google search model
     public class Prediction
     {
