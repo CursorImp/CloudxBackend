@@ -4551,104 +4551,106 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         }
 
                         //if (obj.addressInfo.AddressType.ToInt() == 1 && latitude != null && latitude != 0)
-                        if (latitude != null && latitude != 0)
-                        {
-                            try
-                            {
-                                if (obj.addressInfo.IsPickup == 1)
-                                {
-                                    var query =
-                                        from a in db.GetTable<Fleet_DriverQueueList>()
-                                        join b in db.GetTable<Fleet_Driver_Location>()
-                                                       on a.DriverId equals b.DriverId
-                                        join d in db.GetTable<Fleet_Driver>()
-                                            on a.DriverId equals d.Id
-                                        join bk in db.GetTable<Booking>()
-                                            on a.CurrentJobId equals bk.Id into bkJoin
-                                        from booking in bkJoin.DefaultIfEmpty()
 
-                                        where a.Status == true
-                                           && (
-                                                a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
-                                                || (Global.AllowOnJobStatusOnNearestDriver == "1" && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR)
-                                                || (Global.AllowOnJobStatusOnNearestDriver == "1" && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE)
-                                              )
-                                        select new
-                                        {
-                                            a.DriverId,
-                                            d.DriverNo,
-                                            b.LocationName,
-                                            b.Latitude,
-                                            b.Longitude,
-                                            a.DriverWorkStatusId,
-                                            booking
-                                        };
-                                    var ListofAvailDrvs = query
-    .AsEnumerable()
-    .Where(x =>
-        x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
-        || (Global.AllowOnJobStatusOnNearestDriver == "1" &&
-            (x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR
-             || x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE)
-            && x.booking != null
-            && General.GetZoneId(x.booking.ToAddress.Trim()) == obj.addressInfo.zoneId
-        )
-    )
-    .Select(x => new
-    {
-        x.DriverId,
-        x.DriverNo,
-        DriverLocation = x.LocationName,
-        x.Latitude,
-        x.Longitude,
-        x.DriverWorkStatusId
-    })
-    .ToList();
+    //                    if (latitude != null && latitude != 0)
+    //                    {
+    //                        try
+    //                        {
+    //                            if (obj.addressInfo.IsPickup == 1)
+    //                            {
+    //                                var query =
+    //                                    from a in db.GetTable<Fleet_DriverQueueList>()
+    //                                    join b in db.GetTable<Fleet_Driver_Location>()
+    //                                                   on a.DriverId equals b.DriverId
+    //                                    join d in db.GetTable<Fleet_Driver>()
+    //                                        on a.DriverId equals d.Id
+    //                                    join bk in db.GetTable<Booking>()
+    //                                        on a.CurrentJobId equals bk.Id into bkJoin
+    //                                    from booking in bkJoin.DefaultIfEmpty()
 
-                                    var nearestDrivers = ListofAvailDrvs.Select(args => new
-                                    {
-                                        args.DriverId,
-                                        args.DriverWorkStatusId,
+    //                                    where a.Status == true
+    //                                       && (
+    //                                            a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
+    //                                            || (Global.AllowOnJobStatusOnNearestDriver == "1" && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR)
+    //                                            || (Global.AllowOnJobStatusOnNearestDriver == "1" && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE)
+    //                                          )
+    //                                    select new
+    //                                    {
+    //                                        a.DriverId,
+    //                                        d.DriverNo,
+    //                                        b.LocationName,
+    //                                        b.Latitude,
+    //                                        b.Longitude,
+    //                                        a.DriverWorkStatusId,
+    //                                        booking
+    //                                    };
+    //                                var ListofAvailDrvs = query
+    //.AsEnumerable()
+    //.Where(x =>
+    //    x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
+    //    || (Global.AllowOnJobStatusOnNearestDriver == "1" &&
+    //        (x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.SOONTOCLEAR
+    //         || x.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.NOTAVAILABLE)
+    //        && x.booking != null
+    //        && General.GetZoneId(x.booking.ToAddress.Trim()) == obj.addressInfo.zoneId
+    //    )
+    //)
+    //.Select(x => new
+    //{
+    //    x.DriverId,
+    //    x.DriverNo,
+    //    DriverLocation = x.LocationName,
+    //    x.Latitude,
+    //    x.Longitude,
+    //    x.DriverWorkStatusId
+    //})
+    //.ToList();
 
-                                        MilesAwayFromPickup = new DotNetCoords.LatLng(args.Latitude, args.Longitude).DistanceMiles(new DotNetCoords.LatLng(Convert.ToDouble(latitude), Convert.ToDouble(longitude))),
-                                        args.DriverNo,
-                                        Latitude = args.Latitude,
-                                        Longitude = args.Longitude,
-                                        Location = args.DriverLocation
+    //                                var nearestDrivers = ListofAvailDrvs.Select(args => new
+    //                                {
+    //                                    args.DriverId,
+    //                                    args.DriverWorkStatusId,
 
-                                    }).OrderBy(args => args.MilesAwayFromPickup)
-                                    .Take(3).ToList();
-                                    //List<RouteCoords> coords;
-                                    for (int i = 0; i < nearestDrivers.Count; i++)
-                                    {
-                                        string time = string.Empty;
+    //                                    MilesAwayFromPickup = new DotNetCoords.LatLng(args.Latitude, args.Longitude).DistanceMiles(new DotNetCoords.LatLng(Convert.ToDouble(latitude), Convert.ToDouble(longitude))),
+    //                                    args.DriverNo,
+    //                                    Latitude = args.Latitude,
+    //                                    Longitude = args.Longitude,
+    //                                    Location = args.DriverLocation
 
-                                        time = General.GetETATime(nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude, Convert.ToDouble(latitude) + "," + Convert.ToDouble(longitude), "").ToStr();
+    //                                }).OrderBy(args => args.MilesAwayFromPickup)
+    //                                .Take(3).ToList();
+    //                                //List<RouteCoords> coords;
+    //                                for (int i = 0; i < nearestDrivers.Count; i++)
+    //                                {
+    //                                    string time = string.Empty;
 
-                                        //obj.addressInfo.drvlatlong.Add(nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude);
+    //                                    time = General.GetETATime(nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude, Convert.ToDouble(latitude) + "," + Convert.ToDouble(longitude), "").ToStr();
 
-                                        if (obj.addressInfo.NearestDrivers == null)
-                                            obj.addressInfo.NearestDrivers = new List<string>();
+    //                                    //obj.addressInfo.drvlatlong.Add(nearestDrivers[i].Latitude + "," + nearestDrivers[i].Longitude);
 
-                                        obj.addressInfo.NearestDrivers.Add(
-         $"Drv {nearestDrivers[i].DriverNo} - {time}_LatLng{nearestDrivers[i].Latitude},{nearestDrivers[i].Longitude}_WorkStatus{nearestDrivers[i].DriverWorkStatusId}"
-     );
-                                    }
-                                }
+    //                                    if (obj.addressInfo.NearestDrivers == null)
+    //                                        obj.addressInfo.NearestDrivers = new List<string>();
 
-                            }
-                            catch (Exception ex)
-                            {
-                                try
-                                {
-                                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAddressDetails_exceptionnearestdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + ",exception:" + ex.Message + Environment.NewLine);
-                                    General.WriteLog("GetAddressDetails_exceptionnearestdriver", "json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + ", Exception: " + ex.Message);
-                                }
-                                catch
-                                {
-                                }
-                            }
-                        }
+    //                                    obj.addressInfo.NearestDrivers.Add(
+    //     $"Drv {nearestDrivers[i].DriverNo} - {time}_LatLng{nearestDrivers[i].Latitude},{nearestDrivers[i].Longitude}_WorkStatus{nearestDrivers[i].DriverWorkStatusId}"
+    // );
+    //                                }
+    //                            }
+
+    //                        }
+    //                        catch (Exception ex)
+    //                        {
+    //                            try
+    //                            {
+    //                                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetAddressDetails_exceptionnearestdriver.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + ",exception:" + ex.Message + Environment.NewLine);
+    //                                General.WriteLog("GetAddressDetails_exceptionnearestdriver", "json:" + new JavaScriptSerializer().Serialize(obj.addressInfo) + ", Exception: " + ex.Message);
+    //                            }
+    //                            catch
+    //                            {
+    //                            }
+    //                        }
+    //                    }
+
                         response.Data = obj.addressInfo;
                         //
                     }
