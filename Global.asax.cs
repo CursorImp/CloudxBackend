@@ -775,6 +775,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableOnlineBookingDetailNotification", SetVal = "false", description = "Enable Online Booking Detail Notification"},
                              new AppSetting { SetKey = "EnableDriverPinLogin", SetVal = "0", description = "EnableDriverPinLogin"  },
                              new AppSetting { SetKey = "EnableGoogleCalendarEmail", SetVal = "0", description = "EnableGoogleCalendarEmail"  },
+                             new AppSetting { SetKey = "EnableWriteSMS", SetVal = "false", description = "Enable Write SMS"  },
                         };
 
                 using (var db = new TaxiDataContext())
