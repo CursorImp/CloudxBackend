@@ -144,6 +144,7 @@ namespace SignalRHub
         public static string EnableAddStopAfterPOB = "0";
         public static string EnableDriverPinLogin = "0";
         public static string EnableGoogleCalendarEmail = "0";
+        public static string CheckIVRStatus = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -776,6 +777,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableDriverPinLogin", SetVal = "0", description = "EnableDriverPinLogin"  },
                              new AppSetting { SetKey = "EnableGoogleCalendarEmail", SetVal = "0", description = "EnableGoogleCalendarEmail"  },
                              new AppSetting { SetKey = "DisableDriverCommissionTick", SetVal = "true", description = "DisableDriverCommissionTick"  },
+                             new AppSetting { SetKey = "CheckIVRStatus", SetVal = "0", description = "CheckIVRStatus"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1816,6 +1818,10 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableGoogleCalendarEmail")))
                 {
                     EnableGoogleCalendarEmail = GetAppSetting<string>("EnableGoogleCalendarEmail").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("CheckIVRStatus")))
+                {
+                    CheckIVRStatus = GetAppSetting<string>("CheckIVRStatus").ToStr();
                 }
 
             }
