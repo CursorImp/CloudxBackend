@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -2496,6 +2497,71 @@ WHERE BookingId = {obj.bookingInfo.Id}";
             }
             response.Message = "SMS not sent: conditions not met or invalid booking.";
             response.HasError = true;
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("EnableAutoDespatchORBidding")]
+        public JsonResult EnableAutoDespatchORBidding(WebApiClasses.RequestWebApi obj)
+        {
+            ResponseWebApi response = new ResponseWebApi();
+            BookingBO objMaster = new BookingBO();
+            try
+            {
+
+                //
+                try
+                {
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveBooking.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("EnableAutoDespatchORBidding", "json: " + new JavaScriptSerializer().Serialize(obj));
+                }
+                catch
+                {
+
+                }
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    if (obj.bookingInfo.EnableAutoDespatch == true)
+                    {
+                        string query2 = "Update booking set AutoDespatch={0} where Id={1}";
+                        db.ExecuteCommand(query2, obj.bookingInfo.AutoDespatch, obj.bookingInfo.Id);
+                    }
+                    else if (obj.bookingInfo.EnableBidding == true)
+                    {
+                        string query2 = "Update booking set IsBidding={0},BookingStatusId = {2} where Id={1}";
+                        db.ExecuteCommand(query2, obj.bookingInfo.IsBidding, obj.bookingInfo.Id, obj.bookingInfo.IsBidding == true ? Enums.BOOKINGSTATUS.BID : Enums.BOOKINGSTATUS.WAITING);
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    response.HasError = true;
+
+                    if (objMaster.Errors.Count == 0)
+                    {
+                        response.Message = ex.Message;
+                        //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveBooking_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                        General.WriteLog("EnableAutoDespatchORBidding_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + "Exception: " + ex.Message);
+
+                    }
+                    else
+                    {
+                        response.Message = objMaster.ShowErrors();
+                        //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SaveBooking_validation.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                        General.WriteLog("EnableAutoDespatchORBidding_validation", "json: " + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message);
+                    }
+                }
+                catch
+                {
+
+                }
+            }
+
+
             return Json(response, JsonRequestBehavior.AllowGet);
         }
         [System.Web.Http.HttpGet]

@@ -771,6 +771,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "MinFareForCreditCard", SetVal = "0", description = "MinFareForCreditCard -> if fare is greater than or equal to this fare change payment to credit card"  },
                              new AppSetting { SetKey = "ApplyIncrementOnAccount", SetVal = "1", description = "ApplyIncrementOnAccount"  },
                              new AppSetting { SetKey = "EnableConfirmedReturnDriver", SetVal = "false", description = "EnableConfirmedReturnDriver"  },
+                             new AppSetting { SetKey = "EnableAutoDespatchAndBiddingOnContextMenu", SetVal = "false", description = "EnableAutoDespatchAndBiddingOnContextMenu"  },
                              new AppSetting { SetKey = "EnableAddStopAfterPOB", SetVal = "0", description = "EnableAddStopAfterPOB"  },
                              new AppSetting { SetKey = "EnablePlateNo", SetVal = "false", description = "Enable PlateNo"  },
                              new AppSetting { SetKey = "EnableOnlineBookingDetailNotification", SetVal = "false", description = "Enable Online Booking Detail Notification"},
@@ -778,6 +779,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableGoogleCalendarEmail", SetVal = "0", description = "EnableGoogleCalendarEmail"  },
                              new AppSetting { SetKey = "DisableDriverCommissionTick", SetVal = "true", description = "DisableDriverCommissionTick"  },
                              new AppSetting { SetKey = "CheckIVRStatus", SetVal = "0", description = "CheckIVRStatus"  },
+                             new AppSetting { SetKey = "EnableWriteSMS", SetVal = "false", description = "Enable Write SMS"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -9182,7 +9184,7 @@ namespace SignalRHub
         {
             try
             {
-                await Task.Yield(); 
+                await Task.Yield();
                 CheckBiddingJobs();
             }
             catch (Exception ex)

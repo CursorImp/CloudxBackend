@@ -679,6 +679,8 @@ namespace SignalRHub.WebApiClasses
         public int? Type { get; set; }
         public string Status { get; set; }
         public bool? IsSamePaymentType { get; set; }
+        public bool? EnableAutoDespatch {get;set;}
+        public bool? EnableBidding { get; set; }
     }
 
     public class Booking_DriverCommsiion
