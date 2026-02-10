@@ -375,7 +375,7 @@ namespace SignalRHub.Controllers
                                 ShowMapBydefaultOndashboard = ShowMapBydefaultOndashboard.SetVal,
                                 // webphone change start ------------->
                                 Extension = webPhone?.Extension ?? string.Empty,
-                                ExtenionPassword = webPhone?.Password ?? string.Empty
+                                ExtenionPassword = webPhone?.Password ?? string.Empty,
                                 // webphone change end ------------->
                                 IVREnable = IVRStatus
                             };
@@ -8078,8 +8078,17 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 response.Message = ex.Message;
             }
 
+            var serializer = new JavaScriptSerializer();
+            serializer.MaxJsonLength = Int32.MaxValue;
+            //  return Json(response, JsonRequestBehavior.AllowGet,);
+            var jsonResult = new JsonResult
+            {
+                Data = response,
+                JsonRequestBehavior = JsonRequestBehavior.AllowGet,
+                MaxJsonLength = int.MaxValue // Also increase the maxJsonLength property of the JsonResult
+            };
 
-            return Json(response, JsonRequestBehavior.AllowGet);
+            return jsonResult;//Json(response, JsonRequestBehavior.AllowGet);
 
         }
 
