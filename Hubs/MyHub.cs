@@ -2,6 +2,7 @@
 using Microsoft.AspNet.SignalR;
 using Microsoft.AspNet.SignalR.Hubs;
 using Newtonsoft;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -527,7 +528,45 @@ namespace SignalRHub
 
                         if (values.Count() > 2 && values[2] == "authorize")
                         {
-                            General.BroadCastMessage("**requestauthorize web>>" + Instance.objPolicy.DefaultClientId.ToStr() + ">>" + "XXX" + ">>" + jobId);
+                            using (TaxiDataContext db = new TaxiDataContext())
+                            {
+                                if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='EnableOnlineBookingDetailNotification'").FirstOrDefault().ToStr().Trim() == "true")
+                                {
+
+
+                                    var booking = db.Bookings.FirstOrDefault(b => b.Id == jobId.ToInt());
+
+                                    var payload = new
+                                    {
+                                        Id = booking.Id,
+                                        VehicleTypeId = booking.VehicleTypeId,
+                                        CompanyId = booking.CompanyId,
+                                        CustomerName = booking.CustomerName ?? "",
+                                        CustomerMobileNo = booking.CustomerMobileNo ?? "",
+                                        PickupDate = booking.PickupDateTime?.ToString("dd/MM/yyyy"),
+                                        PickupTime = booking.PickupDateTime?.ToString("HH:mm"),
+                                        FromAddress = booking.FromAddress ?? "",
+                                        ToAddress = booking.ToAddress ?? "",
+                                        VehicleType = booking.Fleet_VehicleType.VehicleType ?? "",
+                                        FareRate = booking.FareRate == null ? "0.00" : booking.FareRate.Value.ToString("0.00")
+                                    };
+
+                                    string json = JsonConvert.SerializeObject(payload);
+
+                                    General.BroadCastMessage(
+                                        "**requestauthorize web>>" +
+                                        Instance.objPolicy.DefaultClientId.ToStr() +
+                                        ">>" + json
+                                    );
+                                }
+
+                                else
+                                {
+                                    General.BroadCastMessage("**requestauthorize web>>" + Instance.objPolicy.DefaultClientId.ToStr() + ">>" + "XXX" + ">>" + jobId);
+
+                                }
+                            }
+
                         }
                         else
                         {

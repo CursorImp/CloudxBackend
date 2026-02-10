@@ -141,6 +141,9 @@ namespace SignalRHub
         public static string EnableETAtoBase = "false";
         public static string EnableMultiBookingExtraFields = "false";
         public static string EnableConfirmedReturnDriver = "false";
+        public static string EnableAddStopAfterPOB = "0";
+        public static string EnableDriverPinLogin = "0";
+        public static string EnableGoogleCalendarEmail = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -768,6 +771,12 @@ namespace SignalRHub
                              new AppSetting { SetKey = "ApplyIncrementOnAccount", SetVal = "1", description = "ApplyIncrementOnAccount"  },
                              new AppSetting { SetKey = "EnableConfirmedReturnDriver", SetVal = "false", description = "EnableConfirmedReturnDriver"  },
                              new AppSetting { SetKey = "EnableAutoDespatchAndBiddingOnContextMenu", SetVal = "false", description = "EnableAutoDespatchAndBiddingOnContextMenu"  },
+                             new AppSetting { SetKey = "EnableAddStopAfterPOB", SetVal = "0", description = "EnableAddStopAfterPOB"  },
+                             new AppSetting { SetKey = "EnablePlateNo", SetVal = "false", description = "Enable PlateNo"  },
+                             new AppSetting { SetKey = "EnableOnlineBookingDetailNotification", SetVal = "false", description = "Enable Online Booking Detail Notification"},
+                             new AppSetting { SetKey = "EnableDriverPinLogin", SetVal = "0", description = "EnableDriverPinLogin"  },
+                             new AppSetting { SetKey = "EnableGoogleCalendarEmail", SetVal = "0", description = "EnableGoogleCalendarEmail"  },
+                             new AppSetting { SetKey = "EnableWriteSMS", SetVal = "false", description = "Enable Write SMS"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1796,6 +1805,18 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("AllowOnJobStatusOnNearestDriver")))
                 {
                     AllowOnJobStatusOnNearestDriver = GetAppSetting<string>("AllowOnJobStatusOnNearestDriver").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableAddStopAfterPOB")))
+                {
+                    EnableAddStopAfterPOB = GetAppSetting<string>("EnableAddStopAfterPOB").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableDriverPinLogin")))
+                {
+                    EnableDriverPinLogin = GetAppSetting<string>("EnableDriverPinLogin").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableGoogleCalendarEmail")))
+                {
+                    EnableGoogleCalendarEmail = GetAppSetting<string>("EnableGoogleCalendarEmail").ToStr();
                 }
 
             }

@@ -26886,6 +26886,84 @@ SET
             }
             return Json(response, JsonRequestBehavior.AllowGet);
         }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendMessageToDrivers")]
+        public JsonResult SendMessageToDrivers(AdminApi obj)
+        {
+            ResponseAdminApi response = new ResponseAdminApi();
+            try
+            {
+                string msg = obj.Message;
+                string mobileno = obj.MobileNo;
+                if (string.IsNullOrEmpty(msg))
+                {
+                    response.HasError = true;
+                    response.Message = "Please enter message.";
+                }
+                else if (string.IsNullOrEmpty(mobileno))
+                {
+                    response.HasError = true;
+                    response.Message = "Please select Customer(s) to sent message.";
+                }
+                else
+                {
+                    var phoneNumbers = obj.MobileNo.Split(',');
+                    foreach (var phoneNumber in phoneNumbers)
+                    {
+                        string trimmedPhoneNumber = phoneNumber.Trim();
+                        if (!string.IsNullOrEmpty(trimmedPhoneNumber))
+                        {
+                            General.AddSMS(trimmedPhoneNumber, $"request pda=0=0=Message>>{msg}>>{DateTime.Now:dd/MM/yyyy HH:mm:ss}", 1);
+                        }
+
+                        using (TaxiDataContext db = new TaxiDataContext())
+                        {
+                            SentSM objSms = new SentSM();
+                            objSms.SentOn = DateTime.Now;
+                            objSms.SentTo = trimmedPhoneNumber.ToStr();
+                            objSms.SMSBody = msg;
+                            objSms.SentBy = obj.UserName.ToStr();
+
+                            db.SentSMs.InsertOnSubmit(objSms);
+                            db.SubmitChanges();
+
+                        }
+                    }
+                    response.Data = "Messages Sent Successfully";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+
+
+        //[System.Web.Http.HttpGet]
+        //[System.Web.Http.HttpPost]
+        //[System.Web.Http.Route("SendPushNotification")]
+        //public async Task<JsonResult> SendPushNotification([FromBody] PushNotificationRequest request)
+        //{
+        //    var response = new ResponseAdminApi();
+        //    try
+        //    {
+        //        foreach (var token in request.Tokens)
+        //        {
+        //            await FcmNotification.SendNotificationAsync(request.Title, request.Message, token);
+        //        }
+        //        response.HasError = false;
+        //        response.Message = "Notifications sent successfully.";
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        response.HasError = true;
+        //        response.Message = "Error while sending notifications: " + ex.Message;
+        //    }
+        //    return Json(response, JsonRequestBehavior.AllowGet);
+        //}
 
 
         [System.Web.Http.HttpGet]

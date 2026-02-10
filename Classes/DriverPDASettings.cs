@@ -135,5 +135,6 @@ namespace SignalRHub
         public string EnableSoundAdjustment = "";
         public string EnablekonnectPayReciept = "";
         public string disableBigFare = "";
+        public string EnableAddStopAfterPOB = "";
     }
 }
