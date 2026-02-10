@@ -767,6 +767,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "MinFareForCreditCard", SetVal = "0", description = "MinFareForCreditCard -> if fare is greater than or equal to this fare change payment to credit card"  },
                              new AppSetting { SetKey = "ApplyIncrementOnAccount", SetVal = "1", description = "ApplyIncrementOnAccount"  },
                              new AppSetting { SetKey = "EnableConfirmedReturnDriver", SetVal = "false", description = "EnableConfirmedReturnDriver"  },
+                             new AppSetting { SetKey = "EnableAutoDespatchAndBiddingOnContextMenu", SetVal = "false", description = "EnableAutoDespatchAndBiddingOnContextMenu"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -9155,7 +9156,7 @@ namespace SignalRHub
         {
             try
             {
-                await Task.Yield(); 
+                await Task.Yield();
                 CheckBiddingJobs();
             }
             catch (Exception ex)
