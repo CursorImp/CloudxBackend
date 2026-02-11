@@ -780,6 +780,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "DisableDriverCommissionTick", SetVal = "true", description = "DisableDriverCommissionTick"  },
                              new AppSetting { SetKey = "CheckIVRStatus", SetVal = "0", description = "CheckIVRStatus"  },
                              new AppSetting { SetKey = "EnableWriteSMS", SetVal = "false", description = "Enable Write SMS"  },
+                             new AppSetting { SetKey = "EnableDriverLoginOutNotification", SetVal = "false", description = "EnableDriverLoginOutNotification"  },
                         };
 
                 using (var db = new TaxiDataContext())
