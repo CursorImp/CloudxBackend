@@ -1996,8 +1996,7 @@ namespace SignalRHub
 
 
                                                 hasChanges = true;
-
-                                                item.PrevZoneId = zoneId;
+                                                
                                                 item.ZoneId = zoneId;
 
                                                 //   item.PreviousZone = "";
@@ -2014,11 +2013,16 @@ namespace SignalRHub
                                                 }
                                                 else
                                                 {
-                                                    if (Global.DisablePlotDateBreakUnBreak == "false")
+                                                    if (Global.DisablePlotDateBreakUnBreak == "true"  && item.PrevZoneId.ToInt() == zoneId)
+                                                    {
+
+                                                    }
+                                                    else
                                                     {
                                                         item.PlotDate = DateTime.Now;
                                                     }
                                                 }
+                                                item.PrevZoneId = zoneId;
                                             }
 
                                             if (zoneId == -1)
@@ -2031,10 +2035,7 @@ namespace SignalRHub
                                                     item.NewZoneName = newZoneName;
                                                     item.ZoneId = null;
                                                     //  item.PreviousZone = null;
-                                                    if (Global.DisablePlotDateBreakUnBreak == "false")
-                                                    {
-                                                        item.PlotDate = DateTime.Now;
-                                                    }
+                                                    item.PlotDate = DateTime.Now;
                                                 }
                                             }
 
