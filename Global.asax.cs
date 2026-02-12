@@ -5,6 +5,7 @@ using DotNetCoords;
 //using FirebaseAdmin;
 //using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNet.SignalR;
+using SignalRHub.Classes;
 using SignalRHub.WebApiClasses;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,8 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -46,12 +49,13 @@ namespace SignalRHub
         private static CallerIdVOIP_Configuration objAsterik = null;
         private ManagerConnection manager = null;
         private string physicalPath = AppContext.BaseDirectory;
-        private enum GatewayType { HypermediaSMSGateway = 1, DinstarSMSGateway = 2, TaxiLocalGateway = 3, VonagSMSGateWay = 5, ClickSend = 6 }
+        private enum GatewayType { HypermediaSMSGateway = 1, DinstarSMSGateway = 2, TaxiLocalGateway = 3, Twillio = 4, VonagSMSGateWay = 5, ClickSend = 6 }
         private static GatewayType SelectedGateway = GatewayType.DinstarSMSGateway;
         private string DefaultClientId { get; set; }
         private DinstarSettings DSSMS_Settings = null;
         private HypermediaSettings HMSMS_Settings = null;
         private SignalRHub.Classes.TaxiLocalSettings TaxiLocal_Settings = null;
+        public static TwillioSMS objTwillio = null;
 
         public static HMSMS.SmsGateway HMSMS_smsgateway = null;
         public static DSSMS.SmsGateway DSSMS_smsgateway = null;
@@ -145,6 +149,7 @@ namespace SignalRHub
         public static string EnableAddStopAfterPOB = "0";
         public static string EnableDriverPinLogin = "0";
         public static string EnableGoogleCalendarEmail = "0";
+        public static string CheckIVRStatus = "0";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -777,8 +782,11 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableOnlineBookingDetailNotification", SetVal = "false", description = "Enable Online Booking Detail Notification"},
                              new AppSetting { SetKey = "EnableDriverPinLogin", SetVal = "0", description = "EnableDriverPinLogin"  },
                              new AppSetting { SetKey = "EnableGoogleCalendarEmail", SetVal = "0", description = "EnableGoogleCalendarEmail"  },
+                             new AppSetting { SetKey = "DisableDriverCommissionTick", SetVal = "true", description = "DisableDriverCommissionTick"  },
+                             new AppSetting { SetKey = "CheckIVRStatus", SetVal = "0", description = "CheckIVRStatus"  },
                              new AppSetting { SetKey = "EnableWriteSMS", SetVal = "false", description = "Enable Write SMS"  },
                              new AppSetting { SetKey = "DisablePlotDateBreakUnBreak", SetVal = "false", description = "Disable Plot Date Break/UnBreak"  },
+                             new AppSetting { SetKey = "EnableDriverLoginOutNotification", SetVal = "false", description = "EnableDriverLoginOutNotification"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1301,6 +1309,10 @@ namespace SignalRHub
                         {
                             SelectedGateway = GatewayType.TaxiLocalGateway;
                         }
+                        else if (_selectgateway == 4)
+                        {
+                            SelectedGateway = GatewayType.Twillio;
+                        }
                         else if (_selectgateway == 5)
                         {
                             SelectedGateway = GatewayType.VonagSMSGateWay;
@@ -1481,6 +1493,36 @@ namespace SignalRHub
                     TLSMS_smsgateway.Password = sms.ClickSMSPassword;
                     TLSMS_smsgateway.UserName = sms.ClickSMSUserName;
                     TLSMS_smsgateway.APIKey = sms.ClickSMSApiKey;
+                }
+                else if (SelectedGateway == GatewayType.Twillio)
+                {
+                    Gen_SysPolicy_SMSConfiguration objSMSConfig = null;
+
+                    try
+                    {
+                        using (TaxiDataContext db = new TaxiDataContext())
+                        {
+
+                            objSMSConfig = db.Gen_SysPolicy_SMSConfigurations.FirstOrDefault();
+
+                            if (objSMSConfig != null && objSMSConfig.SMSAccountType.ToInt() == 4) // twillio
+                            {
+
+                                objTwillio = new TwillioSMS();
+                                objTwillio.AccountSID = objSMSConfig.ClickSMSUserName.ToStr().Trim();
+                                objTwillio.AuthToken = objSMSConfig.ClickSMSPassword.ToStr().Trim();
+                                objTwillio.PhoneNumber = objSMSConfig.ClickSMSApiKey.ToStr().Trim();
+                                SelectedGateway = GatewayType.Twillio;
+
+                            }
+
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+
                 }
                 else if (SelectedGateway == GatewayType.VonagSMSGateWay)
                 {
@@ -1823,6 +1865,10 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableGoogleCalendarEmail")))
                 {
                     EnableGoogleCalendarEmail = GetAppSetting<string>("EnableGoogleCalendarEmail").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("CheckIVRStatus")))
+                {
+                    CheckIVRStatus = GetAppSetting<string>("CheckIVRStatus").ToStr();
                 }
 
             }
@@ -3047,6 +3093,8 @@ namespace SignalRHub
 
                     }
                 }
+                else if (SelectedGateway == GatewayType.Twillio)
+                    SendTwilioSMS(number, message);
                 else
                 {
                     DSSMS_smsgateway.Send(number, message);
@@ -3055,8 +3103,185 @@ namespace SignalRHub
             }
         }
 
+        #region Send Twilio SMS
+        public static string CompanyName;
+        public static TwilioSMSResponse SendTwilioSMS(string number, string message)
+        {
+
+            if (objTwillio == null)
+            {
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\TwillioIsNull.txt", DateTime.Now.ToStr() + " :number:" + number + ",message:" + message + Environment.NewLine);
+                }
+                catch
+                {
+                    //
+                }
+
+                return null;
 
 
+
+            }
+
+
+            try
+            {
+                File.AppendAllText(AppContext.BaseDirectory + "\\SendTwilioSMS.txt", DateTime.Now.ToStr() + " :number:" + number + ",message:" + message + Environment.NewLine);
+            }
+            catch
+            {
+                //
+            }
+
+
+            var response = new TwilioSMSResponse();
+            TwilioSMSRequestDto request = new TwilioSMSRequestDto();
+            try
+            {
+
+
+                using (var tclient = new HttpClient())
+                {
+
+                    if (CompanyName.ToStr().Length == 0)
+                    {
+                        try
+                        {
+                            using (TaxiDataContext db = new TaxiDataContext())
+                            {
+                                CompanyName = db.Gen_SubCompanies.Select(c => c.CompanyName).FirstOrDefault().ToStr();
+                            }
+                        }
+                        catch
+                        { }
+
+                    }
+
+
+
+                    tclient.DefaultRequestHeaders.Accept.Clear();
+                    tclient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    string tbBaseUrl = "https://api-eurosofttech.co.uk/general/api/TwilioSMS";
+                    tclient.BaseAddress = new Uri(tbBaseUrl);
+                    request.companyName = CompanyName;
+
+                    try
+                    {
+
+                        //if (number.StartsWith("1") == false)
+                        //{
+                        //    if (number.StartsWith("+") == false)
+                        //        number = "1" + number;
+
+                        //}
+
+                        request.from = objTwillio.PhoneNumber.ToStr();
+                        request.sid = objTwillio.AccountSID.ToStr();
+                        request.to = number;
+                        request.message = message.Replace("\n", "");
+                        request.token = objTwillio.AuthToken.ToStr();
+                        request.other = "";
+                        request.createdOn = DateTime.Now.ToStr();
+                        var smsapi = Newtonsoft.Json.JsonConvert.SerializeObject(request);
+                        HttpContent content = new StringContent(smsapi, Encoding.UTF8, "application/json");
+
+                        try
+                        {
+
+                            var postTask = tclient.PostAsync(tclient.BaseAddress, content).Result;
+                            var readTask = postTask.Content.ReadAsStringAsync().Result;
+                            response = Newtonsoft.Json.JsonConvert.DeserializeObject<TwilioSMSResponse>(readTask);
+
+
+                        }
+                        catch (Exception ex)
+                        {
+                            try
+                            {
+                                File.AppendAllText(AppContext.BaseDirectory + "\\TwilioSMS_exceptionA.txt", DateTime.Now.ToStr() + "url:" + tclient.BaseAddress + ",request:" + smsapi + " :exception:" + ex.Message + Environment.NewLine);
+                            }
+                            catch
+                            {
+                                //
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        try
+                        {
+                            File.AppendAllText(AppContext.BaseDirectory + "\\TwilioSMS_exceptionB.txt", DateTime.Now.ToStr() + "url:" + tclient.BaseAddress + " :exception:" + ex.Message + Environment.NewLine);
+                        }
+                        catch
+                        {
+                            //
+                        }
+                    }
+                }
+
+                try
+                {
+                    if (response.isSuccssfull)
+                    {
+                        File.AppendAllText(AppContext.BaseDirectory + "\\TwilioSMSSent.txt", DateTime.Now.ToStr() + " : status" + response.isSuccssfull.ToStr() + Environment.NewLine);
+                        CreateLogSendSms(request.message, number, "Success", Newtonsoft.Json.JsonConvert.SerializeObject(request));
+                    }
+
+                    else
+                    {
+                        File.AppendAllText(AppContext.BaseDirectory + "\\TwilioSMSSentFailed.txt", DateTime.Now.ToStr() + " : status" + response.error.ToStr() + Environment.NewLine);
+                        CreateLogSendSms(request.message, number, response.error.ToStr(), Newtonsoft.Json.JsonConvert.SerializeObject(request));
+                    }
+
+
+                }
+                catch
+                {
+                    //
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    File.AppendAllText(AppContext.BaseDirectory + "\\TwilioSMS_exception.txt", DateTime.Now.ToStr() + " :exception:" + ex.Message + Environment.NewLine);
+                    CreateLogSendSms(message.Replace("\n", ""), number, ex.Message, Newtonsoft.Json.JsonConvert.SerializeObject(request));
+                }
+                catch
+                {
+                    //
+                }
+            }
+            return response;
+        }
+        public static void CreateLogSendSms(string SmsBody, string SentTo, string status, string request)
+        {
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    string query = "Insert into SentSMS (SMSBody,SentOn,SentTo,Status,SmsRequest)Values('" + SmsBody + "','" + DateTime.Now + "','" + SentTo + "','" + status.Replace("'", "(") + "','" + request + "')";
+                    try
+                    {
+                        File.AppendAllText(AppContext.BaseDirectory + "\\CreateLogSendSms.txt", DateTime.Now.ToStr() + " :query:" + query + Environment.NewLine);
+                    }
+                    catch
+                    {
+
+                    }
+
+                    db.ExecuteQuery<int>(query);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText(AppContext.BaseDirectory + "\\CreateLogSendSms_exception.txt", DateTime.Now.ToStr() + " :exception:" + ex.Message + Environment.NewLine);
+            }
+        }
+        #endregion
         public static string ClickSend_SendingSms(string mobile, string message, string companyName = null)
         {
             try

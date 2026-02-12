@@ -821,6 +821,7 @@ public static class GetDistance
         string jsonBody = $@"
     {{
         ""textQuery"": ""{keyword} {location}"",
+        ""regionCode"": ""GB"",
         ""locationBias"": {{
             ""circle"": {{
                 ""center"": {{
@@ -878,7 +879,7 @@ public static class GetDistance
                     })
                     .OrderBy(p => p.Distance)
                     .ThenByDescending(p => p.Rating)
-                    .Where(p => p.Distance <= radiusInMiles)
+                    //.Where(p => p.Distance <= radiusInMiles)
                     .Distinct()
                     .ToList();
 

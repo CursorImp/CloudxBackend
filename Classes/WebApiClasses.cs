@@ -1561,6 +1561,12 @@ namespace SignalRHub.WebApiClasses
         public string Type { get; set; }
         public int? SubcompanyId { get; set; }
         public bool? IsInCompleteBooking { get; set; }
+        public bool? IVRStatus { get; set; }
+    }
+    public class IVRResponse
+    {
+        public string message { get; set; }
+        public string status { get; set; }
     }
     public class bookingFare
     {

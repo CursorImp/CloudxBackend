@@ -345,6 +345,16 @@ namespace SignalRHub.Controllers
                             }
                             // webphone change end ------------->
 
+                            bool IVRStatus= false;
+                            try
+                            {
+                                if (Global.CheckIVRStatus == "1")
+                                {
+                                    IVRStatus = GetIVRStatus();
+                                }
+                            }
+                            catch {
+                            }
                             response.Data = new
                             {
                                 CompanyName = companyName,
@@ -366,8 +376,9 @@ namespace SignalRHub.Controllers
                                 ShowMapBydefaultOndashboard = ShowMapBydefaultOndashboard.SetVal,
                                 // webphone change start ------------->
                                 Extension = webPhone?.Extension ?? string.Empty,
-                                ExtenionPassword = webPhone?.Password ?? string.Empty
+                                ExtenionPassword = webPhone?.Password ?? string.Empty,
                                 // webphone change end ------------->
+                                IVREnable = IVRStatus
                             };
 
 
@@ -8133,8 +8144,17 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 response.Message = ex.Message;
             }
 
+            var serializer = new JavaScriptSerializer();
+            serializer.MaxJsonLength = Int32.MaxValue;
+            //  return Json(response, JsonRequestBehavior.AllowGet,);
+            var jsonResult = new JsonResult
+            {
+                Data = response,
+                JsonRequestBehavior = JsonRequestBehavior.AllowGet,
+                MaxJsonLength = int.MaxValue // Also increase the maxJsonLength property of the JsonResult
+            };
 
-            return Json(response, JsonRequestBehavior.AllowGet);
+            return jsonResult;//Json(response, JsonRequestBehavior.AllowGet);
 
         }
 
@@ -14838,6 +14858,143 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                     throw new Exception("WebPhone not found for the provided extension.");
                 }
             }
+        }
+        #endregion
+
+        #region Get/Update IVR Status
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetIVRStatus")]
+        public JsonResult GetIVRStatus(WebApiClasses.RequestWebApi obj)
+        {
+            try
+            {
+
+
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetIVRStatus.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+                response.Data = GetIVRStatus();
+
+
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    response.HasError = true;
+                    response.Message = ex.Message;
+
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetIVRStatus_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+                }
+            }
+
+            return new CustomJsonResult { Data = response };
+        }
+
+        public bool GetIVRStatus()
+        {
+            bool status = false;
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+                    var GetTask = client.GetAsync("https://portal.emeraldvoip.com/config.php?hash=ivr&client=mmatransfers&password=4701mtd4dk!&method=GetIVRStatus").Result;
+                    string PayResp = GetTask.Content.ReadAsStringAsync().Result;
+                    IVRResponse APIresp = new JavaScriptSerializer().Deserialize<IVRResponse>(PayResp);
+                    if (APIresp.status.ToStr().Length > 0)
+                    {
+                        if (APIresp.status.ToStr() == "1") { status = true; }
+                        else { status = false; }
+                    }
+
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetIVRStatus_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+                }
+            }
+            return status;
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("UpdateIVRStatus")]
+        public JsonResult UpdateIVRStatus(WebApiClasses.RequestWebApi obj)
+        {
+            try
+            {
+
+
+                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetIVRStatus.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    var IVRStatus = 0;
+                    if (obj.IVRStatus == true) { IVRStatus = 1; }
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+                    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+                    var GetTask = client.GetAsync("https://portal.emeraldvoip.com/config.php?hash=ivr&client=mmatransfers&password=4701mtd4dk!&method=UpdateIVRStatus&ivrstatus=" + IVRStatus).Result;
+                    string PayResp = GetTask.Content.ReadAsStringAsync().Result;
+                    IVRResponse APIresp = new JavaScriptSerializer().Deserialize<IVRResponse>(PayResp);
+                    response.Data = APIresp;
+                    response.HasError = false;
+                    response.Message = APIresp?.message;
+
+                    General.BroadcastToWebControllers("**IVRStatusUpdate>>" + obj?.IVRStatus + ">>" + Environment.MachineName.ToLower());
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    response.HasError = true;
+                    response.Message = ex.Message;
+
+                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetIVRStatus_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",exception:" + ex.Message + Environment.NewLine);
+                }
+                catch
+                {
+
+                }
+            }
+
+            return new CustomJsonResult { Data = response };
         }
         #endregion
     }
