@@ -2013,7 +2013,12 @@ namespace SignalRHub
 
                                                 }
                                                 else
-                                                    item.PlotDate = DateTime.Now;
+                                                {
+                                                    if (Global.DisablePlotDateBreakUnBreak == "false")
+                                                    {
+                                                        item.PlotDate = DateTime.Now;
+                                                    }
+                                                }
                                             }
 
                                             if (zoneId == -1)
@@ -2026,7 +2031,10 @@ namespace SignalRHub
                                                     item.NewZoneName = newZoneName;
                                                     item.ZoneId = null;
                                                     //  item.PreviousZone = null;
-                                                    item.PlotDate = DateTime.Now;
+                                                    if (Global.DisablePlotDateBreakUnBreak == "false")
+                                                    {
+                                                        item.PlotDate = DateTime.Now;
+                                                    }
                                                 }
                                             }
 

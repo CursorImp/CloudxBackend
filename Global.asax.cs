@@ -124,6 +124,7 @@ namespace SignalRHub
         public static string CancellationFee = "0";
         public static string CancellationFeeType = "1"; //1- Amount, 2- Percentage
         public static string EnableManualLeadTime = "false";
+        public static string DisablePlotDateBreakUnBreak = "false";
         public static string EnablePriority = "false";
         public static string ShowAllocatedInFutureList = "0";
         public static string EnableCustomPayment = "0";
@@ -777,6 +778,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableDriverPinLogin", SetVal = "0", description = "EnableDriverPinLogin"  },
                              new AppSetting { SetKey = "EnableGoogleCalendarEmail", SetVal = "0", description = "EnableGoogleCalendarEmail"  },
                              new AppSetting { SetKey = "EnableWriteSMS", SetVal = "false", description = "Enable Write SMS"  },
+                             new AppSetting { SetKey = "DisablePlotDateBreakUnBreak", SetVal = "false", description = "Disable Plot Date Break/UnBreak"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1734,6 +1736,10 @@ namespace SignalRHub
                 {
                     EnableManualLeadTime = GetAppSetting<string>("EnableManualLeadTime").ToStr();
                 }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("DisablePlotDateBreakUnBreak")))
+                {
+                    DisablePlotDateBreakUnBreak = GetAppSetting<string>("DisablePlotDateBreakUnBreak").ToStr();
+                }                
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableETAtoBase")))
                 {
                     EnableETAtoBase = GetAppSetting<string>("EnableETAtoBase").ToStr();
