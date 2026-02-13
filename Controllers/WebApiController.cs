@@ -176,6 +176,7 @@ namespace SignalRHub.Controllers
                                            u.SecurityGroupId,
                                            u.Email,
                                            u.ShowBookingFilter,
+                                           u.TransferBooking,
                                            SubcompanyAddress = sc != null ? sc.Address : null // pick address from subcompany
                                        }).FirstOrDefault();
 
@@ -281,14 +282,12 @@ namespace SignalRHub.Controllers
                             catch
                             {
                             }
+                            var TransferBooking = false;
+                            var ShowAllBookings = false;
+                            var ShowBookingFilter = false;
                             if (EnableFilterSubCompanyId == "true")
                             {
-
-
                                 var FilterSubCompanyId = 0;
-                                var TransferBooking = false;
-                                var ShowAllBookings = false;
-                                var ShowBookingFilter = false;
                                 if (objUser.SecurityGroupId == 1)
                                 {
                                     FilterSubCompanyId = objUser.SubcompanyId.ToInt();
@@ -300,14 +299,20 @@ namespace SignalRHub.Controllers
                                 {
                                     ShowAllBookings = objUser.ShowAllBookings.ToBool();
                                     ShowBookingFilter = objUser.ShowBookingFilter.ToBool();
-                                    TransferBooking = ShowAllBookings;
+                                    TransferBooking = objUser.TransferBooking.ToBool();
                                 }
 
                                 sysSettings["FilterSubCompanyId"] = FilterSubCompanyId;
-                                sysSettings["ShowAllBookings"] = ShowAllBookings;
-                                sysSettings["ShowBookingFilter"] = ShowBookingFilter;
-                                sysSettings["TransferBooking"] = TransferBooking;
                             }
+                            else
+                            {
+                                ShowAllBookings = objUser.ShowAllBookings.ToBool();
+                                ShowBookingFilter = objUser.ShowBookingFilter.ToBool();
+                                TransferBooking = objUser.TransferBooking.ToBool();
+                            }
+                            sysSettings["ShowAllBookings"] = ShowAllBookings;
+                            sysSettings["ShowBookingFilter"] = ShowBookingFilter;
+                            sysSettings["TransferBooking"] = TransferBooking;
                             var rights = db.UM_SecurityGroup_Permissions.Where(c => c.SecurityGroupId == objUser.SecurityGroupId);
 
                             var ListofUserRights = (from a in rights
@@ -345,7 +350,7 @@ namespace SignalRHub.Controllers
                             }
                             // webphone change end ------------->
 
-                            bool IVRStatus= false;
+                            bool IVRStatus = false;
                             try
                             {
                                 if (Global.CheckIVRStatus == "1")
@@ -353,7 +358,8 @@ namespace SignalRHub.Controllers
                                     IVRStatus = GetIVRStatus();
                                 }
                             }
-                            catch {
+                            catch
+                            {
                             }
                             response.Data = new
                             {
@@ -3442,7 +3448,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             Task.Run(() => obj1.CreateEvent((int?)objMaster.Current.Id));
                         }
                     }
-                    catch {
+                    catch
+                    {
                     }
                     try
                     {
@@ -4056,7 +4063,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             Task.Run(() => obje.DeleteBookingEvents(obj.bookingInfo.Id));
                         }
                     }
-                    catch {
+                    catch
+                    {
                     }
 
                 }
@@ -13238,7 +13246,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
         [System.Web.Http.Route("NearestDriverAsync")]
-        public async Task<JsonResult> NearestDriverAsync( AddressInfo obj)
+        public async Task<JsonResult> NearestDriverAsync(AddressInfo obj)
         {
             ResponseWebApi response = new ResponseWebApi();
 
@@ -13247,7 +13255,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             {
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    if (obj.IsPickup == 1 && obj.Longitude != null && obj.Latitude!=null)
+                    if (obj.IsPickup == 1 && obj.Longitude != null && obj.Latitude != null)
                     {
 
 
