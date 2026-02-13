@@ -6255,7 +6255,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                     if (arr.Count() == 2)
                                     {
                                         response.Data = (from a in db.Gen_Locations.Where(c => c.ShortCutKey == searchValue)
-                                                         select (a.PostCode != string.Empty ? a.LocationName + ", " + a.PostCode : a.LocationName)
+                                                         select (a.Address)
                                           ).ToArray<string>();
 
                                         if (response.Data != null && (response.Data as string[]).Count() == 0)
