@@ -829,7 +829,7 @@ namespace SignalRHub.Controllers
 
 
 
-                    SelectDashboardDrivers(db, ref data, obj.objUserInfo != null ? obj.objUserInfo.SubcompanyId.ToInt() : 0);
+                    //SelectDashboardDrivers(db, ref data, obj.objUserInfo != null ? obj.objUserInfo.SubcompanyId.ToInt() : 0);
 
 
                     //data.listofdrivers = db.stp_GetDashboardDrivers(0).ToList();
@@ -1227,7 +1227,6 @@ namespace SignalRHub.Controllers
 
                     //response.Data = data;
                     response.Data = SelectDashboardDrivers(db, ref data, obj.objUserInfo != null ? obj.objUserInfo.SubcompanyId.ToInt() : 0);
-
 
 
 
