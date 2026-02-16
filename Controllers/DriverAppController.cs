@@ -18089,7 +18089,10 @@ namespace SignalRHub
                             try
                             {
 
-
+                                if (objAction.PaymentGatewayID.ToInt() == 0)
+                                {
+                                    objAction.PaymentGatewayID = 15;
+                                }
 
                                 db.stp_MakePayment("XXX", "XXX", null,
                                       null, "123"
