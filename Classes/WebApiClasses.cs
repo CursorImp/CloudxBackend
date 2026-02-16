@@ -679,6 +679,8 @@ namespace SignalRHub.WebApiClasses
         public int? Type { get; set; }
         public string Status { get; set; }
         public bool? IsSamePaymentType { get; set; }
+        public bool? EnableAutoDespatch {get;set;}
+        public bool? EnableBidding { get; set; }
     }
 
     public class Booking_DriverCommsiion
@@ -1559,6 +1561,12 @@ namespace SignalRHub.WebApiClasses
         public string Type { get; set; }
         public int? SubcompanyId { get; set; }
         public bool? IsInCompleteBooking { get; set; }
+        public bool? IVRStatus { get; set; }
+    }
+    public class IVRResponse
+    {
+        public string message { get; set; }
+        public string status { get; set; }
     }
     public class bookingFare
     {

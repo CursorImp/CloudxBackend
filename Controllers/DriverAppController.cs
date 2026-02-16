@@ -1996,8 +1996,7 @@ namespace SignalRHub
 
 
                                                 hasChanges = true;
-
-                                                item.PrevZoneId = zoneId;
+                                                
                                                 item.ZoneId = zoneId;
 
                                                 //   item.PreviousZone = "";
@@ -2013,7 +2012,17 @@ namespace SignalRHub
 
                                                 }
                                                 else
-                                                    item.PlotDate = DateTime.Now;
+                                                {
+                                                    if (Global.DisablePlotDateBreakUnBreak == "true"  && item.PrevZoneId.ToInt() == zoneId)
+                                                    {
+
+                                                    }
+                                                    else
+                                                    {
+                                                        item.PlotDate = DateTime.Now;
+                                                    }
+                                                }
+                                                item.PrevZoneId = zoneId;
                                             }
 
                                             if (zoneId == -1)
