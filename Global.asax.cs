@@ -788,6 +788,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "DisablePlotDateBreakUnBreak", SetVal = "false", description = "Disable Plot Date Break/UnBreak"  },
                              new AppSetting { SetKey = "EnableDriverLoginOutNotification", SetVal = "false", description = "EnableDriverLoginOutNotification"  },
                              new AppSetting { SetKey = "EnableCompanyPricePercent", SetVal = "false", description = "EnableCompanyPricePercent"  },
+                             new AppSetting { SetKey = "EnableSortingForOnJobDriver", SetVal = "false", description = "EnableSortingForOnJobDriver"  },
                         };
 
                 using (var db = new TaxiDataContext())
