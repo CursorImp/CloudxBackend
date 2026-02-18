@@ -787,6 +787,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableWriteSMS", SetVal = "false", description = "Enable Write SMS"  },
                              new AppSetting { SetKey = "DisablePlotDateBreakUnBreak", SetVal = "false", description = "Disable Plot Date Break/UnBreak"  },
                              new AppSetting { SetKey = "EnableDriverLoginOutNotification", SetVal = "false", description = "EnableDriverLoginOutNotification"  },
+                             new AppSetting { SetKey = "EnableDriverHourly", SetVal = "false", description = "EnableDriverHourly"  },
                         };
 
                 using (var db = new TaxiDataContext())
