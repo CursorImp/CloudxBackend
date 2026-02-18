@@ -2036,6 +2036,7 @@ WHERE BookingId = {obj.bookingInfo.Id}";
                                           Line = a.Line,
                                           STN = a.STN,
                                           Duration = a.CallDuration,
+                                          Id=a.Id,
                                           IsMissed = (a.IsAccepted != null && a.IsAccepted == true) ? "1" : "0",
                                           Company = b != null && b.CompanyName != "" ? b.CompanyName : a.CalledToNumber,
                                           //RecordingUrl = a.CallDuration.Contains(".") ? VoipUrl + "/" + userName + "/inbound/" + a.CallDuration + "_" + (a.PhoneNumber.StartsWith("0") ? a.PhoneNumber.Substring(1) : a.PhoneNumber) : ""
@@ -2060,6 +2061,7 @@ WHERE BookingId = {obj.bookingInfo.Id}";
                     if (callerData != null)
                     {
                         obj.bookingInfo.RecordingUrl = callerData.RecordingUrl;
+                        obj.bookingInfo.CallerId = callerData.Id;
                     }
                     if (obj2.DeadMileage > 0)
                     {
@@ -5518,7 +5520,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         //GETALLFARESFROMDISPATCHNEW
 
 
-                        var url = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GETALLFARESFROMDISPATCHNEW";
+                       var url = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GETALLFARESFROMDISPATCHNEW";
                         var requestData = new
                         {
 
