@@ -17529,7 +17529,7 @@ namespace SignalRHub
 
                                         isMeter = Global.listofMeter != null && Global.listofMeter.Count > 0 && Global.listofMeter.FirstOrDefault(c => c.VehicleTypeId == vehicleTypeId).DefaultIfEmpty().HasMeter.ToBool() ? "1" : "0";
 
-                                        isMeter = objDetails.DisableDriverSMS.ToBool() == true ? "0" : "1";
+                                        isMeter = objDetails.DisableDriverSMS.ToBool() == true ? "0" : isMeter;
 
                                         var obj = Global.listofMeter.FirstOrDefault(c => c.VehicleTypeId == vehicleTypeId).DefaultIfEmpty();
 
@@ -18089,7 +18089,10 @@ namespace SignalRHub
                             try
                             {
 
-
+                                if (objAction.PaymentGatewayID.ToInt() == 0)
+                                {
+                                    objAction.PaymentGatewayID = 15;
+                                }
 
                                 db.stp_MakePayment("XXX", "XXX", null,
                                       null, "123"

@@ -634,12 +634,12 @@ namespace SignalRHub
                                         using (TaxiDataContext db = new TaxiDataContext())
                                         {
 
-                                            var objSub = db.Gen_SubCompanies.Select(args => new { args.SmtpHasSSL, args.SmtpHost, args.SmtpUserName, args.SmtpPassword, args.SmtpPort }).FirstOrDefault();
+                                            var objSub = db.Gen_SubCompanies.Select(args => new { args.SmtpHasSSL, args.SmtpHost, args.SmtpUserName, args.SmtpPassword, args.SmtpPort, args.EmailAddress }).FirstOrDefault();
 
 
-                                            if (objSub.SmtpUserName.ToStr().Trim().Length > 0)
+                                            if (objSub.SmtpUserName.ToStr().Trim().Length > 0 && objSub.EmailAddress.ToStr().Trim().Length > 0)
                                             {
-                                                ClsEASendEmail obj = new ClsEASendEmail(objSub.SmtpUserName.ToStr(), "info@atobtransfers.co.uk", "BOOKING CREATED FROM CMAC", body, objSub.SmtpHost.ToStr(), "");
+                                                ClsEASendEmail obj = new ClsEASendEmail(objSub.SmtpUserName.ToStr(), objSub.EmailAddress.ToStr(), "BOOKING CREATED FROM CMAC", body, objSub.SmtpHost.ToStr(), "");
                                                 var res = obj.Send(objSub.SmtpUserName.ToStr(), objSub.SmtpUserName.ToStr(), objSub.SmtpPassword.ToStr());
 
                                                 if (res)
