@@ -15091,6 +15091,10 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 BaseURL = "http://callrecordingapi.com/WebGet/api/FileAPI/GetFile?file=";
                 string uriString = BaseURL.Trim() + text4;
                 string text6 = FolderPath + "\\" + UniqueID + ".wav";
+                if (System.IO.File.Exists(text6))
+                {
+                    return text6; 
+                }
                 using (WebClient webClient = new WebClient())
                 {
                     webClient.DownloadFile(new Uri(uriString), text6);
