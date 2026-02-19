@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.IO;
 using System.Linq;
@@ -15020,7 +15021,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             //TCS.Call.MakeCall c = new TCS.Call.MakeCall();
                             string dirName = $"{callLog.AnsweredDateTime.Value.Year}-{callLog.AnsweredDateTime.Value.Month}/{callLog.AnsweredDateTime.Value.Day}";
                             string savePath = Server.MapPath("~/CallRecordings/" + dirName);
-                            url = String.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, Url.Content("~/")) + "CallRecordings/" + dirName + "/" + UniqueID;
+                            url = String.Format("{0}://{1}{2}", Request.Url.Scheme, Request.Url.Authority, Url.Content("~/")) + "CallRecordings/" + dirName + "/" + UniqueID + ".mp3";
                             if (!Directory.Exists(savePath))
                             {
                                 Directory.CreateDirectory(savePath);
@@ -15067,22 +15068,12 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
         {
             try
             {
-                string text = bookingDate.Month.ToString();
-                if (text.Length == 1)
-                {
-                    text = "0" + text;
-                }
-
-                string text2 = bookingDate.Day.ToString();
-                if (text2.Length == 1)
-                {
-                    text2 = "0" + text2;
-                }
-
+                string text = bookingDate.Month.ToString("00");
+                string text2 = bookingDate.Day.ToString("00");
                 string text3 = bookingDate.Year + "-" + text + "-" + text2;
-                string text4 = tokenNo.ToString() + "_" + text3 + "_" + UniqueID;
-                string[] array = text4.Split('_');
-                string text5 = array[2];
+
+                string text4 = tokenNo + "_" + text3 + "_" + UniqueID;
+
                 if (!Directory.Exists(FolderPath))
                 {
                     Directory.CreateDirectory(FolderPath);
@@ -15090,19 +15081,41 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
                 BaseURL = "http://callrecordingapi.com/WebGet/api/FileAPI/GetFile?file=";
                 string uriString = BaseURL.Trim() + text4;
-                string text6 = FolderPath + "\\" + UniqueID + ".wav";
-                if (System.IO.File.Exists(text6))
+
+                string wavPath = Path.Combine(FolderPath, UniqueID + ".wav");
+                string mp3Path = Path.Combine(FolderPath, UniqueID + ".mp3");
+
+                // If MP3 already exists, return it
+                if (System.IO.File.Exists(mp3Path))
+                    return mp3Path;
+
+                // Download WAV if not exists
+                if (!System.IO.File.Exists(wavPath))
                 {
-                    return text6; 
-                }
-                using (WebClient webClient = new WebClient())
-                {
-                    webClient.DownloadFile(new Uri(uriString), text6);
+                    using (WebClient webClient = new WebClient())
+                    {
+                        webClient.DownloadFile(new Uri(uriString), wavPath);
+                    }
                 }
 
-                return text6;
+                // Convert to MP3
+                if (System.IO.File.Exists(wavPath))
+                {
+                    Process process = new Process();
+                    process.StartInfo.FileName = Server.MapPath("~/bin/ffmpeg.exe");
+                    process.StartInfo.Arguments = $"-y -i \"{wavPath}\" \"{mp3Path}\"";
+                    process.StartInfo.CreateNoWindow = true;
+                    process.StartInfo.UseShellExecute = false;
+                    process.Start();
+                    process.WaitForExit();
+
+                    // Optional: delete wav after convert
+                    System.IO.File.Delete(wavPath);
+                }
+
+                return mp3Path;
             }
-            catch (Exception)
+            catch
             {
             }
 
