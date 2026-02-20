@@ -682,6 +682,7 @@ namespace SignalRHub.WebApiClasses
         public bool? EnableAutoDespatch {get;set;}
         public bool? EnableBidding { get; set; }
         public long? CallerId { get;  set; }
+        public bool? IsCancelReturn { get;  set; }
     }
 
     public class Booking_DriverCommsiion

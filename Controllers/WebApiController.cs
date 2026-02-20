@@ -3905,7 +3905,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
 
 
-                        if (obj.bookingInfo.BookingReturn != null && obj.bookingInfo.BookingReturn.Id > 0)
+                        if (objMaster.BookingReturns != null && objMaster.BookingReturns[0].Id > 0 && obj.bookingInfo.IsCancelReturn==true)
                         {
                             cancelReturnJob = true;
 
