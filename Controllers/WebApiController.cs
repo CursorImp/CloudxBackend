@@ -6077,8 +6077,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
-        [System.Web.Http.Route("GetAddressData")]
-        public JsonResult GetAddressData(WebApiClasses.RequestWebApi obj)
+        [System.Web.Http.Route("GetAddressDataOld")]
+        public JsonResult GetAddressDataOld(WebApiClasses.RequestWebApi obj)
         {
             //
 
@@ -6532,6 +6532,494 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             return new CustomJsonResult { Data = response };
         }
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetAddressData")]
+        public JsonResult GetAddressData(WebApiClasses.RequestWebApi obj)
+        {
+            //
+
+            ResponseWebApi response = new ResponseWebApi();
+
+            try
+            {//
+
+
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+
+                    string searchValue = obj.addressInfo.searchText.ToStr().Trim().ToUpper();
+                    try
+                    {
+
+                        if (HubProcessor.Instance.objPolicy.BookingInterval.ToInt() == 1)
+                        {
+                            var locationList = GetGoogleAndOtherAddressData(obj);
+                            var locationName = locationList.Select(x => x.AddressLine).ToList();
+                            response.Data = locationList;
+                        }
+                        else
+                        {
+                            //
+                            string postCode = General.GetPostCodeMatchOpt(searchValue);
+
+                            string doorNo = string.Empty;
+                            string place = string.Empty;
+
+
+
+
+                            if (postCode.Length == 0 && searchValue.Trim().Contains(" ") && searchValue.Trim().Contains(".") == false && searchValue.Trim().Contains("#") == false
+                              && searchValue[0].ToStr().IsAlpha() && searchValue.Split(new char[] { ' ' }).Any(c => c.IsAlpha() == false))
+                            //    && (searchValue.Trim().Substring(0, searchValue.Trim().IndexOf(' ')).ToStr().IsAlpha() == false || searchValue.Trim().Substring(searchValue.Trim().IndexOf(' ') + 1)[0].ToStr().IsAlpha()))
+                            {
+                                var arrData = searchValue.Split(new char[] { ' ' });
+
+
+
+                                if (arrData.Count() == 2)
+                                {
+                                    postCode = General.GetPostCodeMatchOpt(arrData.FirstOrDefault(c => c.IsAlpha() == false));
+
+                                }
+                                else if (arrData.Count() > 2)
+                                {
+
+                                    if (arrData[1][0].ToStr().IsNumeric())
+                                        postCode = General.GetPostCodeMatchOpt((arrData.FirstOrDefault(c => c.IsAlpha() == false) + " " + arrData[1]).Trim());
+                                    else if (arrData[1].ToStr().IsAlpha() == false && arrData[2].ToStr().IsAlpha() == false)
+                                        postCode = General.GetPostCodeMatchOpt((arrData.FirstOrDefault(c => c.IsAlpha() == false) + " " + arrData[2]).Trim());
+                                    else
+                                        postCode = General.GetPostCodeMatchOpt(arrData.FirstOrDefault(c => c.IsAlpha() == false));
+                                }
+
+
+                            }
+
+                            if (!string.IsNullOrEmpty(postCode) && postCode.IsAlpha() == true)
+                                postCode = string.Empty;
+
+                            string street = searchValue;
+
+                            if (postCode.Length > 0)
+                            {
+                                street = street.Replace(postCode, "").Trim();
+                            }
+
+
+                            if (!string.IsNullOrEmpty(street) && !string.IsNullOrEmpty(postCode) && street.IsAlpha() == false && street.Length < 4 && searchValue.IndexOf(postCode) < searchValue.IndexOf(street))
+                            {
+                                street = "";
+                                postCode = searchValue;
+                            }
+
+
+                            if (street.Length > 0)
+                            {
+
+                                if (char.IsNumber(street[0]))
+                                {
+
+                                    for (int i = 0; i <= 3; i++)
+                                    {
+
+                                        try
+                                        {
+                                            if (char.IsNumber(street[i]) || (doorNo.Length > 0 && doorNo.Length == i && char.IsLetter(street[i])))
+                                                doorNo += street[i];
+                                            else
+                                                break;
+                                        }
+                                        catch
+                                        {
+
+
+                                        }
+                                    }
+                                }
+                            }
+
+
+                            if (street.Contains("#"))
+                            {
+                                street = street.Replace("#", "").Trim();
+                                place = "p=";
+                            }
+
+                            if (doorNo.Length > 0 && place.Length == 0)
+                            {
+                                street = street.Replace(doorNo, "").Trim();
+
+
+                            }
+
+
+                            if (postCode.Length == 0 && street.Length < 3 && street != "//")
+                            {
+                                //   e.Cancel = true;
+                                //   return;
+
+                            }
+
+
+                            if (street.Length > 1 || postCode.Length > 0)
+                            {
+                                if (postCode.Length > 0)
+                                {
+                                    if (doorNo.Length > 0 && postCode == General.GetPostCodeMatch(postCode))
+                                    {
+                                        doorNo = string.Empty;
+                                    }
+
+                                }
+
+                                if (postCode.Length >= 5 && postCode.Contains(" ") == false)
+                                {
+
+
+                                    //string resultPostCode = AppVars.listOfAddress.FirstOrDefault(a => a.PostalCode.Strip(' ') == postCode).DefaultIfEmpty().PostalCode.ToStr().Trim();
+
+
+                                    //if (resultPostCode.Length >= 5 && resultPostCode.Contains(" "))
+                                    //{
+                                    //    postCode = resultPostCode;
+
+                                    //}
+
+                                }
+
+
+                                //if (POIWorker == null || POIWorker.CancellationPending || ((sender as BackgroundWorker) == null || (sender as BackgroundWorker).CancellationPending))
+                                //{
+                                //    e.Cancel = true;
+                                //    return;
+                                //}
+
+
+
+
+
+
+                                //if (text.Contains(" ") && text.Length < 13 && text.WordCount() == 2 && text.Remove(text.IndexOf(' ')).Trim().Length <= 3 && text.Strip(' ').IsAlpha()==false
+                                //    && (AppVars.keyLocations.Contains(text.Split(new char[] { ' ' })[0])))
+                                //{
+                                //  aTxt.ListBoxElement.Items.Clear();
+                                if (searchValue.Contains(" ") && searchValue.Length < 13 && searchValue.WordCount() == 2 && searchValue.Contains(".") == false && searchValue.Strip(' ').IsAlpha() == false)
+                                {
+
+                                    string[] arr = searchValue.Split(new char[] { ' ' });
+
+                                    if (arr.Count() == 2)
+                                    {
+                                        //response.Data = (from a in db.Gen_Locations.Where(c => c.ShortCutKey == searchValue)
+                                        //                 select (a.Address)
+                                        //  ).ToArray<string>();
+
+                                        //if (response.Data != null && (response.Data as string[]).Count() == 0)
+                                        //    response.Data = null;
+
+                                        response.Data = db.Gen_Locations.Where(c => c.ShortCutKey == searchValue)
+                                        .Select(a => new LocationListAdv
+                                        {
+                                            AddressLine = a.Address,
+                                            Latitude = a.Latitude,
+                                            Longitude = a.Longitude,
+                                            LocationTypeId = a.LocationTypeId
+                                        })
+                                        .ToList();
+
+                                        if (response.Data != null && (response.Data as List<LocationListAdv>).Count() == 0)
+                                            response.Data = null;
+                                    }
+
+                                }
+
+                                if (response.Data == null)
+                                {
+                                    if (searchValue.Contains(" ") && searchValue.Length < 20 && searchValue.WordCount() == 2 && searchValue.Contains(".") == false && searchValue.Strip(' ').IsAlpha() == false)
+                                    {
+
+                                        string[] arr = searchValue.Split(new char[] { ' ' });
+
+                                        if (arr.Count() == 2)
+                                        {
+                                            if (arr[0].IsAlpha())
+                                            {
+                                                string pcode = General.GetPostCodeMatch(arr[1].ToStr().ToUpper());
+
+                                                if (pcode.ToStr().Length > 0)
+                                                {
+                                                    //response.Data = (from a in db.Gen_Locations.Where(c => (c.Gen_LocationType.ShortCutKey == arr[0]) && c.PostCode.StartsWith(pcode))
+                                                    //                 select (a.PostCode != string.Empty ? a.LocationName + ", " + a.PostCode : a.LocationName)
+                                                    //  ).ToArray<string>();
+
+                                                    response.Data = db.Gen_Locations.Where(c => (c.Gen_LocationType.ShortCutKey == arr[0]) && c.PostCode.StartsWith(pcode))
+                                                    .Select(a => new LocationListAdv
+                                                    {
+                                                        AddressLine = a.Address,
+                                                        Latitude = a.Latitude,
+                                                        Longitude = a.Longitude,
+                                                        LocationTypeId = a.LocationTypeId
+                                                    })
+                                                    .ToList();
+
+                                                    if (response.Data != null && (response.Data as List<LocationListAdv>).Count() == 0)
+                                                        response.Data = null;
+
+                                                }
+                                            }
+                                        }
+
+                                    }
+                                }
+
+
+
+                                if (response.Data == null)
+                                {
+
+                                    if (doorNo.Length > 0 && street.Strip(' ').IsAlpha() == false)
+                                    {
+                                        postCode = General.GetPostCodeMatch(street);
+                                        if (postCode.Length > 0)
+                                        {
+
+                                            street = street.Replace(postCode, "").Trim();
+                                        }
+                                    }
+                                    else if (postCode.Length > 0 && street.Length == 0 && postCode.Count(c => c == ' ') > 1)
+                                    {
+                                        string originalPostCode = postCode;
+                                        postCode = postCode.Substring(0, postCode.LastIndexOf(' '));
+
+                                        doorNo = originalPostCode.Replace(postCode, "").ToStr().Trim();
+                                    }
+                                    else if (street.Length > 3 && street.Contains(' ') && street.IsAlpha() == false && doorNo.Length == 0)
+                                    {
+
+
+                                        for (int i = 0; i < street.Length; i++)
+                                        {
+                                            if (Char.IsDigit(street[i]))
+                                            {
+                                                if (i > 0 && street[i - 1] == ' ')
+                                                {
+
+                                                    doorNo += street[i];
+                                                }
+                                                else if (i == 0)
+                                                {
+                                                    doorNo += street[i];
+                                                }
+                                                else if (doorNo.Length > 0)
+                                                {
+                                                    doorNo += street[i];
+
+                                                }
+
+
+                                            }
+
+                                        }
+
+
+                                        if (doorNo.Length > 0)
+                                            street = street.Replace(doorNo, "").Trim();
+                                    }
+                                    else if (postCode.Length > 0 && postCode.Contains(" ") == false && street.Length == 0 && doorNo.Length == 0 && place.Length == 0)
+                                    {
+                                        //    IF LENGTH IS 5
+                                        //THEN
+                                        //E11AA=> IF 3RD CHARACTER IS NUMERIC THEN E1 1AA
+
+
+                                        //IF LENGTH IS 6
+                                        //THEN
+                                        //HA20DU=> IF 4TH CHARACTER IS NUMERIC THEN HA2 0DU
+
+                                        //IF LENGTH IS 7
+                                        //THEN 
+                                        //WC1A1AB=> IF 5TH CHARACTER IS NUMERIC THEN WC1A 1AB
+
+
+
+                                        if (postCode.Length == 5)
+                                        {
+                                            if (postCode[2].ToStr().IsNumeric())
+                                            {
+                                                postCode = postCode.Insert(2, " ");
+
+                                            }
+
+                                        }
+                                        else if (postCode.Length == 6)
+                                        {
+                                            if (postCode[3].ToStr().IsNumeric())
+                                            {
+                                                postCode = postCode.Insert(3, " ");
+
+                                            }
+
+                                        }
+                                        else if (postCode.Length == 7)
+                                        {
+                                            if (postCode[4].ToStr().IsNumeric())
+                                            {
+                                                postCode = postCode.Insert(4, " ");
+
+                                            }
+
+                                        }
+                                    }
+
+
+
+
+
+                                    if (street == "//" && obj.addressInfo.customerinfo.ToStr().Length > 0)
+                                    {
+                                        try
+                                        {
+
+                                            response.Data = db.ExecuteQuery<string>("exec stp_getcustomerhistoryaddresses {0}", obj.addressInfo.customerinfo.ToStr()).ToArray<string>();
+                                        }
+                                        catch
+                                        {
+
+
+                                        }
+                                    }
+                                    else
+                                    {
+
+
+
+
+
+
+                                        //var finalList = db.ExecuteQuery<stp_GetByRoadLevelDataResult>("exec stp_GetByRoadLevelData {0},{1},{2},{3}", postCode, doorNo, street, place)
+                                        //    .Select(c => c.AddressLine1).Where(c => c != null).ToArray<string>();
+
+                                        var finalList = db.ExecuteQuery<LocationListAdv>(
+                                        "exec stp_GetByRoadLevelData_Adv {0},{1},{2},{3}",
+                                        postCode, doorNo, street, place)
+                                        .Where(c => c.AddressLine != null)
+                                        .Select(c => new LocationListAdv
+                                        {
+                                            AddressLine = c.AddressLine,
+                                            Latitude = c.Latitude,
+                                            Longitude = c.Longitude,
+                                            LocationTypeId = c.LocationTypeId
+                                        })
+                                        .ToList();
+
+
+                                        var localization = db.stp_GetLocalizationDetails().Where(c => c.MasterId == null).Select(c => c.PostCode).ToArray<string>();
+
+                                        var finalList2 = (from a in localization
+                                                          from b in finalList
+                                                          where b.AddressLine.Contains(a) && (b.AddressLine.Substring(b.AddressLine.IndexOf(a), a.Length) == a && (b.AddressLine.IndexOf(a) - 1) >= 0 && b.AddressLine[b.AddressLine.IndexOf(a) - 1] == ' ' && GeneralBLL.GetHalfPostCodeMatch(b.AddressLine) == a)
+
+                                                          select b).ToList();
+
+
+                                        if (finalList2.Count() > 0)
+                                        {
+                                            finalList = finalList2.Union(finalList).ToList();
+
+
+                                            //finalList2 = (from a in finalList2
+                                            //                 where General.GetPostCodeMatch(a).Length == 0
+                                            //                 select a).ToArray<string>();
+
+
+                                            //    finalList = finalList2.Union(finalList).ToArray<string>();
+
+                                        }
+
+                                        response.Data = finalList;
+                                        //else
+                                        //{
+                                        //    finalList = resValue;
+
+                                        //    var finalList2 = (from a in resValue
+                                        //                      where General.GetPostCodeMatch(a).Length == 0
+                                        //                      select a).ToArray<string>();
+
+
+                                        //    finalList = finalList2.Union(finalList).ToArray<string>();
+                                        //}
+
+
+                                        //    }
+
+                                        //}
+                                    }
+                                    //   }
+
+
+                                    //    }
+                                }
+
+
+
+
+
+
+
+
+                            }
+                        }
+
+                        //
+
+
+
+                    }
+                    catch (Exception ex)
+                    {
+
+                        try
+                        {
+                            //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "getaddressdata1_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + ex.Message + Environment.NewLine);
+                            General.WriteLog("getaddressdata1_exception", "Exception: " + ex.Message);
+                        }
+                        catch
+                        {
+
+                        }
+
+                        //   AddExcepLog("POIWORKER_DOWORK : " + ex.Message);
+                        //     Console.WriteLine("Start work catch: " + searchValue);
+
+                    }
+
+
+
+
+
+
+
+
+                }
+
+
+
+
+
+            }
+            catch
+            {
+
+                response.HasError = true;
+                response.Message = "exception occured";
+            }
+
+
+
+            return new CustomJsonResult { Data = response };
+        }
 
         public List<LocationList> GetGoogleAndOtherAddressData(WebApiClasses.RequestWebApi obj)
         {
