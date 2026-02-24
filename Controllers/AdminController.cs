@@ -14618,7 +14618,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     objdriver.Current.IsActive = obj.fleetDriver.IsActive.ToBool(); //chkActiveDriver.Checked
                     objdriver.Current.DriverName = obj.fleetDriver.DriverName; //txtDriverName.Text
                     objdriver.Current.Surname = obj.fleetDriver.Surname; //txtSurName.Text
-                    //objdriver.Current.Email = obj.fleetDriver.Email; //txtEmail.Text
+                    objdriver.Current.Email = " "; //txtEmail.Text
                     objdriver.Current.TelephoneNo = obj.fleetDriver.TelephoneNo; //txtTelephoneNo.Text
                     objdriver.Current.MobileNo = obj.fleetDriver.MobileNo; //txtMobileNo.Text
 
