@@ -791,6 +791,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableStatusSortingForOnJobDriver", SetVal = "false", description = "EnableStatusSortingForOnJobDriver"  },
                              new AppSetting { SetKey = "EnableDriverHourly", SetVal = "false", description = "EnableDriverHourly"  },
                              new AppSetting { SetKey = "EnablePermissionOnReturnBookingCancellation", SetVal = "false", description = "EnablePermissionOnReturnBookingCancellation"  },
+                             new AppSetting { SetKey = "EnableCongestionOnAccountInvoice", SetVal = "false", description = "EnableCongestionOnAccountInvoice"  },
                         };
 
                 using (var db = new TaxiDataContext())
