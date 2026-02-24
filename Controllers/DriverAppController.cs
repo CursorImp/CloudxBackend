@@ -13113,9 +13113,12 @@ namespace SignalRHub
                     {
 
                         db.stp_LoginLogoutDriver(values[1].ToInt(), false, null);
-                        var DriverNo=db.Fleet_Drivers.FirstOrDefault(x=>x.Id == values[1].ToInt());
+                        var driverNo = db.Fleet_Drivers
+                 .Where(x => x.Id == values[1].ToInt())
+                 .Select(x => x.DriverNo)   
+                 .FirstOrDefault();         
 
-                        General.BroadCastMessage("**logout>>Driver " + DriverNo + " is Logout");
+                        General.BroadCastMessage("**logout>>Driver " + driverNo + " is Logout");
                     }
 
                 }
