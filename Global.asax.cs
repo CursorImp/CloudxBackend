@@ -792,9 +792,9 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableDriverHourly", SetVal = "false", description = "EnableDriverHourly"  },
                              new AppSetting { SetKey = "EnablePermissionOnReturnBookingCancellation", SetVal = "false", description = "EnablePermissionOnReturnBookingCancellation"  },
                              new AppSetting { SetKey = "EnableCongestionOnAccountInvoice", SetVal = "false", description = "EnableCongestionOnAccountInvoice"  },
-                             new AppSetting { SetKey = "EnableCompletedTime", SetVal = "true", description = "EnableCompletedTime"  },
-                             new AppSetting { SetKey = "EnableCancelTime", SetVal = "true", description = "EnableCancelTime"  },
-                             new AppSetting { SetKey = "EnableNoShowTime", SetVal = "true", description = "EnableNoShowTime"  },
+                             new AppSetting { SetKey = "EnableCompletedTime", SetVal = "false", description = "EnableCompletedTime"  },
+                             new AppSetting { SetKey = "EnableCancelTime", SetVal = "false", description = "EnableCancelTime"  },
+                             new AppSetting { SetKey = "EnableNoShowTime", SetVal = "false", description = "EnableNoShowTime"  },
                         };
 
                 using (var db = new TaxiDataContext())
