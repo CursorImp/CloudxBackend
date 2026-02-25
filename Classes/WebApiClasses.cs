@@ -1951,6 +1951,9 @@ namespace SignalRHub.WebApiClasses
         private string _RefNumber;
 
         private System.Nullable<System.DateTime> _BookingDate;
+        private System.Nullable<System.DateTime> _CompletedDateTime;
+        private System.Nullable<System.DateTime> _CancelTime;
+        private System.Nullable<System.DateTime> _NoShowTime;
 
         private System.Nullable<System.DateTime> _PickupDate;
 
@@ -1968,6 +1971,7 @@ namespace SignalRHub.WebApiClasses
 
         private System.Nullable<decimal> _Fare;
         private System.Nullable<bool> _IsHideJobFromDrivers;
+        private System.Nullable<bool> _IsQuotedPrice;
 
         private string _PaymentMethod;
 
@@ -2072,6 +2076,21 @@ namespace SignalRHub.WebApiClasses
                 }
             }
         }
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_IsQuotedPrice", DbType = "BIT")]
+        public bool? IsQuotedPrice
+        {
+            get
+            {
+                return this._IsQuotedPrice;
+            }
+            set
+            {
+                if ((this._IsQuotedPrice != value))
+                {
+                    this._IsQuotedPrice = value;
+                }
+            }
+        }
 
         [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_RefNumber", DbType = "VarChar(50)")]
         public string RefNumber
@@ -2116,6 +2135,51 @@ namespace SignalRHub.WebApiClasses
                 if ((this._BookingDate != value))
                 {
                     this._BookingDate = value;
+                }
+            }
+        }
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_CompletedDateTime", DbType = "DateTime")]
+        public System.Nullable<System.DateTime> CompletedDateTime
+        {
+            get
+            {
+                return this._CompletedDateTime;
+            }
+            set
+            {
+                if ((this._CompletedDateTime != value))
+                {
+                    this._CompletedDateTime = value;
+                }
+            }
+        }
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_NoShowTime", DbType = "DateTime")]
+        public System.Nullable<System.DateTime> NoShowTime
+        {
+            get
+            {
+                return this._NoShowTime;
+            }
+            set
+            {
+                if ((this._NoShowTime != value))
+                {
+                    this._NoShowTime = value;
+                }
+            }
+        }
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_CancelTime", DbType = "DateTime")]
+        public System.Nullable<System.DateTime> CancelTime
+        {
+            get
+            {
+                return this._CancelTime;
+            }
+            set
+            {
+                if ((this._CancelTime != value))
+                {
+                    this._CancelTime = value;
                 }
             }
         }

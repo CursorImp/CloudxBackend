@@ -135,6 +135,7 @@ namespace SignalRHub
         public long? EscortId { get; set; }
         public bool? HasEscort { get; set; }
         public bool? IsHideJobFromDrivers { get; set; }
+        public bool? IsQuotedPrice { get; set; }
         public string BookingTypeName { get; set; }
         public string OrderNo { get; set; }
         public int? ZoneId { get; set; }
