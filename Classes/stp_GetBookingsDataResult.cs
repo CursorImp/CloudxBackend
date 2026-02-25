@@ -139,5 +139,6 @@ namespace SignalRHub
         public string OrderNo { get; set; }
         public int? ZoneId { get; set; }
         public long? MasterJobId { get; set; }
+        public int TotalRecords { get; set; }
     }
 }

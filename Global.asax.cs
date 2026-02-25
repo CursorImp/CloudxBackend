@@ -790,6 +790,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableCompanyPricePercent", SetVal = "false", description = "EnableCompanyPricePercent"  },
                              new AppSetting { SetKey = "EnableStatusSortingForOnJobDriver", SetVal = "false", description = "EnableStatusSortingForOnJobDriver"  },
                              new AppSetting { SetKey = "EnableDriverHourly", SetVal = "false", description = "EnableDriverHourly"  },
+                             new AppSetting { SetKey = "OptimizeDashboardBookingGrid", SetVal = "false", description = "OptimizeDashboardBookingGrid"  },
                         };
 
                 using (var db = new TaxiDataContext())

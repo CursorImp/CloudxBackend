@@ -1563,6 +1563,11 @@ namespace SignalRHub.WebApiClasses
         public int? SubcompanyId { get; set; }
         public bool? IsInCompleteBooking { get; set; }
         public bool? IVRStatus { get; set; }
+        public int PageNumber { get; set; }
+        public int PageSize { get; set; }
+        public string searchText { get; set; }
+        public DateTime? FromDate { get; set; }
+        public DateTime? TillDate { get; set; }
     }
     public class IVRResponse
     {
