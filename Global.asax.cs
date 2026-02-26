@@ -795,6 +795,7 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableCompletedTime", SetVal = "false", description = "EnableCompletedTime"  },
                              new AppSetting { SetKey = "EnableCancelTime", SetVal = "false", description = "EnableCancelTime"  },
                              new AppSetting { SetKey = "EnableNoShowTime", SetVal = "false", description = "EnableNoShowTime"  },
+                             new AppSetting { SetKey = "OptimizeDashboardBookingGrid", SetVal = "false", description = "OptimizeDashboardBookingGrid"  },
                         };
 
                 using (var db = new TaxiDataContext())

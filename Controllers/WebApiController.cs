@@ -274,6 +274,7 @@ namespace SignalRHub.Controllers
                             sysSettings["AutoModeType"] = HubProcessor.Instance.objPolicy.AutoDespatchDriverCategoryPriority;
                             sysSettings["TransferBooking"] = IsAdmin;
                             sysSettings["WaitAndReturnDiscountType"] = HubProcessor.Instance.objPolicy.DiscountForWRJourneyPercent;
+                            sysSettings["HourControllerReport"] = HubProcessor.Instance.objPolicy.HourControllerReport;
 
                             var EnableFilterSubCompanyId = "false";
                             try
@@ -592,7 +593,6 @@ namespace SignalRHub.Controllers
 
             return data;
         }
-
         private ClsDashboardModel SelectDashboardBookingsList(TaxiDataContext db, ref ClsDashboardModel datab, int subCompanyId = 0)
         {
 
@@ -724,6 +724,78 @@ namespace SignalRHub.Controllers
 
             return data;
         }
+        private ClsDashboardModel SelectDashboardBookingsList_Adv(int subCompanyId = 0, int PageNumber = 0, int PageSize = 0, string StatusId = "", string searchText = "", DateTime? FromDate = null, DateTime? TillDate = null)
+        {
+            ClsDashboardModel data = new ClsDashboardModel();
+            try
+            {
+                DateTime? dt = DateTime.Now.ToDateorNull();
+                DateTime prebookingdays = TillDate ?? dt.Value.AddDays(HubProcessor.Instance.objPolicy.HourControllerReport.ToInt()).ToDate();
+                DateTime From = FromDate ?? DateTime.Now.AddDays(1);
+
+
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    data.listofprebookings = db.ExecuteQuery<stp_GetBookingsDataResult>("exec stp_GetBookingsData_Pagination {0},{1},{2},{3},{4},{5},{6},{7}", From, prebookingdays, subCompanyId, HubProcessor.Instance.objPolicy.DaysInTodayBooking.ToInt(), StatusId, PageNumber, PageSize, searchText ?? "").ToList();
+                }
+            }
+
+            catch
+            {
+
+            }
+            return data;
+        }
+
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetPreBookingData")]
+        public JsonResult GetPreBookingData(WebApiClasses.RequestWebApi obj)
+        {
+            try
+            {
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetDashboardData.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("GetPreBookingData", "json: " + new JavaScriptSerializer().Serialize(obj));
+            }
+            catch
+            {
+
+            }
+            ResponseWebApi response = new ResponseWebApi();
+            ClsDashboardModel data = new ClsDashboardModel();
+            try
+            {
+                string StatusId = (Enums.BOOKINGSTATUS.WAITING + "," + Enums.BOOKINGSTATUS.WAITING_WEBBOOKING + "," + Enums.BOOKINGSTATUS.PENDING_START + "," + Enums.BOOKINGSTATUS.PENDING_WEBBOOKING);
+                data = SelectDashboardBookingsList_Adv((obj.objUserInfo != null ? obj.objUserInfo.SubcompanyId.ToInt() : 0), obj.PageNumber, obj.PageSize, StatusId, obj.searchText, obj.FromDate, obj.TillDate);
+
+                //
+                response.Data = data;
+                General.WriteLog("GetPreBookingData", "json: " + new JavaScriptSerializer().Serialize(obj));
+            }
+            catch (Exception ex)
+            {
+
+                try
+                {
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\GetDashboardData_exception.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetPreBookingData_exception", "json: " + new JavaScriptSerializer().Serialize(obj) + ", Exception: " + ex.Message);
+                }
+                catch
+                {
+
+                }
+
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+
+
+            return new CustomJsonResult { Data = response };
+        }
+
+
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -1557,8 +1629,8 @@ namespace SignalRHub.Controllers
 
                 var list = (from a in db.Fleet_DriverQueueLists
                             where a.DriverId != null && a.Status == true && a.Fleet_Driver.IsActive == true
-                            //&& (a.Fleet_Driver.SubcompanyId == AppVars.DefaultDriverSubCompanyId || AppVars.DefaultDriverSubCompanyId == 0) && (a.ZoneId == null || a.ZoneId != null && a.Gen_Zone.ZoneName != "SIN BIN")
- && (a.DriverWorkStatusId != Enums.Driver_WORKINGSTATUS.AVAILABLE && a.DriverWorkStatusId != Enums.Driver_WORKINGSTATUS.ONBREAK)
+    //&& (a.Fleet_Driver.SubcompanyId == AppVars.DefaultDriverSubCompanyId || AppVars.DefaultDriverSubCompanyId == 0) && (a.ZoneId == null || a.ZoneId != null && a.Gen_Zone.ZoneName != "SIN BIN")
+    && (a.DriverWorkStatusId != Enums.Driver_WORKINGSTATUS.AVAILABLE && a.DriverWorkStatusId != Enums.Driver_WORKINGSTATUS.ONBREAK)
                             //&& (a.IsManualLogin == null || a.IsManualLogin == false)
 
 
@@ -2037,7 +2109,7 @@ WHERE BookingId = {obj.bookingInfo.Id}";
                                           Line = a.Line,
                                           STN = a.STN,
                                           Duration = a.CallDuration,
-                                          Id=a.Id,
+                                          Id = a.Id,
                                           IsMissed = (a.IsAccepted != null && a.IsAccepted == true) ? "1" : "0",
                                           Company = b != null && b.CompanyName != "" ? b.CompanyName : a.CalledToNumber,
                                           //RecordingUrl = a.CallDuration.Contains(".") ? VoipUrl + "/" + userName + "/inbound/" + a.CallDuration + "_" + (a.PhoneNumber.StartsWith("0") ? a.PhoneNumber.Substring(1) : a.PhoneNumber) : ""
@@ -4636,7 +4708,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         }
 
                         obj.addressInfo.zoneId = General.GetZoneId(searchValue);//General.GetZoneId(latitude + "," + longitude);
-                        // GetZoneIDTime zone = General.GetZoneIdAndTime(latitude + "," + longitude);
+                                                                                // GetZoneIDTime zone = General.GetZoneIdAndTime(latitude + "," + longitude);
 
                         //    obj.addressInfo.zoneId = General.GetZoneId(latitude + "," + longitude);
                         //  obj.addressInfo.leadZoneDueTime = zone.leadZoneDueTime;
@@ -5521,7 +5593,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         //GETALLFARESFROMDISPATCHNEW
 
 
-                       var url = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GETALLFARESFROMDISPATCHNEW";
+                        var url = "https://www.treasureonlineapi.co.uk/CabTreasureWebApi/Home/GETALLFARESFROMDISPATCHNEW";
                         var requestData = new
                         {
 
@@ -12199,7 +12271,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             StrBld.Append("<tr><td colspan='4'>&nbsp;</td></tr>");
                             StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-size: 18px; border-bottom: #d4e0ee 1px solid;background-color: #eff3f9;'>");
 
-                            decimal fare = obj2.CompanyId>0?obj2.CompanyPrice.ToDecimal() : obj2.FareRate.ToDecimal();
+                            decimal fare = obj2.CompanyId > 0 ? obj2.CompanyPrice.ToDecimal() : obj2.FareRate.ToDecimal();
                             decimal bookingFee = obj2.ServiceCharges.ToDecimal();
                             decimal total = fare + bookingFee;
                             StrBld.Append("<table width='100%' cellpadding='4' cellspacing='0' style='font-size:14px;'>");
