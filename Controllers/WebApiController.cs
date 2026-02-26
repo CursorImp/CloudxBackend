@@ -1,4 +1,5 @@
 ﻿using DotNetCoords;
+using Jose;
 using Newtonsoft.Json;
 using SignalRHub.WebApiClasses;
 using System;
@@ -12,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16313,6 +16315,42 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 response.Message = ex.Message;
             }
 
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendQuotationBookingConfirmationSms")]
+        public JsonResult SendQuotationBookingConfirmationSms(long Id, string CustomerMobileNo, string CustomerName)
+        {
+            ResponseWebApi response = new ResponseWebApi();
+            try
+            {
+                try
+                {
+                    General.WriteLog("SendQuotationBookingConfirmationSms", "sending confirmation sms...");
+                }
+                catch
+                {
+                }
+                var encodedCustomerName = System.Web.HttpUtility.UrlEncode(CustomerName);
+                string baseUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}";
+                var confirmUrl = $"{baseUrl}/WebApi/ConfirmQuotationFromEmail?bookingId={Id}&customerName={Uri.EscapeDataString(CustomerName)}";
+
+                General.AddSMS(CustomerMobileNo, $"{confirmUrl}", 1);
+                response.HasError = false;
+                response.Message = "Success";
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+                try
+                {
+                    General.WriteLog("SendQuotationBookingConfirmationSms", $"sending confirmation sms failed... exception: {ex.Message}");
+                }
+                catch
+                {
+                }
+            }
             return Json(response, JsonRequestBehavior.AllowGet);
         }
 
