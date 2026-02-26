@@ -1773,6 +1773,14 @@ namespace SignalRHub.WebApiClasses
         public double? Latitude { get; set; }
         public double? Longitude { get; set; }
     }
+
+    public class LocationListAdv
+    {
+        public string AddressLine { get; set; }
+        public int? LocationTypeId { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+    }
     public class RootMapBox
     {
         public string type { get; set; }
