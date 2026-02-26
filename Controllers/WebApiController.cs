@@ -16300,7 +16300,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 string emailBody = BuildQuotationConfirmationEmail(model);
 
                 SignalRHub.Classes.ClsEmail Email = new SignalRHub.Classes.ClsEmail();
-                SignalRHub.Classes.ClsEmail.Send(model.Subject, emailBody, model.FromEmail, model.ToEmail, null, objSubcompany, "", "false");
+                List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
+                SignalRHub.Classes.ClsEmail.Send(model.Subject, emailBody, model.FromEmail, model.ToEmail, attachments, objSubcompany, "", "false");
                 // SignalRHub.Classes.ClsEmail.Send(model.Subject, model.Body, model.FromEmail, model.ToEmail, null, objSubcompany, "", "false");
 
                 response.HasError = false;
