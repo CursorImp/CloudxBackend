@@ -1971,7 +1971,6 @@ namespace SignalRHub.WebApiClasses
         public string Plot { get; set; }
         public DateTime? PlotHour { get; set; }
         public DateTime? PickupDateTemp { get; set; }
-        public string PickUpDate { get; set; }
         public string Time { get; set; }
         public string TelephoneNo { get; set; }
         public string Pickup { get; set; }
@@ -1992,6 +1991,7 @@ namespace SignalRHub.WebApiClasses
         private string _RefNumber;
 
         private System.Nullable<System.DateTime> _BookingDate;
+        private System.Nullable<System.DateTime> _PickupDate;
         private System.Nullable<System.DateTime> _CompletedDateTime;
         private System.Nullable<System.DateTime> _CancelTime;
         private System.Nullable<System.DateTime> _NoShowTime;
@@ -2085,7 +2085,21 @@ namespace SignalRHub.WebApiClasses
                 }
             }
         }
-
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_PickupDate", DbType = "DateTime")]
+        public System.Nullable<System.DateTime> PickupDate
+        {
+            get
+            {
+                return this._PickupDate;
+            }
+            set
+            {
+                if ((this._PickupDate != value))
+                {
+                    this._PickupDate = value;
+                }
+            }
+        }
         [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_Token", DbType = "VarChar(10)")]
         public string Token
         {
