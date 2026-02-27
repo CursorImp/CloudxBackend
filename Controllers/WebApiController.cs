@@ -696,10 +696,10 @@ namespace SignalRHub.Controllers
                     data.objBookingCount.totalNoPickup = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.NOPICKUP).FirstOrDefault().DefaultIfEmpty().count; ;
                     data.objBookingCount.totalCompleted = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.DISPATCHED).FirstOrDefault().DefaultIfEmpty().count;
                     data.objBookingCount.totalOnline = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.WAITING_WEBBOOKING).FirstOrDefault().DefaultIfEmpty().count;
-                    var data1 = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, 0, "", 1).ToList();
+                    var data1 = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, 0, "", 1, HubProcessor.Instance.objPolicy.DaysInTodayBooking.ToInt()).ToList();
                     data.objBookingCount.totalInCompleted = data1.Where(a =>
-                        a.PickupDate.HasValue &&
-                        a.PickupDate.Value.Date < dt.Value.Date &&
+                        a.PickupDateTemp.HasValue &&
+                        a.PickupDateTemp.Value.Date < dt.Value.Date &&
                         (a.StatusId == Enums.BOOKINGSTATUS.WAITING)
                     ).Count();
 
@@ -1459,10 +1459,10 @@ namespace SignalRHub.Controllers
                         //    (a.StatusId != Enums.BOOKINGSTATUS.DISPATCHED ||
                         //     a.StatusId == Enums.BOOKINGSTATUS.CANCELLED)
                         //).ToList();
-                        var data = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, obj.bookingInfo.SubcompanyId.ToInt(), "", obj.bookingInfo.BookingStatusId.ToInt()).ToList();
+                        var data = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, obj.bookingInfo.SubcompanyId.ToInt(), "", obj.bookingInfo.BookingStatusId.ToInt(), HubProcessor.Instance.objPolicy.DaysInTodayBooking.ToInt()).ToList();
                         response.Data = data.Where(a =>
-                            a.PickupDate.HasValue &&
-                            a.PickupDate.Value.Date < dt.Value.Date &&
+                            a.PickupDateTemp.HasValue &&
+                            a.PickupDateTemp.Value.Date < dt.Value.Date &&
                             (a.StatusId == Enums.BOOKINGSTATUS.WAITING)
                         ).ToList();
 
@@ -1470,7 +1470,7 @@ namespace SignalRHub.Controllers
                     }
                     else
                     {
-                        response.Data = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, from, till, obj.bookingInfo.SubcompanyId.ToInt(), "", obj.bookingInfo.BookingStatusId.ToInt()).ToList();
+                        response.Data = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14}", false, true, false, false, false, false, false, false, false, from, till, obj.bookingInfo.SubcompanyId.ToInt(), "", obj.bookingInfo.BookingStatusId.ToInt(), HubProcessor.Instance.objPolicy.DaysInTodayBooking.ToInt()).ToList();
 
                     }
 

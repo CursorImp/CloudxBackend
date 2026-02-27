@@ -1948,7 +1948,43 @@ namespace SignalRHub.WebApiClasses
 
     public class ClsBookingListData
     {
-
+        
+        public string UpdateBy { get; set; }
+        public DateTime? BookingDateTime { get; set; }
+        public int? HasNotes { get; set; }
+        public string HasNotesImg { get; set; }
+        public string GroupId { get; set; }
+        public int? FromLocId { get; set; }
+        public DateTime? PrePickupDate { get; set; }
+        public string BabySeats { get; set; }
+        public bool? IsConfirmedDriver { get; set; }
+        public decimal? MilesFromBase { get; set; }
+        public decimal? DeadMileage { get; set; }
+        public DateTime? DespatchDateTime { get; set; }
+        public int? JourneyTypeId { get; set; }
+        public DateTime? Due { get; set; }
+        public string BackgroundColor { get; set; }
+        public int? NoofLuggages { get; set; }
+        public string PReference { get; set; }
+        public string TextColor { get; set; }
+        public DateTime? Lead { get; set; }
+        public string Plot { get; set; }
+        public DateTime? PlotHour { get; set; }
+        public DateTime? PickupDateTemp { get; set; }
+        public string PickUpDate { get; set; }
+        public string Time { get; set; }
+        public string TelephoneNo { get; set; }
+        public string Pickup { get; set; }
+        public string GoingTo { get; set; }
+        public string Attributes { get; set; }
+        public string VehicleDetails { get; set; }
+        public int? VehicleID { get; set; }
+        public long? EscortId { get; set; }
+        public bool? HasEscort { get; set; }
+        public string OrderNo { get; set; }
+        public int? ZoneId { get; set; }
+        public long? MasterJobId { get; set; }
+        public int? TotalRecords { get; set; }
         private long _Id;
 
         private string _Token;
@@ -1960,7 +1996,6 @@ namespace SignalRHub.WebApiClasses
         private System.Nullable<System.DateTime> _CancelTime;
         private System.Nullable<System.DateTime> _NoShowTime;
 
-        private System.Nullable<System.DateTime> _PickupDate;
 
         private string _Passenger;
 
@@ -2189,21 +2224,7 @@ namespace SignalRHub.WebApiClasses
             }
         }
 
-        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_PickupDate", DbType = "DateTime")]
-        public System.Nullable<System.DateTime> PickupDate
-        {
-            get
-            {
-                return this._PickupDate;
-            }
-            set
-            {
-                if ((this._PickupDate != value))
-                {
-                    this._PickupDate = value;
-                }
-            }
-        }
+        
 
         [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_Passenger", DbType = "NVarChar(MAX)")]
         public string Passenger
