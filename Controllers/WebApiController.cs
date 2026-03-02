@@ -1,4 +1,5 @@
 ﻿using DotNetCoords;
+using Jose;
 using Newtonsoft.Json;
 using SignalRHub.WebApiClasses;
 using System;
@@ -12,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -694,7 +696,7 @@ namespace SignalRHub.Controllers
                     data.objBookingCount.totalNoPickup = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.NOPICKUP).FirstOrDefault().DefaultIfEmpty().count; ;
                     data.objBookingCount.totalCompleted = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.DISPATCHED).FirstOrDefault().DefaultIfEmpty().count;
                     data.objBookingCount.totalOnline = objCnt.Where(c => c.bookingstatusid == Enums.BOOKINGSTATUS.WAITING_WEBBOOKING).FirstOrDefault().DefaultIfEmpty().count;
-                    var data1 = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, 0, "", 1).ToList();
+                    var data1 = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, 0, "", 1, HubProcessor.Instance.objPolicy.DaysInTodayBooking.ToInt()).ToList();
                     data.objBookingCount.totalInCompleted = data1.Where(a =>
                         a.PickupDate.HasValue &&
                         a.PickupDate.Value.Date < dt.Value.Date &&
@@ -1457,7 +1459,7 @@ namespace SignalRHub.Controllers
                         //    (a.StatusId != Enums.BOOKINGSTATUS.DISPATCHED ||
                         //     a.StatusId == Enums.BOOKINGSTATUS.CANCELLED)
                         //).ToList();
-                        var data = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, obj.bookingInfo.SubcompanyId.ToInt(), "", obj.bookingInfo.BookingStatusId.ToInt()).ToList();
+                        var data = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14}", false, true, false, false, false, false, false, false, false, "", (DateTime?)DateTime.Today, obj.bookingInfo.SubcompanyId.ToInt(), "", obj.bookingInfo.BookingStatusId.ToInt(), HubProcessor.Instance.objPolicy.DaysInTodayBooking.ToInt()).ToList();
                         response.Data = data.Where(a =>
                             a.PickupDate.HasValue &&
                             a.PickupDate.Value.Date < dt.Value.Date &&
@@ -1468,7 +1470,7 @@ namespace SignalRHub.Controllers
                     }
                     else
                     {
-                        response.Data = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13}", false, true, false, false, false, false, false, false, false, from, till, obj.bookingInfo.SubcompanyId.ToInt(), "", obj.bookingInfo.BookingStatusId.ToInt()).ToList();
+                        response.Data = db.ExecuteQuery<ClsBookingListData>("exec stp_GetBookingsListData {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12},{13},{14}", false, true, false, false, false, false, false, false, false, from, till, obj.bookingInfo.SubcompanyId.ToInt(), "", obj.bookingInfo.BookingStatusId.ToInt(), HubProcessor.Instance.objPolicy.DaysInTodayBooking.ToInt()).ToList();
 
                     }
 
@@ -16300,7 +16302,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 string emailBody = BuildQuotationConfirmationEmail(model);
 
                 SignalRHub.Classes.ClsEmail Email = new SignalRHub.Classes.ClsEmail();
-                SignalRHub.Classes.ClsEmail.Send(model.Subject, emailBody, model.FromEmail, model.ToEmail, null, objSubcompany, "", "false");
+                List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
+                SignalRHub.Classes.ClsEmail.Send(model.Subject, emailBody, model.FromEmail, model.ToEmail, attachments, objSubcompany, "", "false");
                 // SignalRHub.Classes.ClsEmail.Send(model.Subject, model.Body, model.FromEmail, model.ToEmail, null, objSubcompany, "", "false");
 
                 response.HasError = false;
@@ -16312,6 +16315,42 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 response.Message = ex.Message;
             }
 
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SendQuotationBookingConfirmationSms")]
+        public JsonResult SendQuotationBookingConfirmationSms(long Id, string CustomerMobileNo, string CustomerName)
+        {
+            ResponseWebApi response = new ResponseWebApi();
+            try
+            {
+                try
+                {
+                    General.WriteLog("SendQuotationBookingConfirmationSms", "sending confirmation sms...");
+                }
+                catch
+                {
+                }
+                var encodedCustomerName = System.Web.HttpUtility.UrlEncode(CustomerName);
+                string baseUrl = $"{Request.Url.Scheme}://{Request.Url.Authority}";
+                var confirmUrl = $"{baseUrl}/WebApi/ConfirmQuotationFromEmail?bookingId={Id}&customerName={Uri.EscapeDataString(CustomerName)}";
+
+                General.AddSMS(CustomerMobileNo, $"{confirmUrl}", 1);
+                response.HasError = false;
+                response.Message = "Success";
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+                try
+                {
+                    General.WriteLog("SendQuotationBookingConfirmationSms", $"sending confirmation sms failed... exception: {ex.Message}");
+                }
+                catch
+                {
+                }
+            }
             return Json(response, JsonRequestBehavior.AllowGet);
         }
 
