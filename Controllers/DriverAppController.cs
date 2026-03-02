@@ -7817,15 +7817,50 @@ namespace SignalRHub
 
 
 
-                            decimal pdafares = objBooking.GetType().GetProperty(HubProcessor.Instance.objPolicy.PDAFaresPropertyName.ToStr().Trim()).GetValue(objBooking, null).ToDecimal();
+                            //decimal pdafares = objBooking.GetType().GetProperty(HubProcessor.Instance.objPolicy.PDAFaresPropertyName.ToStr().Trim()).GetValue(objBooking, null).ToDecimal();
+                            decimal pdafares = objBooking.FareRate.ToDecimal();
 
+
+                            pdafares = pdafares + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.CongtionCharges.ToDecimal()
+                                      + objBooking.AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal() + objBooking.CashFares.ToDecimal() +
+                                  +objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal();
+
+                            string showFaresValue = objBooking.Gen_PaymentType.ShowFaresOnPDA.ToStr().Trim();
+
+                            try
+                            {
+                                if (Global.ZeroFareOnMeter == "1" && !objBooking.IsQuotedPrice.ToBool())
+                                {
+                                    string isMeter = "0";
+                                    isMeter = Global.listofMeter != null && Global.listofMeter.Count > 0 && Global.listofMeter.FirstOrDefault(c => c.VehicleTypeId == objBooking.VehicleTypeId).DefaultIfEmpty().HasMeter.ToBool() ? "1" : "0";
+                                    if (isMeter == "1")
+                                    {
+                                        pdafares = 0.0m;
+                                        showFaresValue = "0";
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                            }
+
+
+
+                            if (showFaresValue.ToStr() == "1" && objBooking.CompanyId != null && (objBooking.PaymentTypeId.ToInt() == 2 || objBooking.PaymentTypeId.ToInt() == 6))
+                            {
+                                pdafares = objBooking.CompanyPrice.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.CongtionCharges.ToDecimal()
+                                     + objBooking.AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal() + objBooking.CashFares.ToDecimal() +
+                                 +objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal();
+
+
+                            }
 
                             string msg = string.Empty;
 
 
 
 
-                            string showFaresValue = objBooking.Gen_PaymentType.ShowFaresOnPDA.ToStr().Trim();
+                            //string showFaresValue = objBooking.Gen_PaymentType.ShowFaresOnPDA.ToStr().Trim();
 
                             string showFares = ",\"ShowFares\":\"" + showFaresValue + "\"";
                             string showSummary = ",\"ShowSummary\":\"" + showFaresValue + "\"";
