@@ -16233,21 +16233,21 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             {
                 using (TaxiDataContext db = new TaxiDataContext()) // use your actual DbContext
                 {
-                    var columnSettings = db.UM_Form_UserDefinedSettings
-                        .Where(x => x.FormId == 20)
-                        .OrderBy(x => x.GridColMoveTo)
-                        .Select(x => new
-                        {
-                            Id = x.Id,
-                            FormId = x.FormId,
-                            GridColumnName = x.GridColumnName,
-                            IsVisible = x.IsVisible,
-                            GridColWidth = x.GridColWidth,
-                            GridColMoveTo = x.GridColMoveTo,
-                            HeaderText = x.HeaderText,
-                            FormTab = x.FormTab
-                        })
-                        .ToList();
+                    var columnSettings = db.ExecuteQuery<ColumnSettingsDto>(@"
+    SELECT 
+        Id,
+        FormId,
+        GridColumnName,
+        IsVisible,
+        GridColWidth,
+        GridColMoveTo,
+        HeaderText,
+        DefaultName,
+        FormTab
+    FROM UM_Form_UserDefinedSettings
+    WHERE FormId = 20
+    ORDER BY GridColMoveTo
+").ToList();
 
                     response.Data = columnSettings;
                 }
