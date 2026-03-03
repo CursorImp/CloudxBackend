@@ -11790,7 +11790,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             IsAccountJob = obj2.CompanyId != null,
                             PaymentTypeId = obj2.PaymentTypeId.ToInt(),
 
-                            CustomerName = obj2.Customer.Name.ToStr(),
+                            CustomerName = obj2.CustomerName,
                             FromAddress = obj2.FromAddress.ToStr(),
                             ToAddress = obj2.ToAddress.ToStr(),
                             Fare = obj2.FareRate.ToDecimal(),
