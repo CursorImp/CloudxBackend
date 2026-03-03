@@ -98,7 +98,16 @@ namespace SignalRHub.Classes
 
 
                 }
+                if (isInvoiceOrStatement == "true" && objSubCompany.IsTpCompany.ToBool() && objSubCompany.UseDifferentEmailForInvoices.ToBool())
+                {
 
+                    smptHost = objSubCompany.SmtpInvoiceHost.ToStr().Trim();
+                    port = objSubCompany.SmtpInvoicePort.ToInt();
+                    userName = objSubCompany.SmtpInvoiceUserName.ToStr().Trim();
+                    pwd = objSubCompany.SmtpInvoicePassword.ToStr().Trim();
+                    enableSSL = objSubCompany.SmtpInvoiceSSL.ToBool();
+                    FromEmail = userName;
+                }
 
                 //if (AppVars.listUserRights.Count(c => c.functionId == "USE THIRD PARTY EMAIL SERVER") > 0)
                 //{
