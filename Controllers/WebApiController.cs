@@ -7692,7 +7692,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                          SenderName = a.SenderName
 
                                      }
-                             ).ToList();
+                             ).OrderByDescending(c => c.MessageCreatedOn).ToList();
 
 
 
