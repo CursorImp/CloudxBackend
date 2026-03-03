@@ -3383,8 +3383,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             db.ExecuteCommand(query1, objMaster.Current.Id);
                             foreach (var item in obj.bookingInfo.Booking_ViaLocations)
                             {
-                                string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue,ViaLocId) VALUES ({0}, {1}, {2}, {3}, {4},NULLIF({5},0))";
-                                db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", objMaster.Current.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue, item.ViaLocId > 0 ? item.ViaLocId : 0);
+                                string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue) VALUES ({0}, {1}, {2}, {3}, {4})";
+                                db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", objMaster.Current.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue);
 
 
                             }
@@ -3442,8 +3442,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                 foreach (var item in obj.bookingInfo.Booking_ViaLocations)
                                 {
 
-                                    string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue,ViaLocId) VALUES ({0}, {1}, {2}, {3}, {4}, NULLIF({5},0))";
-                                    db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", master.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue, item.ViaLocId > 0 ? item.ViaLocId : 0);
+                                    string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue) VALUES ({0}, {1}, {2}, {3}, {4})";
+                                    db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", master.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue);
 
                                 }
                             }
@@ -7692,7 +7692,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                          SenderName = a.SenderName
 
                                      }
-                             ).ToList();
+                             ).OrderByDescending(c => c.MessageCreatedOn).ToList();
 
 
 
@@ -9166,8 +9166,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                         {
                                             foreach (var item in booking.Booking_ViaLocations)
                                             {
-                                                string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue,ViaLocId) VALUES ({0}, {1}, {2}, {3}, {4},NULLIF({5},0))";
-                                                db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", booking.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue, item.ViaLocId > 0 ? item.ViaLocId : 0);
+                                                string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue) VALUES ({0}, {1}, {2}, {3}, {4})";
+                                                db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", booking.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue);
                                             }
                                         }
                                     }
@@ -9286,8 +9286,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                         {
                                             foreach (var item in booking.Booking_ViaLocations)
                                             {
-                                                string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue,ViaLocId) VALUES ({0}, {1}, {2}, {3}, {4},NULLIF({5},0))";
-                                                db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", booking.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue, item.ViaLocId > 0 ? item.ViaLocId : 0);
+                                                string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue) VALUES ({0}, {1}, {2}, {3}, {4})";
+                                                db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", booking.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue);
                                             }
                                         }
                                     }
@@ -11790,7 +11790,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             IsAccountJob = obj2.CompanyId != null,
                             PaymentTypeId = obj2.PaymentTypeId.ToInt(),
 
-                            CustomerName = obj2.Customer.Name.ToStr(),
+                            CustomerName = obj2.CustomerName,
                             FromAddress = obj2.FromAddress.ToStr(),
                             ToAddress = obj2.ToAddress.ToStr(),
                             Fare = obj2.FareRate.ToDecimal(),
@@ -16231,21 +16231,21 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             {
                 using (TaxiDataContext db = new TaxiDataContext()) // use your actual DbContext
                 {
-                    var columnSettings = db.UM_Form_UserDefinedSettings
-                        .Where(x => x.FormId == 20)
-                        .OrderBy(x => x.GridColMoveTo)
-                        .Select(x => new
-                        {
-                            Id = x.Id,
-                            FormId = x.FormId,
-                            GridColumnName = x.GridColumnName,
-                            IsVisible = x.IsVisible,
-                            GridColWidth = x.GridColWidth,
-                            GridColMoveTo = x.GridColMoveTo,
-                            HeaderText = x.HeaderText,
-                            FormTab = x.FormTab
-                        })
-                        .ToList();
+                    var columnSettings = db.ExecuteQuery<ColumnSettingsDto>(@"
+    SELECT 
+        Id,
+        FormId,
+        GridColumnName,
+        IsVisible,
+        GridColWidth,
+        GridColMoveTo,
+        HeaderText,
+        DefaultName,
+        FormTab
+    FROM UM_Form_UserDefinedSettings
+    WHERE FormId = 20
+    ORDER BY GridColMoveTo
+").ToList();
 
                     response.Data = columnSettings;
                 }

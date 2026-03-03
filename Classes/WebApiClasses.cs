@@ -1945,7 +1945,18 @@ namespace SignalRHub.WebApiClasses
         public string CompanyName { get; set; }
     }
 
-
+    public class ColumnSettingsDto
+    {
+        public int Id { get; set; }
+        public int? FormId { get; set; }
+        public string GridColumnName { get; set; }
+        public bool? IsVisible { get; set; }
+        public int? GridColWidth { get; set; }
+        public int? GridColMoveTo { get; set; }
+        public string HeaderText { get; set; }
+        public string DefaultName { get; set; }
+        public string FormTab { get; set; }
+    }
     public class ClsBookingListData
     {
         
