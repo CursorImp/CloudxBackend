@@ -1099,55 +1099,55 @@ namespace SignalRHub
                     response = string.Empty;
 
 
-
-
-                    int driverId = values[1].ToInt();
-
-                    using (TaxiDataContext db = new TaxiDataContext())
+                    if (!string.IsNullOrEmpty(values[1]) && values[1] != "null")
                     {
-                        var row = (from a in db.Fleet_DriverQueueLists
-                                   join b in db.Fleet_Driver_Locations on a.DriverId equals b.DriverId
-                                   join c in db.Fleet_Drivers on b.DriverId equals c.Id
-                                   join d in db.Gen_SubCompanies on c.SubcompanyId equals d.Id
-                                   join e in db.Fleet_VehicleTypes on c.VehicleTypeId equals e.Id
-                                   join f in db.Fleet_DriverWorkingStatus on a.DriverWorkStatusId equals f.Id
-                                   where a.DriverId == driverId && a.Status == true
-                                   select new
-                                   {
-                                       f.WorkStatus,
-                                       b.Latitude,
-                                       b.Longitude,
-                                       b.LocationName,
-                                       DriverNo = c.DriverNo,
-                                       ContactNo = d.TelephoneNo,
-                                       DriverName = c.DriverName,
-                                       Vehicle = e.VehicleType + "|" + c.VehicleNo + "-" + c.VehicleMake + "-" + c.VehicleModel + "|" + c.VehicleColor,
-                                       Rating = c.AvgRating
-                                   }).FirstOrDefault();
-                        //   //   tradrv
-                        if (message.Contains("=json"))
-                        {
-                            response = "{ \"Latitude\" :\"" + row.Latitude.ToStr() +
-                              "\", \"Longitude\":\"" + row.Longitude.ToStr() +
-                              "\", \"WorkStatus\":\"" + row.WorkStatus.ToStr().Replace(" ", "").Trim() + "\"," +
-                              "\"LocationName\":\"" + row.LocationName.ToStr() + "\"" +
-                              ",\"DriverImage\":\"" + "http://tradrv.co.uk/DispatchDriverImages/" + Instance.objPolicy.DefaultClientId.ToStr().Replace("_", "").Trim() + "_" + row.DriverNo.ToStr() + ".jpg\"," +
-                               "\"DriverName\":\"" + row.DriverName.ToStr() + "\"," +
-                                  "\"Vehicle\":\"" + row.Vehicle.ToStr() + "\"," +
-                                     "\"Rating\":\"" + row.Rating.ToStr() + "\"" +
+                        int driverId = values[1].ToInt();
 
-                              ",\"Contact\":\"" + row.ContactNo.ToStr().Trim() + "\" }";
-                        }
-                        else
+                        using (TaxiDataContext db = new TaxiDataContext())
                         {
-                            response = row.Latitude.ToStr() + "="
-                                       + row.Longitude.ToStr() + "=" +
-                                         row.WorkStatus.ToStr().Replace(" ", "").Trim() +
-                                         "= " + row.LocationName.ToStr()
-                                         + "=" + "http://tradrv.co.uk/DispatchDriverImages/" + Instance.objPolicy.DefaultClientId.ToStr() + "_" + row.DriverNo.ToStr() + ".jpg";
+                            var row = (from a in db.Fleet_DriverQueueLists
+                                       join b in db.Fleet_Driver_Locations on a.DriverId equals b.DriverId
+                                       join c in db.Fleet_Drivers on b.DriverId equals c.Id
+                                       join d in db.Gen_SubCompanies on c.SubcompanyId equals d.Id
+                                       join e in db.Fleet_VehicleTypes on c.VehicleTypeId equals e.Id
+                                       join f in db.Fleet_DriverWorkingStatus on a.DriverWorkStatusId equals f.Id
+                                       where a.DriverId == driverId && a.Status == true
+                                       select new
+                                       {
+                                           f.WorkStatus,
+                                           b.Latitude,
+                                           b.Longitude,
+                                           b.LocationName,
+                                           DriverNo = c.DriverNo,
+                                           ContactNo = d.TelephoneNo,
+                                           DriverName = c.DriverName,
+                                           Vehicle = e.VehicleType + "|" + c.VehicleNo + "-" + c.VehicleMake + "-" + c.VehicleModel + "|" + c.VehicleColor,
+                                           Rating = c.AvgRating
+                                       }).FirstOrDefault();
+                            //   //   tradrv
+                            if (message.Contains("=json"))
+                            {
+                                response = "{ \"Latitude\" :\"" + row.Latitude.ToStr() +
+                                  "\", \"Longitude\":\"" + row.Longitude.ToStr() +
+                                  "\", \"WorkStatus\":\"" + row.WorkStatus.ToStr().Replace(" ", "").Trim() + "\"," +
+                                  "\"LocationName\":\"" + row.LocationName.ToStr() + "\"" +
+                                  ",\"DriverImage\":\"" + "http://tradrv.co.uk/DispatchDriverImages/" + Instance.objPolicy.DefaultClientId.ToStr().Replace("_", "").Trim() + "_" + row.DriverNo.ToStr() + ".jpg\"," +
+                                   "\"DriverName\":\"" + row.DriverName.ToStr() + "\"," +
+                                      "\"Vehicle\":\"" + row.Vehicle.ToStr() + "\"," +
+                                         "\"Rating\":\"" + row.Rating.ToStr() + "\"" +
+
+                                  ",\"Contact\":\"" + row.ContactNo.ToStr().Trim() + "\" }";
+                            }
+                            else
+                            {
+                                response = row.Latitude.ToStr() + "="
+                                           + row.Longitude.ToStr() + "=" +
+                                             row.WorkStatus.ToStr().Replace(" ", "").Trim() +
+                                             "= " + row.LocationName.ToStr()
+                                             + "=" + "http://tradrv.co.uk/DispatchDriverImages/" + Instance.objPolicy.DefaultClientId.ToStr() + "_" + row.DriverNo.ToStr() + ".jpg";
+                            }
                         }
                     }
-
 
 
 
