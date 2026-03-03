@@ -1570,7 +1570,7 @@ namespace SignalRHub.Controllers
                             where a.Fleet_Driver.IsActive == true
                                && a.DriverId != null
                                && a.Status == true
-                               && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
+                               && (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK)
                             orderby a.QueueDateTime
                             select new
                             {
