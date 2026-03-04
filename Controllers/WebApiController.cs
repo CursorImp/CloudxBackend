@@ -2691,6 +2691,12 @@ WHERE BookingId = {obj.bookingInfo.Id}";
 
                             var data = db.ExecuteQuery<BookingInfo>(Query, obj.bookingInfo.AdvanceBookingId, obj.bookingInfo.JourneyTypeId).FirstOrDefault();
 
+                            string ViaLocations = "SELECT * FROM  BOOKING_ViaLocations WHERE bookingId = {0}";
+
+                            List<ClsBooking_ViaLocation> Via   = db.ExecuteQuery<ClsBooking_ViaLocation>(ViaLocations, data.Id).ToList();
+
+                            obj.bookingInfo.Booking_ViaLocations = Via;
+
                             obj.bookingInfo = data;
                             obj.bookingInfo.JourneyTypeId = journeyTypeId;
                             obj.bookingInfo.objMulti = multi;
