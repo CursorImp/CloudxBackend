@@ -2687,17 +2687,18 @@ WHERE BookingId = {obj.bookingInfo.Id}";
                             var multi = obj.bookingInfo.objMulti;
                             startDate = obj.bookingInfo.objMulti.StartDate;
                             endDateTime = obj.bookingInfo.objMulti.EndDate;
-                            string Query = "SELECT * FROM  BOOKING WHERE AdvanceBookingId = {0} and journeytypeid = {1}";
+                            string Query = "SELECT * FROM  BOOKING WHERE AdvanceBookingId = {0} and journeytypeid = {1} AND ISNULL(viastring, '') <> ''";
 
                             var data = db.ExecuteQuery<BookingInfo>(Query, obj.bookingInfo.AdvanceBookingId, obj.bookingInfo.JourneyTypeId).FirstOrDefault();
 
                             string ViaLocations = "SELECT * FROM  BOOKING_ViaLocations WHERE bookingId = {0}";
 
-                            List<ClsBooking_ViaLocation> Via   = db.ExecuteQuery<ClsBooking_ViaLocation>(ViaLocations, data.Id).ToList();
+                            List<ClsBooking_ViaLocation> Via = db.ExecuteQuery<ClsBooking_ViaLocation>(ViaLocations, data.Id).ToList();
 
                             obj.bookingInfo.Booking_ViaLocations = Via;
 
                             obj.bookingInfo = data;
+                            obj.bookingInfo.Booking_ViaLocations = Via;
                             obj.bookingInfo.JourneyTypeId = journeyTypeId;
                             obj.bookingInfo.objMulti = multi;
                             obj.bookingInfo.ExtendMulti = true;
@@ -14667,7 +14668,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 var obj = new stp_GetBookingsDataResult()
                 {
                     Id = objMaster.Current.Id,
-
+                    AdvanceBookingId = objMaster.Current.AdvanceBookingId,
                     Account = objMaster.Current.CompanyId != null ? objMaster.Current.Gen_Company.CompanyName : "",
 
 
