@@ -29,3 +29,4 @@
 29/01/2026 5:33:05 pmThe SELECT permission was denied on the object 'CallerIdVOIP_Configurations', database 'DemoGB7', schema 'dbo'.
 29/01/2026 5:34:04 pmThe SELECT permission was denied on the object 'CallerIdVOIP_Configurations', database 'DemoGB7', schema 'dbo'.
 1/29/2026 5:56:45 PMThe SELECT permission was denied on the object 'CallerIdVOIP_Configurations', database 'DemoGB7', schema 'dbo'.
+23/02/2026 12:04:10 pmA network-related or instance-specific error occurred while establishing a connection to SQL Server. The server was not found or was not accessible. Verify that the instance name is correct and that SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - The wait operation timed out.)
