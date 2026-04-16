@@ -80,6 +80,7 @@ namespace SignalRHub
         public string drvConPass = "";
         public string drvConPort = "";
         public string isRingback = "";
+        public string EnableDriverChecklist = "";
 
 
         public string showDestAfterPob;

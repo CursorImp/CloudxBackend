@@ -331,6 +331,31 @@ namespace SignalRHub.Classes
         public string TimeZoneId { get; set; }
         public string DistanceUnit { get; set; }
     }
+    public class CheckListDetailModel
+    {
+        public int? Id { get; set; }
+        public int ChecListTypeId { get; set; }
+        public string DetailDescription { get; set; }
+        public bool IsActive { get; set; }
+    }
+    public class CheckListTypeModel
+    {
+        public int? Id { get; set; }
+        public string TypeName { get; set; }
+        public bool? IsActive { get; set; }
+    }
+    public class Fleet_Driver_Restriction
+    {
+
+        public DateTime? StartDate { get; set; }
+
+        public DateTime? EndDate { get; set; }
+
+        public string Comments { get; set; }
+
+        public int? DriverId { get; set; }
+        public int? CompanyVehicleId { get; set; }
+    }
     public class DocumentNumberSettings
     {
         public int Id { get; set; }
@@ -348,8 +373,11 @@ namespace SignalRHub.Classes
 
     public class AdminApi
     {
+        public List<Fleet_Driver_Restriction> Fleet_Driver_Restrictions { get; set; }
         public decimal? SubCompanyBookingFees { get; set; }
         public string PhotoAction { get; set; }
+        public string Header { get; set; }
+        public int? Width { get; set; }
         public int pageNumber { get; set; }
         public int pageSize { get; set; }
         public string searchTerm { get; set; }
@@ -595,7 +623,14 @@ namespace SignalRHub.Classes
         public bool? ShowDestinationAfterPOB { get;  set; }
         public bool? EnableDriverConnect { get;  set; }
         public string VehiclePlateNo { get;  set; }
+        public string AirportPlotIds { get;  set; }
+        public bool? HasCongestion { get; set; }
+        public string AffiliateKey { get;  set; }
+        public bool? IsCreditToDriverAccount { get; set; }
+
         public WebPhone WebPhone { get; set; }
+        public bool? IsTip { get; set; }
+        public int? OnWageTypeId { get; set; }
     }
     public class FareDto
     {
@@ -1375,6 +1410,8 @@ namespace SignalRHub.Classes
         public string LicenseExpiryDatestr { get; set; }
         public string DateOfBirthstr { get; set; }
         public string VehicleLogBookDocument { get; set; }
+        public bool? TipIncludeInDriverComm { get; set; }
+        public int? OnWageTypeId { get; set; }
     }
     public class stp_GetDriverRecord1
     {
@@ -2252,6 +2289,7 @@ namespace SignalRHub.Classes
         public int? JobsDone { get; set; }
         public decimal? Earned { get; set; }
         public string WaitingSince { get; set; }
+        public decimal? OnlineHours { get; set; }
     }
     public class NewCallHistory
     {

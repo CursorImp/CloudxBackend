@@ -1,4 +1,4 @@
-using DotNetCoords;
+ï»¿using DotNetCoords;
 using SignalRHub.Classes;
 using SignalRHub.Classes.KonnectPay;
 using SignalRHub.Classes.KonnectSupplier;
@@ -992,9 +992,9 @@ namespace SignalRHub
                                 string msglog = string.Empty;
 
                                 if (obj.ReturnAmount > 0)
-                                    msglog = "Payment link for £" + Math.Round(obj.Amount, 2) + "(included return journey) sent to : " + obj.CustomerNumber.ToStr();
+                                    msglog = "Payment link for Â£" + Math.Round(obj.Amount, 2) + "(included return journey) sent to : " + obj.CustomerNumber.ToStr();
                                 else
-                                    msglog = "Payment link for £" + Math.Round(obj.Amount, 2) + " sent to : " + obj.CustomerNumber.ToStr();
+                                    msglog = "Payment link for Â£" + Math.Round(obj.Amount, 2) + " sent to : " + obj.CustomerNumber.ToStr();
 
                                 db.stp_BookingLog(obj.BookingId.ToLong(), obj.UserName.ToStr(), msglog);
 
@@ -1332,7 +1332,7 @@ namespace SignalRHub
                                 //
                             }
                         }
-                        // db.stp_BookingLog(obj.BookingId.ToLong(), "Customer", "CARD REGISTERED " + obj.paymentIntentId.ToStr() + " | " + obj.Message.ToStr() + " | Pre-authorised £" + Convert.ToDouble((obj.Amount) / 100));
+                        // db.stp_BookingLog(obj.BookingId.ToLong(), "Customer", "CARD REGISTERED " + obj.paymentIntentId.ToStr() + " | " + obj.Message.ToStr() + " | Pre-authorised Â£" + Convert.ToDouble((obj.Amount) / 100));
                         //
                     }
                     else
@@ -2181,9 +2181,9 @@ namespace SignalRHub
 
                     if (obj.IsSuccess)
                     {
-                        db.ExecuteQuery<int>("update booking set PaymentComments='Authorised for £" + string.Format("{0:f2}", Convert.ToDouble((obj.Amount / 100))) + "',CompanyCreditCardDetails='" + obj.status.ToStr() + "',CustomerCreditCardDetails='" + obj.paymentIntentId.ToStr() + "' where id=" + obj.BookingId.ToLong());
+                        db.ExecuteQuery<int>("update booking set PaymentComments='Authorised for Â£" + string.Format("{0:f2}", Convert.ToDouble((obj.Amount / 100))) + "',CompanyCreditCardDetails='" + obj.status.ToStr() + "',CustomerCreditCardDetails='" + obj.paymentIntentId.ToStr() + "' where id=" + obj.BookingId.ToLong());
 
-                        db.stp_BookingLog(obj.BookingId.ToLong(), "Customer", "Secure Card Transaction " + obj.paymentIntentId.ToStr() + " | " + obj.Message.ToStr() + " | Pre-authorised £" + Convert.ToDouble((obj.Amount) / 100));
+                        db.stp_BookingLog(obj.BookingId.ToLong(), "Customer", "Secure Card Transaction " + obj.paymentIntentId.ToStr() + " | " + obj.Message.ToStr() + " | Pre-authorised Â£" + Convert.ToDouble((obj.Amount) / 100));
                         //
                     }
                     else
@@ -2279,7 +2279,7 @@ namespace SignalRHub
 
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-                    db.stp_BookingLog(obj.BookingId.ToLong(), obj.OperatorName.ToStr(), "PAYMENT LINK for £" + string.Format("{0:f2}", Convert.ToDouble((obj.Amount / 100))) + " SENT TO : " + obj.MobileNo.ToStr());
+                    db.stp_BookingLog(obj.BookingId.ToLong(), obj.OperatorName.ToStr(), "PAYMENT LINK for Â£" + string.Format("{0:f2}", Convert.ToDouble((obj.Amount / 100))) + " SENT TO : " + obj.MobileNo.ToStr());
 
                 }
 
@@ -2497,7 +2497,7 @@ namespace SignalRHub
 
                     }
 
-                    db.stp_BookingLog(obj.BookingId.ToLong(), obj.OperatorName.ToStr(), "PAYMENT LINK for £" + string.Format("{0:f2}", Convert.ToDouble((obj.Amount / 100))) + returnPayment + " SENT TO : " + obj.MobileNo.ToStr());
+                    db.stp_BookingLog(obj.BookingId.ToLong(), obj.OperatorName.ToStr(), "PAYMENT LINK for Â£" + string.Format("{0:f2}", Convert.ToDouble((obj.Amount / 100))) + returnPayment + " SENT TO : " + obj.MobileNo.ToStr());
 
                 }
 
@@ -2594,7 +2594,7 @@ namespace SignalRHub
                     {
                         //
 
-                        string msg = "PAID £" + string.Format("{0:f2}", obj.Amount) + " | TRANSACTION - " + obj.paymentIntentId.ToStr() + " | " + string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
+                        string msg = "PAID Â£" + string.Format("{0:f2}", obj.Amount) + " | TRANSACTION - " + obj.paymentIntentId.ToStr() + " | " + string.Format("{0:dd/MM/yyyy HH:mm}", DateTime.Now);
 
                         db.ExecuteQuery<int>("update booking set Paymenttypeid=6,PaymentComments='" + msg + "' where id=" + obj.BookingId.ToLong());
 
@@ -4128,6 +4128,46 @@ namespace SignalRHub
                 }
 
                 (new TaxiDataContext()).stp_SendMessage(values[1].ToInt(), values[2].ToInt(), values[3].ToStr(), "", values[4].ToStr(), values[5].ToStr());
+                //if (Global.EnableComapnyVehicleNo == "true")
+                //{
+                //    try
+                //    {
+                //        using (TaxiDataContext db = new TaxiDataContext())
+                //        {
+                //            int driverid = Convert.ToInt32(values[1]);
+
+                //            var result = (from a in db.Fleet_DriverQueueLists
+                //                          where a.Fleet_Driver.IsActive == true
+                //                             && a.DriverId == driverid
+                //                             && a.Status == true
+                //                             && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
+                //                          select new
+                //                          {
+                //                              VehicleOrDriver =
+                //                                  a.FleetMasterId > 0 &&
+                //                                  a.Fleet_Master != null &&
+                //                                  !string.IsNullOrEmpty(a.Fleet_Master.VehicleID)
+                //                                      ? a.Fleet_Master.VehicleID
+                //                                      : a.Fleet_Driver.DriverNo
+                //                          }).FirstOrDefault();
+
+                //            General.BroadCastMessage(
+                //                "**message>>" +
+                //                values[1]?.ToString() + ">>" +
+                //                (result?.VehicleOrDriver ?? "") + ">>" +
+                //                values[4].ToStr() + ">>" + string.Format("{0:dd/MMM HH:mm:ss}", DateTime.Now));
+                //        }
+                //    }
+                //    catch
+                //    {
+
+                //    }
+                //}
+                //else
+                //{
+                //    General.BroadCastMessage("**message>>" + values[1].ToStr() + ">>" + values[3].ToStr() + ">>" + values[4].ToStr() + ">>" + string.Format("{0:dd/MMM HH:mm:ss}", DateTime.Now));
+
+                //}
                 General.BroadCastMessage("**message>>" + values[1].ToStr() + ">>" + values[3].ToStr() + ">>" + values[4].ToStr());
             }
             catch (Exception ex)
@@ -6848,7 +6888,15 @@ namespace SignalRHub
                     {
                         returnPayment = " (Inc. Return)";
                     }
-                    HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + obj?.phoneNumber.Trim() + " =" + "Please click on the link to authorize your payment for your journey with " + obj?.companyName + Environment.NewLine + "Ref No - " + obj?.bookingRef.ToStr().Trim() + Environment.NewLine + "Cars will only be dispatched when payment authorised." + Environment.NewLine + obj.PreAuthUrl.ToStr());
+                    try
+                    {
+                        HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + obj?.phoneNumber.Trim() + " =" + "Please click on the link to authorize your payment for your journey with " + obj?.companyName + Environment.NewLine + "Ref No - " + obj?.bookingRef.ToStr().Trim() + Environment.NewLine + "Cars will only be dispatched when payment authorised." + Environment.NewLine + obj.PreAuthUrl.ToStr());
+
+                    }
+                    catch
+                    {
+
+                    }
                     using (TaxiDataContext db = new TaxiDataContext())
                     {
                         db.stp_BookingLog(obj.bookingId.ToLong(), obj.OperatorName.ToStr(), "Authorization LINK for " + DefaultCurrencySign + string.Format("{0:f2}", Convert.ToDouble((obj.amount / 100))) + returnPayment + " SENT TO : " + obj.phoneNumber.ToStr());
@@ -6863,6 +6911,7 @@ namespace SignalRHub
 
                                 .Select(args => new
                                 {
+                                    args.TelephoneNo,
                                     args.CompanyName,
                                     args.EmailAddress,
                                     args.SmtpHost,
@@ -6878,6 +6927,7 @@ namespace SignalRHub
                             genSubCompany = db.Gen_SubCompanies.Where(c => c.Id == 1)
                                .Select(args => new
                                {
+                                   args.TelephoneNo,
                                    args.CompanyName,
                                    args.EmailAddress,
                                    args.SmtpHost,
@@ -6890,8 +6940,117 @@ namespace SignalRHub
                                ).FirstOrDefault();
                         }
                         string Note = "Please note that if the captured amount is less than the hold amount, the remaining balance will be refunded within five to ten days!";
-                        ClsEASendEmail cls = new ClsEASendEmail(genSubCompany.EmailAddress, obj.email.ToStr().Trim(), "Link for Card Authorization " + obj?.bookingRef.ToStr(), "Please click on the link to authorize your payment for your journey with " + obj?.companyName + Environment.NewLine + "Ref No - " + obj?.bookingRef.ToStr().Trim() + ".<br/>" + "<a href='" + obj.PreAuthUrl.ToStr() + "'>" + obj.PreAuthUrl.ToStr() + "</a>", genSubCompany.SmtpHost, genSubCompany.EmailCC);
-                        IsSent = cls.Send(obj.email.ToStr(), genSubCompany.SmtpUserName, genSubCompany.SmtpPassword);
+                        if (HubProcessor.Instance.objPolicy.DefaultClientId.ToStr() == "JetTaxis")
+                        {
+                            try
+                            {
+                                var objBooking = db.Bookings.Where(c => c.Id == obj.bookingId).FirstOrDefault();
+                                var EmailBody = $@"
+                                <!DOCTYPE html>
+                                <html lang='en'>
+                                <head>
+                                <meta charset='utf-8'>
+                                <meta name='viewport' content='width=device-width,initial-scale=1'>
+                                <title>Payment request for your booking</title>
+                                <style>
+                                    html,body{{margin:0!important;padding:0!important;height:100%!important;width:100%!important;}}
+                                    table,td{{border-collapse:collapse!important;}}
+                                    a{{text-decoration:none;}}
+                                </style>
+                                </head>
+                                <body style='background:#f4f6f8; font-family:Segoe UI, Roboto, Helvetica, Arial, sans-serif; color:#0f172a;'>
+                                <table role='presentation' width='100%' bgcolor='#f4f6f8'>
+                                <tr>
+                                <td align='center' style='padding:24px;'>
+                                <table role='presentation' width='600' style='max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;'>
+                                <tr>
+                                <td bgcolor='#1f6feb' style='padding:18px 24px;color:#ffffff;'>
+                                <table role='presentation' width='100%'>
+                                <tr>
+                                <td style='font-size:22px;font-weight:700;'>{obj?.companyName}</td>
+                                <td align='right' style='font-size:14px;opacity:.95;'>
+                                                    Booking RF: {obj?.bookingRef}
+                                </td>
+                                </tr>
+                                </table>
+                                </td>
+                                </tr>
+                                <tr>
+                                <td style='padding:28px 24px 0 24px;'>
+                                <h1 style='margin:0;font-size:28px;line-height:1.25;color:#0f172a;'>
+                                                Payment request for your booking
+                                </h1>
+                                </td>
+                                </tr>
+                                <tr>
+                                <td style='padding:12px 24px 0 24px;font-size:16px;line-height:1.6;color:#334155;'>
+                                              Hello {obj?.customerName},<br><br>
+                                              Thank you for choosing {obj?.companyName}. Please use the secure link below to complete payment for your booking 
+                                <strong>{obj?.bookingRef}</strong>.
+                                </td>
+                                </tr>
+                                <tr>
+                                <td style='padding:20px 24px 0 24px;'>
+                                <table role='presentation' width='100%' style='background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:18px;'>
+                                <tr>
+                                <td style='font-size:16px;color:#334155;'>Amount Due</td>
+                                <td align='right' style='font-size:16px;font-weight:700;color:#0f172a;'>{obj?.displayAmount}</td>
+                                </tr>
+                                <tr><td colspan='2' height='10'></td></tr>
+                                <tr>
+                                <td style='font-size:16px;color:#334155;'>Passenger Name</td>
+                                <td align='right' style='font-size:16px;color:#0f172a;'>{obj?.customerName}</td>
+                                </tr>
+                                <tr><td colspan='2' height='10'></td></tr>
+                                <tr>
+                                <td style='font-size:16px;color:#334155;'>Pickup Date &amp; Time</td>
+                                <td align='right' style='font-size:16px;color:#0f172a;'>{objBooking.PickupDateTime:dd MMM yyyy, HH:mm}</td>
+                                </tr>
+                                </table>
+                                </td>
+                                </tr>
+                                <tr>
+                                <td align='center' style='padding:24px 24px 0 24px;'>
+                                <a href='{obj?.PreAuthUrl.ToStr()}' 
+                                                 style='display:inline-block;background:#2563eb;border-radius:10px;padding:14px 26px;font-weight:700;font-size:16px;color:#ffffff;'>
+                                                 Pay Securely
+                                </a>
+                                </td>
+                                </tr>
+                                <tr>
+                                <td style='padding:18px 24px 0 24px;font-size:14px;line-height:1.7;color:#475569;'>
+                                              If the button does not work, copy and paste this link into your browser:
+                                <br>
+                                <a href='{obj?.PreAuthUrl.ToStr()}' style='word-break:break-all;color:#2563eb;'>{obj?.PreAuthUrl.ToStr()}</a>
+                                </td>
+                                </tr>
+                                <tr>
+                                <td style='padding:18px 24px 24px 24px;font-size:14px;line-height:1.7;color:#475569;'>
+                                              âœ“ Your payment is processed over an encrypted connection. {obj?.companyName} does not store your full card details.
+                                <br><br>
+                                              Only proceed if you recognise this request from {obj?.companyName}. If you have any concerns, contact us {genSubCompany.TelephoneNo} before paying.
+                                </td>
+                                </tr>
+                                </table>
+                                </td>
+                                </tr>
+                                </table>
+                                </body>
+                                </html>";
+                                ClsEASendEmail cls = new ClsEASendEmail(genSubCompany.EmailAddress, obj.email.ToStr().Trim(), "Link for Card Authorization " + obj?.bookingRef.ToStr(), EmailBody.ToStr(), genSubCompany.SmtpHost, genSubCompany.EmailCC);
+                                IsSent = cls.Send(obj.email.ToStr(), genSubCompany.SmtpUserName, genSubCompany.SmtpPassword);
+                            }
+                            catch
+                            {
+
+                            }
+                        }
+                        else
+                        {
+                            ClsEASendEmail cls = new ClsEASendEmail(genSubCompany.EmailAddress, obj.email.ToStr().Trim(), "Link for Card Authorization " + obj?.bookingRef.ToStr(), "Please click on the link to authorize your payment for your journey with " + obj?.companyName + Environment.NewLine + "Ref No - " + obj?.bookingRef.ToStr().Trim() + ".<br/>" + "<a href='" + obj.PreAuthUrl.ToStr() + "'>" + obj.PreAuthUrl.ToStr() + "</a>", genSubCompany.SmtpHost, genSubCompany.EmailCC);
+                            IsSent = cls.Send(obj.email.ToStr(), genSubCompany.SmtpUserName, genSubCompany.SmtpPassword);
+
+                        }
 
                         if (IsSent)
                         {
@@ -7000,7 +7159,14 @@ namespace SignalRHub
                         {
                             returnPayment = " (Inc. Return)";
                         }
-                        HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + obj.phoneNumber.Trim() + " =" + "Please click on the link to process your payment for your journey with " + obj?.companyName + Environment.NewLine + "Ref No - " + obj?.bookingRef.ToStr().Trim() + Environment.NewLine + obj.PreAuthUrl.ToStr());
+                        try
+                        {
+                            HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + obj.phoneNumber.Trim() + " =" + "Please click on the link to process your payment for your journey with " + obj?.companyName + Environment.NewLine + "Ref No - " + obj?.bookingRef.ToStr().Trim() + Environment.NewLine + obj.PreAuthUrl.ToStr());
+                        }
+                        catch
+                        {
+
+                        }
                         using (TaxiDataContext db = new TaxiDataContext())
                         {
                             db.stp_BookingLog(obj.bookingId.ToLong(), obj.OperatorName.ToStr(), "PAYMENT LINK for " + DefaultCurrencySign + string.Format("{0:f2}", Convert.ToDouble((obj.amount / 100))) + returnPayment + " SENT TO : " + obj.phoneNumber.ToStr());
@@ -7043,8 +7209,117 @@ namespace SignalRHub
                             //       }
                             //       ).FirstOrDefault();
                             //}
+                            if (HubProcessor.Instance.objPolicy.DefaultClientId.ToStr() == "JetTaxis")
+                            {
+                                try
+                                {
+                                    var objBooking = db.Bookings.Where(c => c.Id == obj.bookingId).FirstOrDefault();
+                                    var EmailBody = $@"
+                                    <!DOCTYPE html>
+                                    <html lang='en'>
+                                    <head>
+                                    <meta charset='utf-8'>
+                                    <meta name='viewport' content='width=device-width,initial-scale=1'>
+                                    <title>Payment request for your booking</title>
+                                    <style>
+                                        html,body{{margin:0!important;padding:0!important;height:100%!important;width:100%!important;}}
+                                        table,td{{border-collapse:collapse!important;}}
+                                        a{{text-decoration:none;}}
+                                    </style>
+                                    </head>
+                                    <body style='background:#f4f6f8; font-family:Segoe UI, Roboto, Helvetica, Arial, sans-serif; color:#0f172a;'>
+                                    <table role='presentation' width='100%' bgcolor='#f4f6f8'>
+                                    <tr>
+                                    <td align='center' style='padding:24px;'>
+                                    <table role='presentation' width='600' style='max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;'>
+                                    <tr>
+                                    <td bgcolor='#1f6feb' style='padding:18px 24px;color:#ffffff;'>
+                                    <table role='presentation' width='100%'>
+                                    <tr>
+                                    <td style='font-size:22px;font-weight:700;'>{obj?.companyName}</td>
+                                    <td align='right' style='font-size:14px;opacity:.95;'>
+                                                        Booking RF: {obj?.bookingRef}
+                                    </td>
+                                    </tr>
+                                    </table>
+                                    </td>
+                                    </tr>
+                                    <tr>
+                                    <td style='padding:28px 24px 0 24px;'>
+                                    <h1 style='margin:0;font-size:28px;line-height:1.25;color:#0f172a;'>
+                                                    Payment request for your booking
+                                    </h1>
+                                    </td>
+                                    </tr>
+                                    <tr>
+                                    <td style='padding:12px 24px 0 24px;font-size:16px;line-height:1.6;color:#334155;'>
+                                                  Hello {obj?.customerName},<br><br>
+                                                  Thank you for choosing {obj?.companyName}. Please use the secure link below to complete payment for your booking 
+                                    <strong>{obj?.bookingRef}</strong>.
+                                    </td>
+                                    </tr>
+                                    <tr>
+                                    <td style='padding:20px 24px 0 24px;'>
+                                    <table role='presentation' width='100%' style='background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:18px;'>
+                                    <tr>
+                                    <td style='font-size:16px;color:#334155;'>Amount Due</td>
+                                    <td align='right' style='font-size:16px;font-weight:700;color:#0f172a;'>{obj?.displayAmount}</td>
+                                    </tr>
+                                    <tr><td colspan='2' height='10'></td></tr>
+                                    <tr>
+                                    <td style='font-size:16px;color:#334155;'>Passenger Name</td>
+                                    <td align='right' style='font-size:16px;color:#0f172a;'>{obj?.customerName}</td>
+                                    </tr>
+                                    <tr><td colspan='2' height='10'></td></tr>
+                                    <tr>
+                                    <td style='font-size:16px;color:#334155;'>Pickup Date &amp; Time</td>
+                                    <td align='right' style='font-size:16px;color:#0f172a;'>{objBooking.PickupDateTime:dd MMM yyyy, HH:mm}</td>
+                                    </tr>
+                                    </table>
+                                    </td>
+                                    </tr>
+                                    <tr>
+                                    <td align='center' style='padding:24px 24px 0 24px;'>
+                                    <a href='{obj?.PreAuthUrl.ToStr()}' 
+                                                     style='display:inline-block;background:#2563eb;border-radius:10px;padding:14px 26px;font-weight:700;font-size:16px;color:#ffffff;'>
+                                                     Pay Securely
+                                    </a>
+                                    </td>
+                                    </tr>
+                                    <tr>
+                                    <td style='padding:18px 24px 0 24px;font-size:14px;line-height:1.7;color:#475569;'>
+                                                  If the button does not work, copy and paste this link into your browser:
+                                    <br>
+                                    <a href='{obj?.PreAuthUrl.ToStr()}' style='word-break:break-all;color:#2563eb;'>{obj?.PreAuthUrl.ToStr()}</a>
+                                    </td>
+                                    </tr>
+                                    <tr>
+                                    <td style='padding:18px 24px 24px 24px;font-size:14px;line-height:1.7;color:#475569;'>
+                                                  âœ“ Your payment is processed over an encrypted connection. {obj?.companyName} does not store your full card details.
+                                    <br><br>
+                                                  Only proceed if you recognise this request from {obj?.companyName}. If you have any concerns, contact us {genSubCompany.TelephoneNo} before paying.
+                                    </td>
+                                    </tr>
+                                    </table>
+                                    </td>
+                                    </tr>
+                                    </table>
+                                    </body>
+                                    </html>";
+                                    IsSent = ClsEmail.SendPaymentKPLink("Link for Card Payment " + obj?.bookingRef.ToStr(), EmailBody.ToStr(), genSubCompany.EmailAddress, obj.email.ToStr().Trim(), genSubCompany);
 
-                            IsSent = ClsEmail.SendPaymentKPLink("Link for Card Payment " + obj?.bookingRef.ToStr(), "Please click on the link to process the payment for your journey with " + obj?.companyName.ToStr() + Environment.NewLine + "Ref No - " + obj?.bookingRef.ToStr().Trim() + ".<br/>" + "<a href='" + obj.PreAuthUrl.ToStr() + "'>" + obj.PreAuthUrl.ToStr() + "</a>", genSubCompany.EmailAddress, obj.email.ToStr().Trim(), genSubCompany);
+                                }
+                                catch
+                                {
+
+                                }
+
+                            }
+                            else
+                            {
+                                IsSent = ClsEmail.SendPaymentKPLink("Link for Card Payment " + obj?.bookingRef.ToStr(), "Please click on the link to process the payment for your journey with " + obj?.companyName.ToStr() + Environment.NewLine + "Ref No - " + obj?.bookingRef.ToStr().Trim() + ".<br/>" + "<a href='" + obj.PreAuthUrl.ToStr() + "'>" + obj.PreAuthUrl.ToStr() + "</a>", genSubCompany.EmailAddress, obj.email.ToStr().Trim(), genSubCompany);
+
+                            }
                             //ClsEASendEmail cls = new ClsEASendEmail(genSubCompany.EmailAddress, obj.email.ToStr().Trim(), "Link for Card Payment " + obj?.bookingRef.ToStr(), "Please click on the link to process the payment for your journey with " + obj?.companyName.ToStr() + Environment.NewLine + "Ref No - " + obj?.bookingRef.ToStr().Trim() + ".<br/>" + "<a href='" + obj.PreAuthUrl.ToStr() + "'>" + obj.PreAuthUrl.ToStr() + "</a>", genSubCompany.SmtpHost, genSubCompany.EmailCC);
                             //IsSent = cls.Send(obj.email.ToStr(), genSubCompany.SmtpUserName, genSubCompany.SmtpPassword);
 
@@ -7627,7 +7902,15 @@ namespace SignalRHub
                 {
                     if (!string.IsNullOrEmpty(obj?.phoneNumber))
                     {
-                        HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + obj.phoneNumber.Trim() + " =" + "Please click on the link to Register card" + Environment.NewLine + obj.PreAuthUrl.ToStr());
+                        try
+                        {
+                            HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + obj.phoneNumber.Trim() + " =" + "Please click on the link to Register card" + Environment.NewLine + obj.PreAuthUrl.ToStr());
+
+                        }
+                        catch
+                        {
+
+                        }
                     }
                     if (!string.IsNullOrEmpty(obj?.email))
                     {
@@ -7637,6 +7920,7 @@ namespace SignalRHub
 
                                     .Select(args => new
                                     {
+                                        args.TelephoneNo,
                                         args.CompanyName,
                                         args.EmailAddress,
                                         args.SmtpHost,
@@ -7652,6 +7936,7 @@ namespace SignalRHub
                                 genSubCompany = db.Gen_SubCompanies.Where(c => c.Id == 1)
                                    .Select(args => new
                                    {
+                                       args.TelephoneNo,
                                        args.CompanyName,
                                        args.EmailAddress,
                                        args.SmtpHost,
@@ -7663,8 +7948,150 @@ namespace SignalRHub
                                    }
                                    ).FirstOrDefault();
                             }
-                            ClsEASendEmail cls = new ClsEASendEmail(genSubCompany.EmailAddress, obj.email.ToStr().Trim(), "Link for Register card ", "Please click on the link to Register Card for your journey with " + obj?.companyName.ToStr() + Environment.NewLine + ".<br/>" + "<a href='" + obj.PreAuthUrl.ToStr() + "'>" + obj.PreAuthUrl.ToStr() + "</a>", genSubCompany.SmtpHost, genSubCompany.EmailCC);
-                            bool IsSent = cls.Send(obj.email.ToStr(), genSubCompany.SmtpUserName, genSubCompany.SmtpPassword);
+                            if (HubProcessor.Instance.objPolicy.DefaultClientId.ToStr() == "JetTaxis")
+                            {
+                                try
+                                {
+                                    var EmailBody = $@"
+                                    <!doctype html>
+                                    <html lang='en' xmlns='http://www.w3.org/1999/xhtml'>
+                                    <head>
+                                    <meta charset='utf-8'>
+                                    <meta name='x-apple-disable-message-reformatting'>
+                                    <meta http-equiv='x-ua-compatible' content='ie=edge'>
+                                    <meta name='viewport' content='width=device-width, initial-scale=1'>
+                                    <title>Add your card</title>
+                                    <style>
+                                        html, body {{ margin:0 auto !important; padding:0 !important; height:100% !important; width:100% !important; }}
+                                        * {{ -ms-text-size-adjust:100%; -webkit-text-size-adjust:100%; }}
+                                        table, td {{ mso-table-lspace:0pt !important; mso-table-rspace:0pt !important; }}
+                                        img {{ -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; }}
+                                        a {{ text-decoration:none; }}
+                                        @media screen and (max-width: 600px){{
+                                          .container {{ width:100% !important; }}
+                                          .px-24 {{ padding-left:24px !important; padding-right:24px !important; }}
+                                          .pt-24 {{ padding-top:24px !important; }}
+                                          .pb-24 {{ padding-bottom:24px !important; }}
+                                          .text-right {{ text-align:left !important; padding-top:6px !important; display:block !important; }}
+                                        }}
+                                        @media (prefers-color-scheme: dark) {{
+                                          body, .bg {{ background:#0f1113 !important; }}
+                                          .card {{ background:#14171a !important; }}
+                                          .text {{ color:#e6e6e6 !important; }}
+                                          .muted {{ color:#b7bec7 !important; }}
+                                          .btn {{ background:#2b7cff !important; }}
+                                        }}
+                                    </style>
+                                    <!--[if gte mso 9]>
+                                    <xml>
+                                    <o:OfficeDocumentSettings>
+                                    <o:AllowPNG/>
+                                    <o:PixelsPerInch>96</o:PixelsPerInch>
+                                    </o:OfficeDocumentSettings>
+                                    </xml>
+                                    <![endif]-->
+                                    </head>
+                                    <body style='margin:0; padding:0; background:#f2f4f7;'>
+                                    <!-- Preheader (hidden) -->
+                                    <div style='display:none; max-height:0; overflow:hidden; mso-hide:all;'>
+                                        Save a card securely to speed up future bookingsâ€”no charge today.
+                                    </div>
+ 
+                                      <table role='presentation' cellpadding='0' cellspacing='0' border='0' width='100%' class='bg' style='background:#f2f4f7;'>
+                                    <tr>
+                                    <td align='center' style='padding:0 12px;'>
+                                    <table role='presentation' cellpadding='0' cellspacing='0' border='0' width='600' class='container' style='width:600px; max-width:600px;'>
+                                    <!-- Top bar -->
+                                    <tr>
+                                    <td style='background:#1d7ada; color:#ffffff; padding:18px 24px; font-family:Arial,Helvetica,sans-serif; font-size:24px; font-weight:700; border-radius:6px 6px 0 0;'>
+                                    <span> {obj?.companyName} </span>
+                                    </td>
+                                    </tr>
+                                    <!-- Body -->
+                                    <tr>
+                                    <td style='background:#ffffff; padding:32px 32px 8px; font-family:Arial,Helvetica,sans-serif; border-radius:0 0 6px 6px;'>
+                                    <h1 class='text' style='margin:0 0 16px; font-size:32px; line-height:1.25; color:#111827; font-weight:800;'>
+                                                    Add your card for<br/>faster future payments
+                                    </h1>
+                                    <p class='text' style='margin:0 0 12px; font-size:16px; line-height:24px; color:#111827;'>
+                                                    Hello {obj.customerName},
+                                    </p>
+                                    <p class='text' style='margin:0 0 20px; font-size:16px; line-height:24px; color:#111827;'>
+                                                    Save a card securely with {obj?.companyName} to speed up future bookings and contactless payments. No charge will be taken today.
+                                    </p>
+                                    <!-- Feature card -->
+                                    <table role='presentation' cellpadding='0' cellspacing='0' border='0' width='100%' class='card' style='background:#f8fafc; border-radius:8px;'>
+                                    <tr>
+                                    <td class='px-24 pt-24 pb-24' style='padding:20px 24px; font-family:Arial,Helvetica,sans-serif;'>
+                                    <ul style='margin:0; padding:0 0 0 20px; color:#111827; font-size:16px; line-height:24px;'>
+                                    <li style='margin-bottom:10px;'>Use your saved card to pay instantly after rides or when confirming bookings.</li>
+                                    <li style='margin-bottom:10px;'>Cancel or remove your card at any time from your account or by contacting us.</li>
+                                    <li>Processed by our PCI DSS compliant payment partner; we never store full card details.</li>
+                                    </ul>
+                                    </td>
+                                    </tr>
+                                    </table>
+ 
+                                                  <!-- Spacer -->
+                                    <div style='line-height:24px; height:24px;'>&nbsp;</div>
+ 
+                                                  <!-- CTA Button -->
+                                    <table role='presentation' cellpadding='0' cellspacing='0' border='0' align='center'>
+                                    <tr>
+                                    <td align='center'>
+                                    <a class='btn' href='{obj?.PreAuthUrl.ToStr()}' target='_blank'
+                                                           style='display:inline-block; background:#1d7ada; color:#ffffff; font-family:Arial,Helvetica,sans-serif; font-size:18px; font-weight:700; line-height:48px; text-align:center; text-decoration:none; border-radius:8px; padding:0 28px; min-width:260px;'>
+                                                          Add Card Securely
+                                    </a>
+                                    <!--<![endif]-->
+                                    </td>
+                                    </tr>
+                                    </table>
+ 
+                                                  <!-- Fallback link -->
+                                    <p class='muted' style='margin:20px 0 0; font-size:14px; line-height:20px; color:#667085;'>
+                                                    If the button does not work, copy and paste this link to your browser:<br>
+                                    <a href='{obj?.PreAuthUrl.ToStr()}' target='_blank' style='color:#1d7ada; word-break:break-all;'>{obj?.PreAuthUrl.ToStr()}</a>
+                                    </p>
+ 
+                                                  <!-- Legal -->
+                                    <div style='line-height:24px; height:24px;'>&nbsp;</div>
+                                    <p class='muted' style='margin:0 0 10px; font-size:13px; line-height:20px; color:#667085;'>
+                                                    By following the link, you consent to {obj?.companyName}  and our payment processor creating a secure payment token from your card. You authorize us to use this token to charge for future bookings you confirm with us (e.g. deposits, no-show fees, or agreed fares)
+                                    </p>
+                                    <p class='muted' style='margin:0 0 6px; font-size:13px; line-height:20px; color:#667085;'>
+                                                    You can withdraw this authorization at any time by removing the saved card or contacting us at
+                                    <a href='{genSubCompany?.TelephoneNo}' style='color:#1d7ada;'>{genSubCompany?.TelephoneNo}</a>.
+                                    </p>
+ 
+                                                  <!-- Footer space -->
+                                    <div style='line-height:24px; height:24px;'>&nbsp;</div>
+                                    </td>
+                                    </tr>
+ 
+                                            </table>
+                                    </td>
+                                    </tr>
+                                    </table>
+                                    </body>
+                                    </html>
+ 
+                                    ";
+                                    ClsEASendEmail cls = new ClsEASendEmail(genSubCompany.EmailAddress, obj.email.ToStr().Trim(), "Link for Register card ", EmailBody, genSubCompany.SmtpHost, genSubCompany.EmailCC);
+                                    bool IsSent = cls.Send(obj.email.ToStr(), genSubCompany.SmtpUserName, genSubCompany.SmtpPassword);
+                                }
+                                catch
+                                {
+
+                                }
+                               
+                            }
+                            else
+                            {
+                                ClsEASendEmail cls = new ClsEASendEmail(genSubCompany.EmailAddress, obj.email.ToStr().Trim(), "Link for Register card ", "Please click on the link to Register Card for your journey with " + obj?.companyName.ToStr() + Environment.NewLine + ".<br/>" + "<a href='" + obj.PreAuthUrl.ToStr() + "'>" + obj.PreAuthUrl.ToStr() + "</a>", genSubCompany.SmtpHost, genSubCompany.EmailCC);
+                                bool IsSent = cls.Send(obj.email.ToStr(), genSubCompany.SmtpUserName, genSubCompany.SmtpPassword);
+                            }
+                                
 
                         }
                     }
@@ -8791,9 +9218,9 @@ namespace SignalRHub
                 value = value.Replace(",", "").Trim();
             }
 
-            if (value.ToStr().Contains(" "))
+            if (value.ToStr().Contains("Â "))
             {
-                value = value.Replace(" ", " ").Trim();
+                value = value.Replace("Â ", " ").Trim();
             }
 
             RemoveUK(ref value);

@@ -3246,6 +3246,46 @@ namespace SignalRHub
                 }
 
                 (new TaxiDataContext()).stp_SendMessage(values[1].ToInt(), values[2].ToInt(), values[3].ToStr(), "", values[4].ToStr(), values[5].ToStr());
+                //if (Global.EnableComapnyVehicleNo == "true")
+                //{
+                //    try
+                //    {
+                //        using (TaxiDataContext db = new TaxiDataContext())
+                //        {
+                //            int driverid = Convert.ToInt32(values[1]);
+
+                //            var result = (from a in db.Fleet_DriverQueueLists
+                //                          where a.Fleet_Driver.IsActive == true
+                //                             && a.DriverId == driverid
+                //                             && a.Status == true
+                //                             && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
+                //                          select new
+                //                          {
+                //                              VehicleOrDriver =
+                //                                  a.FleetMasterId > 0 &&
+                //                                  a.Fleet_Master != null &&
+                //                                  !string.IsNullOrEmpty(a.Fleet_Master.VehicleID)
+                //                                      ? a.Fleet_Master.VehicleID
+                //                                      : a.Fleet_Driver.DriverNo
+                //                          }).FirstOrDefault();
+
+                //            General.BroadCastMessage(
+                //                "**message>>" +
+                //                values[1]?.ToString() + ">>" +
+                //                (result?.VehicleOrDriver ?? "") + ">>" +
+                //                values[4].ToStr() + ">>" + string.Format("{0:dd/MMM HH:mm:ss}", DateTime.Now));
+                //        }
+                //    }
+                //    catch
+                //    {
+
+                //    }
+                //}
+                //else
+                //{
+                //    General.BroadCastMessage("**message>>" + values[1].ToStr() + ">>" + values[3].ToStr() + ">>" + values[4].ToStr() + ">>" + string.Format("{0:dd/MMM HH:mm:ss}", DateTime.Now));
+
+                //}
                 General.BroadCastMessage("**message>>" + values[1].ToStr() + ">>" + values[3].ToStr() + ">>" + values[4].ToStr());
             }
             catch (Exception ex)

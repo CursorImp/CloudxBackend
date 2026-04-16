@@ -5,6 +5,7 @@ using DotNetCoords;
 //using FirebaseAdmin;
 //using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNet.SignalR;
+using Microsoft.AspNet.SignalR.Client.Http;
 using SignalRHub.Classes;
 using SignalRHub.WebApiClasses;
 using System;
@@ -71,6 +72,8 @@ namespace SignalRHub
         public static string HEREKEY = "";
         public static string smsInbox = "0";
         public static string enableRingBack = "0";
+        public static string EnableComapnyVehicleNo = "false";
+        public static string EnablePreBookingMins = "0";
         public static int DocumentExpiryDays = 0;
         public static string applicationurl = "0";
         public static string enableClearJobText = "0";
@@ -130,6 +133,7 @@ namespace SignalRHub
         public static string EnableManualLeadTime = "false";
         public static string DisablePlotDateBreakUnBreak = "false";
         public static string EnablePriority = "false";
+        public static string EnableAutoCalculatePriority = "false";
         public static string ShowAllocatedInFutureList = "0";
         public static string EnableCustomPayment = "0";
         public static string EnableSoundAdjustment = "0";
@@ -150,6 +154,12 @@ namespace SignalRHub
         public static string EnableDriverPinLogin = "0";
         public static string EnableGoogleCalendarEmail = "0";
         public static string CheckIVRStatus = "0";
+        public static string NotShowOnBreakDrivers = "0";
+        public static string EnableRemindSTC = "0";
+        public static string EnableOnlineStatus = "1";
+        private const int MaxDrvRadiusCacheSize = 500;
+        public static string EnableSendReceiptOnSMS = "0";
+        public static string SendReceiptOnSMSURL = "";
         public static void RemoveJobFromBidList(long jobId)
         {
 
@@ -794,6 +804,36 @@ namespace SignalRHub
                              new AppSetting { SetKey = "EnableNoShowTime", SetVal = "false", description = "EnableNoShowTime"  },
                              new AppSetting { SetKey = "OptimizeDashboardBookingGrid", SetVal = "false", description = "OptimizeDashboardBookingGrid"  },
                              new AppSetting { SetKey = "EnableAdvanceSearchFeature", SetVal = "true", description = "EnableAdvanceSearchFeature"  },
+                             new AppSetting { SetKey = "NotShowOnBreakDrivers", SetVal = "0", description = "NotShowOnBreakDrivers"  },
+                             new AppSetting { SetKey = "EnableOptimizedNearestDriverAPI", SetVal = "false", description = "Enable Optimized Nearest Driver API"  },
+                             new AppSetting { SetKey = "NotValidateCustomerName", SetVal = "false", description = "NotValidateCustomerName"  },
+                             new AppSetting { SetKey = "EnableRemindSTC", SetVal = "0", description = "EnableRemindSTC"  },
+                             new AppSetting { SetKey = "EnableOtherDriverSettings", SetVal = "false", description = "Enable Other Driver Settings on driver profile"  },
+                             new AppSetting { SetKey = "EnableDriverWiseKonectPay", SetVal = "false", description = "Enable Driver Wise Konect Pay"  },
+                             new AppSetting { SetKey = "IncludeTipInDriverComm", SetVal = "false", description = "IncludeTipInDriverComm"  },
+                             new AppSetting { SetKey = "EnableHideColumnOrderNoInJobListRpt", SetVal = "true", description = "EnableHideColumnOrderNoInJobListRpt"  },
+                             new AppSetting { SetKey = "EnableHideColumnPaymentRefInJobListRpt", SetVal = "true", description = "EnableHideColumnPaymentRefInJobListRpt"  },
+                             new AppSetting { SetKey = "DisableAutoDispatchAndBiddingOnNewJob", SetVal = "false", description = "DisableAutoDispatchAndBiddingOnNewJob"  },
+                             new AppSetting { SetKey = "EnableDriverChecklist", SetVal = "0", description = "EnableDriverChecklist"  },
+                             new AppSetting { SetKey = "EnableLeadTimePerVehicle", SetVal = "false", description = "EnableLeadTimePerVehicle"  },
+                             new AppSetting { SetKey = "EnableComplianceInUser", SetVal = "false", description = "EnableComplianceInUser"  },
+                             new AppSetting { SetKey = "EnablePreBookingMins", SetVal = "0", description = "EnablePreBookingMins"  },
+                             new AppSetting { SetKey = "EnableTipOnDriverStatement", SetVal = "false", description = "EnableTipOnDriverStatement"  },
+                             new AppSetting { SetKey = "EnableDriverRestrictions", SetVal = "false", description = "EnableDriverRestrictions"  },
+                             new AppSetting { SetKey = "EnableCompanyVehicleRestrictions", SetVal = "false", description = "EnableCompanyVehicleRestrictions"  },
+                             new AppSetting { SetKey = "EnableServiceChargesSetting", SetVal = "false", description = "EnableServiceChargesSetting"  },
+                             new AppSetting { SetKey = "EnableComapnyVehicleNo", SetVal = "false", description = "EnableComapnyVehicleNo"  },
+                             new AppSetting { SetKey = "EnableAutoCalculatePriority", SetVal = "false", description = "EnableAutoCalculatePriority"  },
+                             new AppSetting { SetKey = "EnableCongestionChargesOnDriverStatement", SetVal = "true", description = "EnableCongestionChargesOnDriverStatement"  },
+                             new AppSetting { SetKey = "EnableOnlineStatus", SetVal = "1", description = "EnableOnlineStatus"  },
+                             new AppSetting { SetKey = "EnableAutoFutureDateTimeValidation", SetVal = "false", description = "EnableAutoFutureDateTimeValidation"  },
+                             new AppSetting { SetKey = "EnableDestinationAddress", SetVal = "false", description = "EnableDestinationAddress"  },
+                             new AppSetting { SetKey = "EnableWaitingListFilter", SetVal = "false", description = "EnableWaitingListFilter"  },
+                             new AppSetting { SetKey = "EnableOnJobFilter", SetVal = "false", description = "EnableOnJobFilter"  },
+                             new AppSetting { SetKey = "EnableViaDetailOnDashboardBookingGrid", SetVal = "false", description = "EnableViaDetailOnDashboardBookingGrid"  },
+                             new AppSetting { SetKey = "EnableSendReceiptOnSMS", SetVal = "0", description = "EnableSendReceiptOnSMS"  },
+                             new AppSetting { SetKey = "SendReceiptOnSMSURL", SetVal = "", description = "SendReceiptOnSMSURL"  },
+                             new AppSetting { SetKey = "EnablePreBookingMinsWork", SetVal = "false", description = "EnablePreBookingMinsWork"  },
                         };
 
                 using (var db = new TaxiDataContext())
@@ -1543,6 +1583,27 @@ namespace SignalRHub
                     enableRingBack = GetAppSetting<string>("enableRingBack").ToStr();
 
                 }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableComapnyVehicleNo")))
+                {
+                    EnableComapnyVehicleNo = GetAppSetting<string>("EnableComapnyVehicleNo").ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnablePriority")))
+                {
+                    EnablePriority = GetAppSetting<string>("EnablePriority").ToStr();
+
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableAutoCalculatePriority")))
+                {
+                    EnableAutoCalculatePriority = GetAppSetting<string>("EnableAutoCalculatePriority").ToStr();
+
+                }
+
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnablePreBookingMins")))
+                {
+                    EnablePreBookingMins = GetAppSetting<string>("EnablePreBookingMins").ToStr();
+
+                }
 
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("DocumentExpiryDays")))
                 {
@@ -1876,6 +1937,26 @@ namespace SignalRHub
                 if (!string.IsNullOrEmpty(GetAppSetting<string>("CheckIVRStatus")))
                 {
                     CheckIVRStatus = GetAppSetting<string>("CheckIVRStatus").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("NotShowOnBreakDrivers")))
+                {
+                    NotShowOnBreakDrivers = GetAppSetting<string>("NotShowOnBreakDrivers").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableRemindSTC")))
+                {
+                    EnableRemindSTC = GetAppSetting<string>("EnableRemindSTC").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableOnlineStatus")))
+                {
+                    EnableOnlineStatus = GetAppSetting<string>("EnableOnlineStatus").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("EnableSendReceiptOnSMS")))
+                {
+                    EnableSendReceiptOnSMS = GetAppSetting<string>("EnableSendReceiptOnSMS").ToStr();
+                }
+                if (!string.IsNullOrEmpty(GetAppSetting<string>("SendReceiptOnSMSURL")))
+                {
+                    SendReceiptOnSMSURL = GetAppSetting<string>("SendReceiptOnSMSURL").ToStr();
                 }
 
             }
@@ -3852,7 +3933,8 @@ namespace SignalRHub
                                 if (listofDrvRadius.Count(c => c.latitude1 == Latitude && c.longitude1 == Longitude && c.latitude2 == destLatitude && c.longitude2 == destLongitude) == 0)
                                 {
                                     listofDrvRadius.Add(new clsDriverRadius { latitude1 = Convert.ToDouble(Latitude), longitude1 = Convert.ToDouble(Longitude), latitude2 = Convert.ToDouble(destLatitude), longitude2 = Convert.ToDouble(destLongitude), Miles = miles });
-
+                                    if (listofDrvRadius.Count > MaxDrvRadiusCacheSize)
+                                        listofDrvRadius.RemoveRange(0, listofDrvRadius.Count - MaxDrvRadiusCacheSize);
                                 }
                             }
 
@@ -3897,7 +3979,8 @@ namespace SignalRHub
                                     if (listofDrvRadius.Count(c => c.latitude1 == Latitude && c.longitude1 == Longitude && c.latitude2 == destLatitude && c.longitude2 == destLongitude) == 0)
                                     {
                                         listofDrvRadius.Add(new clsDriverRadius { latitude1 = Convert.ToDouble(Latitude), longitude1 = Convert.ToDouble(Longitude), latitude2 = Convert.ToDouble(destLatitude), longitude2 = Convert.ToDouble(destLongitude), Miles = miles });
-
+                                        if (listofDrvRadius.Count > MaxDrvRadiusCacheSize)
+                                            listofDrvRadius.RemoveRange(0, listofDrvRadius.Count - MaxDrvRadiusCacheSize);
                                     }
                                 }
 
@@ -10199,5 +10282,49 @@ namespace SignalRHub
         }
 
         #endregion
+
+
+        public static void checkReminderJobs()
+        {
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    DateTime TodayDate = DateTime.Now.Date;
+                    string query = $"select Id,BookingNo,PickupDateTime,DriverId,AlarmMinutes from Booking where AlarmMinutes is not null and BookingStatusId = 17 and DriverId is not null and DATEADD(MINUTE,-AlarmMinutes,PickupDateTime) <= '{DateTime.Now.ToString("yyyy-MM-dd HH:mm")}' and ISNULL(IsReminderSent,0) = 0";
+                    var bookings = db.ExecuteQuery<BookingReminderInfo>(query).ToList();
+
+                    if (bookings != null && bookings.Count() > 0)
+                    {
+                        foreach (BookingReminderInfo item in bookings)
+                        {
+                            string message = "Reminder! Your job " + item.BookingNo + " is scheduled to start in " + item.AlarmMinutes + " minutes";
+                            SocketIO.SendToSocket(item.DriverId.ToStr(), $"alertpreshuttlelist: " + message, "despatchBooking");
+                            string updateQuery = @"
+                                    UPDATE Booking
+                                    SET IsReminderSent = 1
+                                    WHERE Id = " + item.Id + "";
+
+                            db.stp_BookingLog(item.Id, "system", message);
+                            db.ExecuteCommand(updateQuery);
+
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                General.WriteLog("checkReminderJobs", "exception:" + ex.Message);
+            }
+
+        }
+        public class BookingReminderInfo
+        {
+            public long Id { get; set; }
+            public string BookingNo { get; set; }
+            public DateTime PickupDateTime { get; set; }
+            public int DriverId { get; set; }
+            public int AlarmMinutes { get; set; }
+        }
     }
 }

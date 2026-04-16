@@ -116,6 +116,7 @@ namespace SignalRHub.WebApiClasses
         public string BookingType;
         public string OrderNo { get; set; }
         public string UserName { get; set; }
+        public int? BabySeats { get; set; }
     }
     public class Zones
     {
@@ -335,7 +336,14 @@ namespace SignalRHub.WebApiClasses
         public int? CompanyId { get; set; }
         public int? BookingTypeId { get; set; }
     }
-
+    public class ExtraCharges_Attributes
+    {
+        public int? Id { get; set; }
+        public long? BookingId { get; set; }
+        public int? AttributeId { get; set; }
+        public int? Qty { get; set; }
+        public decimal? Price { get; set; }
+    }
     public class ClsBooking_ViaLocation
     {
         public ClsBooking_ViaLocation() { }
@@ -454,6 +462,7 @@ namespace SignalRHub.WebApiClasses
         public bool? IsFare { get; set; }
         public string PermanentNotes { get; set; }
         public List<ClsBooking_ViaLocation> Booking_ViaLocations { get; set; }
+        public List<Booking_Attribute> Booking_Attributes { get; set; }
 
 
         public bool? EnableFareMeter { get; set; }
@@ -1500,7 +1509,11 @@ namespace SignalRHub.WebApiClasses
         public string Email { get; set; }
         //   args.Id, args.SubcompanyId, args.ShowAllBookings, args.ShowAllDrivers, args.SecurityGroupId, args.Email
     }
-
+    public class PriorityResult
+    {
+        public int? TotalPriority { get; set; }
+        public int? TotalPreBookPriority { get; set; }
+    }
     public class RequestWebApi
     {
         public int? RecordingId { get; set; }
@@ -1569,6 +1582,7 @@ namespace SignalRHub.WebApiClasses
         public string searchText { get; set; }
         public DateTime? FromDate { get; set; }
         public DateTime? TillDate { get; set; }
+        public string SessionId { get; set; } 
     }
     public class IVRResponse
     {
@@ -1840,6 +1854,10 @@ namespace SignalRHub.WebApiClasses
         public string zoneName { get; set; }
         public int JobDueTime { get; set; }
         public int IsPickup { get; set; }
+        public int? VehicleTypeId { get;  set; }
+        public int? BookingTypeId { get;  set; }
+        public int? TotalPreBookPriority { get;  set; }
+        public int? TotalPriority { get;  set; }
     }
 
     public class ExcludedFleetDriver
@@ -1970,6 +1988,7 @@ namespace SignalRHub.WebApiClasses
         public string BabySeats { get; set; }
         public bool? IsConfirmedDriver { get; set; }
         public decimal? MilesFromBase { get; set; }
+        public decimal? CompanyPrice { get; set; }
         public decimal? DeadMileage { get; set; }
         public DateTime? DespatchDateTime { get; set; }
         public int? JourneyTypeId { get; set; }

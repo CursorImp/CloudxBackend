@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -274,7 +275,22 @@ namespace SignalRHub.Controllers
 
                         var result = db.ExecuteQuery<Fleet_Master_Update>(sqlQuery).ToList();
 
-                        response.Data = new { VehicleTypes = result };
+                        List<Fleet_Driver_Restriction> FleetDriverRestrictionsRecd = null;
+                        try
+                        {
+                            FleetDriverRestrictionsRecd = db.ExecuteQuery<Fleet_Driver_Restriction>(
+                                @"SELECT Id, StartDate, EndDate, Comments, CompanyVehicleId 
+FROM Fleet_CompanyVehicleRestriction WITH (NOLOCK)
+WHERE CompanyVehicleId = " + obj.companyVehicle.ID
+                            ).ToList();
+                        }
+                        catch
+                        {
+                            FleetDriverRestrictionsRecd = new List<Fleet_Driver_Restriction>();
+                        }
+
+
+                        response.Data = new { FleetDriverRestrictions = FleetDriverRestrictionsRecd, VehicleTypes = result };
                     }
                 }
                 else
@@ -1065,7 +1081,9 @@ namespace SignalRHub.Controllers
                                     UseCompanyVehicle = x.UseCompanyVehicle, //chkUseCompanyVehicle.Checked
                                     CarRent = x.CarRent, //numCarRent.Value
                                     CarInsuranceRent = x.CarInsuranceRent, //numCarInsuranceRent.Value
-                                    PrimeCompanyRent = x.PrimeCompanyRent //numPrimeCompanyRent.Value
+                                    PrimeCompanyRent = x.PrimeCompanyRent, //numPrimeCompanyRent.Value
+                                    IsTip = x.TipIncludeInDriverComm,
+                                    OnWageTypeId = x.OnWageTypeId
                                 })
                                 .OrderBy(item => item.No).ToList();
 
@@ -14986,6 +15004,32 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     //db.SubmitChanges()
                     //
                     //;
+
+                    try
+                    {
+                        db.ExecuteQuery<int>(
+           @"DELETE FROM Fleet_DriverRestriction 
+              WHERE DriverId = {0}",
+           objdriver.Current.Id
+       );
+                        foreach (var item in obj.Fleet_Driver_Restrictions)
+                        {
+                            db.ExecuteQuery<int>(
+                                @"INSERT INTO Fleet_DriverRestriction
+              (StartDate, EndDate, Comments, DriverId)
+              VALUES
+              ({0}, {1}, {2}, {3})",
+                                item.StartDate,
+                                item.EndDate,
+                                item.Comments,
+                                objdriver.Current.Id
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                       
+                    }
                     try
                     {
                         if (obj.fleetDriver.Email != null)
@@ -15000,12 +15044,70 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     }
                     try
                     {
+
+                        db.ExecuteQuery<int>(@"UPDATE Fleet_Driver SET AirportPlotIds = {0}, HasCongestion={1} WHERE Id = {2}",
+                                                     obj.AirportPlotIds != null ? obj.AirportPlotIds : "", obj.HasCongestion == true ? obj.HasCongestion : false, objdriver.Current.Id);
+
+
+                    }
+                    catch
+                    {
+                    }
+                    try
+                    {
+
+                        db.ExecuteQuery<int>(@"UPDATE Fleet_Driver_DeviceInfo SET AffiliateKey = {0}, IsCreditToDriverAccount={1} WHERE driverid = {2}",
+                                                     obj.AffiliateKey != null ? obj.AffiliateKey : "", obj.IsCreditToDriverAccount == true ? obj.IsCreditToDriverAccount : false, objdriver.Current.Id);
+
+
+                    }
+                    catch
+                    {
+                    }
+
+                    try
+                    {
                         if (obj.VehiclePlateNo != null)
                         {
                             db.ExecuteQuery<int>(@"UPDATE Fleet_Driver SET VehiclePlateNo = {0} WHERE Id = {1}",
                                                          obj.VehiclePlateNo, objdriver.Current.Id);
                         }
 
+                    }
+                    catch
+                    {
+
+                    }
+                    try
+                    {
+                        if (obj.IsTip != null)
+                        {
+                            db.ExecuteQuery<int>(@"UPDATE Fleet_Driver SET TipIncludeInDriverComm = {0} WHERE Id = {1}",
+                                                         obj.IsTip, objdriver.Current.Id);
+                        }
+
+                    }
+                    catch
+                    {
+
+                    }
+                    try
+                    {
+                        if (obj.OnWageTypeId == null)
+                        {
+                            db.ExecuteCommand(
+                                @"UPDATE Fleet_Driver SET OnWageTypeId = NULL WHERE Id = {0}",
+                                objdriver.Current.Id
+                            );
+                        }
+                        else
+                        {
+                            db.ExecuteCommand(
+                                @"UPDATE Fleet_Driver SET OnWageTypeId = {0} WHERE Id = {1}",
+                                obj.OnWageTypeId,
+                                objdriver.Current.Id
+                            );
+                        }
                     }
                     catch
                     {
@@ -15900,6 +16002,32 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
 
 
                     objCompanyVehicle.Save();
+
+                    try
+                    {
+                        db.ExecuteQuery<int>(
+           @"DELETE FROM Fleet_CompanyVehicleRestriction 
+              WHERE CompanyVehicleId = {0}",
+           objCompanyVehicle.Current.Id
+       );
+                        foreach (var item in obj.Fleet_Driver_Restrictions)
+                        {
+                            db.ExecuteQuery<int>(
+                                @"INSERT INTO Fleet_CompanyVehicleRestriction
+              (StartDate, EndDate, Comments, CompanyVehicleId)
+              VALUES
+              ({0}, {1}, {2}, {3})",
+                                item.StartDate,
+                                item.EndDate,
+                                item.Comments,
+                                objCompanyVehicle.Current.Id
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
 
                     if (obj.PHCVehicleExpiryDate != null)
                     {
@@ -17467,7 +17595,45 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
             return Json(response, JsonRequestBehavior.AllowGet);
 
         }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SaveGridColWidth")]
+        public JsonResult SaveGridColWidth(AdminApi obj)
+        {
+            //
 
+            ResponseAdminApi response = new ResponseAdminApi();
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var record = db.UM_Form_UserDefinedSettings
+                             .FirstOrDefault(x => x.HeaderText == obj.Header && x.FormId == 20);
+                    if (record != null)
+                    {
+                        // Update the Width (or other fields if needed)
+                        record.GridColWidth = obj.Width;
+                        db.SubmitChanges(); // Save changes to DB
+                        response.HasError = false;
+                        response.Message = "Success";
+
+                    }
+                    else
+                    {
+                        response.HasError = false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -20693,7 +20859,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                         pda.JobTimeout = ((objPda.JobTimeOutInterval.ToStr()));
                         pda.SoundOnZoneChange = ((objPda.NotifyOnZoneChange.ToBool() ? "1" : "0"));
                         pda.MessageStayOnScreen = ((objPda.MessageStayOnScreen.ToBool() ? "1" : "0"));
-                        pda.EnableCompanyCars = ((objPda.HasCompanyCars.ToBool() ? "1" : "0"));
+                        //pda.EnableCompanyCars = ((objPda.HasCompanyCars.ToBool() ? "1" : "0"));
                         pda.EnableFareMeter = ((objPda.EnableFareMeter.ToBool() ? "1" : "0"));
                         pda.ShowCustomerNo = ((objPda.ShowCustomerMobileNo.ToBool() ? "1" : "0"));
                         //pda.HidePickupAndDest = ((objPda.HidePickAndDestination.ToBool() ? "1" : "0"));
@@ -20858,7 +21024,7 @@ obj.SecurityGeneral[0].HourControllerReport, obj.SecurityGeneral[0].BookingExpir
                     objSavedSettings.ShowPlots = objPda.ShowPlots;
                     objSavedSettings.JobTimeOutInterval = objPda.JobTimeOutInterval;
                     objSavedSettings.NotifyOnZoneChange = objPda.NotifyOnZoneChange;
-                    objSavedSettings.HasCompanyCars = objPda.HasCompanyCars;
+                    //objSavedSettings.HasCompanyCars = objPda.HasCompanyCars;
                     objSavedSettings.IgnoreArriveAction = objPda.IgnoreArriveAction;
                     //objSavedSettings.HidePickAndDestination = objPda.HidePickAndDestination;
                     objSavedSettings.NotifyOnJobLate = objPda.NotifyOnJobLate;
@@ -22735,7 +22901,8 @@ SET
                                     Fare = a.FareRate,
                                     TotalFare = a.TotalCharges,
                                     VehicleType = a.Fleet_VehicleType.VehicleType,
-                                    DepartmentId = a.DepartmentId
+                                    DepartmentId = a.DepartmentId,
+                                    TipAmount = a.TipAmount
                                 }).ToList();
                     response.HasError = false;
                     response.Data = list.ToList();
@@ -22972,7 +23139,7 @@ SET
                 {
 
                     var objBooking = db.Bookings.Where(x => x.Id == BookingId)
-                         .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges,args.ServiceCharges }).FirstOrDefault();
+                         .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges, args.ServiceCharges }).FirstOrDefault();
 
 
                     if (objBooking.CompanyId == null)
@@ -22982,7 +23149,7 @@ SET
                         if (objBooking.JourneyTypeId.ToInt() == 2)
                         {
                             objBooking = db.Bookings.Where(x => x.MasterJobId == BookingId)
-                     .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges,args.ServiceCharges }).FirstOrDefault();
+                     .Select(args => new { args.JourneyTypeId, args.PaymentTypeId, args.CompanyId, args.CompanyPrice, args.FareRate, args.CongtionCharges, args.ParkingCharges, args.MeetAndGreetCharges, args.WaitingCharges, args.ExtraDropCharges, args.ServiceCharges }).FirstOrDefault();
 
 
                             if (objBooking != null)
@@ -23000,7 +23167,7 @@ SET
 
 
                             if (objBooking != null)
-                                total += objBooking.CompanyPrice.ToDecimal() + objBooking.CongtionCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal();
+                                total += objBooking.CompanyPrice.ToDecimal() + objBooking.ParkingCharges.ToDecimal() + objBooking.MeetAndGreetCharges.ToDecimal() + objBooking.ExtraDropCharges.ToDecimal() + objBooking.ServiceCharges.ToDecimal();
 
                         }
 
@@ -27447,7 +27614,10 @@ SET
                 //
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
-
+                    var BabySeatId = db.Gen_Attributes
+                   .Where(a => a.Name == "BABY SEAT")
+                   .Select(a => a.Id)
+                   .FirstOrDefault();
                     //
                     list = (from a in db.Bookings
                             join b in db.Gen_PaymentTypes on a.PaymentTypeId equals b.Id
@@ -27495,7 +27665,9 @@ SET
                                 SpecialRequirements = a.SpecialRequirements,
                                 FlightNumber = a.FromFlightNo,
                                 PaymentComments = a.PaymentComments,
-
+                                BabySeats = db.Booking_Attributes
+                              .Where(ba => ba.BookingId == a.Id && ba.AttributeId == BabySeatId)
+                              .Sum(ba => (int?)ba.Qty) ?? 0
                             }).ToList();
                 }
                 response.Data = list;
@@ -27566,10 +27738,11 @@ SET
                     else
                     {
                         db.stp_UpdateOnlineJobStatus(obj.Id, Enums.BOOKINGSTATUS.CANCELLED, "OnlineBooking Declined:" + "", "Declined", "Controller");
+                        var booking = db.Bookings.Where(x => x.Id == obj.Id).Select(x => new { PickupDateTime = x.PickupDateTime, BookingNo = x.BookingNo, CustomerEmail = x.CustomerEmail, SubCompanyId = x.SubcompanyId, CustomerMobileNo = x.CustomerMobileNo }).FirstOrDefault();
                         if (Global.EnableOnlineBookingEmail == "1")
                         {
                             string subject = "";
-                            var booking = db.Bookings.Where(x => x.Id == obj.Id).Select(x => new { PickupDateTime = x.PickupDateTime, BookingNo = x.BookingNo, CustomerEmail = x.CustomerEmail, SubCompanyId = x.SubcompanyId }).FirstOrDefault();
+
                             var objSubcompany = new TaxiDataContext().Gen_SubCompanies.FirstOrDefault(x => x.Id == booking.SubCompanyId.ToInt());
 
                             subject = "Apologies — We Couldn’t Accept Your Booking REF :" + booking.BookingNo.ToStr();
@@ -27583,6 +27756,13 @@ SET
 
                             SendOnlineBookingmail(obj1);
 
+                        }
+                        if (Global.EnableOnlineBookingSMS == "1")
+                        {
+                            if (booking != null && booking.CustomerMobileNo.ToStr().Length >= 9 && HubProcessor.Instance.objPolicy.SMSCancelJob.ToStr().Trim().Length > 0)
+                            {
+                                SendBookingDeclineSMS(obj.Id);
+                            }
                         }
                     }
                 }
@@ -28056,6 +28236,195 @@ SET
                 }
             }
         }
+        public static void SendBookingDeclineSMS(long bookingId)
+        {
+            try
+            {
+                try
+                {
+                    General.WriteLog("SendBookingDeclineSMS", "sending Decline sms...");
+                }
+                catch
+                {
+                }
+                BookingBO objMaster = new BookingBO();
+                objMaster.GetByPrimaryKey(bookingId);
+                Global.InitializeSMSTags();
+                string msg = HubProcessor.Instance.objPolicy.SMSCancelJob.ToStr().Trim();
+
+                if (!string.IsNullOrEmpty(msg))
+                {
+                    string mobileNo = objMaster.Current.CustomerMobileNo.ToStr().Trim();
+
+                    if (mobileNo.Length > 0)
+                    {
+                        object propertyValue = string.Empty;
+                        foreach (var tag in Global.listofSMSTags.Where(c => msg.Contains(c.TagMemberValue)))
+                        {
+
+
+                            switch (tag.TagObjectName)
+                            {
+                                case "booking":
+
+
+                                    if (tag.TagPropertyValue.Contains('.'))
+                                    {
+
+                                        string[] val = tag.TagPropertyValue.Split(new char[] { '.' });
+
+                                        object parentObj = objMaster.Current.GetType().GetProperty(val[0]).GetValue(objMaster.Current, null);
+
+                                        if (parentObj != null)
+                                        {
+                                            propertyValue = parentObj.GetType().GetProperty(val[1]).GetValue(parentObj, null);
+                                        }
+                                        else
+                                            propertyValue = string.Empty;
+
+
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        if (!string.IsNullOrEmpty(tag.ConditionNotNull) && objMaster.Current.GetType().GetProperty(tag.ConditionNotNull) != null)
+                                        {
+
+                                            if (tag.ConditionNotNull.ToStr() == "BabySeats" && tag.TagPropertyValue.ToStr() == "BabySeats")
+                                            {
+                                                propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue2).GetValue(objMaster.Current, null);
+
+                                                if (!string.IsNullOrEmpty(propertyValue.ToStr().Trim()) && propertyValue.ToStr().Contains("<<<"))
+                                                {
+                                                    string[] arr = propertyValue.ToStr().Split(new string[] { "<<<" }, StringSplitOptions.None);
+
+                                                    propertyValue = "B Seat 1 : " + arr[0].ToStr() + Environment.NewLine + "B Seat 2 : " + arr[1].ToStr();
+
+                                                }
+
+                                            }
+                                            else if (objMaster.Current.GetType().GetProperty(tag.ConditionNotNull).GetValue(objMaster.Current, null) != null)
+                                            {
+                                                propertyValue = tag.ConditionNotNullReplacedValue.ToStr();
+                                            }
+
+                                        }
+                                        else
+                                        {
+
+                                            if (tag.ExpressionValue.ToStr().Trim().Length > 0)
+                                            {
+                                                try
+                                                {
+                                                    char[] splitArr = new char[] { ',' };
+                                                    char[] splitArr2 = new char[] { '|' };
+                                                    string[] val = tag.ExpressionValue.Split(splitArr);
+
+                                                    string replaceMessage = val[0].ToStr();
+                                                    int? expressionApplied = null;
+                                                    foreach (var item in val.Where(c => c.EndsWith("|replacemessage") == false))
+                                                    {
+                                                        var str = item.Split(splitArr2);
+
+                                                        if (objMaster.Current.GetType().GetProperty(str[0]) != null)
+                                                        {
+                                                            if (objMaster.Current.GetType().GetProperty(str[0]).GetValue(objMaster.Current, null).ToStr() == str[1])
+                                                            {
+                                                                if (expressionApplied == null)
+                                                                    expressionApplied = 1;
+                                                            }
+                                                            else
+                                                                expressionApplied = null;
+
+                                                        }
+                                                    }
+
+                                                    if (expressionApplied != null && expressionApplied == 1)
+                                                    {
+                                                        var replacearr = replaceMessage.Split(splitArr2);
+
+                                                        msg = msg.Replace(replacearr[0], replacearr[1]);
+                                                    }
+                                                    else
+                                                    {
+                                                        propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current, null);
+                                                    }
+                                                }
+                                                catch
+                                                {
+                                                    propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current, null);
+
+                                                }
+
+                                            }
+                                            else
+                                            {
+
+                                                propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current, null);
+                                            }
+
+
+
+                                        }
+                                    }
+
+
+                                    if (string.IsNullOrEmpty(propertyValue.ToStr()) && !string.IsNullOrEmpty(tag.TagPropertyValue2))
+                                    {
+                                        propertyValue = objMaster.Current.GetType().GetProperty(tag.TagPropertyValue2).GetValue(objMaster.Current, null);
+                                    }
+                                    break;
+
+
+                                case "Booking_ViaLocations":
+                                    if (tag.TagPropertyValue == "ViaLocValue")
+                                    {
+
+
+                                        string[] VilLocs = null;
+                                        int cnt = 1;
+                                        VilLocs = objMaster.Current.Booking_ViaLocations.Select(c => cnt++.ToStr() + ". " + c.ViaLocValue).ToArray();
+                                        if (VilLocs.Count() > 0)
+                                        {
+
+                                            string Locations = "VIA POINT(s) : \n" + string.Join("\n", VilLocs);
+                                            propertyValue = Locations;
+                                        }
+                                        else
+                                            propertyValue = string.Empty;
+
+                                    }
+                                    break;
+
+                                default:
+                                    propertyValue = objMaster.Current.Gen_SubCompany.GetType().GetProperty(tag.TagPropertyValue).GetValue(objMaster.Current.Gen_SubCompany, null);
+                                    break;
+
+                            }
+
+
+
+
+                            msg = msg.Replace(tag.TagMemberValue,
+                                tag.TagPropertyValuePrefix.ToStr() + string.Format(tag.TagDataFormat, propertyValue) + tag.TagPropertyValueSuffix.ToStr());
+
+                        }
+                        msg.Replace("\n\n", "\n");
+                        HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + mobileNo.Trim() + " = " + msg);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    General.WriteLog("SendBookingDeclineSMS", $"sending Decline sms failed... exception: {ex.Message}");
+                }
+                catch
+                {
+                }
+            }
+        }
         #endregion
 
         #region Braithwaites invoice report 
@@ -28340,7 +28709,7 @@ SET
         {
             try
             {
-                
+
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
                     var user = db.UM_Users.FirstOrDefault(u => u.UserName.ToLower() == model.UserName.ToLower());
@@ -28349,12 +28718,12 @@ SET
                         return Json(new { success = false, message = "User not found." });
                     }
 
-                    if (user.Passwrd != model.CurrentPassword) 
+                    if (user.Passwrd != model.CurrentPassword)
                     {
                         return Json(new { success = false, message = "Current password is incorrect." });
                     }
 
-                    user.Passwrd = model.NewPassword; 
+                    user.Passwrd = model.NewPassword;
                     db.SubmitChanges();
 
                     return Json(new { success = true, message = "Password changed successfully." });

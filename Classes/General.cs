@@ -1522,7 +1522,8 @@ namespace SignalRHub
 
             string message = string.Empty;
             int? driverId = null;
-
+            BookingBO objMaster = new BookingBO();
+            objMaster.GetByPrimaryKey(objBooking.Id);
             try
             {
 
@@ -1717,7 +1718,8 @@ namespace SignalRHub
 
                             try
                             {
-                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AllocateDriver1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",objbooking.driverid:" + objBooking.DriverId + Environment.NewLine);
+                                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AllocateDriver1.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",objbooking.driverid:" + objBooking.DriverId + Environment.NewLine);
+                                General.WriteLog("AllocateDriver1", "driverid:" + driverId + ",objbooking.driverid:" + objBooking.DriverId);
                             }
                             catch
                             {
@@ -1741,10 +1743,12 @@ namespace SignalRHub
                             //   ObjMaster.Edit();
 
                             objBooking.DriverId = driverId;
+                            objMaster.Current.DriverId = driverId;
 
                             try
                             {
-                                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AllocateDriver2.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",objbooking.driverid:" + objBooking.DriverId + Environment.NewLine);
+                                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AllocateDriver2.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",objbooking.driverid:" + objBooking.DriverId + Environment.NewLine);
+                                General.WriteLog("AllocateDriver2", "driverid:" + driverId + ",objbooking.driverid:" + objBooking.DriverId);
                             }
                             catch
                             {
@@ -1753,18 +1757,24 @@ namespace SignalRHub
 
                             //objBooking.IsConfirmedDriver = driverId != null ? isConfirmedDriver : false;
                             objBooking.IsConfirmedDriver = isConfirmedDriver;
+                            objMaster.Current.IsConfirmedDriver = isConfirmedDriver;
 
 
 
 
-                            if (objBooking.BookingStatusId.ToInt() == Enums.BOOKINGSTATUS.NOTACCEPTED)
+                            if (objBooking.BookingStatusId.ToInt() == Enums.BOOKINGSTATUS.NOTACCEPTED || objBooking.BookingStatusId.ToInt() == Enums.BOOKINGSTATUS.BID)
+                            {
                                 objBooking.BookingStatusId = Enums.BOOKINGSTATUS.WAITING;
+                                objMaster.Current.BookingStatusId = Enums.BOOKINGSTATUS.WAITING;
+                            }
+                                
 
 
 
                             if (driverId == null || (oldDriverId != null && oldDriverId != driverId && objBooking.BookingStatusId != Enums.BOOKINGSTATUS.WAITING))
                             {
                                 objBooking.BookingStatusId = Enums.BOOKINGSTATUS.WAITING;
+                                objMaster.Current.BookingStatusId = Enums.BOOKINGSTATUS.WAITING;
                                 //cancelJob = true;
 
                             }
@@ -1825,11 +1835,30 @@ namespace SignalRHub
                             }
                             else if (driverId == null && !string.IsNullOrEmpty(oldDriverNo))
                                 Msg = "Job is De-Allocated from Driver (" + oldDriverNo + ")";
+                            int? fleetMasterId = null;
+                            try
+                            {
+                                if (driverId > 0)
+                                {
+                                    fleetMasterId = db.Fleet_DriverQueueLists
+                               .Where(x => x.DriverId == driverId && x.Status == true)
+                               .Select(x => (int?)x.FleetMasterId)
+                               .FirstOrDefault();
+                                    objBooking.FleetMasterId = fleetMasterId;
+                                    objMaster.Current.FleetMasterId = fleetMasterId;
+                                }
+                            }
+                            catch
+                            {
 
-
+                            }
+                                                     
                             db.stp_BookingLog(objBooking.Id, "", Msg);
-
+                            objMaster.Save();
                             db.SubmitChanges();
+
+                           
+                           
 
 
                             //if (cancelJob)
@@ -1893,7 +1922,8 @@ namespace SignalRHub
 
                     try
                     {
-                        System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AllocateDriver_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",objbooking.driverid:" + objBooking.DriverId + ",exception:" + ex.Message + Environment.NewLine);
+                        //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "AllocateDriver_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",driverid:" + driverId + ",objbooking.driverid:" + objBooking.DriverId + ",exception:" + ex.Message + Environment.NewLine);
+                        General.WriteLog("AllocateDriver_exception", "driverid:" + driverId + ",objbooking.driverid:" + objBooking.DriverId + ",exception:" + ex.Message);
                     }
                     catch
                     {
@@ -2415,7 +2445,25 @@ namespace SignalRHub
                             , ObjDriver.DriverNo.ToStr()
                             , ObjDriver.HasPDA.ToBool(), true, false, false,
                             despatchBy, status, offlinejob, "").FirstOrDefault();
+                        int? fleetMasterId = null;
+                        try
+                        {
+                            if (ObjDriver.Id > 0)
+                            {
+                                BookingBO objMaster = new BookingBO();
+                                objMaster.GetByPrimaryKey(objBooking.Id);
+                                fleetMasterId = db.Fleet_DriverQueueLists
+                           .Where(x => x.DriverId == ObjDriver.Id && x.Status == true)
+                           .Select(x => (int?)x.FleetMasterId)
+                           .FirstOrDefault();
+                                objMaster.Current.FleetMasterId = fleetMasterId;
+                                objMaster.Save();
+                            }
+                        }
+                        catch
+                        {
 
+                        }
 
                         //  db.stp_DespatchedJobWithLogReason(objBooking.Id, ObjDriver.Id, ObjDriver.DriverNo.ToStr(), ObjDriver.HasPDA.ToBool(), true, false, false, "Admin", Enums.BOOKINGSTATUS.PENDING, false, "");
                     }
@@ -2564,7 +2612,7 @@ namespace SignalRHub
                         }
 
                     }
-
+                    
                 }
             }
             catch (Exception ex)
@@ -2980,7 +3028,7 @@ namespace SignalRHub
 
 
 
-        public static int? GetZoneId(string address)
+        public static int? GetZoneId(string address, double? lat = 0, double? lng = 0)
         {
             //if (AppVars.objPolicyConfiguration.EnablePDA.ToBool() == false)
             //    return null;
@@ -3024,14 +3072,31 @@ namespace SignalRHub
                         {
                             //string postCode = General.GetPostCode(address);
                             Gen_Coordinate objCoord = General.GetObject<Gen_Coordinate>(c => c.PostCode == postCode);
-                            if (objCoord != null)
+                            if (objCoord == null && !string.IsNullOrWhiteSpace(postCode) && postCode.Length > 4 && lat != null && lat != 0  && lng != 0)
+                            {
+                                try
+                                {
+                                    new TaxiDataContext().ExecuteQuery<int>($@"insert into Gen_Coordinates (PostCode,Latitude,Longitude) values ('{postCode}','{lat}','{lng}')");
+                                    objCoord = General.GetObject<Gen_Coordinate>(c => c.PostCode == postCode);
+                                }
+                                catch
+                                {
+                                }
+                            }
+                            if (objCoord != null || (lat != null && lat != 0 && lng != 0))
                             {
                                 double latitude = 0, longitude = 0;
-
-                                latitude = Convert.ToDouble(objCoord.Latitude);
-                                longitude = Convert.ToDouble(objCoord.Longitude);
-
-                                int[] plot = null;
+                                if (objCoord != null)
+                                {
+                                    latitude = Convert.ToDouble(objCoord.Latitude);
+                                    longitude = Convert.ToDouble(objCoord.Longitude);
+                                }
+                                else
+                                {
+                                    latitude = Convert.ToDouble(lat);
+                                    longitude = Convert.ToDouble(lng);
+                                }
+                                    int[] plot = null;
 
 
                                 plot = (from a in General.GetQueryable<Gen_Zone>(c => (c.ShapeType != null && c.ShapeType == "circle") || (c.MinLatitude != null && (latitude >= c.MinLatitude && latitude <= c.MaxLatitude)

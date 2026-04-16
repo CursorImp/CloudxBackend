@@ -1,4 +1,5 @@
-﻿using DotNetCoords;
+﻿using CabTreasureWebApi.Models.HereForwardGeocode;
+using DotNetCoords;
 using SignalRHub.Classes;
 using SignalRHub.Classes.KonnectSupplier;
 using SMSGateway;
@@ -7,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -1996,7 +1998,7 @@ namespace SignalRHub
 
 
                                                 hasChanges = true;
-                                                
+
                                                 item.ZoneId = zoneId;
 
                                                 //   item.PreviousZone = "";
@@ -2013,7 +2015,7 @@ namespace SignalRHub
                                                 }
                                                 else
                                                 {
-                                                    if (Global.DisablePlotDateBreakUnBreak == "true"  && item.PrevZoneId.ToInt() == zoneId)
+                                                    if (Global.DisablePlotDateBreakUnBreak == "true" && item.PrevZoneId.ToInt() == zoneId)
                                                     {
 
                                                     }
@@ -4926,8 +4928,221 @@ namespace SignalRHub
             }
             return resp;
         }
+        public static string SaveImageToServer(string base64Image, string serverFolderPath)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(base64Image))
+                    return null;
+
+                // Extract MIME type if present in data URI
+                var match = Regex.Match(base64Image, @"data:(?<mime>image/[^;]+);base64,(?<data>.+)");
+                string mimeType, base64Data;
+
+                if (match.Success)
+                {
+                    mimeType = match.Groups["mime"].Value;    // e.g., "image/png"
+                    base64Data = match.Groups["data"].Value;  // actual Base64
+                }
+                else
+                {
+                    // If no prefix, assume JPEG by default
+                    mimeType = "image/jpeg";
+                    base64Data = base64Image;
+                }
+
+                // Map MIME type to file extension
+                string extension;
+                switch (mimeType.ToLower())
+                {
+                    case "image/png":
+                        extension = ".png";
+                        break;
+                    case "image/jpeg":
+                    case "image/jpg":
+                        extension = ".jpg";
+                        break;
+                    case "image/gif":
+                        extension = ".gif";
+                        break;
+                    case "image/bmp":
+                        extension = ".bmp";
+                        break;
+                    default:
+                        extension = ".jpg"; // fallback
+                        break;
+                }
+
+                // Clean Base64 string
+                base64Data = base64Data.Replace("\r", "").Replace("\n", "").Trim();
+
+                // Convert to byte array
+                byte[] imageBytes = Convert.FromBase64String(base64Data);
+
+                // Map virtual path to physical path
+                string folderPath = System.Web.Hosting.HostingEnvironment.MapPath(serverFolderPath);
+
+                if (!Directory.Exists(folderPath))
+                    Directory.CreateDirectory(folderPath);
+
+                // Generate file name dynamically
+                string fileName = $"{Guid.NewGuid()}{extension}";
+                string fullPath = Path.Combine(folderPath, fileName);
+
+                // Save the file
+                File.WriteAllBytes(fullPath, imageBytes);
+
+                return fileName;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("getchecklist")]
+        public ResponseData getCheckList()
+        {
 
 
+            ResponseData res = new ResponseData();
+            try
+            {
+
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var headers = db.ExecuteQuery<CheckListTypeModel>(
+                "SELECT * FROM CheckListType WHERE IsActive = 1"
+            ).ToList();
+
+                    var details = db.ExecuteQuery<CheckListDetailModel>(
+                        "SELECT * FROM CheckListDetail WHERE IsActive = 1"
+                    ).ToList();
+
+                    var grouped = headers.Select(h => new
+                    {
+                        Id = h.Id,
+                        heading = h.TypeName,
+                        Detail = details
+                            .Where(d => d.ChecListTypeId == h.Id)
+                            .Select(d => new
+                            {
+                                Id = d.Id,
+                                CheckListHeaderID = d.ChecListTypeId,
+                                question = d.DetailDescription
+                            })
+                            .ToList()
+                    }).ToList();
+
+                    string response = Newtonsoft.Json.JsonConvert.SerializeObject(grouped);
+                    res.Data = response;
+                    res.IsSuccess = true;
+                    res.Message = "";
+                }
+
+
+            }
+            catch (Exception ex)
+            {
+                //return "exceptionoccurred";
+                res.Data = null;
+                res.IsSuccess = false;
+                res.Message = ex.Message;
+            }
+
+            return res;
+        }
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("addchecklist")]
+        public ResponseData AddCheckList(List<DriverChecklist> modelList)
+        {
+            ResponseData res = new ResponseData();
+
+            try
+            {
+                if (modelList == null || modelList.Count == 0)
+                {
+                    res.IsSuccess = false;
+                    res.Message = "No data received";
+                    return res;
+                }
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var firstItem = modelList.First(); // common data
+
+                    int vehicleId;
+
+                    if (!string.IsNullOrEmpty(firstItem.VehicleNo))
+                    {
+                        vehicleId = db.ExecuteQuery<int>(@"
+                    SELECT TOP 1 Id 
+                    FROM Fleet_Master 
+                    WHERE VehicleNo = {0}
+                ", firstItem.VehicleNo).FirstOrDefault();
+                    }
+                    else
+                    {
+                        vehicleId = db.ExecuteQuery<int>(@"
+                    SELECT VehicleTypeId 
+                    FROM Fleet_Driver 
+                    WHERE Id = {0}
+                ", firstItem.DriverId).FirstOrDefault();
+                    }
+
+                    // ✅ Insert ONLY ONE submission
+                    int submissionId = db.ExecuteQuery<int>(
+                        @"INSERT INTO CheckListSubmission 
+                  (DriverId, VehicleId, SubmittedDate, IsCompleted, IsCompanyCar)
+                  OUTPUT INSERTED.Id
+                  VALUES ({0}, {1}, GETDATE(), 1, {2})",
+                        firstItem.DriverId,
+                        vehicleId,
+                        !string.IsNullOrEmpty(firstItem.VehicleNo) ? true : false
+                    ).Single();
+
+                    // ✅ Loop for multiple details
+                    foreach (var item in modelList)
+                    {
+                        string imagePath = "";
+
+                        if (!string.IsNullOrEmpty(item.imgUrl))
+                        {
+                            string savedFileName = SaveImageToServer(item.imgUrl, "~/Images/CheckList/");
+                            imagePath = "/Images/CheckList/" + savedFileName;
+                        }
+
+                        db.ExecuteCommand(
+                            @"INSERT INTO CheckListSubmissionDetail
+                      (SubmissionId, CheckListTypeId, CheckListDetailID, DriverId, VehicleId, ImagePath, Comment, IsSuccess, CreatedDate, IsCompanyCar)
+                      VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, GETDATE(), {8})",
+                            submissionId,
+                            item.CheckListHeaderID,
+                            item.CheckListDetailID,
+                            item.DriverId,
+                            vehicleId,
+                            imagePath,
+                            item.comment,
+                            item.isSuccess,
+                            !string.IsNullOrEmpty(item.VehicleNo) ? true : false
+                        );
+                    }
+
+                    res.IsSuccess = true;
+                    res.Message = "Checklist submitted successfully";
+                }
+            }
+            catch (Exception ex)
+            {
+                res.IsSuccess = false;
+                res.Message = ex.Message;
+            }
+
+            return res;
+        }
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -5465,7 +5680,7 @@ namespace SignalRHub
                             }
                             else if (!string.IsNullOrEmpty(gatewayName) && (gatewayName.ToLower().Trim() == "konnectpay" || item.PaymentGatewayId == 15))
                             {
-                               
+
 
 
                                 long jobId = input.jobId.ToLong();
@@ -5565,6 +5780,12 @@ namespace SignalRHub
 
                                                     dynamic ConnectGatewayDetails = GetKonnectPayGatewayDetails(obj, input.driverId);//Getting PAYMENT OPTIONS for KonnectPay 
                                                     if (ConnectGatewayDetails != null) { makePaymentResponse.Gateways.AddRange(ConnectGatewayDetails); }
+                                                    if (paymentGateway.Any(x => x.PaymentGatewayId == 9)
+                                                        && makePaymentResponse.Gateways != null
+                                                        && !makePaymentResponse.Gateways.Any(g => g.GatewayName == "Sumup"))
+                                                    {
+                                                        makePaymentResponse.Gateways.Add(new { GatewayName = "Sumup", Url = item.PaypalID });
+                                                    }
                                                     makePaymentResponse.ResponseType = (int)ResponseType.MultipleGateways;
                                                     res.Message = makePaymentResponse.TransactionMessage;
                                                     res.Data = Newtonsoft.Json.JsonConvert.SerializeObject(makePaymentResponse);
@@ -8265,7 +8486,7 @@ namespace SignalRHub
 
 
 
-                            
+
 
                             string showFares = ",\"ShowFares\":\"" + showFaresValue + "\"";
                             string showSummary = ",\"ShowSummary\":\"" + showFaresValue + "\"";
@@ -8319,6 +8540,9 @@ namespace SignalRHub
                             listofSummary.Add(new ChargesSummary { label = "Extras", value = string.Format("{0:0.00}", objBooking.ExtraDropCharges.ToDecimal()) });
                             listofSummary.Add(new ChargesSummary { label = "Fee", value = string.Format("{0:0.00}", objBooking.AgentCommission.ToDecimal() + objBooking.CashRate.ToDecimal() + objBooking.ServiceCharges.ToDecimal()) });
 
+                            bool disableRestrict = true;
+                            string disableRestrictStr = ",\"disableRestrict\":\"" + disableRestrict + "\"";
+
                             summary = ",\"Summary\":" + Newtonsoft.Json.JsonConvert.SerializeObject(listofSummary);
 
                             msg = "{ \"JobId\" :\"" + objBooking.Id +
@@ -8335,7 +8559,7 @@ namespace SignalRHub
                                    agentDetails +
 
 
-                                 ",\"Did\":\"" + driverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + summary + " }";
+                                 ",\"Did\":\"" + driverId + "\",\"BabySeats\":\"" + objBooking.BabySeats.ToStr() + "\"" + showFares + showSummary + summary + disableRestrictStr + " }";
 
 
 
@@ -9437,7 +9661,7 @@ namespace SignalRHub
                                     list.Add(new ClsPlotBidding { ZoneId = item.zoneid.ToInt(), ZoneName = item.zonename, Drivers = 0, J15 = 0, J30 = 0, Bid = item.Jobs, BidDetails = bidDetails, Rank = rank, DriverWorkStatus = statusName, Distance = GetPointsDistance(DriverPlotPoint, item.zoneid.ToInt()) });
                                 }
                             }
-                                
+
 
 
                             //
@@ -11728,6 +11952,17 @@ namespace SignalRHub
                         {
                             EnableNoPickupAuth = "0";
                         }
+                        var EnableDriverChecklist = "0";
+
+                        try
+                        {
+                            EnableDriverChecklist = db.ExecuteQuery<string>("Select SetVal From AppSettings where setkey='EnableDriverChecklist'").FirstOrDefault().ToStr();
+                        }
+                        catch
+                        {
+                            EnableDriverChecklist = "0";
+                        }
+                        pda.EnableDriverChecklist = EnableDriverChecklist;
                         //need to comment
                         pda.DisableJobAuth = ((obj.DisableRejectJobAuth.ToBool() ? ((EnableNoPickupAuth == "1") ? "3" : pda.DisableJobAuth) : "0"));
 
@@ -11750,13 +11985,17 @@ namespace SignalRHub
 
                         pda.SyncBookingHistory = "1";
                         pda.EnableWaitingAfterArrive = Global.EnableWaitingAfterArrive;
-                        pda.EnableOnlineStatus = "1";
+                        pda.EnableOnlineStatus = Global.EnableOnlineStatus;
 
                         if (pda.EnableCompanyCars == "1")
                             pda.EnableDriverPinLogin = Global.EnableDriverPinLogin;
                         else
                         {
                             pda.EnableDriverPinLogin = "0";
+                        }
+                        if (pda.EnableDriverPinLogin == "1")
+                        {
+                            pda.EnableOnlineStatus = "0";
                         }
                         pda.EnableSocketIO = "1";
                         pda.EnableLocationAck = "1";
@@ -11929,353 +12168,528 @@ namespace SignalRHub
                         try
                         {
                             var objDriver = db.Fleet_Drivers.FirstOrDefault(c => c.Id == driverId && c.LoginPassword == password && c.IsActive == true);
-
                             if (objDriver != null)
                             {
-                                DateTime now = DateTime.Now;
-
-                                if (vehicle.Length > 0 && obj.DeviceId.ToStr().Trim().Length > 0)
+                                try
                                 {
-                                    DateTime prevDate = DateTime.Now.AddDays(-1);
-
-                                    Fleet_DriverQueueList objQueue = db.Fleet_DriverQueueLists.Where(c => c.DriverId == driverId).OrderByDescending(c => c.Id)
-                                            .FirstOrDefault(c => c.Status == true && c.LoginDateTime.Value.Date >= prevDate.Date);
-
-                                    if (objQueue != null && !string.IsNullOrEmpty(objDriver.DeviceId.ToStr().Trim())
-                                      && obj.DeviceId.ToStr().Trim().Length > 0 && obj.DeviceId.ToStr().Trim() != objDriver.DeviceId.ToStr().Trim())
+                                    if (obj.EnableDriverChecklist == "1")
                                     {
-
-                                        msg = msg.Replace("true", "");
-                                        msg = "Driver is already login from another pda" + ",";
-                                    }
-                                }
-
-                                if (!objDriver.PDALoginBlocked.ToBool())
-                                {
-                                    msg = msg.Replace("true", "");
-                                    msg += "Your Rent is due. Please call office,";
-                                }
-                                else
-                                {
-                                    if (objDriver.RentLimit.ToDecimal() > 0)
-                                    {
-                                        try
+                                        int? HasFailed = db.ExecuteQuery<int>(
+    "SELECT CASE WHEN EXISTS (SELECT 1 FROM CheckListSubmissionDetail WHERE DriverId = {0} AND IsSuccess = 0) THEN 1 ELSE 0 END",
+    objDriver.Id
+    ).FirstOrDefault();
+                                        if (HasFailed == 1)
                                         {
+                                            msg = msg.Replace("true", "");
+                                            msg += "You cannot login until controller clears your check list";
+                                        }
+                                        else
+                                        {
+                                            var lastChecklist = db.ExecuteQuery<CheckListSubmission>(@"
+                                            SELECT TOP 1 *
+                                            FROM CheckListSubmission
+                                            WHERE DriverId = {0}
+                                            ORDER BY Id DESC", objDriver.Id).FirstOrDefault();
 
-
-
-                                            if ((pdaversion.ToDecimal() > 100.00m))
+                                            if (lastChecklist != null)
                                             {
-                                                //
-                                                string driverPay = GetDriverPay(driverId, objDriver, pdaversion.ToStr());
+                                                var submittedDate = lastChecklist.SubmittedDate;
 
-                                                if (driverPay.Length > 0)
+                                                int totalJobs = db.Bookings
+                                                    .Count(b => b.DriverId == objDriver.Id
+                                                             && b.BookingStatusId == 2
+                                                             && b.PickupDateTime >= submittedDate);
+
+                                                if (totalJobs > 0)
                                                 {
-                                                    msg = msg.Replace("true", "balance:");
-                                                    msg += driverPay;
-
-                                                    //   Clients.Caller.shiftLogin(msg.ToStr());
-                                                    //   return;
-
-                                                    res.Data = msg;
-                                                    //  res.Data = new JavaScriptSerializer().Serialize(msg.ToStr());
+                                                    msg = "CheckList:true";
+                                                    res.Data = msg.ToStr();
                                                     res.IsSuccess = true;
-                                                    res.Message = msg;
-                                                    //     return res;
+                                                    res.Message = "";
+                                                    return res;
                                                 }
                                             }
-
-
                                         }
-                                        catch (Exception ex)
+                                    }
+                                }
+                                catch
+                                {
+
+                                }
+                                if (msg != "CheckList:true")
+                                {
+
+
+                                    DateTime now = DateTime.Now;
+
+                                    try
+                                    {
+                                        var enableVehicleRestriction = db.ExecuteQuery<string>("SELECT SetVal FROM AppSettings WHERE SetKey ='EnableCompanyVehicleRestrictions'").FirstOrDefault()?.Trim().ToLower() == "true";
+                                        var enableDriverRestriction = db.ExecuteQuery<string>("SELECT SetVal FROM AppSettings WHERE SetKey ='EnableDriverRestrictions'").FirstOrDefault()?.Trim().ToLower() == "true";
+                                        if (enableVehicleRestriction && !string.IsNullOrEmpty(vehicle))
+                                        {
+                                            var CompanyVehicle = db.Fleet_Masters.FirstOrDefault(x => x.VehicleID == vehicle);
+                                            if (CompanyVehicle != null)
+                                            {
+                                                var restrictions = db.ExecuteQuery<Fleet_Driver_Restriction>(@"SELECT Id, StartDate, EndDate, Comments, CompanyVehicleId FROM Fleet_CompanyVehicleRestriction WITH (NOLOCK) WHERE CompanyVehicleId = @0", CompanyVehicle.Id).ToList();
+                                                var activeRestriction = restrictions.FirstOrDefault(r => r.StartDate <= now && (r.EndDate == null || r.EndDate >= now));
+                                                if (activeRestriction != null)
+                                                {
+                                                    msg = msg.Replace("true", "");
+                                                    msg = "Company Vehicle has active restriction: " + activeRestriction.Comments + ", ";
+                                                }
+                                            }
+                                        }
+                                        if (enableDriverRestriction)
+                                        {
+                                            var restrictions = db.ExecuteQuery<Fleet_Driver_Restriction>(@"SELECT Id, StartDate, EndDate, Comments, DriverId FROM Fleet_DriverRestriction WITH (NOLOCK) WHERE DriverId = @0", objDriver.Id).ToList();
+                                            var activeRestriction = restrictions.FirstOrDefault(r => r.StartDate <= now && (r.EndDate == null || r.EndDate >= now));
+                                            if (activeRestriction != null)
+                                            {
+                                                msg = msg.Replace("true", "");
+                                                msg = "Driver has active restriction: " + activeRestriction.Comments + ", ";
+                                            }
+                                        }
+                                    }
+                                    catch
+                                    {
+
+                                    }
+                                    if (vehicle.Length > 0 && obj.DeviceId.ToStr().Trim().Length > 0)
+                                    {
+                                        DateTime prevDate = DateTime.Now.AddDays(-1);
+
+                                        Fleet_DriverQueueList objQueue = db.Fleet_DriverQueueLists.Where(c => c.DriverId == driverId).OrderByDescending(c => c.Id)
+                                                .FirstOrDefault(c => c.Status == true && c.LoginDateTime.Value.Date >= prevDate.Date);
+
+                                        if (objQueue != null && !string.IsNullOrEmpty(objDriver.DeviceId.ToStr().Trim())
+                                          && obj.DeviceId.ToStr().Trim().Length > 0 && obj.DeviceId.ToStr().Trim() != objDriver.DeviceId.ToStr().Trim())
+                                        {
+
+                                            msg = msg.Replace("true", "");
+                                            msg = "Driver is already login from another pda" + ",";
+                                        }
+                                    }
+
+                                    if (!objDriver.PDALoginBlocked.ToBool())
+                                    {
+                                        msg = msg.Replace("true", "");
+                                        msg += "Your Rent is due. Please call office,";
+                                    }
+                                    else
+                                    {
+                                        if (objDriver.RentLimit.ToDecimal() > 0)
                                         {
                                             try
                                             {
-                                                //File.AppendAllText(physicalPath + "\\RentlimitException.txt", DateTime.Now.ToStr() + ":" + ex.Message + Environment.NewLine);
-                                                General.WriteLog("RentlimitException", "exception:" + ex.Message);
+
+
+
+                                                if ((pdaversion.ToDecimal() > 100.00m))
+                                                {
+                                                    //
+                                                    string driverPay = GetDriverPay(driverId, objDriver, pdaversion.ToStr());
+
+                                                    if (driverPay.Length > 0)
+                                                    {
+                                                        msg = msg.Replace("true", "balance:");
+                                                        msg += driverPay;
+
+                                                        //   Clients.Caller.shiftLogin(msg.ToStr());
+                                                        //   return;
+
+                                                        res.Data = msg;
+                                                        //  res.Data = new JavaScriptSerializer().Serialize(msg.ToStr());
+                                                        res.IsSuccess = true;
+                                                        res.Message = msg;
+                                                        //     return res;
+                                                    }
+                                                }
+
+
                                             }
-                                            catch
+                                            catch (Exception ex)
                                             {
+                                                try
+                                                {
+                                                    //File.AppendAllText(physicalPath + "\\RentlimitException.txt", DateTime.Now.ToStr() + ":" + ex.Message + Environment.NewLine);
+                                                    General.WriteLog("RentlimitException", "exception:" + ex.Message);
+                                                }
+                                                catch
+                                                {
 
+                                                }
                                             }
-                                        }
-                                    } // END RENT LIMIT
-                                }
-                                //else
-                                //{
-                                //    //if (objDriver.RentLimit.ToDecimal() > 0 && Global.DriverPay.ToStr() == "1")
-                                //    //{
-                                //    //    try
-                                //    //    {
-                                //    //        string version = pdaversion.ToStr();
-
-
-
-
-
-
-
-
-
-                                //    //        //string driverPay = GetDriverPay(driverId, objDriver, pdaversion.ToStr());
-
-                                //    //        //if (driverPay.Length > 0)
-                                //    //        //{
-                                //    //        //    msg = msg.Replace("true", "balance:");
-                                //    //        //    msg += driverPay;
-
-
-
-                                //    //        //    res.Data = new JavaScriptSerializer().Serialize(msg.ToStr());
-                                //    //        //    res.IsSuccess = true;
-                                //    //        //    res.Message = "";
-
-                                //    //        //}
-
-
-
-                                //    //    }
-                                //    //    catch (Exception ex)
-                                //    //    {
-                                //    //        try
-                                //    //        {
-                                //    //            File.AppendAllText(physicalPath + "\\RentlimitException.txt", DateTime.Now.ToStr() + ":" + ex.Message + Environment.NewLine);
-                                //    //        }
-                                //    //        catch
-                                //    //        {
-
-                                //    //        }
-                                //    //    }
-                                //    //} // END RENT LIMIT
-                                //}
-
-                                string expiredmsg = string.Empty;
-
-                                if (objDriver.DrivingLicenseExpiryDate != null)
-                                {
-                                    if (objDriver.DrivingLicenseExpiryDate.Value < now)
-                                    {
-                                        if (LoginDrvOnExpiredDoc == false)
-                                        {
-                                            msg = msg.Replace("true", "");
-                                            msg += "Driving License is Expired" + ",";
-                                        }
-                                        else
-                                        {
-                                            expiredmsg += "Driving License is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objDriver.DrivingLicenseExpiryDate.Value) + ",";
-                                        }
+                                        } // END RENT LIMIT
                                     }
+                                    //else
+                                    //{
+                                    //    //if (objDriver.RentLimit.ToDecimal() > 0 && Global.DriverPay.ToStr() == "1")
+                                    //    //{
+                                    //    //    try
+                                    //    //    {
+                                    //    //        string version = pdaversion.ToStr();
 
-                                    if (objDriver.DrivingLicenseExpiryDate >= now.Date && objDriver.DrivingLicenseExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
-                                    {
-                                        if (string.IsNullOrEmpty(alertMsg))
-                                            alertMsg = "alert";
 
-                                        alertMsg += ",License expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.DrivingLicenseExpiryDate);
-                                    }
-                                }
-                                if (objDriver.InsuranceExpiryDate != null)
-                                {
-                                    if (objDriver.InsuranceExpiryDate.Value < now)
+
+
+
+
+
+
+
+                                    //    //        //string driverPay = GetDriverPay(driverId, objDriver, pdaversion.ToStr());
+
+                                    //    //        //if (driverPay.Length > 0)
+                                    //    //        //{
+                                    //    //        //    msg = msg.Replace("true", "balance:");
+                                    //    //        //    msg += driverPay;
+
+
+
+                                    //    //        //    res.Data = new JavaScriptSerializer().Serialize(msg.ToStr());
+                                    //    //        //    res.IsSuccess = true;
+                                    //    //        //    res.Message = "";
+
+                                    //    //        //}
+
+
+
+                                    //    //    }
+                                    //    //    catch (Exception ex)
+                                    //    //    {
+                                    //    //        try
+                                    //    //        {
+                                    //    //            File.AppendAllText(physicalPath + "\\RentlimitException.txt", DateTime.Now.ToStr() + ":" + ex.Message + Environment.NewLine);
+                                    //    //        }
+                                    //    //        catch
+                                    //    //        {
+
+                                    //    //        }
+                                    //    //    }
+                                    //    //} // END RENT LIMIT
+                                    //}
+
+                                    string expiredmsg = string.Empty;
+
+                                    if (objDriver.DrivingLicenseExpiryDate != null)
                                     {
-                                        if (LoginDrvOnExpiredDoc == false)
+                                        if (objDriver.DrivingLicenseExpiryDate.Value < now)
                                         {
-                                            msg = msg.Replace("true", "");
-                                            msg += "Driver Insurance is Expired" + ",";
-                                        }
-                                        else
-                                        {
-                                            expiredmsg += "Driver Insurance is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objDriver.InsuranceExpiryDate.Value) + ",";
-                                        }
-                                    }
-
-                                    if (objDriver.InsuranceExpiryDate >= now.Date && objDriver.InsuranceExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
-                                    {
-                                        if (string.IsNullOrEmpty(alertMsg))
-                                            alertMsg = "alert";
-
-                                        alertMsg += ",Insurance Expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.InsuranceExpiryDate);
-                                    }
-                                }
-
-
-
-                                if (objDriver.RoadTaxiExpiryDate != null)
-                                {
-                                    if (objDriver.RoadTaxiExpiryDate.Value < now)
-                                    {
-                                        if (LoginDrvOnExpiredDoc == false)
-                                        {
-                                            msg = msg.Replace("true", "");
-                                            msg += "Driver Road Tax is Expired" + ",";
-                                        }
-                                        else
-                                        {
-                                            expiredmsg += "Driver Road Tax is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objDriver.RoadTaxiExpiryDate.Value) + ",";
-                                        }
-                                    }
-
-                                    if (objDriver.RoadTaxiExpiryDate >= now.Date && objDriver.RoadTaxiExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
-                                    {
-                                        if (string.IsNullOrEmpty(alertMsg))
-                                            alertMsg = "alert";
-
-                                        alertMsg += ",Road Tax Expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.RoadTaxiExpiryDate);
-                                    }
-                                }
-
-
-                                if (objDriver.MOTExpiryDate != null)
-                                {
-                                    if (objDriver.MOTExpiryDate.Value < now)
-                                    {
-                                        if (LoginDrvOnExpiredDoc == false)
-                                        {
-                                            msg = msg.Replace("true", "");
-                                            msg += "Driver MOT is Expired" + ",";
-                                        }
-                                        else
-                                        {
-                                            expiredmsg += "Driver MOT is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objDriver.MOTExpiryDate.Value) + ",";
-                                        }
-                                    }
-
-                                    if (objDriver.MOTExpiryDate >= now.Date && objDriver.MOTExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
-                                    {
-                                        if (string.IsNullOrEmpty(alertMsg))
-                                            alertMsg = "alert";
-
-                                        alertMsg += ",MOT Expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.MOTExpiryDate);
-                                    }
-                                }
-                                if (objDriver.MOT2ExpiryDate != null)
-                                {
-                                    if (objDriver.MOT2ExpiryDate.Value < now && LoginDrvOnExpiredDoc == false)
-                                    {
-                                        msg = msg.Replace("true", "");
-                                        msg += "Driver MOT 2 is Expired" + ",";
-                                    }
-
-                                    if (objDriver.MOT2ExpiryDate >= now.Date && objDriver.MOT2ExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
-                                    {
-                                        if (string.IsNullOrEmpty(alertMsg))
-                                            alertMsg = "alert";
-
-                                        alertMsg += ",MOT 2 Expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.MOT2ExpiryDate);
-                                    }
-                                }
-                                if (objDriver.PCODriverExpiryDate != null)
-                                {
-                                    if (objDriver.PCODriverExpiryDate.Value < now)
-                                    {
-                                        if (LoginDrvOnExpiredDoc == false)
-                                        {
-                                            msg = msg.Replace("true", "");
-                                            msg += "Driver PCO is Expired" + ",";
-                                        }
-                                        else
-                                        {
-                                            expiredmsg += "Driver PCO is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objDriver.PCODriverExpiryDate.Value) + ",";
-                                        }
-                                    }
-
-                                    if (objDriver.PCODriverExpiryDate >= now.Date && objDriver.PCODriverExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
-                                    {
-                                        if (string.IsNullOrEmpty(alertMsg))
-                                            alertMsg = "alert";
-
-                                        alertMsg += ",PCO Expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.PCODriverExpiryDate);
-                                    }
-                                }
-
-
-
-
-
-
-
-
-                                if (objDriver.PCOVehicleExpiryDate != null)
-                                {
-                                    if (objDriver.PCOVehicleExpiryDate.Value < now)
-                                    {
-                                        if (LoginDrvOnExpiredDoc == false)
-                                        {
-                                            msg = msg.Replace("true", "");
-                                            msg += "Driver Vehicle PHC is Expired";
-                                        }
-                                        else
-                                        {
-                                            expiredmsg += "Driver Vehicle PHC is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objDriver.PCOVehicleExpiryDate.Value) + ",";
-                                        }
-                                    }
-
-                                    if (objDriver.PCOVehicleExpiryDate >= now.Date && objDriver.PCOVehicleExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
-                                    {
-                                        if (string.IsNullOrEmpty(alertMsg))
-                                            alertMsg = "alert";
-
-                                        alertMsg += ",Vehicle PHC Expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.PCOVehicleExpiryDate);
-                                    }
-                                }
-
-                                if (!string.IsNullOrEmpty(expiredmsg))
-                                {
-                                    string pdaMsg = "request pda=" + objDriver.Id + "=" + 0 + "="
-                                                         + "Message>>" + expiredmsg + ">>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4";
-
-                                    string[] splitArr = pdaMsg.Split(new string[] { "=" }, StringSplitOptions.RemoveEmptyEntries);
-
-                                    HubProcessor.Instance.listofJobs.Add(new clsPDA
-                                    {
-                                        DriverId = splitArr[1].ToInt(),
-                                        JobId = 0,
-                                        MessageDateTime = DateTime.Now.AddSeconds(-50),
-                                        JobMessage = splitArr[3].ToStr().Trim(),
-                                        MessageTypeId = splitArr[4].ToInt()
-                                    });
-                                }
-
-
-                                if (vehicle.Length > 0)
-                                {
-                                    string vehNo = vehicle;
-                                    if (vehNo.ToStr().Equals("9988") == false)
-                                    {
-                                        //string vehNo = "APH-319411";
-                                        Fleet_Master objFleet = db.Fleet_Masters.FirstOrDefault(c => c.Plateno == vehNo || c.VehicleID == vehNo || c.VehicleNo == vehNo);
-
-                                        if (objFleet == null)
-                                        {
-                                            msg = msg.Replace("true", "");
-                                            msg += "Invalid Vehicle ID";
-                                        }
-                                        else
-                                        {
-                                            //DateTime prevDate = DateTime.Now.AddDays(-1);
-                                            if (objFleet.Fleet_DriverQueueLists.Count(c => c.DriverId != driverId && c.Status == true) > 0)
+                                            if (LoginDrvOnExpiredDoc == false)
                                             {
                                                 msg = msg.Replace("true", "");
-                                                msg += "Vehicle already in use";
+                                                msg += "Driving License is Expired" + ",";
                                             }
-                                            else if (db.Fleet_Driver_CompanyVehicles.Where(c => c.DriverId == driverId).Count() > 0 && db.Fleet_Driver_CompanyVehicles.Count(c => c.DriverId == driverId && c.FleetMasterId == objFleet.Id) == 0)
+                                            else
+                                            {
+                                                expiredmsg += "Driving License is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objDriver.DrivingLicenseExpiryDate.Value) + ",";
+                                            }
+                                        }
+
+                                        if (objDriver.DrivingLicenseExpiryDate >= now.Date && objDriver.DrivingLicenseExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
+                                        {
+                                            if (string.IsNullOrEmpty(alertMsg))
+                                                alertMsg = "alert";
+
+                                            alertMsg += ",License expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.DrivingLicenseExpiryDate);
+                                        }
+                                    }
+                                    if (objDriver.InsuranceExpiryDate != null)
+                                    {
+                                        if (objDriver.InsuranceExpiryDate.Value < now)
+                                        {
+                                            if (LoginDrvOnExpiredDoc == false)
                                             {
                                                 msg = msg.Replace("true", "");
-                                                msg += "Driver Doesn't have this Company Vehicle";
+                                                msg += "Driver Insurance is Expired" + ",";
+                                            }
+                                            else
+                                            {
+                                                expiredmsg += "Driver Insurance is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objDriver.InsuranceExpiryDate.Value) + ",";
+                                            }
+                                        }
 
+                                        if (objDriver.InsuranceExpiryDate >= now.Date && objDriver.InsuranceExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
+                                        {
+                                            if (string.IsNullOrEmpty(alertMsg))
+                                                alertMsg = "alert";
+
+                                            alertMsg += ",Insurance Expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.InsuranceExpiryDate);
+                                        }
+                                    }
+
+
+
+                                    if (objDriver.RoadTaxiExpiryDate != null)
+                                    {
+                                        if (objDriver.RoadTaxiExpiryDate.Value < now)
+                                        {
+                                            if (LoginDrvOnExpiredDoc == false)
+                                            {
+                                                msg = msg.Replace("true", "");
+                                                msg += "Driver Road Tax is Expired" + ",";
+                                            }
+                                            else
+                                            {
+                                                expiredmsg += "Driver Road Tax is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objDriver.RoadTaxiExpiryDate.Value) + ",";
+                                            }
+                                        }
+
+                                        if (objDriver.RoadTaxiExpiryDate >= now.Date && objDriver.RoadTaxiExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
+                                        {
+                                            if (string.IsNullOrEmpty(alertMsg))
+                                                alertMsg = "alert";
+
+                                            alertMsg += ",Road Tax Expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.RoadTaxiExpiryDate);
+                                        }
+                                    }
+
+
+                                    if (objDriver.MOTExpiryDate != null)
+                                    {
+                                        if (objDriver.MOTExpiryDate.Value < now)
+                                        {
+                                            if (LoginDrvOnExpiredDoc == false)
+                                            {
+                                                msg = msg.Replace("true", "");
+                                                msg += "Driver MOT is Expired" + ",";
+                                            }
+                                            else
+                                            {
+                                                expiredmsg += "Driver MOT is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objDriver.MOTExpiryDate.Value) + ",";
+                                            }
+                                        }
+
+                                        if (objDriver.MOTExpiryDate >= now.Date && objDriver.MOTExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
+                                        {
+                                            if (string.IsNullOrEmpty(alertMsg))
+                                                alertMsg = "alert";
+
+                                            alertMsg += ",MOT Expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.MOTExpiryDate);
+                                        }
+                                    }
+                                    if (objDriver.MOT2ExpiryDate != null)
+                                    {
+                                        if (objDriver.MOT2ExpiryDate.Value < now && LoginDrvOnExpiredDoc == false)
+                                        {
+                                            msg = msg.Replace("true", "");
+                                            msg += "Driver MOT 2 is Expired" + ",";
+                                        }
+
+                                        if (objDriver.MOT2ExpiryDate >= now.Date && objDriver.MOT2ExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
+                                        {
+                                            if (string.IsNullOrEmpty(alertMsg))
+                                                alertMsg = "alert";
+
+                                            alertMsg += ",MOT 2 Expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.MOT2ExpiryDate);
+                                        }
+                                    }
+                                    if (objDriver.PCODriverExpiryDate != null)
+                                    {
+                                        if (objDriver.PCODriverExpiryDate.Value < now)
+                                        {
+                                            if (LoginDrvOnExpiredDoc == false)
+                                            {
+                                                msg = msg.Replace("true", "");
+                                                msg += "Driver PCO is Expired" + ",";
+                                            }
+                                            else
+                                            {
+                                                expiredmsg += "Driver PCO is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objDriver.PCODriverExpiryDate.Value) + ",";
+                                            }
+                                        }
+
+                                        if (objDriver.PCODriverExpiryDate >= now.Date && objDriver.PCODriverExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
+                                        {
+                                            if (string.IsNullOrEmpty(alertMsg))
+                                                alertMsg = "alert";
+
+                                            alertMsg += ",PCO Expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.PCODriverExpiryDate);
+                                        }
+                                    }
+
+
+
+
+
+
+
+
+                                    if (objDriver.PCOVehicleExpiryDate != null)
+                                    {
+                                        if (objDriver.PCOVehicleExpiryDate.Value < now)
+                                        {
+                                            if (LoginDrvOnExpiredDoc == false)
+                                            {
+                                                msg = msg.Replace("true", "");
+                                                msg += "Driver Vehicle PHC is Expired";
+                                            }
+                                            else
+                                            {
+                                                expiredmsg += "Driver Vehicle PHC is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objDriver.PCOVehicleExpiryDate.Value) + ",";
+                                            }
+                                        }
+
+                                        if (objDriver.PCOVehicleExpiryDate >= now.Date && objDriver.PCOVehicleExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
+                                        {
+                                            if (string.IsNullOrEmpty(alertMsg))
+                                                alertMsg = "alert";
+
+                                            alertMsg += ",Vehicle PHC Expiry=" + string.Format("{0:dd/MM/yyyy}", objDriver.PCOVehicleExpiryDate);
+                                        }
+                                    }
+                                    if (vehicle.Length > 0)
+                                    {
+                                        string vehNo = vehicle;
+                                        if (vehNo.ToStr().Equals("9988") == false)
+                                        {
+                                            //string vehNo = "APH-319411";
+                                            Fleet_Master objFleet = db.Fleet_Masters.FirstOrDefault(c => c.VehicleID == vehNo || c.Plateno == vehNo || c.VehicleNo == vehNo);
+
+                                            if (objFleet == null)
+                                            {
+                                                msg = msg.Replace("true", "");
+                                                msg += "Invalid Vehicle ID";
                                             }
                                             else
                                             {
                                                 fleetMasterId = objFleet.Id;
+                                                //DateTime prevDate = DateTime.Now.AddDays(-1);
+                                                if (objFleet.Fleet_DriverQueueLists.Count(c => c.DriverId != driverId && c.Status == true) > 0)
+                                                {
+                                                    msg = msg.Replace("true", "");
+                                                    msg += "Vehicle already in use";
+                                                }
+                                                else if (db.Fleet_Driver_CompanyVehicles.Where(c => c.DriverId == driverId).Count() > 0 && db.Fleet_Driver_CompanyVehicles.Count(c => c.DriverId == driverId && c.FleetMasterId == objFleet.Id) == 0)
+                                                {
+                                                    msg = msg.Replace("true", "");
+                                                    msg += "Driver Doesn't have this Company Vehicle";
+
+                                                }
+                                                else if (objFleet.MOTExpiryDate != null)
+                                                {
+                                                    if (objFleet.MOTExpiryDate.Value < now)
+                                                    {
+                                                        if (LoginDrvOnExpiredDoc == false)
+                                                        {
+                                                            msg = msg.Replace("true", "");
+                                                            msg += "Company Vehicle MOT is Expired" + ",";
+                                                        }
+                                                        else
+                                                        {
+                                                            expiredmsg += "Company Vehicle MOT is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objFleet.MOTExpiryDate.Value) + ",";
+                                                        }
+                                                    }
+
+                                                    if (objFleet.MOTExpiryDate >= now.Date && objFleet.MOTExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
+                                                    {
+                                                        if (string.IsNullOrEmpty(alertMsg))
+                                                            alertMsg = "alert";
+
+                                                        alertMsg += ",Company Vehicle MOT Expiry=" + string.Format("{0:dd/MM/yyyy}", objFleet.MOTExpiryDate);
+                                                    }
+                                                }
+
+                                                if (objFleet.PLateExpiryDate != null)
+                                                {
+                                                    if (objFleet.PLateExpiryDate.Value < now)
+                                                    {
+                                                        if (LoginDrvOnExpiredDoc == false)
+                                                        {
+                                                            msg = msg.Replace("true", "");
+                                                            msg += "Company Vehicle PLate No is Expired" + ",";
+                                                        }
+                                                        else
+                                                        {
+                                                            expiredmsg += "Company Vehicle PLate No is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objFleet.PLateExpiryDate.Value) + ",";
+                                                        }
+                                                    }
+
+                                                    if (objFleet.PLateExpiryDate >= now.Date && objFleet.PLateExpiryDate <= now.AddDays(Global.DocumentExpiryDays))
+                                                    {
+                                                        if (string.IsNullOrEmpty(alertMsg))
+                                                            alertMsg = "alert";
+
+                                                        alertMsg += ",Company PLate No Expiry=" + string.Format("{0:dd/MM/yyyy}", objFleet.PLateExpiryDate);
+                                                    }
+                                                }
+                                                if (objFleet.RoadTaxExpDate != null)
+                                                {
+                                                    if (objFleet.RoadTaxExpDate.Value < now)
+                                                    {
+                                                        if (LoginDrvOnExpiredDoc == false)
+                                                        {
+                                                            msg = msg.Replace("true", "");
+                                                            msg += "Company Vehicle Road Tax is Expired" + ",";
+                                                        }
+                                                        else
+                                                        {
+                                                            expiredmsg += "Company Vehicle Road Tax is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objFleet.RoadTaxExpDate.Value) + ",";
+                                                        }
+                                                    }
+
+                                                    if (objFleet.RoadTaxExpDate >= now.Date && objFleet.RoadTaxExpDate <= now.AddDays(Global.DocumentExpiryDays))
+                                                    {
+                                                        if (string.IsNullOrEmpty(alertMsg))
+                                                            alertMsg = "alert";
+
+                                                        alertMsg += ",Company Vehicle Road Tax Expiry=" + string.Format("{0:dd/MM/yyyy}", objFleet.RoadTaxExpDate);
+                                                    }
+                                                }
+                                                if (objFleet.InsuranceExpiry != null)
+                                                {
+                                                    if (objFleet.InsuranceExpiry.Value < now)
+                                                    {
+                                                        if (LoginDrvOnExpiredDoc == false)
+                                                        {
+                                                            msg = msg.Replace("true", "");
+                                                            msg += "Company Vehicle Insurance Date is Expired" + ",";
+                                                        }
+                                                        else
+                                                        {
+                                                            expiredmsg += "Company Vehicle Insurance Date is Expired : " + string.Format("{0:dd/MM/yy HH:mm}", objFleet.InsuranceExpiry.Value) + ",";
+                                                        }
+                                                    }
+
+                                                    if (objFleet.InsuranceExpiry >= now.Date && objFleet.InsuranceExpiry <= now.AddDays(Global.DocumentExpiryDays))
+                                                    {
+                                                        if (string.IsNullOrEmpty(alertMsg))
+                                                            alertMsg = "alert";
+
+                                                        alertMsg += ",Company Vehicle Insurance Date Expiry=" + string.Format("{0:dd/MM/yyyy}", objFleet.InsuranceExpiry);
+                                                    }
+                                                }
+
                                             }
                                         }
                                     }
-                                }
+                                    if (!string.IsNullOrEmpty(expiredmsg))
+                                    {
+                                        string pdaMsg = "request pda=" + objDriver.Id + "=" + 0 + "="
+                                                             + "Message>>" + expiredmsg + ">>" + String.Format("{0:dd/MM/yyyy HH:mm:ss}", DateTime.Now) + "=4";
 
-                                if (msg.EndsWith(","))
-                                {
-                                    msg = msg.Remove(msg.LastIndexOf(','));
+                                        string[] splitArr = pdaMsg.Split(new string[] { "=" }, StringSplitOptions.RemoveEmptyEntries);
+
+                                        HubProcessor.Instance.listofJobs.Add(new clsPDA
+                                        {
+                                            DriverId = splitArr[1].ToInt(),
+                                            JobId = 0,
+                                            MessageDateTime = DateTime.Now.AddSeconds(-50),
+                                            JobMessage = splitArr[3].ToStr().Trim(),
+                                            MessageTypeId = splitArr[4].ToInt()
+                                        });
+                                    }
+
+
+
+
+                                    if (msg.EndsWith(","))
+                                    {
+                                        msg = msg.Remove(msg.LastIndexOf(','));
+                                    }
                                 }
+                               
                             }
                             else
                             {
@@ -12436,7 +12850,7 @@ namespace SignalRHub
                                 }
                             }
 
-                            if (msg != "true" && msg != "false" && msg.Contains(">>") == false)
+                            if (msg != "true" && msg != "false" && msg.Contains(">>") == false )
                                 msg += ">> ";
 
                             //send message back to PDA
@@ -13185,8 +13599,8 @@ namespace SignalRHub
                         db.stp_LoginLogoutDriver(values[1].ToInt(), false, null);
                         var driverNo = db.Fleet_Drivers
                  .Where(x => x.Id == values[1].ToInt())
-                 .Select(x => x.DriverNo)   
-                 .FirstOrDefault();         
+                 .Select(x => x.DriverNo)
+                 .FirstOrDefault();
 
                         General.BroadCastMessage("**logout>>Driver " + driverNo + " is Logout");
                     }
@@ -13917,6 +14331,15 @@ namespace SignalRHub
         [System.Web.Http.Route("requestsendingmessage")] //already exist, make it change by returning ResponseData model as return type
         public ResponseData requestSendingMessage(string mesg)
         {
+            try
+            {
+                General.WriteLog("requestsendingmessage", "request: " + mesg);
+                //File.AppendAllText(physicalPath + "\\requestMeterType.txt", DateTime.Now.ToStr() + " request: " + mesg + Environment.NewLine);
+            }
+            catch
+            {
+
+            }
             ResponseData res = new ResponseData();
             //string rtn = "false";
             try
@@ -13943,7 +14366,46 @@ namespace SignalRHub
                 {
                     db.stp_SendMessage(values[1].ToInt(), values[2].ToInt(), values[3].ToStr(), "", values[4].ToStr(), values[5].ToStr());
                 }
-                General.BroadCastMessage("**message>>" + values[1].ToStr() + ">>" + values[3].ToStr() + ">>" + values[4].ToStr() + ">>" + string.Format("{0:dd/MMM HH:mm:ss}", DateTime.Now));
+                if (Global.EnableComapnyVehicleNo == "true")
+                {
+                    try
+                    {
+                        using (TaxiDataContext db = new TaxiDataContext())
+                        {
+                            int driverid = Convert.ToInt32(values[1]);
+
+                            var result = (from a in db.Fleet_DriverQueueLists
+                                          where a.Fleet_Driver.IsActive == true
+                                             && a.DriverId == driverid
+                                             && a.Status == true
+                                          select new
+                                          {
+                                              VehicleOrDriver =
+                                                  a.FleetMasterId > 0 &&
+                                                  a.Fleet_Master != null &&
+                                                  a.Fleet_Master.VehicleID != null &&
+                                                  a.Fleet_Master.VehicleID != ""
+                                                      ? a.Fleet_Master.VehicleID
+                                                      : a.Fleet_Driver.DriverNo
+                                          }).FirstOrDefault();
+                            General.BroadCastMessage(
+                                "**message>>" +
+                                values[1]?.ToString() + ">>" +
+                                (result?.VehicleOrDriver ?? "") + ">>" +
+                                values[4].ToStr() + ">>" + string.Format("{0:dd/MMM HH:mm:ss}", DateTime.Now));
+                        }
+                    }
+                    catch
+                    {
+                        General.BroadCastMessage("**message>>" + values[1].ToStr() + ">>" + values[3].ToStr() + ">>" + values[4].ToStr() + ">>" + string.Format("{0:dd/MMM HH:mm:ss}", DateTime.Now));
+                    }
+                }
+                else
+                {
+                    General.BroadCastMessage("**message>>" + values[1].ToStr() + ">>" + values[3].ToStr() + ">>" + values[4].ToStr() + ">>" + string.Format("{0:dd/MMM HH:mm:ss}", DateTime.Now));
+
+                }
+                //General.BroadCastMessage("**message>>" + values[1].ToStr() + ">>" + values[3].ToStr() + ">>" + values[4].ToStr() + ">>" + string.Format("{0:dd/MMM HH:mm:ss}", DateTime.Now));
             }
             catch (Exception ex)
             {
@@ -14977,6 +15439,24 @@ namespace SignalRHub
                 {
                     if (db.Bookings.Count(c => c.Id == jobId && c.DriverId == driverId && c.BookingStatusId == Enums.BOOKINGSTATUS.PENDING_START) > 0)
                         IsAvalable = "true";
+
+                    //if (IsAvalable == "true")
+                    //{
+                    //    var pickupDatetime = db.Bookings.Where(x => x.Id == jobId).Select(x => x.PickupDateTime).FirstOrDefault().ToDateTime();
+
+                    //    var allowedStartTime = pickupDatetime.AddHours(-6);
+
+                    //    if (DateTime.Now < allowedStartTime)
+                    //    {
+                    //        res.Data = null;
+                    //        res.IsSuccess = false;
+                    //        res.Message = "Pre-job activities cannot be initiated earlier than 6 hours before the scheduled job time.";
+                    //        return res;
+                    //    }
+
+                    //}
+
+
 
                     //send message back to PDA
                     ///Clients.Caller.preJobStarted(IsAvalable);------------------------------------------------
@@ -16019,7 +16499,7 @@ namespace SignalRHub
                     {
                         long jobId = objAction.JobId.ToLong();
 
-                        var data = db.Bookings.Where(c => c.Id == jobId).Select(args => new { args.FromAddress, args.ToAddress, args.CompanyId, args.FareRate, args.ExtraDropCharges, args.MeetAndGreetCharges, args.CongtionCharges, args.AgentCommission, args.CashRate, args.CashFares, args.ServiceCharges }).FirstOrDefault();
+                        var data = db.Bookings.Where(c => c.Id == jobId).Select(args => new { args.FromAddress, args.ToAddress, args.CompanyId, args.FareRate, args.ExtraDropCharges, args.MeetAndGreetCharges, args.CongtionCharges, args.AgentCommission, args.CashRate, args.CashFares, args.ServiceCharges, args.PaymentTypeId }).FirstOrDefault();
 
 
                         objAction.Pickup = data.FromAddress.ToStr().ToUpper().Trim();
@@ -16076,6 +16556,7 @@ namespace SignalRHub
                         string showDetails = "1";
                         string eta = "";
 
+                        showDetails = db.Gen_PaymentTypes.Where(x => x.Id == data.PaymentTypeId).Select(x => x.ShowFaresOnPDA).FirstOrDefault().ToStr();
                         //if (companyId == 597)
                         //{
                         //    showDetails = "1";
@@ -17985,354 +18466,393 @@ namespace SignalRHub
                 JobAction objAction = new JavaScriptSerializer().Deserialize<JobAction>(values[1].ToStr());
                 jStatus = objAction.JStatus.ToStr().ToLower();
 
-                if (objAction.JStatus.ToStr().ToLower() == Enums.BOOKINGSTATUS.DISPATCHED.ToStr().ToLower())
+                var remindSTC = false;
+                try
                 {
-
-
-                    if ((objAction.Dropoff.ToStr().Trim().ToLower() == "as directed"
-                        || objAction.Dropoff.ToStr().Trim().ToLower().StartsWith("<<<")
-                        || objAction.Dropoff.ToStr().Trim().ToLower().StartsWith("as directed<<<")
-                          || (objAction.ChangePlot == 1 && Global.enableChangePlotUpdateDestination == "1"))
-                        && objAction.Latitude != null && objAction.Latitude > 0)
+                    if (Global.EnableRemindSTC == "1")
                     {
-                        string dropOff = General.GetLocationName(objAction.Latitude, objAction.Longitude);
-
-
-                        objAction.Dropoff = dropOff;
-                    }
-                    else
-                        objAction.Dropoff = string.Empty;
-
-                    if (objAction.DropOffFareList != null && objAction.DropOffFareList.Count > 0)
-                    {
-                        foreach (var item in objAction.DropOffFareList)
+                        var bookinstatus = 0;
+                        using (TaxiDataContext db1 = new TaxiDataContext())
                         {
-                            if (item.fieldname.ToLower() == "fares")
-                            {
-                                objAction.Fares = item.value;
-                            }
-                            else if (item.fieldname.ToLower() == "parking")
-                            {
-                                objAction.ParkingCharges = item.value;
-                            }
-                            else if (item.fieldname.ToLower() == "waiting")
-                            {
-                                objAction.WaitingCharges = item.value;
-                            }
-                            else if (item.fieldname.ToLower() == "extradropcharges")
-                            {
-                                objAction.ExtraDropCharges = item.value;
-                            }
-                            else if (item.fieldname.ToLower() == "tip")
-                            {
-                                objAction.Tip = item.value;
-                            }
-                            else if (item.fieldname.ToLower() == "bookingfee")
-                            {
-                                objAction.BookingFee = item.value;
-                            }
+                            bookinstatus = db1.Bookings.Where(x => x.Id == objAction.JobId.ToStr().ToLong() && x.DriverId == objAction.DrvId.ToInt()).Select(x => x.BookingStatusId).FirstOrDefault().ToInt();
+                        }
+                        if (bookinstatus != Enums.BOOKINGSTATUS.STC)
+                        {
+                            remindSTC = true;
+                            res.IsSuccess = false;
+                            res.Message = "Press STC first";
+                            res.Data = null;
                         }
                     }
-                    else if (!string.IsNullOrEmpty(objAction.cardPaymentExtras))
+                }
+                catch
+                {
+                    remindSTC = false;
+                }
+                if (!remindSTC)
+                {
+                    if (objAction.JStatus.ToStr().ToLower() == Enums.BOOKINGSTATUS.DISPATCHED.ToStr().ToLower())
                     {
-                        var cardpaymentlist = new JavaScriptSerializer().Deserialize<List<BookingSummary>>(objAction.cardPaymentExtras.ToStr().Trim());
-                        foreach (var item in cardpaymentlist)
+
+
+                        if ((objAction.Dropoff.ToStr().Trim().ToLower() == "as directed"
+                            || objAction.Dropoff.ToStr().Trim().ToLower().StartsWith("<<<")
+                            || objAction.Dropoff.ToStr().Trim().ToLower().StartsWith("as directed<<<")
+                              || (objAction.ChangePlot == 1 && Global.enableChangePlotUpdateDestination == "1"))
+                            && objAction.Latitude != null && objAction.Latitude > 0)
                         {
-                            if (item.fieldname.ToLower() == "fares")
-                            {
-                                objAction.Fares = item.value;
-                            }
-                            else if (item.fieldname.ToLower() == "parking")
-                            {
-                                objAction.ParkingCharges = item.value;
-                            }
-                            else if (item.fieldname.ToLower() == "waiting")
-                            {
-                                objAction.WaitingCharges = item.value;
-                            }
-                            else if (item.fieldname.ToLower() == "extradropcharges")
-                            {
-                                objAction.ExtraDropCharges = item.value;
-                            }
-                            else if (item.fieldname.ToLower() == "tip")
-                            {
-                                objAction.Tip = item.value;
-                            }
-                            else if (item.fieldname.ToLower() == "bookingfee")
-                            {
-                                objAction.BookingFee = item.value;
-                            }
-                        }
-                    }
-
-                    var IsFareSetToMinimum = false;
-                    using (TaxiDataContext db = new TaxiDataContext())
-                    {
-                        var _bookingData = db.Bookings.FirstOrDefault(a => a.Id == objAction.JobId.ToLong());
-                        if (Global.EnableVehicleMinimumFare == "true")
-                        {
-                            var vehicleStartRate = db.Fleet_VehicleTypes.Where(x => x.Id == _bookingData.VehicleTypeId).Select(x => x.StartRate).FirstOrDefault().ToDecimal();
-                            if (objAction.Fares < vehicleStartRate)
-                            {
-                                objAction.Fares = vehicleStartRate;
-                                IsFareSetToMinimum = true;
-                            }
-                        }
-                        if (objAction.IsMeter.ToStr().Trim() == "1" || (objAction.DropOffFareList != null && objAction.DropOffFareList.Count > 0))
-                        {
-                            int waitingTime = 0;
-
-                            if (objAction.WaitingTime.ToStr().IsNumeric())
-                                waitingTime = objAction.WaitingTime.ToInt();
+                            string dropOff = General.GetLocationName(objAction.Latitude, objAction.Longitude);
 
 
-
-                            db.ExecuteQuery<int?>("exec stp_UpdateAndClearJobFaresDetails {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12}"
-                                                                     , objAction.JobId.ToStr().ToLong(), objAction.DrvId.ToInt(), objAction.JStatus.ToInt(), objAction.DStatus.ToInt()
-                                 , objAction.Dropoff.ToStr(), objAction.Miles, objAction.Fares.ToDecimal(), waitingTime, objAction.WaitingCharges, objAction.ParkingCharges.ToDecimal()
-                                 , objAction.ExtraDropCharges.ToDecimal(), objAction.BookingFee.ToDecimal(), objAction.ExtrasDetail.ToStr());
-
-
+                            objAction.Dropoff = dropOff;
                         }
                         else
+                            objAction.Dropoff = string.Empty;
+
+                        if (objAction.DropOffFareList != null && objAction.DropOffFareList.Count > 0)
                         {
-                            db.stp_UpdateJobAndRoute(objAction.JobId.ToStr().ToLong(), objAction.DrvId.ToInt(), objAction.JStatus.ToInt(), objAction.DStatus.ToInt(), objAction.Dropoff.ToStr(), objAction.Miles, null);
-
-
-
+                            if (objAction.DropOffFareList != null)
+                            {
+                                foreach (var item in objAction.DropOffFareList)
+                                {
+                                    if (item.fieldname.ToLower() == "fares")
+                                    {
+                                        objAction.Fares = item.value;
+                                    }
+                                    else if (item.fieldname.ToLower() == "parking")
+                                    {
+                                        objAction.ParkingCharges = item.value;
+                                    }
+                                    else if (item.fieldname.ToLower() == "waiting")
+                                    {
+                                        objAction.WaitingCharges = item.value;
+                                    }
+                                    else if (item.fieldname.ToLower() == "extradropcharges")
+                                    {
+                                        objAction.ExtraDropCharges = item.value;
+                                    }
+                                    else if (item.fieldname.ToLower() == "tip")
+                                    {
+                                        objAction.Tip = item.value;
+                                    }
+                                    else if (item.fieldname.ToLower() == "bookingfee")
+                                    {
+                                        objAction.BookingFee = item.value;
+                                    }
+                                }
+                            }
+                        }
+                        else if (!string.IsNullOrEmpty(objAction.cardPaymentExtras))
+                        {
+                            var cardpaymentlist = new JavaScriptSerializer().Deserialize<List<BookingSummary>>(objAction.cardPaymentExtras.ToStr().Trim());
+                            if (cardpaymentlist != null)
+                            {
+                                foreach (var item in cardpaymentlist)
+                                {
+                                    if (item.fieldname.ToLower() == "fares")
+                                    {
+                                        objAction.Fares = item.value;
+                                    }
+                                    else if (item.fieldname.ToLower() == "parking")
+                                    {
+                                        objAction.ParkingCharges = item.value;
+                                    }
+                                    else if (item.fieldname.ToLower() == "waiting")
+                                    {
+                                        objAction.WaitingCharges = item.value;
+                                    }
+                                    else if (item.fieldname.ToLower() == "extradropcharges")
+                                    {
+                                        objAction.ExtraDropCharges = item.value;
+                                    }
+                                    else if (item.fieldname.ToLower() == "tip")
+                                    {
+                                        objAction.Tip = item.value;
+                                    }
+                                    else if (item.fieldname.ToLower() == "bookingfee")
+                                    {
+                                        objAction.BookingFee = item.value;
+                                    }
+                                }
+                            }
                         }
 
-
-                        string transId = objAction.TransId.ToStr().Trim();
-
-
-
-                        if (transId.Length > 0)
+                        var IsFareSetToMinimum = false;
+                        using (TaxiDataContext db = new TaxiDataContext())
                         {
-                            decimal tipAmount = 0.00m;
-                            if (objAction.DropOffFareList != null && objAction.DropOffFareList.Count > 0)
+                            var _bookingData = db.Bookings.FirstOrDefault(a => a.Id == objAction.JobId.ToLong());
+                            if (Global.EnableVehicleMinimumFare == "true")
                             {
-                                tipAmount = objAction.Tip.ToDecimal();
-                                db.stp_BookingLog(objAction.JobId.ToLong(), "System", " Tip " + tipAmount + " Paid By Customer");
+                                var vehicleStartRate = db.Fleet_VehicleTypes.Where(x => x.Id == _bookingData.VehicleTypeId).Select(x => x.StartRate).FirstOrDefault().ToDecimal();
+                                if (objAction.Fares < vehicleStartRate)
+                                {
+                                    objAction.Fares = vehicleStartRate;
+                                    IsFareSetToMinimum = true;
+                                }
+                            }
+                            if (objAction.IsMeter.ToStr().Trim() == "1" || (objAction.DropOffFareList != null && objAction.DropOffFareList.Count > 0))
+                            {
+                                int waitingTime = 0;
+
+                                if (objAction.WaitingTime.ToStr().IsNumeric())
+                                    waitingTime = objAction.WaitingTime.ToInt();
+
+
+
+                                db.ExecuteQuery<int?>("exec stp_UpdateAndClearJobFaresDetails {0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10},{11},{12}"
+                                                                         , objAction.JobId.ToStr().ToLong(), objAction.DrvId.ToInt(), objAction.JStatus.ToInt(), objAction.DStatus.ToInt()
+                                     , objAction.Dropoff.ToStr(), objAction.Miles, objAction.Fares.ToDecimal(), waitingTime, objAction.WaitingCharges, objAction.ParkingCharges.ToDecimal()
+                                     , objAction.ExtraDropCharges.ToDecimal(), objAction.BookingFee.ToDecimal(), objAction.ExtrasDetail.ToStr());
+
+
                             }
                             else
                             {
-                                if (objAction.cardPaymentExtras.ToStr().Trim().Length > 0)
+                                db.stp_UpdateJobAndRoute(objAction.JobId.ToStr().ToLong(), objAction.DrvId.ToInt(), objAction.JStatus.ToInt(), objAction.DStatus.ToInt(), objAction.Dropoff.ToStr(), objAction.Miles, null);
+
+
+
+                            }
+
+
+                            string transId = objAction.TransId.ToStr().Trim();
+
+
+
+                            if (transId.Length > 0)
+                            {
+                                decimal tipAmount = 0.00m;
+                                if (objAction.DropOffFareList != null && objAction.DropOffFareList.Count > 0)
                                 {
+                                    tipAmount = objAction.Tip.ToDecimal();
+                                    db.stp_BookingLog(objAction.JobId.ToLong(), "System", " Tip " + tipAmount + " Paid By Customer");
+                                }
+                                else
+                                {
+                                    if (objAction.cardPaymentExtras.ToStr().Trim().Length > 0)
+                                    {
+
+                                        try
+                                        {
+
+                                            try
+                                            {
+                                                //File.AppendAllText(physicalPath + "\\requestClearJob_tipAmount.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
+                                                General.WriteLog("requestClearJob_tipAmount", "msg: " + mesg);
+                                            }
+                                            catch
+                                            {
+
+                                            }
+
+                                            var cardpaymentlist = new JavaScriptSerializer().Deserialize<List<BookingSummary>>(objAction.cardPaymentExtras.ToStr().Trim());
+
+
+                                            tipAmount = cardpaymentlist.FirstOrDefault(c => c.label == "Tip").value;
+                                            db.stp_BookingLog(objAction.JobId.ToLong(), "System", " Tip " + tipAmount + " Paid By Customer");
+
+
+
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            try
+                                            {
+                                                //File.AppendAllText(physicalPath + "\\requestClearJob_tipAmount_exception.txt", DateTime.Now + " : msg" + mesg + ",exception:" + ex.Message + Environment.NewLine);
+                                                General.WriteLog("requestClearJob_tipAmount_exception", "msg:" + mesg + ", exception:" + ex.Message);
+                                            }
+                                            catch
+                                            {
+
+                                            }
+
+                                        }
+                                    }
+                                }
+
+                                try
+                                {
+                                    db.ExecuteQuery<int>("update booking set TipAmount=" + tipAmount + " where id=" + objAction.JobId.ToLong());
+                                }
+                                catch
+                                {
+                                }
+
+                                try
+                                {
+
+                                    if (objAction.PaymentGatewayID.ToInt() == 0)
+                                    {
+                                        objAction.PaymentGatewayID = 15;
+                                    }
+
+                                    db.stp_MakePayment("XXX", "XXX", null,
+                                          null, "123"
+                                    , "xxx", "xxx", "xxx", "xxx"
+                                    , transId, objAction.PaymentGatewayID,
+                                     objAction.Fares.ToDecimal(), objAction.ParkingCharges.ToDecimal(), objAction.WaitingCharges.ToDecimal(),
+                                       HubProcessor.Instance.objPolicy.CreditCardExtraCharges.ToDecimal(), 0.00m, 0.00m,
+                                      objAction.Fares.ToDecimal() + objAction.WaitingCharges.ToDecimal(), "paid", objAction.JobId.ToLong(), objAction.DrvId.ToInt(),
+                                      objAction.DrvNo.ToStr(), false, true, true, null);
+
 
                                     try
                                     {
-
-                                        try
-                                        {
-                                            //File.AppendAllText(physicalPath + "\\requestClearJob_tipAmount.txt", DateTime.Now + " : msg" + mesg + Environment.NewLine);
-                                            General.WriteLog("requestClearJob_tipAmount", "msg: " + mesg);
-                                        }
-                                        catch
-                                        {
-
-                                        }
-
-                                        var cardpaymentlist = new JavaScriptSerializer().Deserialize<List<BookingSummary>>(objAction.cardPaymentExtras.ToStr().Trim());
-
-
-                                        tipAmount = cardpaymentlist.FirstOrDefault(c => c.label == "Tip").value;
-                                        db.stp_BookingLog(objAction.JobId.ToLong(), "System", " Tip " + tipAmount + " Paid By Customer");
-
-
-
+                                        //
+                                        //File.AppendAllText(physicalPath + "\\paymentlog.txt", DateTime.Now + ": datavalue=" + dataValue + Environment.NewLine);
+                                        General.WriteLog("paymentlog", "datavalue=" + dataValue);
                                     }
-                                    catch (Exception ex)
+                                    catch
                                     {
-                                        try
-                                        {
-                                            //File.AppendAllText(physicalPath + "\\requestClearJob_tipAmount_exception.txt", DateTime.Now + " : msg" + mesg + ",exception:" + ex.Message + Environment.NewLine);
-                                            General.WriteLog("requestClearJob_tipAmount_exception", "msg:" + mesg + ", exception:" + ex.Message);
-                                        }
-                                        catch
-                                        {
 
-                                        }
 
                                     }
-                                }
-                            }
-
-
-                            try
-                            {
-
-                                if (objAction.PaymentGatewayID.ToInt() == 0)
-                                {
-                                    objAction.PaymentGatewayID = 15;
-                                }
-
-                                db.stp_MakePayment("XXX", "XXX", null,
-                                      null, "123"
-                                , "xxx", "xxx", "xxx", "xxx"
-                                , transId, objAction.PaymentGatewayID,
-                                 objAction.Fares.ToDecimal(), objAction.ParkingCharges.ToDecimal(), objAction.WaitingCharges.ToDecimal(),
-                                   HubProcessor.Instance.objPolicy.CreditCardExtraCharges.ToDecimal(), 0.00m, 0.00m,
-                                  objAction.Fares.ToDecimal() + objAction.WaitingCharges.ToDecimal(), "paid", objAction.JobId.ToLong(), objAction.DrvId.ToInt(),
-                                  objAction.DrvNo.ToStr(), false, true, true, null);
-
-
-                                try
-                                {
-                                    //
-                                    //File.AppendAllText(physicalPath + "\\paymentlog.txt", DateTime.Now + ": datavalue=" + dataValue + Environment.NewLine);
-                                    General.WriteLog("paymentlog", "datavalue=" + dataValue);
-                                }
-                                catch
-                                {
-
-
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                try
-                                {
-                                    General.WriteLog("exception_paymentclear", "datavalue=" + dataValue + ", exception:" + ex.Message);
-                                    //File.AppendAllText(physicalPath + "\\exception_paymentclear.txt", DateTime.Now + ": datavalue=" + dataValue + ",exception= " + ex.Message + Environment.NewLine);
-                                }
-                                catch
-                                {
-
-
-                                }
-
-
-                            }
-
-
-                        }
-                        else if (string.IsNullOrEmpty(transId) && _bookingData != null && _bookingData.PaymentTypeId == 2)
-                        {
-                            db.ExecuteQuery<int>("update booking set paymenttypeid=1 where id=" + objAction.JobId.ToLong());
-                            try
-                            {
-                                //File.AppendAllText(physicalPath + "\\requestClearJob.txt", DateTime.Now + " : msg" + mesg + " : change type to cash " + Environment.NewLine);
-                                General.WriteLog("requestClearJob", "msg: " + mesg + " : change type to cash ");
-                            }
-                            catch
-                            {
-
-                            }
-
-                        }
-
-                    }
-                    if (IsFareSetToMinimum)
-                    {
-                        rrr = "success:" + "{ \"totalFares\" :\"" + (objAction.Fares.ToDecimal() + objAction.ParkingCharges.ToDecimal() + objAction.WaitingCharges.ToDecimal() + objAction.ExtraDropCharges.ToDecimal() + objAction.Tip.ToDecimal() + objAction.BookingFee.ToDecimal()) + "\",\"totalMiles\" :\"" + Math.Round(objAction.Miles.ToDecimal(), 1) + "\" }";
-                    }
-                    else
-                    {
-                        rrr = "true";
-                    }
-                    General.BroadCastMessage("**action>>" + objAction.JobId.ToStr() + ">>" + objAction.DrvId.ToStr() + ">>" + objAction.JStatus.ToInt());
-
-
-                    try
-                    {
-
-                        if (HubProcessor.Instance.listofJobs.Count(c => c.DriverId == objAction.DrvId.ToInt() && c.JobId == objAction.JobId.ToLong()) > 0)
-                        {
-                            HubProcessor.Instance.listofJobs.RemoveAll(c => c.DriverId == objAction.DrvId.ToInt() && c.JobId == objAction.JobId.ToLong());
-                        }
-                    }
-                    catch
-                    {
-
-
-                    }
-
-                    if (respAccount.ToStr().Length > 0)
-                        rrr = respAccount.ToStr();
-
-                    ///Clients.Caller.jobCleared(rrr);--------------------------------------------
-                    ///
-                    res.Data = rrr;
-                    res.IsSuccess = true;
-                    res.Message = "";
-
-
-                    try
-                    {
-
-                        if (objAction.JobId.ToLong() > 0 && HubProcessor.Instance.objPolicy.DespatchTextForPDA.ToStr().Trim().Length > 0)
-                        {
-                            DispatchJobSMS(objAction.JobId.ToLong(), Enums.BOOKINGSTATUS.DISPATCHED.ToInt());
-
-
-
-                        }
-
-                        if (Global.enableEmaiLReceipt.ToStr() == "1")
-                        {
-                            new Thread(delegate ()
-                            {
-                                try
-                                {
-                                    new ClsSendReceipt().SendReceipt(objAction.JobId.ToLong());
                                 }
                                 catch (Exception ex)
                                 {
+                                    try
+                                    {
+                                        General.WriteLog("exception_paymentclear", "datavalue=" + dataValue + ", exception:" + ex.Message);
+                                        //File.AppendAllText(physicalPath + "\\exception_paymentclear.txt", DateTime.Now + ": datavalue=" + dataValue + ",exception= " + ex.Message + Environment.NewLine);
+                                    }
+                                    catch
+                                    {
+
+
+                                    }
+
 
                                 }
 
-                            }).Start();
 
+                            }
+                            else if (string.IsNullOrEmpty(transId) && _bookingData != null && _bookingData.PaymentTypeId == 2)
+                            {
+                                db.ExecuteQuery<int>("update booking set paymenttypeid=1 where id=" + objAction.JobId.ToLong());
+                                try
+                                {
+                                    //File.AppendAllText(physicalPath + "\\requestClearJob.txt", DateTime.Now + " : msg" + mesg + " : change type to cash " + Environment.NewLine);
+                                    General.WriteLog("requestClearJob", "msg: " + mesg + " : change type to cash ");
+                                }
+                                catch
+                                {
 
+                                }
+
+                            }
 
                         }
-
-
-                        General.UpdatePoolJob(0, 0, objAction.JobId.ToLong(), objAction.DrvId.ToInt(), Enums.BOOKINGSTATUS.DISPATCHED.ToInt(), "completed");
-                        CallSupplierApi.UpdateStatus(objAction.JobId.ToLong(), 2);
-                    }
-                    catch
-                    {
-
-                    }
-
-
-
-
-                }
-                else if (objAction.JStatus.ToStr().ToLower() == "jobcharges")
-                {
-                    try
-                    {
-                        if (objAction.Fares.ToDecimal() == 0)
+                        if (IsFareSetToMinimum)
                         {
-                            objAction.Fares = null;
+                            rrr = "success:" + "{ \"totalFares\" :\"" + (objAction.Fares.ToDecimal() + objAction.ParkingCharges.ToDecimal() + objAction.WaitingCharges.ToDecimal() + objAction.ExtraDropCharges.ToDecimal() + objAction.Tip.ToDecimal() + objAction.BookingFee.ToDecimal()) + "\",\"totalMiles\" :\"" + Math.Round(objAction.Miles.ToDecimal(), 1) + "\" }";
                         }
-
-                        using (TaxiDataContext db = new TaxiDataContext())
+                        else
                         {
-                            db.stp_UpdateJobExtraCharges(objAction.JobId.ToLong(), objAction.DrvId.ToInt(),
-                                objAction.ParkingCharges.ToDecimal(),
-                               objAction.WaitingCharges.ToDecimal(),
-                                objAction.Miles, objAction.WaitingCharges.ToDecimal(), objAction.ParkingCharges.ToDecimal(), objAction.Fares.ToDecimal(), "manual");
+                            rrr = "true";
+                        }
+                        General.BroadCastMessage("**action>>" + objAction.JobId.ToStr() + ">>" + objAction.DrvId.ToStr() + ">>" + objAction.JStatus.ToInt());
+
+
+                        try
+                        {
+
+                            if (HubProcessor.Instance.listofJobs.Count(c => c.DriverId == objAction.DrvId.ToInt() && c.JobId == objAction.JobId.ToLong()) > 0)
+                            {
+                                HubProcessor.Instance.listofJobs.RemoveAll(c => c.DriverId == objAction.DrvId.ToInt() && c.JobId == objAction.JobId.ToLong());
+                            }
+                        }
+                        catch
+                        {
+
+
                         }
 
-                        rrr = "true";
+                        if (respAccount.ToStr().Length > 0)
+                            rrr = respAccount.ToStr();
+
+                        ///Clients.Caller.jobCleared(rrr);--------------------------------------------
+                        ///
+                        res.Data = rrr;
+                        res.IsSuccess = true;
+                        res.Message = "";
+
+
+                        try
+                        {
+
+                            if (objAction.JobId.ToLong() > 0 && HubProcessor.Instance.objPolicy.DespatchTextForPDA.ToStr().Trim().Length > 0)
+                            {
+                                DispatchJobSMS(objAction.JobId.ToLong(), Enums.BOOKINGSTATUS.DISPATCHED.ToInt());
+
+
+
+                            }
+
+                            if (Global.enableEmaiLReceipt.ToStr() == "1")
+                            {
+                                new Thread(delegate ()
+                                {
+                                    try
+                                    {
+                                        new ClsSendReceipt().SendReceipt(objAction.JobId.ToLong());
+                                    }
+                                    catch (Exception ex)
+                                    {
+
+                                    }
+
+                                }).Start();
+
+
+
+                            }
+
+
+                            General.UpdatePoolJob(0, 0, objAction.JobId.ToLong(), objAction.DrvId.ToInt(), Enums.BOOKINGSTATUS.DISPATCHED.ToInt(), "completed");
+                            CallSupplierApi.UpdateStatus(objAction.JobId.ToLong(), 2);
+                        }
+                        catch
+                        {
+
+                        }
+
+
+
+
                     }
-                    catch (Exception ex)
+                    else if (objAction.JStatus.ToStr().ToLower() == "jobcharges")
                     {
-                        rrr = "false";
+                        try
+                        {
+                            if (objAction.Fares.ToDecimal() == 0)
+                            {
+                                objAction.Fares = null;
+                            }
 
-                        //File.AppendAllText(physicalPath + "\\log_manualfares.txt", DateTime.Now.ToStr() + ",DataValue:" + dataValue + ",exception:" + ex.Message);
-                        General.WriteLog("log_manualfares", "DataValue" + dataValue + ", exception:" + ex.Message);
+                            using (TaxiDataContext db = new TaxiDataContext())
+                            {
+                                db.stp_UpdateJobExtraCharges(objAction.JobId.ToLong(), objAction.DrvId.ToInt(),
+                                    objAction.ParkingCharges.ToDecimal(),
+                                   objAction.WaitingCharges.ToDecimal(),
+                                    objAction.Miles, objAction.WaitingCharges.ToDecimal(), objAction.ParkingCharges.ToDecimal(), objAction.Fares.ToDecimal(), "manual");
+                            }
+
+                            rrr = "true";
+                        }
+                        catch (Exception ex)
+                        {
+                            rrr = "false";
+
+                            //File.AppendAllText(physicalPath + "\\log_manualfares.txt", DateTime.Now.ToStr() + ",DataValue:" + dataValue + ",exception:" + ex.Message);
+                            General.WriteLog("log_manualfares", "DataValue" + dataValue + ", exception:" + ex.Message);
+                        }
+
+                        ///Clients.Caller.manualFares(rrr);----------------------------------------------
+                        ///
+                        res.Data = new JavaScriptSerializer().Serialize(rrr);
+                        res.IsSuccess = true;
+                        res.Message = "";
                     }
-
-                    ///Clients.Caller.manualFares(rrr);----------------------------------------------
-                    ///
-                    res.Data = new JavaScriptSerializer().Serialize(rrr);
-                    res.IsSuccess = true;
-                    res.Message = "";
                 }
             }
             catch (Exception ex)
@@ -20253,6 +20773,51 @@ namespace SignalRHub
 
 
         }
+
+
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("SetAlarm")]
+        public async Task<IHttpActionResult> SetAlarm(int jobId, int minutes)
+        {
+            ResponseData resp = new ResponseData();
+
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    var booking = db.Bookings.FirstOrDefault(b => b.Id == jobId);
+                    if (booking == null)
+                    {
+                        resp.IsSuccess = false;
+                        resp.Message = "Job not found";
+                        return Ok(resp);
+                    }
+
+                    string updateQuery = $@"
+                                    UPDATE Booking
+                                    SET IsReminderSent = NULL,
+                                    AlarmMinutes = {minutes}
+                                    WHERE Id = " + jobId + "";
+                    db.ExecuteCommand(updateQuery);
+
+                    resp.IsSuccess = true;
+                    resp.Message = "Alarm set successfully";
+                    resp.Data = "success";
+                }
+            }
+            catch (Exception ex)
+            {
+                //log.Error("SetAlarm Failed: " + ex.Message, ex);
+                General.WriteLog("SetAlarm", "SetAlarm Failed: " + ex.Message);
+                resp.IsSuccess = false;
+                resp.Message = "Alarm Failed: " + ex.Message;
+            }
+
+            //log.Debug($"SetAlarm Called: jobId={jobId}, minutes={minutes}");
+            General.WriteLog("SetAlarm", $"SetAlarm Called: jobId={jobId}, minutes={minutes}");
+            return Ok(resp);
+        }
+
     }
 
 

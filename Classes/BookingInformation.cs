@@ -10,6 +10,11 @@ namespace SignalRHub
 
 
 
+        public string routeType
+        {
+            get;
+            set;
+        }
         public int? SubCompanyId
         {
             get;

@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
-
+using System.Web.UI;
 using Taxi_BLL;
 using Taxi_Model;
 using Utils;
@@ -367,6 +367,13 @@ namespace SignalRHub
                                    genSubCompany.SmtpPassword, genSubCompany.SmtpPort, genSubCompany.SmtpHasSSL.ToBool(), genSubCompany.EmailCC.ToStr()
                                    , booking.CustomerEmail.ToStr().Trim(), subject, this.body, genSubCompany.EmailAddress);
 
+                                //need to uncomment below method with AppSetting EnableSendReceiptOnSMS and make it dynamic
+                                if (Global.EnableSendReceiptOnSMS == "1" && Global.SendReceiptOnSMSURL.StartsWith("http") && !string.IsNullOrEmpty(booking.CustomerMobileNo.ToStr()) && (booking.CustomerMobileNo.StartsWith("07") || booking.CustomerMobileNo.StartsWith("447") || booking.CustomerMobileNo.StartsWith("+447")))
+                                {
+                                    SendReceiptOnSMS(this.body, booking.Id, booking.CustomerMobileNo.ToStr().Trim(), booking.BookingNo.ToStr(), Global.SendReceiptOnSMSURL);
+                                }
+
+
                                 //booking.CustomerEmail.ToStr().Trim(), subject, this.body);
                             }
 
@@ -392,7 +399,101 @@ namespace SignalRHub
             }
         }
 
+        private void SendReceiptOnSMS(string text, long bookingId, string mobNo, string bookingNo, string url)
+        {
+            string message = string.Empty;
+            try
+            {
+                if (mobNo.ToStr().Trim().Length > 0)
+                {
+                    using (TaxiDataContext db = new TaxiDataContext("Data Source=88.208.216.50,52565;Initial Catalog=onlineWebVehicleManagementSystem;Persist Security Info=True;User ID=0nL!n3@Web$!T3$3@;Password=onl!n3$er@;"))
+                    {
+                        db.ExecuteQuery<int>("exec stp_savereceipttemplate {0},{1},{2},{3}", HubProcessor.Instance.objPolicy.DefaultClientId, bookingId, text, mobNo);
 
+                        if (mobNo.ToStr().StartsWith("00") == false)
+                        {
+
+                            int idx = -1;
+                            if (mobNo.StartsWith("044") == true)
+                            {
+                                idx = mobNo.IndexOf("044");
+                                mobNo = mobNo.Substring(idx + 3);
+                                mobNo = mobNo.Insert(0, "+44");
+                            }
+
+                            if (mobNo.StartsWith("07"))
+                            {
+                                mobNo = mobNo.Substring(1);
+                            }
+
+                            if (mobNo.StartsWith("044") == false || mobNo.StartsWith("+44") == false)
+                                mobNo = mobNo.Insert(0, "+44");
+                        }
+
+                        string q = Cryptography.Encrypt((HubProcessor.Instance.objPolicy.DefaultClientId + "|" + bookingId.ToStr()), "tcloudX@@!", true);
+
+                        //url = "https://bookings.windsorcars.com/bookingreceipt.aspx?q=" + q;
+                        url = url + q;
+                        url = General.ToTinyURLS(url);
+
+                        if (url.ToStr().Trim().Length > 0)
+                        {
+
+                            message = "Please click on the below link to see your booking " + bookingNo + " receipt." + " " + Environment.NewLine + url;
+
+
+                            HubProcessor.Instance.listofSMS.Add("request dispatchsms = " + mobNo.Trim() + " = " + message);
+
+                            try
+                            {
+
+                                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\smsreceipt.txt", DateTime.Now.ToStr() + " request" + message + " ,number :" + mobNo + Environment.NewLine);
+                                General.WriteLog("smsreceipt", "request" + message + " ,number :" + mobNo);
+                            }
+                            catch
+                            {
+
+                            }
+                        }
+                        else
+                        {
+                            try
+                            {
+
+                                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\smsreceipt_failed.txt", DateTime.Now.ToStr() + " url" + url + " ,number :" + mobNo + Environment.NewLine);
+                                General.WriteLog("smsreceipt_failed", "url" + url + " ,number :" + mobNo);
+                            }
+                            catch
+                            {
+
+                            }
+
+                        }
+
+                    }
+
+
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\smsreceipt_exception.txt", DateTime.Now.ToStr() + " request" + message + " ,number :" + mobNo + Environment.NewLine);
+                    General.WriteLog("smsreceipt_exception", "request" + message + " ,number :" + mobNo);
+                }
+                catch
+                {
+
+                }
+
+            }
+
+
+        }
 
         private string GetPostCodeMatch(string value)
         {

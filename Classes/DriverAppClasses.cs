@@ -156,6 +156,7 @@ namespace SignalRHub
 
         public string EnableOnlineStatus;
         public string DStatus;
+        public string EnableDriverChecklist;
     }
 
     public class MakePaymentRequestViewModel
@@ -211,7 +212,26 @@ namespace SignalRHub
         public List<ClsPlotDriverDetails> driverDetails;
 
     }
-
+    public class CheckListSubmission
+    {
+        public int Id { get; set; }
+        public int DriverId { get; set; }
+        public int VehicleId { get; set; }
+        public DateTime SubmittedDate { get; set; }
+        public bool IsCompleted { get; set; }
+    }
+    public class DriverChecklist
+    {
+        public int CheckListHeaderID { get; set; }
+        public int CheckListDetailID { get; set; }
+        public int DriverId { get; set; }
+        public string VehicleNo { get; set; }
+        public string ImagePath { get; set; }
+        public string comment { get; set; }
+        public int isSuccess { get; set; }
+        public string strDate { get; set; }
+        public string imgUrl { get; set; }
+    }
     public class ResponseData
     {
         public bool IsSuccess;

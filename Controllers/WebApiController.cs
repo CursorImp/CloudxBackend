@@ -2,12 +2,14 @@
 using Newtonsoft.Json;
 using SignalRHub.WebApiClasses;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -18,6 +20,7 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Script.Serialization;
+using System.Web.UI.WebControls;
 using Taxi_BLL;
 using Taxi_Model;
 using Utils;
@@ -104,7 +107,52 @@ namespace SignalRHub.Controllers
         #region Phase#1
 
 
+        public JsonResult UpdateLogoutDate(WebApiClasses.RequestWebApi obj)
+        {
+            try
+            {
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\LoginUser.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("UpdateLogoutDate", "json: " + new JavaScriptSerializer().Serialize(obj));
+            }
+            catch
+            {
 
+            }
+            //
+
+            ResponseWebApi response = new ResponseWebApi();
+            try
+            {
+                if (!string.IsNullOrEmpty(obj.SessionId))
+                {
+                    using (TaxiDataContext db = new TaxiDataContext())
+                    {
+                        var user = db.UM_UserLogins.Where(x => x.Id == obj.SessionId.ToLong()).FirstOrDefault();
+                        if (user != null)
+                        {
+                            user.LogoutDate = DateTime.Now; // ya jo bhi date set karni ho
+                            db.SubmitChanges();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\LoginUser.txt", DateTime.Now + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                    General.WriteLog("UpdateLogoutDate", "Exception: " + ex.Message);
+
+                }
+                catch
+                {
+                    
+                }
+            }
+
+
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
 
         public JsonResult LoginUser(WebApiClasses.RequestWebApi obj)
         {
@@ -290,7 +338,7 @@ namespace SignalRHub.Controllers
                             if (EnableFilterSubCompanyId == "true")
                             {
                                 var FilterSubCompanyId = 0;
-                                if (objUser.SecurityGroupId == 1)
+                                if (objUser.SecurityGroupId == 6)
                                 {
                                     FilterSubCompanyId = objUser.SubcompanyId.ToInt();
                                     ShowAllBookings = false;
@@ -1541,7 +1589,7 @@ namespace SignalRHub.Controllers
             //
 
             ResponseWebApi response = new ResponseWebApi();
-
+            string EnableComapnyVehicleNo = Global.EnableComapnyVehicleNo;
             using (TaxiDataContext db = new TaxiDataContext())
             {
 
@@ -1551,7 +1599,56 @@ namespace SignalRHub.Controllers
                 if (obj.AllocateAnyDriver == true)
                 {
                     // Case 1: Load all active drivers
-                    list = db.Fleet_Drivers
+
+                    if (EnableComapnyVehicleNo == "true")
+                    {
+                        list = db.Fleet_Drivers
+    .Where(d => d.IsActive == true)
+    .Select(d => new
+    {
+        Driver = d,
+
+        LastQueue = db.Fleet_DriverQueueLists
+            .Where(q => q.DriverId == d.Id)
+            .OrderByDescending(q => q.Id)
+            .FirstOrDefault()
+    })
+    .Select(x => new
+    {
+        Id = x.Driver.Id,
+
+        VehicleNo =
+            (x.LastQueue != null
+             && x.LastQueue.Status == true
+             && x.LastQueue.FleetMasterId > 0
+             && x.LastQueue.Fleet_Master != null
+            && x.LastQueue.Fleet_Master.VehicleID != null && x.LastQueue.Fleet_Master.VehicleID != "")
+                 ? x.LastQueue.Fleet_Master.VehicleID
+                 : x.Driver.DriverNo,
+
+        DriverName = x.Driver.DriverName,
+        VehicleType = x.Driver.Fleet_VehicleType.VehicleType,
+
+        x.Driver.SubcompanyId,
+        x.Driver.VehicleTypeId
+    }).OrderBy(x => x.VehicleNo)
+    .Select(x => new
+    {
+        x.Id,
+
+        DriverName =
+            x.VehicleNo + " - " +
+            x.DriverName + " [" +
+            x.VehicleType + "]",
+
+        x.SubcompanyId,
+        x.VehicleTypeId
+    })
+    .ToList<object>();
+                    }
+                    else
+                    {
+                         list = db.Fleet_Drivers
                         .Where(d => d.IsActive == true)
                         .Select(d => new
                         {
@@ -1562,26 +1659,67 @@ namespace SignalRHub.Controllers
                             d.VehicleTypeId
                         })
                         .ToList<object>();
+                    }
+                       
                 }
                 else
                 {
                     // Case 2: Load from queue list with conditions
-                    list = (from a in db.Fleet_DriverQueueLists
-                            where a.Fleet_Driver.IsActive == true
-                               && a.DriverId != null
-                               && a.Status == true
-                               && (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE || a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK)
-                            orderby a.QueueDateTime
-                            select new
-                            {
-                                Id = a.DriverId,
-                                DriverName = a.Fleet_Driver.DriverNo + " - " + a.Fleet_Driver.DriverName +
-                                             " [" + a.Fleet_Driver.Fleet_VehicleType.VehicleType + "]",
-                                a.Fleet_Driver.SubcompanyId,
-                                a.Fleet_Driver.VehicleTypeId
-                            })
+                    bool hideBreakDrivers = Global.NotShowOnBreakDrivers == "1";
+                    if (EnableComapnyVehicleNo == "true")
+                    {
+                        list = (from a in db.Fleet_DriverQueueLists
+                                where a.Fleet_Driver.IsActive == true
+                                   && a.DriverId != null
+                                   && a.Status == true
+                                   && (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
+                                        || (!hideBreakDrivers && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK)
+                                      )
+                                select new
+                                {
+                                    Id = a.DriverId,
+                                    SortKey= (
+    a.FleetMasterId > 0 && a.Fleet_Master != null && a.Fleet_Master.VehicleID != null && a.Fleet_Master.VehicleID != ""
+        ? a.Fleet_Master.VehicleID
+        : a.Fleet_Driver.DriverNo
+),
+                                    DriverName =
+(
+    a.FleetMasterId > 0 && a.Fleet_Master != null && a.Fleet_Master.VehicleID != null && a.Fleet_Master.VehicleID != ""
+        ? a.Fleet_Master.VehicleID
+        : a.Fleet_Driver.DriverNo
+)
++ " - " + a.Fleet_Driver.DriverName +
+" [" + a.Fleet_Driver.Fleet_VehicleType.VehicleType + "]",
+                                    a.Fleet_Driver.SubcompanyId,
+                                    a.Fleet_Driver.VehicleTypeId
+                                })
                             .Distinct()
+                             .OrderBy(x => x.SortKey)
                             .ToList<object>();
+                    }
+                    else
+                    {
+                        list = (from a in db.Fleet_DriverQueueLists
+                                where a.Fleet_Driver.IsActive == true
+                                   && a.DriverId != null
+                                   && a.Status == true
+                                   && (a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.AVAILABLE
+                                        || (!hideBreakDrivers && a.DriverWorkStatusId == Enums.Driver_WORKINGSTATUS.ONBREAK)
+                                      )
+                                orderby a.QueueDateTime
+                                select new
+                                {
+                                    Id = a.DriverId,
+                                    DriverName = a.Fleet_Driver.DriverNo + " - " + a.Fleet_Driver.DriverName +
+                                                 " [" + a.Fleet_Driver.Fleet_VehicleType.VehicleType + "]",
+                                    a.Fleet_Driver.SubcompanyId,
+                                    a.Fleet_Driver.VehicleTypeId
+                                })
+                           .Distinct()
+                           .ToList<object>();
+                    }
+                       
                 }
 
 
@@ -1625,25 +1763,61 @@ namespace SignalRHub.Controllers
 
             using (TaxiDataContext db = new TaxiDataContext())
             {
+                string EnableComapnyVehicleNo = Global.EnableComapnyVehicleNo;
 
-
-                var list = (from a in db.Fleet_DriverQueueLists
-                            where a.DriverId != null && a.Status == true && a.Fleet_Driver.IsActive == true
-    //&& (a.Fleet_Driver.SubcompanyId == AppVars.DefaultDriverSubCompanyId || AppVars.DefaultDriverSubCompanyId == 0) && (a.ZoneId == null || a.ZoneId != null && a.Gen_Zone.ZoneName != "SIN BIN")
-    && (a.DriverWorkStatusId != Enums.Driver_WORKINGSTATUS.AVAILABLE && a.DriverWorkStatusId != Enums.Driver_WORKINGSTATUS.ONBREAK)
-                            //&& (a.IsManualLogin == null || a.IsManualLogin == false)
-
-
-                            orderby a.QueueDateTime
-                            select new
+                if (EnableComapnyVehicleNo == "true")
+                {
+                  var  list = (from a in db.Fleet_DriverQueueLists
+                            where a.Fleet_Driver.IsActive == true
+                               && a.DriverId != null
+                               && a.Status == true
+                               && (a.DriverWorkStatusId != Enums.Driver_WORKINGSTATUS.AVAILABLE
+                                    || ( a.DriverWorkStatusId != Enums.Driver_WORKINGSTATUS.ONBREAK)
+                                  )
+                               select new
                             {
-                                Id = a.DriverId,
-                                DriverName = (a.Fleet_Driver.DriverNo + " - " + a.Fleet_Driver.DriverName + " [" + a.Fleet_Driver.Fleet_VehicleType.VehicleType + "]")
-                                //         ,
-                                //   a.IsManualLogin
-                            }).Distinct().ToList();
+                                   SortKey =
+                    (a.FleetMasterId > 0 && a.Fleet_Master != null && a.Fleet_Master.VehicleID != null && a.Fleet_Master.VehicleID != "")
+                        ? a.Fleet_Master.VehicleID
+                        : a.Fleet_Driver.DriverNo,
+                                   Id = a.DriverId,
+                                DriverName =
+(
+a.FleetMasterId > 0 && a.Fleet_Master != null && a.Fleet_Master.VehicleID != null && a.Fleet_Master.VehicleID != ""
+    ? a.Fleet_Master.VehicleID
+    : a.Fleet_Driver.DriverNo
+)
++ " - " + a.Fleet_Driver.DriverName +
+" [" + a.Fleet_Driver.Fleet_VehicleType.VehicleType + "]",
+                                a.Fleet_Driver.SubcompanyId,
+                                a.Fleet_Driver.VehicleTypeId
+                            })
+                        .Distinct()
+                         .OrderBy(x => x.SortKey)
+                        .ToList<object>();
+                    response.Data = list;
+                }
+                else
+                {
+                    var list = (from a in db.Fleet_DriverQueueLists
+                                where a.DriverId != null && a.Status == true && a.Fleet_Driver.IsActive == true
+        //&& (a.Fleet_Driver.SubcompanyId == AppVars.DefaultDriverSubCompanyId || AppVars.DefaultDriverSubCompanyId == 0) && (a.ZoneId == null || a.ZoneId != null && a.Gen_Zone.ZoneName != "SIN BIN")
+        && (a.DriverWorkStatusId != Enums.Driver_WORKINGSTATUS.AVAILABLE && a.DriverWorkStatusId != Enums.Driver_WORKINGSTATUS.ONBREAK)
+                                //&& (a.IsManualLogin == null || a.IsManualLogin == false)
 
-                response.Data = list;
+
+                                orderby a.QueueDateTime
+                                select new
+                                {
+                                    Id = a.DriverId,
+                                    DriverName = (a.Fleet_Driver.DriverNo + " - " + a.Fleet_Driver.DriverName + " [" + a.Fleet_Driver.Fleet_VehicleType.VehicleType + "]")
+                                    //         ,
+                                    //   a.IsManualLogin
+                                }).Distinct().ToList();
+
+                    response.Data = list;
+                }
+                   
 
             }
 
@@ -2020,6 +2194,25 @@ WHERE BookingId = {obj.bookingInfo.Id}";
                     {
 
                     }
+                    obj.bookingInfo.Booking_Attributes = new List<Booking_Attribute>();
+
+
+                    // if(obj2.ViaString.ToStr().Trim().Length>0)
+                    //{
+
+                    try
+                    {
+                        //
+                        foreach (var item in db.Booking_Attributes.Where(c => c.BookingId == obj.bookingInfo.Id))
+                        {
+                            obj.bookingInfo.Booking_Attributes.Add(new Booking_Attribute { Id = item.Id, BookingId = obj.bookingInfo.Id, AttributeId = item.AttributeId, Qty = item.Qty, Price = item.Price });
+                        }
+                    }
+                    catch
+                    {
+
+                    }
+
                     if (obj?.bookingInfo?.CompanyId > 0)
                     {
                         var tempCompany = db.Gen_Companies.Where(x => x.Id == obj.bookingInfo.CompanyId).Select(x => new { x.HasBookedBy, x.HasOrderNo, x.HasDepartment, x.HasEscort, x.PasswordEnable }).FirstOrDefault();
@@ -2212,6 +2405,36 @@ WHERE BookingId = {obj.bookingInfo.Id}";
 
 
 
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetProrityDetails")]
+        public async Task<JsonResult> GetProrityDetails(RequestWebApi obj)
+        {
+            ResponseWebApi response = new ResponseWebApi();
+            try
+            {
+
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    int? ZoneId = 0;
+                    if (!string.IsNullOrEmpty(obj.bookingInfo.FromAddress))
+                    {
+                        ZoneId = General.GetZoneId(obj.bookingInfo.FromAddress);
+                    }
+                    var result = db.ExecuteQuery<PriorityResult>(
+                        "EXEC sp_GetPriorityTotals @BookingTypeId={0}, @VehicleTypeId={1}, @ZoneId={2}",
+                        obj.bookingInfo.BookingTypeId ?? 0,
+                        obj.bookingInfo.VehicleTypeId ?? 0,
+                        ZoneId
+                    ).FirstOrDefault();
+                    response.Data = result;
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return Json(response, JsonRequestBehavior.AllowGet);
+        }
 
         [System.Web.Http.HttpGet]
         [System.Web.Http.HttpPost]
@@ -2934,7 +3157,10 @@ WHERE BookingId = {obj.bookingInfo.Id}";
 
                                     if (item.Name == "AdvanceBookingId")
                                         continue;
-
+                                    if (item.Name == "Booking_Attributes")
+                                        continue;
+                                    if (item.Name == "TipAmount")
+                                        continue;
 
 
                                     if (item.Name == "DriverId")
@@ -3247,7 +3473,159 @@ WHERE BookingId = {obj.bookingInfo.Id}";
                             }
                         }
                         objMaster.ReturnCustomerPrice = objMaster.Current.ServiceCharges.ToDecimal();
+                        int? fleetMasterId = null;
+                        try
+                        {
+                            if (obj.bookingInfo.DriverId > 0)
+                            {
+                                fleetMasterId = db.Fleet_DriverQueueLists
+                           .Where(x => x.DriverId == obj.bookingInfo.DriverId && x.Status == true)
+                           .Select(x => (int?)x.FleetMasterId)
+                           .FirstOrDefault();
+                                objMaster.Current.FleetMasterId = fleetMasterId;
+                            }
+                        }
+                        catch
+                        {
+
+                        }
                         objMaster.Save();
+                        try
+                        {
+                            try
+                            {
+                                if (objMaster.Current.Id > 0)
+                                {
+                                    string deleteQuery = "DELETE FROM Booking_Attributes WHERE BookingId = {0}";
+                                    db.ExecuteCommand(deleteQuery, objMaster.Current.Id);
+                                }
+                            }
+                            catch
+                            {
+
+                            }
+
+
+
+                            if (obj.bookingInfo.Booking_Attributes != null)
+                            {
+                                foreach (var item in obj.bookingInfo.Booking_Attributes)
+                                {
+                                    var newAttr = new Booking_Attribute
+                                    {
+                                        BookingId = objMaster.Current.Id,
+                                        AttributeId = item.AttributeId,
+                                        Qty = item.Qty,
+                                        Price = item.Price,
+                                    };
+
+                                    db.Booking_Attributes.InsertOnSubmit(newAttr);
+                                }
+                                db.SubmitChanges();
+                            }
+
+                        }
+                        catch
+                        {
+
+                        }
+
+                        try
+                        {
+                            // Only proceed if pre-booking is enabled
+                            if (Convert.ToInt32(Global.EnablePreBookingMins) > 0)
+                            {
+                                int preBookingMins = Convert.ToInt32(Global.EnablePreBookingMins);
+
+                                DateTime? pickupTime = obj.bookingInfo.PickupDateTime;
+                                if (pickupTime != null)
+                                {
+
+                                    DateTime currentTime = DateTime.Now;
+                                    double diffMins = (pickupTime.Value - currentTime).TotalMinutes;
+                                    bool isValid = diffMins >= preBookingMins;
+
+
+                                    string query = string.Format(
+                                        "UPDATE Booking SET IsPreBooking = {0} WHERE Id = {1}",
+                                        isValid ? 1 : 0,
+                                        objMaster.Current.Id
+                                    );
+
+                                    db.ExecuteCommand(query);
+                                }
+                            }
+                            else
+                            {
+                                // --- Step 1: Get zone info ---
+                                int? zoneId = General.GetZoneId(obj.bookingInfo.FromAddress);
+                                int zoneJobDueMinutes = 0;
+
+                                if (zoneId.ToInt() > 0)
+                                {
+                                    var ZoneInfo = db.Gen_Zones
+                                                     .Where(c => c.Id == zoneId)
+                                                     .Select(c => new { c.ZoneName, c.JobDueTime })
+                                                     .FirstOrDefault();
+
+                                    if (Global.EnableManualLeadTime == "true" && ZoneInfo?.JobDueTime != null)
+                                    {
+                                        zoneJobDueMinutes = ZoneInfo.JobDueTime.Value.Hour * 60 + ZoneInfo.JobDueTime.Value.Minute;
+                                    }
+                                }
+
+                                // --- Step 2: Add vehicle type lead time if enabled ---
+                                try
+                                {
+                                    string enableLeadTimePerVehicle = db.ExecuteQuery<string>(
+                                        "SELECT SetVal FROM AppSettings WHERE setkey = 'EnableLeadTimePerVehicle'")
+                                        .FirstOrDefault().ToStr();
+
+                                    if (enableLeadTimePerVehicle == "true")
+                                    {
+                                        var leadTime = db.ExecuteQuery<DateTime?>(
+                                            "SELECT leadtime FROM Fleet_VehicleTypes WHERE id = " + obj.bookingInfo.VehicleTypeId
+                                        ).FirstOrDefault();
+
+                                        if (leadTime != null && !(leadTime.Value.Hour == 0 && leadTime.Value.Minute == 0))
+                                        {
+                                            zoneJobDueMinutes += leadTime.Value.Hour * 60 + leadTime.Value.Minute;
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                    // ignore vehicle lead time errors
+                                }
+                                DateTime? bookingDateTime = objMaster.Current.BookingDate;
+
+                                bool isValid = false;
+
+                                if (bookingDateTime != null)
+                                {
+                                    DateTime currentTime = DateTime.Now;
+
+                                    int totalLeadMinutes = zoneJobDueMinutes;
+
+                                    double diffMinutes = (bookingDateTime.Value - currentTime).TotalMinutes;
+
+                                    isValid = diffMinutes >= totalLeadMinutes;
+                                    string query = string.Format(
+                                      "UPDATE Booking SET IsPreBooking = {0} WHERE Id = {1}",
+                                      isValid ? 1 : 0,
+                                      objMaster.Current.Id
+                                  );
+
+                                    db.ExecuteCommand(query);
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // handle exceptions silently
+                        }
+
+
                         try
                         {
                             if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='EnablePromotionOnBooking'").FirstOrDefault().ToStr().Trim() == "true")
@@ -3324,6 +3702,15 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                 {
                                     string query2 = "Update booking set PaymentTypeId= {0} where Id={1}";
                                     db.ExecuteCommand(query2, obj.bookingInfo.PaymentTypeId, master.Id);
+                                }
+                            }
+                            else
+                            {
+                                var master = db.Bookings.FirstOrDefault(x => x.MasterJobId == objMaster.Current.Id);
+                                if (master != null)
+                                {
+                                    string query2 = "Update booking set PaymentTypeId= {0} where Id={1}";
+                                    db.ExecuteCommand(query2,Enums.PAYMENT_TYPES.CASH, master.Id);
                                 }
                             }
                         }
@@ -3423,6 +3810,141 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
                                 try
                                 {
+                                    // Only proceed if pre-booking is enabled
+                                    if (Convert.ToInt32(Global.EnablePreBookingMins) > 0)
+                                    {
+                                        int preBookingMins = Convert.ToInt32(Global.EnablePreBookingMins);
+
+                                        DateTime? pickupTime = obj.bookingInfo.ReturnPickupDateTime;
+                                        if (pickupTime != null)
+                                        {
+
+                                            DateTime currentTime = DateTime.Now;
+                                            double diffMins = (pickupTime.Value - currentTime).TotalMinutes;
+                                            bool isValid = diffMins >= preBookingMins;
+
+
+                                            string query = string.Format(
+                                                "UPDATE Booking SET IsPreBooking = {0} WHERE Id = {1}",
+                                                isValid ? 1 : 0,
+                                                master.Id
+                                            );
+
+                                            db.ExecuteCommand(query);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // --- Step 1: Get zone info ---
+                                        int? zoneId = General.GetZoneId(obj.bookingInfo.ToAddress);
+                                        int zoneJobDueMinutes = 0;
+
+                                        if (zoneId.ToInt() > 0)
+                                        {
+                                            var ZoneInfo = db.Gen_Zones
+                                                             .Where(c => c.Id == zoneId)
+                                                             .Select(c => new { c.ZoneName, c.JobDueTime })
+                                                             .FirstOrDefault();
+
+                                            if (Global.EnableManualLeadTime == "true" && ZoneInfo?.JobDueTime != null)
+                                            {
+                                                zoneJobDueMinutes = ZoneInfo.JobDueTime.Value.Hour * 60 + ZoneInfo.JobDueTime.Value.Minute;
+                                            }
+                                        }
+
+                                        // --- Step 2: Add vehicle type lead time if enabled ---
+                                        try
+                                        {
+                                            string enableLeadTimePerVehicle = db.ExecuteQuery<string>(
+                                                "SELECT SetVal FROM AppSettings WHERE setkey = 'EnableLeadTimePerVehicle'")
+                                                .FirstOrDefault().ToStr();
+
+                                            if (enableLeadTimePerVehicle == "true")
+                                            {
+                                                var leadTime = db.ExecuteQuery<DateTime?>(
+                                                    "SELECT leadtime FROM Fleet_VehicleTypes WHERE id = " + obj.bookingInfo.VehicleTypeId
+                                                ).FirstOrDefault();
+
+                                                if (leadTime != null && !(leadTime.Value.Hour == 0 && leadTime.Value.Minute == 0))
+                                                {
+                                                    zoneJobDueMinutes += leadTime.Value.Hour * 60 + leadTime.Value.Minute;
+                                                }
+                                            }
+                                        }
+                                        catch
+                                        {
+                                            // ignore vehicle lead time errors
+                                        }
+                                        DateTime? bookingDateTime = objMaster.Current.BookingDate;
+
+                                        bool isValid = false;
+
+                                        if (bookingDateTime != null)
+                                        {
+                                            DateTime currentTime = DateTime.Now;
+
+                                            int totalLeadMinutes = zoneJobDueMinutes;
+
+                                            double diffMinutes = (bookingDateTime.Value - currentTime).TotalMinutes;
+
+                                            isValid = diffMinutes >= totalLeadMinutes;
+                                            string query = string.Format(
+                                              "UPDATE Booking SET IsPreBooking = {0} WHERE Id = {1}",
+                                              isValid ? 1 : 0,
+                                              master.Id
+                                          );
+
+                                            db.ExecuteCommand(query);
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                    // handle exceptions silently
+                                }
+
+                                try
+                                {
+                                    try
+                                    {
+                                        if (master.Id > 0)
+                                        {
+                                            string deleteQuery = "DELETE FROM Booking_Attributes WHERE BookingId = {0}";
+                                            db.ExecuteCommand(deleteQuery, master.Id);
+                                        }
+                                    }
+                                    catch
+                                    {
+
+                                    }
+
+
+
+                                    if (obj.bookingInfo.Booking_Attributes != null)
+                                    {
+                                        foreach (var item in obj.bookingInfo.Booking_Attributes)
+                                        {
+                                            var newAttr = new Booking_Attribute
+                                            {
+                                                BookingId = master.Id,
+                                                AttributeId = item.AttributeId,
+                                                Qty = item.Qty,
+                                                Price = item.Price,
+                                            };
+
+                                            db.Booking_Attributes.InsertOnSubmit(newAttr);
+                                        }
+                                        db.SubmitChanges();
+                                    }
+
+                                }
+                                catch
+                                {
+
+                                }
+
+                                try
+                                {
                                     var EnableOtherReturnFields = db.ExecuteQuery<string>("Select SetVal From AppSettings where setkey='EnableOtherReturnFields'").FirstOrDefault().ToStr();
 
                                     if (EnableOtherReturnFields == "true")
@@ -3441,18 +3963,38 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                 {
 
                                 }
+                                try
+                                {
+                                    if (obj.bookingInfo.BoundType != null)
+                                    {
+                                        string query2 = "Update booking set BoundType={0} where Id={1}";
+                                        db.ExecuteCommand(query2, obj.bookingInfo.BoundType, master.Id);
+                                    }
+                                }
+                                catch
+                                {
+                                }
+
+                                try
+                                {
+                                    string query1 = "delete from Booking_ViaLocations where BookingId={0}";
+                                    db.ExecuteCommand(query1, master.Id);
+                                    for (int i = obj.bookingInfo.Booking_ViaLocations.Count - 1; i >= 0; i--)
+                                    {
+                                        var item = obj.bookingInfo.Booking_ViaLocations[i];
 
 
+                                        string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue,ViaLocId) VALUES ({0}, {1}, {2}, {3}, {4}, NULLIF({5},0))";
+                                        db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", master.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue, item.ViaLocId > 0 ? item.ViaLocId : 0);
 
-                                string query1 = "delete from Booking_ViaLocations where BookingId={0}";
-                                db.ExecuteCommand(query1, master.Id);
-                                foreach (var item in obj.bookingInfo.Booking_ViaLocations)
+                                    }
+                                }
+                                catch
                                 {
 
-                                    string queryR = "INSERT INTO Booking_ViaLocations (ViaLocTypeLabel, ViaLocTypeValue, BookingId, ViaLocTypeId, ViaLocValue,ViaLocId) VALUES ({0}, {1}, {2}, {3}, {4}, NULLIF({5},0))";
-                                    db.ExecuteCommand(queryR, item.ViaLocTypeLabel != null ? item.ViaLocTypeLabel : "", item.ViaLocTypeValue != null ? item.ViaLocTypeValue : "", master.Id, Enums.LOCATION_TYPES.ADDRESS, item.ViaLocValue, item.ViaLocId > 0 ? item.ViaLocId : 0);
-
                                 }
+                                
+                            
                             }
                         }
 
@@ -3984,7 +4526,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
 
 
-                        if (objMaster.BookingReturns != null && objMaster.BookingReturns[0].Id > 0 && obj.bookingInfo.IsCancelReturn==true)
+                        if (objMaster.BookingReturns != null && objMaster.BookingReturns[0].Id > 0 && obj.bookingInfo.IsCancelReturn == true)
                         {
                             cancelReturnJob = true;
 
@@ -4206,7 +4748,10 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 {
                     string despatchBy = obj.bookingInfo.Despatchby.ToStr();
                     var pickupDateTime = db.Bookings.Where(c => c.Id == obj.bookingInfo.Id).Select(x => x.PickupDateTime).FirstOrDefault();
-                    var isNotAllowedDispatch = Convert.ToInt32(Global.EnableTodayBookingFilterInHours) > 0 ? (pickupDateTime.ToDateTime() > DateTime.Now.AddHours(Convert.ToInt32(Global.EnableTodayBookingFilterInHours))) ? true : false : pickupDateTime?.Date != DateTime.Now.Date ? true : false;
+                    //var isNotAllowedDispatch = Convert.ToInt32(Global.EnableTodayBookingFilterInHours) > 0 ? (pickupDateTime.ToDateTime() > DateTime.Now.AddHours(Convert.ToInt32(Global.EnableTodayBookingFilterInHours))) ? true : false : pickupDateTime?.Date != DateTime.Now.Date ? true : false;
+                    var isNotAllowedDispatch = Convert.ToInt32(Global.EnableTodayBookingFilterInHours) > 0
+    ? pickupDateTime.ToDateTime() > DateTime.Now.AddHours(Convert.ToInt32(Global.EnableTodayBookingFilterInHours))
+    : !(pickupDateTime?.Date == DateTime.Now.Date || pickupDateTime.ToDateTime() >= DateTime.Now.Date.AddHours(-3));
                     if (pickupDateTime != null && isNotAllowedDispatch && obj.bookingInfo.BookingTypeId.ToInt() != 4 && obj.bookingInfo.BookingTypeId.ToInt() != 3 && obj.IsInCompleteBooking != true)
                     {
                         //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "DispatchBooking_warning.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",pickup date" + pickupDateTime?.Date.ToStr() + "bookingid: " + obj.bookingInfo.Id.ToStr() + " type: " + obj.bookingInfo.BookingTypeId.ToStr() + Environment.NewLine);
@@ -4263,6 +4808,10 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                             response.HasError = true;
                                             response.Message = "Please select a driver";
                                             //
+                                        }
+                                        else if (db.Bookings.Where(x => x.Id == obj.bookingInfo.Id.ToLong() && x.DriverId != obj.bookingInfo.DriverId.ToInt()).Select(x => x.BookingStatusId).FirstOrDefault().ToInt() == 4) //4 = PENDING ACCEPT
+                                        {
+                                            msg = "Job is already dispatched to other driver.";
                                         }
                                         else
                                             msg = General.AllocateDriver(db, HubProcessor.Instance.objPolicy, db.Bookings.FirstOrDefault(c => c.Id == obj.bookingInfo.Id), db.Fleet_Drivers.FirstOrDefault(c => c.Id == obj.bookingInfo.DriverId), obj.bookingInfo.BookingTypeId.ToInt(), obj.bookingInfo.IsConfirmedDriver, obj.bookingInfo.DriverIdReturn);
@@ -4639,6 +5188,47 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             }
             return new CustomJsonResult { Data = response };
         }
+        [System.Web.Http.HttpGet]
+        [System.Web.Http.HttpPost]
+        [System.Web.Http.Route("GetViaByBookingId")]
+        public JsonResult GetViaByBookingId(WebApiClasses.RequestWebApi obj)
+        {
+            ResponseWebApi response = new ResponseWebApi();
+            try
+            {
+                using (TaxiDataContext db = new TaxiDataContext())
+                {
+                    if (obj.bookingInfo.Id > 0)
+                    {
+                        var data = db.Booking_ViaLocations
+           .Where(c => c.BookingId == obj.bookingInfo.Id)
+           .Select(c => new
+           {
+               ViaLocTypeLabel = c.ViaLocTypeLabel, 
+               ViaLocTypeValue = c.ViaLocTypeValue,
+               ViaLocLabel = c.ViaLocLabel,
+               ViaLocValue = c.ViaLocValue
+           })
+           .ToList();
+                        response.Data = data;
+                    }
+                    else
+                    {
+                        response.HasError = true;
+                        response.Data = null;
+                    }
+
+                    
+                }
+
+            }
+            catch (Exception ex)
+            {
+                response.HasError = true;
+                response.Message = ex.Message;
+            }
+            return new CustomJsonResult { Data = response };
+        }
 
 
 
@@ -4714,12 +5304,33 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             }
                         }
 
-                        obj.addressInfo.zoneId = General.GetZoneId(searchValue);//General.GetZoneId(latitude + "," + longitude);
-                                                                                // GetZoneIDTime zone = General.GetZoneIdAndTime(latitude + "," + longitude);
+                        obj.addressInfo.zoneId = General.GetZoneId(searchValue, latitude, longitude);//General.GetZoneId(latitude + "," + longitude);
+                        //obj.addressInfo.zoneId = General.GetZoneId(searchValue);
+                        // GetZoneIDTime zone = General.GetZoneIdAndTime(latitude + "," + longitude);
 
                         //    obj.addressInfo.zoneId = General.GetZoneId(latitude + "," + longitude);
                         //  obj.addressInfo.leadZoneDueTime = zone.leadZoneDueTime;
+                        //
+                        try
+                        {
+                            if (Global.EnableAutoCalculatePriority=="true" && Global.EnablePriority == "true")
+                            {
+                                var data = db.ExecuteQuery<PriorityResult>(
+                                         "EXEC sp_GetPriorityTotals @BookingTypeId={0}, @VehicleTypeId={1}, @ZoneId={2}",
+                                         obj.addressInfo.BookingTypeId ?? 0,
+                                          obj.addressInfo.VehicleTypeId ?? 0,
+                                         obj.addressInfo.zoneId ?? 0
+                                     ).FirstOrDefault();
 
+                                obj.addressInfo.TotalPreBookPriority = data.TotalPreBookPriority;
+                                obj.addressInfo.TotalPriority = data.TotalPriority;
+                            }
+                        }
+                        catch
+                        {
+
+                        }
+                        
                         if (obj.addressInfo.zoneId.ToInt() > 0)
                         {
                             var ZoneInfo = db.Gen_Zones.Where(c => c.Id == obj.addressInfo.zoneId).Select(c => new { ZoneName = c.ZoneName, JobDueTime = c.JobDueTime }).FirstOrDefault();
@@ -4734,6 +5345,32 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                                     obj.addressInfo.JobDueTime = ((hour * 60) + min);
                                 }
                             }
+                        }
+                        try
+                        {
+                            if (db.ExecuteQuery<string>(
+                                "select SetVal from AppSettings where setkey= 'EnableLeadTimePerVehicle'")
+                                .FirstOrDefault().ToStr() == "true")
+                            {
+                                var leadTime = db.ExecuteQuery<DateTime?>(
+                                    "select leadtime from Fleet_VehicleTypes where id=" + obj.addressInfo.VehicleTypeId
+                                ).FirstOrDefault();
+
+                                if (leadTime != null
+                                    && !(leadTime.Value.Hour == 0 && leadTime.Value.Minute == 0))
+                                {
+                                    int hour = leadTime.Value.Hour;
+                                    int min = leadTime.Value.Minute;
+
+                                    int leadMinutes = (hour * 60) + min;
+
+                                    obj.addressInfo.JobDueTime += leadMinutes;
+                                }
+                            }
+                        }
+                        catch
+                        {
+
                         }
 
                         //if (obj.addressInfo.AddressType.ToInt() == 1 && latitude != null && latitude != 0)
@@ -5009,6 +5646,64 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 {
                     string pickup = obj.routeInfo.pickupAddress.Address.ToStr().ToUpper().Trim();
                     string destination = obj.routeInfo.destinationAddress.Address.ToStr().ToUpper().Trim();
+
+                    if (pickup != "" && obj.routeInfo.pickupAddress.Latitude != null && obj.routeInfo.pickupAddress.Latitude != 0)
+                    {
+                        try
+                        {
+                            var fullP = pickup ?? "";
+
+                            var partsP = fullP.Split(new[] { ',' }, 2);
+
+                            var locationNameP = partsP.Length > 0
+                                ? partsP[0].Trim()
+                                : "";
+
+                            var addressP = partsP.Length > 1
+                                ? partsP[1].Replace(",", "").Trim()
+                                : "";
+                            if (addressP != "")
+                            {
+                                db.ExecuteQuery<int>($@"IF NOT EXISTS (Select  1 FROM Gen_Locations WHERE FullLocationName = '{fullP.Replace(",", "")}')
+                                            BEGIN
+                                            insert into Gen_Locations (LocationName,LocationTypeId,Address,PostCode,AddOn,Latitude,Longitude) 
+                                            values ('{locationNameP}',20,'{addressP}','',GETDATE(),'{obj.routeInfo.pickupAddress.Latitude}','{obj.routeInfo.pickupAddress.Longitude}')
+                                            END");
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
+                    if (destination != "" && obj.routeInfo.destinationAddress.Latitude != null && obj.routeInfo.destinationAddress.Latitude != 0)
+                    {
+                        try
+                        {
+                            var fullD = destination ?? "";
+
+                            var partsD = fullD.Split(new[] { ',' }, 2);
+
+                            var locationNameD = partsD.Length > 0
+                                ? partsD[0].Trim()
+                                : "";
+
+                            var addressD = partsD.Length > 1
+                                ? partsD[1].Replace(",", "").Trim()
+                                : "";
+                            if (addressD != "")
+                            {
+                                db.ExecuteQuery<int>($@"IF NOT EXISTS (Select  1 FROM Gen_Locations WHERE FullLocationName = '{fullD.Replace(",", "")}')
+                                            BEGIN
+                                            insert into Gen_Locations (LocationName,LocationTypeId,Address,PostCode,AddOn,Latitude,Longitude) 
+                                            values ('{locationNameD}',20,'{addressD}','',GETDATE(),'{obj.routeInfo.destinationAddress.Latitude}','{obj.routeInfo.destinationAddress.Longitude}')
+                                            END");
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
+
                     if (HubProcessor.Instance.objPolicy.BookingInterval.ToInt() == 1)
                     {
                         var hereMapResponse = General.getHeremapJourneyLocationCordinates(pickup, destination);
@@ -5194,7 +5889,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             sourceType = "hubapi",
                             routeType = routeType,
                             vias = vias,
-                            HasDeadMileage
+                            HasDeadMileage,
+                            SubCompanyId = obj.routeInfo.SubCompanyId
                             //vias = obj.routeInfo.viaAddresses.Select(args => new {Via=args.Latitude +","+args.Longitude })
                         };
 
@@ -5578,6 +6274,21 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             info.SubCompanyId = obj.routeInfo.SubCompanyId;
                         }
 
+                        string routeType = "";
+
+                        if (!string.IsNullOrWhiteSpace(obj.routeInfo.RouteType))
+                        {
+                            routeType = obj.routeInfo.RouteType;
+                        }
+                        else
+                        {
+                            if (db.ExecuteQuery<string>("Select SetVal from AppSettings WHERE SetKey ='EnableFastestRoute'").FirstOrDefault().ToStr().Trim() == "1")
+                            {
+                                routeType = "fastest";
+                            }
+                        }
+                        info.routeType = routeType;
+
                         //    info.Vehicle = db.Fleet_VehicleTypes.Where(a => a.Id == info.VehicleTypeId).Select(a => a.VehicleType).FirstOrDefault().ToStr();
                         //needtouncomment
                         //try
@@ -5613,6 +6324,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         using (var streamWriter = new StreamWriter(httpWebRequest.GetRequestStream()))
                         {
                             string json = new JavaScriptSerializer().Serialize(requestData);
+                            General.WriteLog("GETALLFARESFROMDISPATCHNEW_request", "json: " + json);
                             streamWriter.Write(json);
                             streamWriter.Flush();
                             streamWriter.Close();
@@ -7851,25 +8563,42 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                 //{
                 using (TaxiDataContext db = new TaxiDataContext())
                 {
+                    string query = "";
+                    if (Global.EnableComapnyVehicleNo == "true")
+                    {
+                        query = "select Id=ISNULL(z.id,0),ZoneName=ISNULL(z.ZoneName,l.newzonename) ,l.driverid,driverno=    CASE       WHEN q.FleetMasterId > 0  AND fm.VehicleID IS NOT NULL  AND fm.VehicleID <> ''  THEN fm.VehicleID ELSE d.DriverNo    END" +
+                                    ", l.plotdate,l.latitude,l.longitude,l.speed,locationname = ISNULL(z.ZoneName, l.newzonename) " +
+                                    ",q.driverworkstatusid,s.workstatus,s.backgroundcolor,fm.Plateno,l.EstimatedTimeLeft,UpdateDate = l.UpdateDate ,WaitSinceOn = isnull(q.WaitSinceOn, getdate()),d.SubCompanyId" +
+                                    " from gen_zones z " +
+                                    " right JOIN Fleet_Driver_Location l on z.id = l.zoneid " +
+                                    " INNER JOIN FLEET_DRIVERQUEUELIST q on q.driverid = L.driverid and q.status = 1 " +
+                                    " inner join fleet_driver d on d.id = l.driverid and d.haspda = 1 " +
+                                    "  inner join fleet_driverworkingstatus s on s.id = q.driverworkstatusid" +
+                                    " left join fleet_master fm on q.fleetmasterid = fm.id" +
+                                    " where l.driverid = " + obj.bookingInfo.DriverId.ToInt();
+                    }
+                    else
+                    {
+                         query = "select Id=ISNULL(z.id,0),ZoneName=ISNULL(z.ZoneName,l.newzonename) ,l.driverid,d.driverno " +
+                                    ", l.plotdate,l.latitude,l.longitude,l.speed,locationname = ISNULL(z.ZoneName, l.newzonename) " +
+                                    ",q.driverworkstatusid,s.workstatus,s.backgroundcolor,fm.Plateno,l.EstimatedTimeLeft,UpdateDate = l.UpdateDate ,WaitSinceOn = isnull(q.WaitSinceOn, getdate()),d.SubCompanyId" +
+                                    " from gen_zones z " +
+                                    " right JOIN Fleet_Driver_Location l on z.id = l.zoneid " +
+                                    " INNER JOIN FLEET_DRIVERQUEUELIST q on q.driverid = L.driverid and q.status = 1 " +
+                                    " inner join fleet_driver d on d.id = l.driverid and d.haspda = 1 " +
+                                    "  inner join fleet_driverworkingstatus s on s.id = q.driverworkstatusid" +
+                                    " left join fleet_master fm on q.fleetmasterid = fm.id" +
+                                    " where l.driverid = " + obj.bookingInfo.DriverId.ToInt();
 
-                    string query = "select Id=ISNULL(z.id,0),ZoneName=ISNULL(z.ZoneName,l.newzonename) ,l.driverid,d.driverno " +
-                                ", l.plotdate,l.latitude,l.longitude,l.speed,locationname = ISNULL(z.ZoneName, l.newzonename) " +
-                                ",q.driverworkstatusid,s.workstatus,s.backgroundcolor,fm.Plateno,l.EstimatedTimeLeft,UpdateDate = l.UpdateDate ,WaitSinceOn = isnull(q.WaitSinceOn, getdate()),d.SubCompanyId" +
-                                " from gen_zones z " +
-                                " right JOIN Fleet_Driver_Location l on z.id = l.zoneid " +
-                                " INNER JOIN FLEET_DRIVERQUEUELIST q on q.driverid = L.driverid and q.status = 1 " +
-                                " inner join fleet_driver d on d.id = l.driverid and d.haspda = 1 " +
-                                "  inner join fleet_driverworkingstatus s on s.id = q.driverworkstatusid" +
-                                " left join fleet_master fm on q.fleetmasterid = fm.id" +
-                                " where l.driverid = " + obj.bookingInfo.DriverId.ToInt();
 
 
 
 
 
+                       
+                    }
 
                     var resp = db.ExecuteQuery<clsTrackDriver>(query).FirstOrDefault();
-
 
                     if (obj.bookingInfo.Id > 0)
                     {
@@ -8479,7 +9208,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                         response.Data = db.Bookings.Where(c => c.PickupDateTime >= loginDateTime
                                                       && (c.DriverId == driverId || c.ReturnDriverId == driverId)
                                                     && c.BookingStatusId == Enums.BOOKINGSTATUS.DISPATCHED)
-                                                    .Select(args => new { args.Id, args.BookingNo, PickupDate = string.Format("{0:dd/MM/yyyy HH:mm}", args.PickupDateTime), args.PickupDateTime, Pickup = args.FromAddress, Destination = args.ToAddress, Fares = args.FareRate + args.MeetAndGreetCharges + args.ExtraDropCharges })
+                                                    .Select(args => new { args.Id, args.BookingNo, PickupDate = string.Format("{0:dd/MM/yyyy HH:mm}", args.PickupDateTime), args.PickupDateTime, Pickup = args.FromAddress, Destination = args.ToAddress, Fares = args.FareRate + args.MeetAndGreetCharges + args.ExtraDropCharges , VehicleType= args.Fleet_VehicleType!=null?args.Fleet_VehicleType.VehicleType:"", PaymentType=args.Gen_PaymentType!=null?args.Gen_PaymentType.PaymentType:"",FareRate=args.FareRate})
                                                    .OrderByDescending(c => c.PickupDateTime).ToList();
                     }
 
@@ -11508,7 +12237,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
             {
 
 
-                System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverDetails.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + Environment.NewLine);
+                General.WriteLog("GetDriverDetails", "json:" + new JavaScriptSerializer().Serialize(obj));
             }
             catch
             {
@@ -11583,7 +12313,8 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                     response.HasError = true;
                     response.Message = ex.Message;
 
-                    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    //System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "GetDriverDetails_exception.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + ",json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message + Environment.NewLine);
+                    General.WriteLog("GetDriverDetails_exception", "json:" + new JavaScriptSerializer().Serialize(obj) + ",exception:" + ex.Message);
                 }
                 catch
                 {
@@ -12617,7 +13348,7 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
                         }
                     }
-                    
+
                     else if (HubProcessor.Instance.objPolicy.DefaultClientId.ToStr() == "SAL_Cars")
                     {
 
@@ -12642,18 +13373,18 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
 
                             StrBld.Append("<table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid; background-color:White;font-family: verdana, arial;font-size: 11px;font-weight: normal;color: #000;text-decoration: none;'>");
-                            
+
                             StrBld.Append("<tr>");
-                            
+
                             StrBld.Append("<td colspan='4' style='text-align:center; padding:20px; border-bottom:#d4e0ee 1px solid;'>");
 
-                            
+
                             StrBld.Append("<div style='font-size:28px; font-weight:bold; color:#7a99c2; margin-bottom:5px; font-family:Arial, sans-serif;'>" + fullCompanyName + "</div>");
 
-                           
+
                             //StrBld.Append("<span style='font-size:28px; font-weight:bold; color:#7a99c2; margin-bottom:5px; font-family:Arial, sans-serif;'>" + companyAddress + "</span><br/>");
 
-                           
+
                             StrBld.Append("<span style='font-size:20px; font-weight:bold; color:#7a99c2; margin-bottom:5px; font-family:Arial, sans-serif;'>02077014321</span>");
 
                             StrBld.Append("</td>");
@@ -12790,8 +13521,10 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
                             StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-size: 18px; border-bottom: #d4e0ee 1px solid;background-color: #eff3f9;'>");
 
                             decimal fare = obj2.CompanyId > 0 ? obj2.CompanyPrice.ToDecimal() : obj2.FareRate.ToDecimal();
+                            decimal parkingCharges = obj2.CompanyId > 0 ? obj2.ParkingCharges.ToDecimal() : obj2.CongtionCharges.ToDecimal();
+                            decimal extraCharges = obj2.ExtraDropCharges.ToDecimal();
                             decimal bookingFee = obj2.ServiceCharges.ToDecimal();
-                            decimal total = fare + bookingFee;
+                            decimal total = fare + bookingFee + parkingCharges + extraCharges;
                             // Container with light blue background and subtle borders
                             StrBld.Append("<div style='background-color:#f0f4f9; border-top:1px solid #d4e0ee; border-bottom:1px solid #d4e0ee; padding:10px 15px; font-family:Arial, sans-serif;'>");
 
@@ -12951,8 +13684,10 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
 
                                 decimal fareReturn = objReturns.CompanyId > 0 ? objReturns.CompanyPrice.ToDecimal() : objReturns.FareRate.ToDecimal();
+                                decimal parkingChargesReturn = objReturns.CompanyId > 0 ? objReturns.ParkingCharges.ToDecimal() : objReturns.CongtionCharges.ToDecimal();
+                                decimal extraChargesReturn = objReturns.ExtraDropCharges.ToDecimal();
                                 decimal bookingFeeReturn = objReturns.ServiceCharges.ToDecimal();
-                                decimal totalReturn = fareReturn + bookingFeeReturn;
+                                decimal totalReturn = fareReturn + bookingFeeReturn + parkingChargesReturn + extraChargesReturn;
                                 //if (objReturns.IsQuotation.ToBool() || (chkHideFares == null && hideFares == false) || (chkHideFares != null && chkHideFares.Checked == false))
                                 // Container with light blue background and subtle borders
                                 StrBld.Append("<div style='background-color:#f0f4f9; border-top:1px solid #d4e0ee; border-bottom:1px solid #d4e0ee; padding:10px 15px; font-family:Arial, sans-serif;'>");
@@ -13112,8 +13847,449 @@ UPDATE booking SET PromotionId = 0 WHERE Id = {0};
 
                         }
                     }
-                    
-                    
+
+
+                    else if (HubProcessor.Instance.objPolicy.DefaultClientId.ToStr() == "Prime-Crs.NW54HT")
+                    {
+
+                        var obj2 = db.Bookings.FirstOrDefault(c => c.Id == obj.emailInfo.BookingId);
+
+                        obj.emailInfo.toEmailType = 0;
+                        if (obj2 != null)
+                        {
+                            var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).FirstOrDefault();
+                            //var objSubCompany = db.Gen_SubCompanies.Where(c => c.Id == obj2.SubcompanyId).Select(args => new { args.SmtpHost, args.SmtpUserName, args.SmtpPassword, args.SmtpPort, args.SmtpHasSSL, args.EmailCC }).FirstOrDefault();
+                            if (obj.emailInfo.toEmailType == 0)
+                            {
+                                emailTo = obj2.CustomerName.ToStr();
+                                price = obj2.FareRate.ToDecimal() + obj2.MeetAndGreetCharges.ToDecimal() + obj2.CongtionCharges.ToDecimal() + obj2.ExtraDropCharges.ToDecimal() + obj2.ServiceCharges.ToDecimal();
+                                returnPrice = obj2.BookingReturns.Count > 0 ? obj2.BookingReturns[0].FareRate.ToDecimal() + obj2.BookingReturns[0].CongtionCharges.ToDecimal() + obj2.BookingReturns[0].ExtraDropCharges.ToDecimal() + obj2.BookingReturns[0].MeetAndGreetCharges.ToDecimal() + obj2.BookingReturns[0].ServiceCharges.ToDecimal() : 0.00m;
+
+                            }
+                            StringBuilder StrBld = new StringBuilder();
+
+
+                            StrBld.Append("<table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid; background-color:White;font-family: verdana, arial;font-size: 11px;font-weight: normal;color: #000;text-decoration: none;'>");
+                            //  StrBld.Append("<tr><td style='text-align: left; padding: 10px 20px 10px 20px; font-size: 16px;font-weight: bold; color: #ef0000; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>Booking Confirmation</td>");
+
+                            string fullCompanyName = obj2.Gen_SubCompany.CompanyName;
+                            StrBld.Append("Dear: " + emailTo + "<td width='20%' style='padding: 10px 5px 10px 5px; font-size: 16px; font-weight: bold;border-right: #d4e0ee 1px solid;'>REF NO:</td><td width='30%' style='padding: 10px 5px 10px 5px; font-size: 16px; font-weight: bold;border-right: #d4e0ee 1px solid; color: #008000;'>" + obj2.BookingNo.ToStr() + "</td>");
+
+                            StrBld.Append("</tr>");
+                            StrBld.Append("<tr style='background-color: #eff3f9;'><td colspan='2' style='padding: 5px; text-decoration: underline;border-top: #d4e0ee 1px solid; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;'>");
+                            StrBld.Append("Traveller Information</td><td colspan='2' style='padding: 5px; text-decoration: underline;border-top: #d4e0ee 1px solid; border-bottom: #d4e0ee 1px solid; font-size: 12px;'>Carrier Details</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 15%'>");
+                            StrBld.Append("Passenger:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 25%'>" + obj2.CustomerName.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 15%'>");
+                            StrBld.Append("Passenger No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;width: 45%'>" + obj2.NoofPassengers.ToInt() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Mobile:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.CustomerMobileNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("   </td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + " " + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Phone:</td><td style='padding: 5px; bold; border-bottom: #d4e0ee 1px solid;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + obj2.CustomerPhoneNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Check-in Luggage:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.NoofLuggages.ToInt() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Email:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.CustomerEmail.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Vehicle:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.Fleet_VehicleType.VehicleType.ToStr() + "</td></tr>");
+                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Pickup Date/Time:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + string.Format("{0:dd-MMM-yyyy HH:mm}", obj2.PickupDateTime) + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Special Ins:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.SpecialRequirements.ToStr() + "</td></tr>");
+                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Account:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.Gen_Company.DefaultIfEmpty().CompanyName.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                            StrBld.Append("Order No</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.OrderNo.ToStr() + "</td></tr><tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr valign='top'><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
+                            StrBld.Append("Pick-up Information</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromAddress + "</td></tr>");
+                            if (obj2.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                            {
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Flight Number:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromDoorNo.ToStr() + "</td></tr>");
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Coming From:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromStreet.ToStr() + "</td></tr>");
+
+                            }
+                            else if (obj2.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE)
+                            {
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From Door #:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromDoorNo.ToStr() + "</td></tr>");
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From Street:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromStreet.ToStr() + "</td></tr>");
+                            }
+                            else
+                            {
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Door #:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + obj2.FromDoorNo.ToStr() + "</td></tr>");
+                            }
+                            StrBld.Append("</table></td><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
+                            StrBld.Append("Drop-off Information</td></tr>");
+
+
+                            StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>To:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.ToAddress + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+
+                            if (obj2.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE)
+                            {
+
+                                StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.ToDoorNo + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                StrBld.Append("To Street:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.ToStreet.ToStr() + "</td></tr>");
+                            }
+                            else
+                            {
+                                string toDoorNo = obj2.ToDoorNo.ToStr().Trim();
+
+                                if (obj2.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT && obj2.JourneyTypeId.ToInt() == Enums.JOURNEY_TYPES.RETURN)
+                                    toDoorNo = string.Empty;
+                                else if (toDoorNo.Length > 0)
+                                    toDoorNo = toDoorNo + "-";
+
+                                StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + toDoorNo + "</td></tr>");
+
+
+                                //  StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objBooking.ToDoorNo + "</td></tr>");
+
+
+                            }
+
+                            StrBld.Append("</table></td></tr>");
+
+
+                            if (obj2.Booking_ViaLocations.Count > 0)
+                            {
+
+                                StrBld.Append("<tr><td colspan='4'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline; border-bottom: #d4e0ee 1px solid;font-size: 12px; width: 50%' align='center'>From</td><td style='padding: 5px; text-decoration: underline; border-bottom: #d4e0ee 1px solid;font-size: 12px; width: 50%' align='center'>To</td></tr>");
+
+                                int cnt = obj2.Booking_ViaLocations.Count;
+
+
+                                for (int i = 0; i < cnt; i++)
+                                {
+                                    if (i == 0)
+                                    {
+                                        StrBld.Append("<tr>");
+                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + obj2.FromAddress.ToStr() + "</td>");
+
+                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
+                                        StrBld.Append("</tr>");
+
+                                    }
+                                    else
+                                    {
+                                        if (i < cnt)
+                                        {
+
+                                            StrBld.Append("<tr>");
+                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + obj2.Booking_ViaLocations[i - 1].ViaLocValue.ToStr() + "</td>");
+
+
+                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
+                                            StrBld.Append("</tr>");
+                                        }
+                                    }
+
+
+                                    if (i + 1 == cnt)
+                                    {
+                                        StrBld.Append("<tr>");
+                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + obj2.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
+
+                                        StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.ToAddress.ToStr() + "</td>");
+                                        StrBld.Append("</tr>");
+
+                                    }
+
+
+                                }
+
+
+
+
+
+                                StrBld.Append("</table></td></tr>");
+                            }
+
+
+                            StrBld.Append("<tr><td colspan='4'>&nbsp;</td></tr>");
+                            StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-size: 18px; border-bottom: #d4e0ee 1px solid;background-color: #eff3f9;'>");
+
+
+                            //if (objBooking.IsQuotation.ToBool() || (chkHideFares == null && hideFares == false) || (chkHideFares != null && chkHideFares.Checked == false))
+                            //if (obj2.IsQuotation.ToBool())
+                            //{
+                                StrBld.Append("GBP Cost: <span style='color: #008000;'>£ " + string.Format("{0:f2}", (price)) + "</span>");
+                            //}
+                            StrBld.Append(" <span style='color: #008000;'>" + obj2.Gen_PaymentType.DefaultIfEmpty().PaymentType.ToStr() + "</span></td></tr>");
+
+                            if (obj2.BookingReturns.Count > 0)
+                            {
+
+                                Booking objReturns = obj2.BookingReturns[0];
+
+                                StrBld.Append("<tr style='background-color: #eff3f9;'><td colspan='2' style='padding: 5px; text-decoration: underline;border-top: #d4e0ee 1px solid; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;'>");
+
+                                StrBld.Append("Return Booking Details</td><td colspan='2' style='padding: 5px; text-decoration: underline;border-top: #d4e0ee 1px solid; border-bottom: #d4e0ee 1px solid; font-size: 12px;'>REF NO:" + objReturns.BookingNo.ToStr() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 15%'>");
+                                StrBld.Append("Passenger:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 25%'>" + objReturns.CustomerName.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid; width: 15%'>");
+                                StrBld.Append("Passenger No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;width: 45%'>" + objReturns.NoofPassengers.ToInt() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                StrBld.Append("Mobile:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.CustomerMobileNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                StrBld.Append("   </td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + " " + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+
+
+                                StrBld.Append("Phone:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.CustomerPhoneNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                // StrBld.Append("Phone:</td><td style='padding: 5px; bold; border-bottom: #d4e0ee 1px solid;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + objReturns.CustomerPhoneNo.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                StrBld.Append("Check-in Luggage:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.NoofLuggages.ToInt() + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                StrBld.Append("Email:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.CustomerEmail.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                StrBld.Append("Vehicle:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + obj2.Fleet_VehicleType.VehicleType.ToStr() + "</td></tr>");
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Pickup Date/Time:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + string.Format("{0:dd-MMM-yyyy HH:mm}", objReturns.PickupDateTime) + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+
+                                StrBld.Append("Special Ins:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.SpecialRequirements.ToStr() + "</td></tr>");
+
+                                //  StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr valign='top'><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
+
+
+
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Account:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.Gen_Company.DefaultIfEmpty().CompanyName.ToStr() + "</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+
+                                StrBld.Append("Order No</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.OrderNo.ToStr() + "</td></tr><tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr valign='top'><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
+
+
+
+                                StrBld.Append("Pick-up Information</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromAddress + "</td></tr>");
+
+                                if (objReturns.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.AIRPORT)
+                                {
+                                    StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Flight Number:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromDoorNo.ToStr() + "</td></tr>");
+                                    StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Coming From:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromStreet.ToStr() + "</td></tr>");
+
+                                }
+                                else if (objReturns.FromLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE)
+                                {
+                                    StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From Door #:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromDoorNo.ToStr() + "</td></tr>");
+                                    StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>From Street:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromStreet.ToStr() + "</td></tr>");
+
+
+                                }
+                                else
+                                {
+
+
+                                    StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>Door #:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>" + objReturns.FromDoorNo.ToStr() + "</td></tr>");
+
+
+                                }
+                                StrBld.Append("</table></td><td colspan='2'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline;border-bottom: #d4e0ee 1px solid; font-size: 12px;' colspan='2'>");
+                                StrBld.Append("Drop-off Information</td></tr>");
+
+
+                                StrBld.Append("<tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>To:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToAddress + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+
+                                if (objReturns.ToLocTypeId.ToInt() == Enums.LOCATION_TYPES.POSTCODE)
+                                {
+
+                                    StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToDoorNo + "</td></tr><tr><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;border-right: #d4e0ee 1px solid;'>");
+                                    StrBld.Append("To Street:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToStreet.ToStr() + "</td></tr>");
+                                }
+                                else
+                                {
+
+                                    StrBld.Append("To Door No:</td><td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToDoorNo + "</td></tr>");
+
+
+                                }
+
+                                StrBld.Append("</table></td></tr>");
+
+
+                                if (objReturns.Booking_ViaLocations.Count > 0)
+                                {
+
+                                    StrBld.Append("<tr><td colspan='4'><table width='100%' border='0' cellspacing='0' cellpadding='0' style='border: #d4e0ee 1px solid;background-color: White; font-family: verdana, arial; font-size: 11px; font-weight: normal;color: #000; text-decoration: none;'><tr style='background-color: #eff3f9;'><td style='padding: 5px; text-decoration: underline; border-bottom: #d4e0ee 1px solid;font-size: 12px; width: 50%' align='center'>From</td><td style='padding: 5px; text-decoration: underline; border-bottom: #d4e0ee 1px solid;font-size: 12px; width: 50%' align='center'>To</td></tr>");
+
+                                    int cnt = objReturns.Booking_ViaLocations.Count;
+
+
+                                    for (int i = 0; i < cnt; i++)
+                                    {
+                                        if (i == 0)
+                                        {
+                                            StrBld.Append("<tr>");
+                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + objReturns.FromAddress.ToStr() + "</td>");
+
+                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
+                                            StrBld.Append("</tr>");
+
+                                        }
+                                        else
+                                        {
+                                            if (i < cnt)
+                                            {
+
+                                                StrBld.Append("<tr>");
+                                                StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + objReturns.Booking_ViaLocations[i - 1].ViaLocValue.ToStr() + "</td>");
+
+
+                                                StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
+                                                StrBld.Append("</tr>");
+                                            }
+                                        }
+
+
+                                        if (i + 1 == cnt)
+                                        {
+                                            StrBld.Append("<tr>");
+                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid; border-right: #d4e0ee 1px solid;'>" + objReturns.Booking_ViaLocations[i].ViaLocValue.ToStr() + "</td>");
+
+                                            StrBld.Append("<td style='padding: 5px; border-bottom: #d4e0ee 1px solid;'>" + objReturns.ToAddress.ToStr() + "</td>");
+                                            StrBld.Append("</tr>");
+
+                                        }
+
+                                    }
+
+
+
+                                    StrBld.Append("</table></td></tr>");
+                                }
+
+
+                                StrBld.Append("<tr><td colspan='4'>&nbsp;</td></tr>");
+
+
+                                //                 <tr><td style='padding: 10px 5px 10px 5px; font-size: 14px; border: #d4e0ee 1px solid;background-color: White; text-decoration: underline; font-weight: bold;'>Meeting Point:</td><td style='padding: 10px 5px 10px 5px; font-size: 11px; border: #d4e0ee 1px solid;background-color: #eff3f9;' colspan='3'>The driver will meet you with a name board displaying the Passenger name at ARRIVALS <span style='color: Green'>05 Minutes</span> after your flight lands (as per your request). You will have a further <span style='color: Green'>35 minutes</span> of Free waiting time, meaning a total Free waiting time allowance of <span style='color: Red'>40 Minutes</span> from the time of landing which also include car park. Please Note thereafter waiting time is chargeable at the rate of <span style='color: Red'>GBP £20p</span> per minute.</td></tr>
+                                StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-size: 18px; border-bottom: #d4e0ee 1px solid;background-color: #eff3f9;'>");
+
+
+
+                                //if (objReturns.IsQuotation.ToBool() || (chkHideFares == null && hideFares == false) || (chkHideFares != null && chkHideFares.Checked == false))
+                                //if (objReturns.IsQuotation.ToBool())
+                                //{
+                                    StrBld.Append("GBP Cost: <span style='color: #008000;'>£ " + string.Format("{0:f2}", (returnPrice)) + "</span>");
+
+                                //}
+
+                                StrBld.Append(" <span style='color: #008000;'>" + objReturns.Gen_PaymentType.DefaultIfEmpty().PaymentType.ToStr() + "</span></td></tr>");
+
+
+
+
+                            }
+                            string footer = string.Empty;
+                            //try
+                            //{
+
+                            //    footer = db.ExecuteQuery<string>("select Footer from EmailSettings").FirstOrDefault();
+
+                            //}
+                            //catch
+                            //{
+
+                            //}
+
+                            //if (footer.ToStr().Trim().Length > 0)
+                            //    if (footer.ToStr().Trim().Length > 0)
+                            //        StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;color: #6b97c2;'><p style=\"color:#6b97c2\"><strong>" + footer + "</strong></p></td></tr>");
+
+                            // }
+
+                            //if (footer.ToStr().Trim().Length > 0)
+                            //    StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-weight: bold; font-size: 17px;text-align: center; border-bottom: #d4e0ee 1px solid; line-height:10px'><p style=\"color:#6b97c2\"><strong>" + footer + "</strong></p></td></tr>");
+
+                            if (obj2.IsQuotation.ToBool())
+                            {
+                                StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-weight: bold; font-size: 17px;text-align: center; border-bottom: #d4e0ee 1px solid; line-height:10px'><p style=\"color:#6b97c2\"><strong>Please check the quotation carefully…</strong></p></td></tr>");
+
+                            }
+                            else
+                                StrBld.Append("<tr><td colspan='4' style='border-bottom: #d4e0ee 1px solid;'>&nbsp;</td></tr><tr><td colspan='4' style='padding: 10px 5px 10px 5px; font-weight: bold; font-size: 17px;text-align: center; border-bottom: #d4e0ee 1px solid; line-height:10px'><p style=\"color:#6b97c2\"><strong>Please check the confirmation carefully…</strong></p></td></tr>");
+
+
+
+                            StrBld.Append("<tr><td colspan='4' style='text-align: center; padding: 5px 0px 5px 0px; font-size: 18px;font-weight: normal; color: #6b97c2;' ><p align=\"Center\">We welcome all comments on the services that we provide.</p></td></tr>");
+
+
+
+
+
+                            StrBld.Append("</table>");
+
+                            //try
+                            //{
+                            //    System.IO.File.AppendAllText(AppContext.BaseDirectory + "\\" + "SendConfirmationEmailTable.txt", DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss") + Environment.NewLine + StrBld + Environment.NewLine);
+
+                            //}
+                            //catch (Exception)
+                            //{
+
+                            //}
+
+                            var obja = new
+                            {
+                                //   imageName = file,
+                                //   file = base64Text,
+                                subject = obj.emailInfo.Subject,
+                                messageBody = StrBld.ToStr(),
+                                fromEmail = obj.emailInfo.From,
+                                toEmail = obj.emailInfo.To,
+                                CCEmail = objSubCompany.EmailCC.ToStr(),
+                                smtpHost = objSubCompany.SmtpHost,
+                                smtpPwd = objSubCompany.SmtpPassword,
+                                defaultclientid = HubProcessor.Instance.objPolicy.DefaultClientId.ToStr(),
+                                sourceType = "dispatch-cloudx"
+                            };
+                            objSubCompany.UseDifferentEmailForInvoices = false;
+
+                            List<System.Net.Mail.Attachment> attachments = new List<System.Net.Mail.Attachment>();
+                            SignalRHub.Classes.ClsEmail.Send(obja.subject, obja.messageBody, obja.fromEmail, obja.toEmail, attachments, objSubCompany, "");
+
+                            response.Data = "Booking confirmation email sent successfully.";
+
+                            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                            //HttpClient httpClient = new HttpClient();
+                            //var stringContent = new StringContent
+                            //(Newtonsoft.Json.JsonConvert.SerializeObject(obja), Encoding.UTF8, "application/json");
+
+                            //HttpResponseMessage res = httpClient.PostAsync("https://cabtreasureappapi.co.uk/CabTreasureWebApi/Home/SendTPEmail", stringContent).Result;
+                            //httpClient.Dispose();
+                            //string sd = res.Content.ReadAsStringAsync().Result;
+
+
+
+                            //if (sd.ToStr().Contains("\"success\"") == false)
+                            //{
+                            //    ResponseData dt = null;
+                            //    try
+                            //    {
+                            //        dt = Newtonsoft.Json.JsonConvert.DeserializeObject<ResponseData>(sd);
+
+                            //    }
+                            //    catch
+                            //    {
+
+                            //    }
+
+                            //    if (dt != null)
+                            //    {
+
+                            //        response.HasError = true;
+                            //        response.Message = dt.Message;
+
+                            //    }
+                            //    else
+                            //    {
+                            //        response.HasError = true;
+                            //        //  response.Message =
+
+
+                            //    }
+                            //}
+                            //else
+                            //{
+                            //    try
+                            //    {
+                            //        using (TaxiDataContext dbContext = new TaxiDataContext())
+                            //        {
+                            //            dbContext.ExecuteCommand("exec insertInSendEmail {0}, {1}, {2}, {3}",
+                            //                obja.subject,
+                            //                obja.messageBody,
+                            //                string.IsNullOrWhiteSpace(obj.UserName) ? obj.objUserInfo?.UserName : obj.UserName,
+                            //                obja.toEmail);
+                            //        }
+                            //    }
+                            //    catch (Exception ex)
+                            //    {
+                            //    }
+                            //    response.Data = sd;
+                            //}
+
+
+
+
+
+                        }
+                    }
                     else
                     {
 

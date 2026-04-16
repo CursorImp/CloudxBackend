@@ -6,6 +6,7 @@ using System.Data.Linq;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
 using System.Xml.Linq;
@@ -820,7 +821,7 @@ public static class GetDistance
         double radiusInMeters = radiusInMiles * 1609.34;
         string jsonBody = $@"
     {{
-        ""textQuery"": ""{keyword} {location}"",
+        ""textQuery"": ""{keyword} {location} UK"",
         ""regionCode"": ""GB"",
         ""locationBias"": {{
             ""circle"": {{
@@ -887,6 +888,9 @@ public static class GetDistance
                 {
                     string address = item.Formatted_address.Trim();
                     RemoveUK(ref address);
+                    address = Regex.Replace(address, @"[^a-zA-Z0-9\s,\-&]", "");
+                    address = Regex.Replace(address, @"\s+", " ");
+
                     item.Formatted_address = address.Trim();
                 }
             }

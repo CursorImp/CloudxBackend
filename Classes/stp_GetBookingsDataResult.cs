@@ -142,5 +142,7 @@ namespace SignalRHub
         public long? MasterJobId { get; set; }
         public int TotalRecords { get; set; }
         public long? AdvanceBookingId { get; set; }
+        public bool? IsPreBooking { get; set; }
+        public decimal? CompanyPrice { get; set; }
     }
 }
